@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures'
 
 // WCAG 2.2 AA (CLAUDE.md § Accessibilité). La liste s'allonge à chaque story, FR et EN dès la story 1.4.
 const PAGES = [

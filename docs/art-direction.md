@@ -172,6 +172,8 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 ### 7.2 Hero et entrée par besoin (Accueil, scène S1)
 Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (Annexe B).
 
+> **Décision D25 (15/10/2026) : « la marque d'abord ».** Remplace la composition de D19 ci-dessous : ouverture filmée une fois par visite (M16), puis « Maison Triona » en grand, centré sur la vidéo V01 plein écran (voile sapin à 50 %, mesuré), signé du « K. » entre deux filets ; bande ivoire avec une phrase qui dit ce que fait la maison et les 4 choix ; puis « Nos services » en triptyque (une fenêtre vidéo par service), La maison, Comment ça se passe (une seule fois), Territoires, Contact. Le mini-menu (§7.9) et le passage « on entre » (M15) sont retirés.
+>
 > **Décision D19 (15/10/2026) : « Seuil plein écran ».** Elle prime sur la composition « colonne + vidéo » ci-dessous pour le desktop :
 > - **Écran 1 = 100 % de la hauteur** (`100svh`) : vidéo V01 **plein cadre**, titre display posé dessus sur voile sapin ≥ 58 %, en-tête transparent.
 > - **Bande ivoire en bas de l'écran 1** (aplat, environ un tiers de la hauteur) : la question puis les **4 choix côte à côte** en desktop (4 colonnes, filets or verticaux, mêmes contenus et mêmes règles que la liste : vrais liens, numéro cyprès, catégorie en label, choix 4 moins appuyé, cible ≥ 56 px). En dessous de 1024 px, la liste verticale de la variante B.

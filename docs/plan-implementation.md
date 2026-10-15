@@ -159,6 +159,9 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **2.8 FAQ ⛳ (E2-S3)** — `/fr/faq`, `/en/faq` ; 8 questions de `docs/trust-contact-launch.md` annexe B.1, réponses depuis le CMS ; `<details>`/`<summary>` natifs, **une ancre par question** (ouverte à l'arrivée par l'ancre), ouvertes à l'impression ; la question « délai » masquée tant que Cat ne s'engage pas ; JSON-LD `FAQPage` léger (sans résultat enrichi attendu).
 **CA** : contenu lisible **sans JS** ; accordéon utilisable au clavier et annoncé correctement ; FR/EN ; aucune réponse inventée (`check:content`).
 
+**2.12 Ouverture et accueil « la marque d'abord » ⛳ (D25)** — Ouverture filmée (M16) une fois par visite ; premier écran : « Maison Triona » centré sur la vidéo plein écran, phrase de présentation et entrée par besoin sur la bande ivoire ; « Nos services » en triptyque vidéo ; La maison ; Comment ça se passe (une fois) ; Territoires ; Contact ; médias du lot 2.
+**CA** : l'ouverture se passe au clavier (Échap, « Passer »), se met en pause, n'apparaît ni sans JavaScript ni une seconde fois dans la visite ; aucune vidéo en mobile ni en mouvement réduit ; premier choix visible sans défiler en 390 × 844 au-dessus de la barre mobile ; axe 0 violation.
+
 **2.9 Comment ça se passe + langage simple + PDF ⛳ (E2-S4)** — 5 étapes (annexe B.2), version en langage simple (`/langage-simple`, `/easy-read`), page imprimable et **PDF balisé FR/EN** généré au build (`docs/architecture.md` §6.8).
 **CA** : 4 à 5 étapes ; version simple liée depuis la page et le PDF ; PDF avec texte réel, langue, titres, signets, contrôlé (PAC ou veraPDF) ; **aucun délai non validé** ; PDF absent tant que le texte n'est pas validé.
 

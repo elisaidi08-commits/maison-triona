@@ -1,11 +1,11 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures'
 
-// Stories 2.2 et 2.3 : scènes de l'accueil et pages de service.
+// Accueil (D25) : les trois services ; pages de service (stories 2.2 et 2.3).
 
 test('chaque choix d’entrée mène à une scène existante', async ({ page }) => {
   await page.goto('/fr')
   for (const anchor of ['conciergerie', 'grand-age', 'enfants']) {
-    await expect(page.locator(`section#${anchor}`)).toHaveCount(1)
+    await expect(page.locator(`#${anchor}`)).toHaveCount(1)
     await expect(page.locator(`#${anchor}-titre`)).toBeVisible()
   }
 })

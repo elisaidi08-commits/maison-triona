@@ -50,7 +50,7 @@
   },
   "Home": {
     "title": "Une seconde vie, comme des vacances qui ne s’arrêtent pas.",
-    "question": "Que pouvons-nous faire pour vous, ou pour l’un de vos proches ?",
+    "intro": "Conciergerie de luxe, accompagnement du grand âge et garde d’enfants : la maison vous présente des personnes de confiance, choisies une à une.",
     "imageAlt": "Une pièce dans la pénombre, une porte-fenêtre ouverte sur la mer et un rideau de lin soulevé par la brise.",
     "choices": {
       "concierge": {
@@ -108,17 +108,21 @@
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
-      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage."
+      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
+      "link": "Découvrir la conciergerie de luxe"
     },
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
-      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés."
+      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés.",
+      "link": "Découvrir l’accompagnement du grand âge"
     },
     "children": {
       "name": "Garde d’enfants",
-      "promise": "Une présence choisie, pour quelques heures ou pour une saison."
-    }
+      "promise": "Une présence choisie, pour quelques heures ou pour une saison.",
+      "link": "Découvrir la garde d’enfants"
+    },
+    "title": "Nos services"
   },
   "Video": {
     "pause": "Mettre la vidéo en pause",
@@ -176,14 +180,13 @@
       }
     ]
   },
-  "MiniMenu": {
-    "label": "Sur cette page",
-    "concierge": "Conciergerie",
-    "senior": "Grand âge",
-    "children": "Enfants",
-    "contact": "Contact"
-  },
   "MobileBar": {
     "label": "Écrire en toute discrétion"
+  },
+  "Ouverture": {
+    "label": "Ouverture",
+    "summary": "Maison Triona : conciergerie de luxe, accompagnement du grand âge et garde d’enfants, en Belgique, en France, au Luxembourg, à Monaco et en Suisse.",
+    "skip": "Passer l’introduction",
+    "enter": "Entrer"
   }
 }

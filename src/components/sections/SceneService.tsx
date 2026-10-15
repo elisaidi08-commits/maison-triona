@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
-import { SERVICE_IMAGES, type Service } from '@/lib/services'
+import { SERVICE_MEDIA, type Service } from '@/lib/services'
 
 // Scène de service, structure identique × 3 (docs/art-direction.md §7.8). Desktop : média à hauteur
 // d'écran, collant pendant que le texte défile, côté alterné d'une scène à l'autre ; la scène se lit
@@ -31,7 +31,7 @@ export async function SceneService({
   const t = await getTranslations('Services')
   const reassurance = t.raw('reassurance') as string[]
   const steps = t.raw('steps') as string[]
-  const image = SERVICE_IMAGES[service.id]
+  const image = SERVICE_MEDIA[service.id]
   const Heading = heading
   const titleId = `${service.anchor}-titre`
 

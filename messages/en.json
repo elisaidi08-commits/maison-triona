@@ -50,7 +50,7 @@
   },
   "Home": {
     "title": "A second life, like a holiday that never ends.",
-    "question": "What can we do for you, or for someone close to you?",
+    "intro": "Luxury concierge, senior companionship and childcare: the house introduces you to trusted people, chosen one by one.",
     "imageAlt": "A dim room, French windows open onto the sea and a linen curtain lifted by the breeze.",
     "choices": {
       "concierge": {
@@ -104,17 +104,21 @@
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
-      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope."
+      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
+      "link": "Discover our luxury concierge"
     },
     "senior": {
       "name": "Senior companionship",
       "promise": "Days that keep their rhythm and their pleasures.",
-      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals."
+      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals.",
+      "link": "Discover senior companionship"
     },
     "children": {
       "name": "Childcare",
-      "promise": "A trusted presence, for a few hours or a whole season."
-    }
+      "promise": "A trusted presence, for a few hours or a whole season.",
+      "link": "Discover childcare"
+    },
+    "title": "Our services"
   },
   "Video": {
     "pause": "Pause the video",
@@ -172,14 +176,13 @@
       }
     ]
   },
-  "MiniMenu": {
-    "label": "On this page",
-    "concierge": "Concierge",
-    "senior": "Senior companionship",
-    "children": "Childcare",
-    "contact": "Contact"
-  },
   "MobileBar": {
     "label": "Write to us in confidence"
+  },
+  "Ouverture": {
+    "label": "Opening",
+    "summary": "Maison Triona: luxury concierge, senior companionship and childcare, in Belgium, France, Luxembourg, Monaco and Switzerland.",
+    "skip": "Skip the introduction",
+    "enter": "Enter"
   }
 }

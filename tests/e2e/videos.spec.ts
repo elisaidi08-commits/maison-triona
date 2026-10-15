@@ -1,7 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { expect, test as base } from '@playwright/test'
+import { test } from '../fixtures'
 
-// Story 2.5 : vidéos conditionnelles (desktop, sans mouvement réduit), bouton pause, aucune vidéo
-// en mobile ni en mouvement réduit.
+// Vidéos conditionnelles (desktop, sans mouvement réduit), bouton pause, aucune vidéo en mobile ni
+// en mouvement réduit, ouverture comprise (`base` : premier passage, l'ouverture s'affiche).
 
 const videoRequests = (page: import('@playwright/test').Page) => {
   const urls: string[] = []
@@ -11,25 +12,25 @@ const videoRequests = (page: import('@playwright/test').Page) => {
   return urls
 }
 
-test('aucune vidéo téléchargée en mobile', async ({ page }) => {
+base('aucune vidéo téléchargée en mobile, ouverture comprise', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const urls = videoRequests(page)
   await page.goto('/fr')
+  await expect(page.getByRole('dialog')).toBeVisible()
   await page.waitForTimeout(2500)
   expect(urls).toEqual([])
 })
 
-test('aucune vidéo en mouvement réduit', async ({ page }) => {
+base('aucune vidéo en mouvement réduit, ouverture comprise', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
   const urls = videoRequests(page)
   await page.goto('/fr')
   await page.waitForTimeout(2500)
   expect(urls).toEqual([])
-  await expect(page.locator('#seuil-passage')).toHaveCount(0)
 })
 
-test('desktop : la vidéo du seuil joue et se met en pause au clavier', async ({ page }) => {
+test('desktop : la vidéo du premier écran joue et se met en pause au clavier', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
   const pause = page.getByRole('button', { name: 'Mettre la vidéo en pause' }).first()
