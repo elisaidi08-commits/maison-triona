@@ -1,0 +1,51 @@
+{
+  "Meta": {
+    "siteName": "Maison Triona"
+  },
+  "SkipLink": {
+    "label": "Skip to content"
+  },
+  "Header": {
+    "home": "Maison Triona, home",
+    "navLabel": "Main navigation",
+    "menu": "Menu",
+    "close": "Close"
+  },
+  "Nav": {
+    "house": "The House",
+    "services": "Services",
+    "territories": "Where we work",
+    "contact": "Contact"
+  },
+  "Locale": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "LanguageSuggestion": {
+    "text": "This site is also available in English.",
+    "switch": "Switch to English",
+    "close": "Close"
+  },
+  "Footer": {
+    "label": "Footer",
+    "legal": "Legal notice",
+    "privacy": "Privacy",
+    "contact": "Contact",
+    "ai": "Images created with the help of artificial intelligence.",
+    "copyright": "© Maison Triona"
+  },
+  "Pages": {
+    "home": "Maison Triona",
+    "house": "The House",
+    "services": "Services",
+    "territories": "Where we work",
+    "contact": "Contact",
+    "legal": "Legal notice",
+    "privacy": "Privacy"
+  },
+  "NotFound": {
+    "title": "This page does not exist.",
+    "back": "Back to the home page"
+  }
+}

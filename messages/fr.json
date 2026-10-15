@@ -1,0 +1,51 @@
+{
+  "Meta": {
+    "siteName": "Maison Triona"
+  },
+  "SkipLink": {
+    "label": "Aller au contenu"
+  },
+  "Header": {
+    "home": "Maison Triona, accueil",
+    "navLabel": "Navigation principale",
+    "menu": "Menu",
+    "close": "Fermer"
+  },
+  "Nav": {
+    "house": "La Maison",
+    "services": "Services",
+    "territories": "Territoires",
+    "contact": "Contact"
+  },
+  "Locale": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "LanguageSuggestion": {
+    "text": "Ce site existe aussi en français.",
+    "switch": "Passer en français",
+    "close": "Fermer"
+  },
+  "Footer": {
+    "label": "Pied de page",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "contact": "Contact",
+    "ai": "Images créées avec l’aide de l’intelligence artificielle.",
+    "copyright": "© Maison Triona"
+  },
+  "Pages": {
+    "home": "Maison Triona",
+    "house": "La Maison",
+    "services": "Services",
+    "territories": "Territoires",
+    "contact": "Contact",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité"
+  },
+  "NotFound": {
+    "title": "Cette page n’existe pas.",
+    "back": "Revenir à l’accueil"
+  }
+}
