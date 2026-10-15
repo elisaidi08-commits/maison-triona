@@ -1,0 +1,44 @@
+{
+  "name": "maison-triona",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Site vitrine de Maison Triona — by K.",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:e2e": "playwright test --project=e2e",
+    "test:a11y": "playwright test --project=a11y",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "check:content": "node scripts/check-content.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:third-party": "node scripts/check-third-party.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.1",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "lighthouse": "13.5.0",
+    "prettier": "3.9.10",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  }
+}

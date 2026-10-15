@@ -1,0 +1,24 @@
+# Rien de ce qui suit n'est envoyé à Vercel (docs/architecture.md §3).
+# Les noms des dossiers de travail finissent par une espace : motifs plutôt que noms exacts.
+
+# Cadrage, agents et moodboard : jamais publiés
+/docs
+/.claude
+/CLAUDE.md
+/AGENTS.md
+/anti-patterns.md
+
+# Médias bruts et dossiers de travail
+/media-incoming
+/ASSETS PHOTO MAQUETTE*
+/MOODBOARD*
+/LOGO*
+/TYPO*
+/maison-triona-prd.pdf
+/bascule-satoshi.js
+
+# Tests et rapports
+/tests
+/test-results
+/playwright-report
+/.lighthouse

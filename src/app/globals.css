@@ -1,0 +1,7 @@
+/*
+ * Tailwind v4. Les sources sont limitées à src/ : les documents de cadrage contiennent des noms
+ * de classes cités en exemple (`p-4`, `bg-red-500`) qui ne doivent jamais être générés.
+ * Tokens et suppression des palettes par défaut : story 1.2 (docs/design-tokens.md).
+ */
+@import 'tailwindcss' source(none);
+@source '../';
