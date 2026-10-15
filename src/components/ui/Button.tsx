@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 // hauteur 52 px, libellé en corps 18 px comme le lien. Survol : bordure champagne et filet sous
 // le texte qui se dessine (M4). Sur ivoire : TextLink.
 
-const CLASSES =
+export const BUTTON_CLASSES =
   'group inline-flex min-h-button items-center justify-center border border-or px-32 text-body text-ivoire transition-colors duration-micro ease-standard hover:border-champagne'
 
 type ButtonProps =
@@ -14,13 +14,13 @@ type ButtonProps =
 export function Button({ children, href, type = 'button' }: ButtonProps) {
   if (href) {
     return (
-      <a href={href} className={CLASSES}>
+      <a href={href} className={BUTTON_CLASSES}>
         <span className="filet-survol">{children}</span>
       </a>
     )
   }
   return (
-    <button type={type} className={`${CLASSES} cursor-pointer bg-sapin`}>
+    <button type={type} className={`${BUTTON_CLASSES} cursor-pointer bg-sapin`}>
       <span className="filet-survol">{children}</span>
     </button>
   )

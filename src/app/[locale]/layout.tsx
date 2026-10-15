@@ -45,7 +45,21 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
   const suggestion = await getTranslations({ locale: other, namespace: 'LanguageSuggestion' })
 
   return (
-    <html lang={locale} className={`${manrope.variable} ${newsreader.variable}`}>
+    <html
+      lang={locale}
+      className={`${manrope.variable} ${newsreader.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Ouverture de l'accueil déjà vue pendant la visite (D25) : masquée avant le premier
+            affichage, sans clignotement. Aucune donnée envoyée ; sessionStorage seulement. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(sessionStorage.getItem('mt-ouverture-vue')==='1')document.documentElement.dataset.ouverture='vue'}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <SkipLink label={t('label')} />
         <Header locale={locale} />

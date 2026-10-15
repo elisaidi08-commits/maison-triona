@@ -1,15 +1,11 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures'
 
-// Story 2.1 : premier écran « Seuil plein écran » (D19).
+// Premier écran de l'accueil (D25) : le nom de la maison, ce qu'elle fait, l'entrée par besoin.
 
-test('le seuil donne le titre, la question et 4 vrais liens', async ({ page }) => {
+test('le premier écran donne le nom, ce que fait la maison et 4 vrais liens', async ({ page }) => {
   await page.goto('/fr')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Une seconde vie, comme des vacances qui ne s’arrêtent pas.',
-  )
-  await expect(
-    page.getByRole('heading', { level: 2, name: /Que pouvons-nous faire/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Maison Triona')
+  await expect(page.getByText(/Conciergerie de luxe, accompagnement du grand/)).toBeVisible()
   const hrefs = await page
     .locator('section[aria-labelledby="seuil-titre"] ul a')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')))
