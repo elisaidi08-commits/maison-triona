@@ -8,13 +8,13 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 (fusionnée) et 1.2 (validée, PR #2) livrées sur le dépôt privé `elisaidi08-commits/maison-triona`. **En cours : piste B, lot 0 des assets IA** (style sheet A01-A03). Prochaine story de la piste A : 1.3. Dépôt dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). **En cours : groupe ① fondations (1.3, 1.4, 1.5)** et, en parallèle, images du lot 1 en autonomie (D21). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 
 1. **Périmètre d'écriture** : en phase 0, uniquement `docs/`, `.claude/` et ce fichier. À partir de la phase 1, seulement ce que la story en cours exige.
 2. **Rien ne s'invente** : tout point `[À CONFIRMER]` ou `[À TRANCHER]` remonte à Sady. Aucun faux texte publié en dur : `[CONTENU À FOURNIR PAR CAT]` ou brouillon balisé ; `check:content` bloque la production.
-3. **Points de contrôle** : à la fin de chaque story visuelle, **s'arrêter**, livrer les captures 1440 / 834 / 390 et attendre « OK story X.Y ». Aucun enchaînement automatique d'écrans.
+3. **Points de contrôle** (D22) : les stories s'enchaînent ; Claude fusionne chaque PR quand la CI est verte, et **s'arrête aux 4 points de contrôle** (① fondations 1.3-1.5, ② accueil 2.1-2.5, ③ pages 2.6-2.11, ④ contact 3.x) avec les captures 1440 / 834 / 390, puis attend l'OK de Sady.
 4. **Honnêteté technique** : si un outil ou une API n'est pas disponible ou pas vérifié, le dire et proposer un plan B. Ne jamais inventer d'API ; vérifier la doc à jour avant de figer une version.
 5. **Le luxe se ressent, il ne se crie pas** : aucune animation démonstrative, aucun effet gratuit. Entre « plus » et « moins » : **moins**. Et si l'accessibilité et un effet s'opposent, **l'accessibilité gagne**.
 
