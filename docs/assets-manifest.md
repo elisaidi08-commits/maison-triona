@@ -1,6 +1,6 @@
 # Manifeste des assets IA — Maison Triona
 
-> **Statut** : v1, phase 0 (15/10/2026). **Aucune génération lancée.** Source : `docs/assets-ia-brief.md` (brief de Sady), `docs/ux-entry-i18n-a11y.md` (spec d'entrée, prioritaire), style bible figée dans `docs/art-direction.md` §6.
+> **Statut** : v1.1 (15/10/2026). Lot 0 en cours : passe 1 faite (12 brouillons, journal §7). Source : `docs/assets-ia-brief.md` (brief de Sady), `docs/ux-entry-i18n-a11y.md` (spec d'entrée, prioritaire), style bible figée dans `docs/art-direction.md` §6.
 > **Mis à jour par** : l'agent `media-producer` à chaque génération, validation ou intégration.
 > **Statuts** : `à générer` → `généré` → `validé Sady` → `validé Cat` → `intégré`.
 
@@ -13,8 +13,8 @@ Vérifié par la CLI officielle (`@higgsfield/cli` 1.1.26, connectée au workspa
 | Besoin | Modèle retenu (ID CLI) | Paramètres utiles | Coût estimé |
 |---|---|---|---|
 | Brouillons d'images, personnes / plans cinéma | `soul_cinematic` | `--aspect_ratio` 16:9, 3:4, 1:1… (**pas de 4:5**) · `--quality 2k` (= 1080p réel) · 1 image de référence | **0,12** crédit |
-| Brouillons d'images, lieux sans personne | `soul_location` | ratios fixes, dont 16:9 et 3:4 | **0,12** |
-| Images finales ≥ 2 400 px | `bytedance_image_upscale` (`--resolution 4k`) sur le brouillon retenu, **ou** `nano_banana_pro` (`--resolution 4k`, 4:5 natif, jusqu'à 14 images de référence) | — | upscale : à estimer sur fichier · Nano Banana Pro 4k : **4** |
+| Brouillons d'images, lieux sans personne | `soul_location` | `--aspect_ratio` seulement (pas de qualité, **pas d'image de référence**) | **0,12** |
+| Images finales ≥ 2 400 px | `bytedance_image_upscale` (`--resolution 4k`) sur le brouillon retenu, **ou** `nano_banana_pro` (`--resolution 4k`, 4:5 natif, jusqu'à 14 images de référence) | — | upscale 4k : **2** (mesuré le 15/10/2026 sur une image neutre 16:9 et 1:1) · Nano Banana Pro 4k : **4** |
 | Vidéo 16:9, 1080p, boucle | **`kling3_0`** `--mode pro --duration 8 --sound off` | `--start-image` **et** `--end-image` (même image = boucle native), ratios 16:9, 9:16, 1:1 | **12** |
 | Vidéo de secours (plan difficile) | `veo3_1` `--duration 8 --quality high` | `--start-image` seulement | 32 |
 | À éviter avec ce budget | `seedance_2_5` (défaut de la skill Higgsfield) | 1080p à forcer, audio actif par défaut | **128** (brouillon 24) |
@@ -58,6 +58,15 @@ gentle, desaturated colour; steady unhurried camera; timeless setting with nothi
 modern or electronic in view
 ```
 
+### `QUALITY_GUARD_EMPTY` v1 (proposé après la passe 1 du lot 0, scènes sans personne)
+Constat du 15/10/2026 : avec `QUALITY_GUARD` v1, qui parle de mains et de personnes, Soul ajoute des personnes dans 11 brouillons sur 12, même quand la scène n'en décrit aucune. Pour les ancres, les lieux et les natures mortes :
+```
+an unoccupied, quiet scene, empty of people, with no figures, hands or silhouettes anywhere in the frame;
+plain unmarked surfaces and objects; soft diffused light; gentle, desaturated colour;
+timeless setting with nothing modern or electronic in view
+```
+`QUALITY_GUARD` v1 reste réservé aux scènes **avec** des personnes ou des mains (P04, P05, P06, V04 à V06).
+
 ### `NEGATIVE` v1 (brief, inchangé)
 À utiliser **seulement** si un modèle expose un champ négatif (dans le catalogue de Sady : Kling 2.5 Turbo, Wan 2.6 et 2.7, PixVerse V6 ; aucun n'est retenu).
 
@@ -90,9 +99,9 @@ Le guide officiel Higgsfield est clair : en image → vidéo, **ne décrire que 
 
 | ID | Rôle | Type | Ratio | Modèle | Statut | Fichier | Notes |
 |---|---|---|---|---|---|---|---|
-| A01 | Extérieur lumineux | Image | 16:9 | `soul_location` → upscale 4k | à générer | `media-incoming/A01-exterieur.png` | Référence de style pour V02, V07, V08 |
-| A02 | Intérieur sombre à fenêtre | Image | 16:9 | `soul_cinematic` → upscale 4k | à générer | `media-incoming/A02-interieur.png` | Référence pour V01, V04 |
-| A03 | Détail de matière | Image | 1:1 | `soul_cinematic` → upscale 4k | à générer | `media-incoming/A03-matiere.png` | Référence pour P09, V06 |
+| A01 | Extérieur lumineux | Image | 16:9 | `soul_location` → upscale 4k | **validé Sady** (v1.1-p1), upscale 4k lancé | `media-incoming/A01-exterieur.png` | Référence de style pour V02, V07, V08 |
+| A02 | Intérieur sombre à fenêtre | Image | 16:9 | `soul_cinematic` → upscale 4k | **validé Sady** (v1.1-vide-p2), upscale 4k lancé | `media-incoming/A02-interieur.png` | Référence pour V01, V04 |
+| A03 | Détail de matière | Image | 1:1 | `soul_cinematic` → upscale 4k | **validé Sady** (v1-vide-p2), upscale 4k lancé | `media-incoming/A03-matiere.png` | Référence pour P09, V06 |
 
 Les ancres ne sont **jamais publiées** : elles servent de référence de style (`--image A0x.png`, une référence par génération Soul).
 
@@ -117,8 +126,8 @@ Scrub : au plus **deux** scènes en version liée au scroll (recommandé : V01 e
 |---|---|---|---|---|---|---|
 | P01-d | Poster V01, image de départ | — | 16:9 | `soul_cinematic` (réf. A02) → upscale 4k | à générer | `public/media/seuil/P01-fenetre-mer` |
 | P01-m | Hero mobile | — | 4:5 | `nano_banana_pro` 4k (réf. P01-d) | à générer | `public/media/seuil/P01-fenetre-mer-m` |
-| P02-d / P02-m | Poster V02 / mobile | — | 16:9 / 4:5 | `soul_location` (réf. A01) → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/maison/P02-porte-ocre[-m]` |
-| P03-d / P03-m | Poster V03 / mobile | **Choix 1** | 16:9 / 4:5 | `soul_location` → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/conciergerie/P03-bateau-quai[-m]` |
+| P02-d / P02-m | Poster V02 / mobile | — | 16:9 / 4:5 | `soul_cinematic` (réf. A01) → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/maison/P02-porte-ocre[-m]` |
+| P03-d / P03-m | Poster V03 / mobile | **Choix 1** | 16:9 / 4:5 | `soul_cinematic` (réf. A01) → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/conciergerie/P03-bateau-quai[-m]` |
 | P04-d / P04-m | Poster V04 / mobile | **Choix 2** | 16:9 / 4:5 | `soul_cinematic` (réf. A02) → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/grand-age/P04-mains-livre[-m]` |
 | P05-d / P05-m | Poster V05 / mobile | **Choix 3** | 16:9 / 4:5 | `soul_cinematic` → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/enfants/P05-table-partagee[-m]` |
 | P06-d / P06-m | Poster V06 / mobile (**visuel principal S5**) | **Choix 3** | 16:9 / 4:5 | `soul_cinematic` (réf. A03) → upscale ; Nano Banana Pro 4:5 | à générer | `public/media/enfants/P06-mains-romarin[-m]` |
@@ -154,7 +163,7 @@ Exports de chaque photo : AVIF puis WebP, largeurs 640 · 828 · 1080 · 1280 ·
 
 ### Images de départ et posters (16:9)
 - **P01-d** (réf. A02) : `Seen from deep inside a dim lime-plastered room, a pair of tall weathered ivory French windows stands half open; through the gap, a calm grey-blue sea meets a hazy horizon; a sheer linen curtain lifts slightly; warm low sunlight draws a long stripe across a terracotta tile floor; the left third of the room stays in soft shadow.`
-- **P02-d** (réf. A01) : `An old country house wall of deep ochre lime plaster seen at an angle, a single arched doorway framed in pale stone with its weathered wooden door left ajar, climbing jasmine and a potted lemon tree beside it, dappled afternoon light through olive leaves.`
+- **P02-d** (réf. A01, via `soul_cinematic`) : `An old country house wall of deep ochre lime plaster seen at an angle, a single arched doorway framed in pale stone with its weathered wooden door left ajar, climbing jasmine and a potted lemon tree beside it, dappled afternoon light through olive leaves.`
 - **P03-d** : `The varnished wooden deck of a small classic boat moored at a quiet stone jetty at dawn, a neatly folded cream canvas cover and a coiled rope on the deck, still dark-green water, soft mist on the far shore, no buildings in view.`
 - **P04-d** (réf. A02) : `The elegant, well-kept hands of an elderly woman wearing a simple gold ring rest on an open hardback book on a linen-covered table, beside a white porcelain cup; the edge of a muted ochre silk scarf; soft window light from the side.`
   - *Variante visage `[À VALIDER]`* : `Seen from behind and slightly to the side, an elegant elderly woman with short silver hair and a camel cashmere cardigan stands upright at an open window, looking out at a garden in soft morning light, poised and unhurried.`
@@ -174,7 +183,7 @@ Même description que la version 16:9, suivie de : `Vertical 4:5 composition of 
 | ID | Images | Prompt de mouvement |
 |---|---|---|
 | V01 (boucle) | `--start-image P01-d --end-image P01-d` | `Static camera. The linen curtain breathes slowly in and out with the breeze, the stripe of sunlight shimmers softly on the floor and the sea surface moves very slightly. Everything else stays still.` |
-| V01-s (scrub, option) | `--start-image P01-d` | `A very slow, steady push-in from the back of the room toward the half-open window and the sea, perfectly smooth, no other movement.` |
+| V01-s (scrub, **obligatoire depuis D19**) | `--start-image P01-d` | `A very slow, steady push-in from the back of the room toward the half-open window and the sea, perfectly smooth, no other movement.` |
 | V02 | `--start-image P02-d --end-image P02-d` | `Static camera. Olive-leaf shadows slide slowly across the ochre plaster and the jasmine trembles in a light breeze; the door stays still.` |
 | V03 (scrub) | `--start-image P03-d` | `A slow, smooth forward glide along the varnished deck toward the misty water, a single continuous camera move, gentle ripples on the water.` |
 | V04 | `--start-image P04-d --end-image P04-d` | `Static camera. Thin steam rises from the porcelain cup and the window light breathes softly across the table; the hands rest calmly, barely moving.` |
@@ -182,6 +191,29 @@ Même description que la version 16:9, suivie de : `Vertical 4:5 composition of 
 | V06 | `--start-image P06-d --end-image P06-d` | `Static camera with a gentle focus pull from the porcelain cup to the vase; the rosemary sprig settles into the water; minimal, natural hand movement.` |
 | V07 (scrub) | `--start-image P07-d` | `A very slow forward drift at eye level over the still water toward the far shore, mist curling gently, one continuous move.` |
 | V08 | `--start-image P08-d --end-image P08-d` | `Static camera. The low sunlight slides slowly across the stones and jasmine petals tremble in a light breeze; the gate stays slightly open.` |
+
+### Lot 1 · fiches prêtes (préparées le 15/10/2026, **rien n'est lancé** avant la validation de Cat et l'accord de Sady)
+
+Corrections apportées par le lot 0 :
+- `soul_location` **n'accepte pas d'image de référence** (vérifié avec `higgsfield model get`) : P02-d et P03-d passent en `soul_cinematic` avec l'ancre A01, comme P01-d avec A02, pour garder un seul étalonnage.
+- Scènes **sans personne** (P01-d, P02-d, P03-d) : `QUALITY_GUARD_EMPTY` v1, sinon le modèle ajoute des silhouettes.
+- Bloc de style par défaut : `STYLE_ANCHOR` **v1.1** (deux ancres sur trois ; grain plus léger, meilleur pour l'encodage).
+- Offre starter : **4 jobs simultanés au plus** ; on lance par 3.
+
+| Étape | Asset | Modèle et paramètres | Image | Prises | Coût unitaire (mesuré) | Sous-total |
+|---|---|---|---|---|---|---|
+| 1 | P01-d (hero, poster et image de départ V01) | `soul_cinematic` 16:9, qualité 2k | `--image media-incoming/A02-interieur.*` | 4 | 0,12 | 0,48 |
+| 1 | P02-d (la maison) | `soul_cinematic` 16:9, qualité 2k | `--image media-incoming/A01-exterieur.*` | 4 | 0,12 | 0,48 |
+| 1 | P03-d (conciergerie) | `soul_cinematic` 16:9, qualité 2k | `--image media-incoming/A01-exterieur.*` | 4 | 0,12 | 0,48 |
+| 2 | Upscale 4k des 3 retenues | `bytedance_image_upscale --resolution 4k` | Pxx-d retenue | 3 | 2 | 6 |
+| 3 | V01 boucle, V02 boucle, V03 scrub | `kling3_0 --mode pro --duration 8 --sound off --aspect_ratio 16:9` | `--start-image` (et `--end-image` pour les boucles) = Pxx-d | 2 × 3 | 12 | 72 |
+| 3 bis | **V01-s** (avancée vers la fenêtre, scrub, D19) | idem, `--start-image` P01-d seulement | P01-d | 1 | 12 | 12 |
+| 4 | P01-m, P02-m, P03-m (mobile 4:5) | `nano_banana_pro --resolution 4k --aspect_ratio 4:5` | `--image` Pxx-d | 3 | 4 | 12 |
+| | **Total lot 1** | | | | | **≈ 103,4** |
+
+Chaque étape attend le choix de Sady sur la précédente (brouillons → upscale → vidéo → mobile). Kling en mode `4k` coûterait 48 par clip : non retenu.
+
+Prompts images (`STYLE_ANCHOR` v1.1 + scène + `QUALITY_GUARD_EMPTY` v1) : scènes P01-d, P02-d, P03-d du §4 ci-dessus, inchangées. P01-d garde son **tiers gauche dans l'ombre** (colonne de texte du hero).
 
 ### Commandes CLI (modèles ; à lancer par Sady ou avec son accord explicite)
 ```bash
@@ -205,13 +237,13 @@ Le brief demande « style sheet → validation Cat → V01-V03 → P01-P03 → r
 |---|---|---|---|
 | Lot | Contenu | Détail du calcul | Crédits estimés | Validation |
 |---|---|---|---|---|
-| 0 | A01-A03 ; comparaison `STYLE_ANCHOR` v1 / v1.1 | 30 brouillons × 0,12 + 3 upscales × ~4 | ~16 | Sady, puis **Cat** (porte d'entrée de tout le reste) |
-| 1 | S1-S3 : P01-d, P02-d, P03-d → V01, V02, V03 (2 prises) → P01-m, P02-m, P03-m | 30 × 0,12 + 3 × 4 + 6 × 12 + 3 × 4 | ~100 | Sady, puis Cat |
-| 2 | S4-S7 : P04-d à P08-d → V04 (2 prises), V05 à V08 (1 prise) → P04-m à P08-m | 50 × 0,12 + 5 × 4 + 6 × 12 + 5 × 4 | ~118 | Sady, puis Cat |
-| 3 | P09 (6 détails), P06b si retenue | 30 × 0,12 + 6 × 4 + 4 | ~32 | Sady |
-| **Total** | | | **~266 sur 278,88** | |
+| 0 | A01-A03 ; comparaison `STYLE_ANCHOR` v1 / v1.1 | passe 1 : 12 brouillons × 0,12 ; passe 2 éventuelle : 12 × 0,12 ; 3 upscales × 2 | ~9 | Sady, puis **Cat** (porte d'entrée de tout le reste) |
+| 1 | S1-S3 : P01-d, P02-d, P03-d → V01, V02, V03 (2 prises) → P01-m, P02-m, P03-m | 30 × 0,12 + 3 × 2 + 6 × 12 + 3 × 4 | ~94 | Sady, puis Cat |
+| 2 | S4-S7 : P04-d à P08-d → V04 (2 prises), V05 à V08 (1 prise) → P04-m à P08-m | 50 × 0,12 + 5 × 2 + 6 × 12 + 5 × 4 | ~108 | Sady, puis Cat |
+| 3 | P09 (6 détails), P06b si retenue | 30 × 0,12 + 6 × 2 + 4 | ~20 | Sady |
+| **Total** | | | **~231 sur 278,88** | |
 
-**Le budget est juste** : environ 13 crédits de marge, et **deux prises pour toutes les vidéos coûteraient 48 crédits de plus** (total ~314). Recommandation : une recharge d'environ 100 crédits avant le lot 2. Le coût de l'upscale (compté ~4 ici) sera mesuré au lot 0 avec `generate cost` sur le premier brouillon.
+**Coûts remesurés le 15/10/2026** (`generate cost`, sans rien consommer) : brouillon Soul 0,12 ; upscale 4k **2** (et non ~4) ; Nano Banana Pro 4k 4 ; Kling 3.0 pro 8 s 12. Marge d'environ **48 crédits** : deux prises pour toutes les vidéos (+48) tiendraient tout juste. Une recharge reste conseillée avant le lot 2 si les reprises se multiplient.
 
 ---
 
@@ -227,4 +259,29 @@ Une ligne par génération, **y compris les prises écartées** (traçabilité, 
 
 | Date | ID | Outil | Modèle | Paramètres | Graine | Bloc style | Prompt exact (ou lien) | Job ID | Crédits | Prise retenue | Statut | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | | | | |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 772209 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A01 (§4) + `QUALITY_GUARD` v1 | `dad3d934-390c-49a3-aa03-1f8c45af42b5` | 0,12 | non | écartée | deux femmes ajoutées, fleurs rouges et jaunes saturées, verre de vin |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 910151 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A01 (§4) + `QUALITY_GUARD` v1 | `cee4ae9e-225b-4144-ba9c-d9283f3d386b` | 0,12 | non | écartée | mur de pierre sèche, oliveraie, cyprès : très juste, mais silhouettes au fond |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 305515 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A01 (§4) + `QUALITY_GUARD` v1 | `f5ad7374-bcc7-4ebd-b16b-7d16a58b5760` | 0,12 | oui (candidate) | candidate | mur de calcaire, olivier, cyprès, gravier, aucune personne ; ciel un peu pâle |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 704303 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A01 (§4) + `QUALITY_GUARD` v1 | `f470736d-c5bc-4a26-9ee9-322aaa81fc04` | 0,12 | non | écartée | architecture trop moderne (règle §6.7) |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 420227 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A02 (§4) + `QUALITY_GUARD` v1 | `37be0176-34b7-4b3d-90c5-257798f76eb8` | 0,12 | non | écartée | main sur le fauteuil et silhouette à gauche |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 941907 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A02 (§4) + `QUALITY_GUARD` v1 | `d67157b0-9204-46fc-b2d3-5569f0e8d9e4` | 0,12 | non | écartée | mains au premier plan ; fenêtre et fauteuil justes |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 432480 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A02 (§4) + `QUALITY_GUARD` v1 | `9378e902-6a48-4431-8edb-f807f5e780ff` | 0,12 | non | écartée | personne allongée |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 186002 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A02 (§4) + `QUALITY_GUARD` v1 | `fb108d51-b7ff-4fa0-a9a0-d7ab671eb17d` | 0,12 | non | écartée | visage flou au premier plan |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 381144 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A03 (§4) + `QUALITY_GUARD` v1 | `b97e26e8-c8a4-423e-aa1b-06cff7d229df` | 0,12 | non | écartée | mains posées sur le lin ; lumière et matière excellentes |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 831969 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A03 (§4) + `QUALITY_GUARD` v1 | `b0ca9526-78a4-44d5-beaa-4021338220ce` | 0,12 | non | écartée | bras et buste |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 958868 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A03 (§4) + `QUALITY_GUARD` v1 | `ccd41917-28fe-437e-a34c-c7b3d0b9e884` | 0,12 | non | écartée | mains et buste |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 612878 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A03 (§4) + `QUALITY_GUARD` v1 | `94dd4c28-c2ce-46f3-b7e0-06fc38c82bfc` | 0,12 | non | écartée | main sur le bord de la table |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 338687 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A01 (§4) + `QUALITY_GUARD_EMPTY` v1 | `36bd7cb3-c110-42e1-92a1-f20692254ee4` | 0,12 | non | écartée | mur de pierre, cyprès, olivier, mais palmier et pénombre |
+| 15/10/2026 | A01 | Higgsfield CLI 1.1.26 | `soul_location` | 16:9, 2048 × 1152 | 585664 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A01 (§4) + `QUALITY_GUARD_EMPTY` v1 | `1b6ab81f-0909-4f57-8b21-ebb340062119` | 0,12 | non | écartée | mur ocre lisse, architecture trop moderne |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 595584 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A02 (§4) + `QUALITY_GUARD_EMPTY` v1 | `1bb54336-14b4-4fe7-b111-6c5c7192740e` | 0,12 | non | écartée | pièce vide juste, fauteuil housse, mais composition sombre et fermée |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 450836 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A02 (§4) + `QUALITY_GUARD_EMPTY` v1 | `d6aa7669-85da-452a-ad4a-99a3323372e7` | 0,12 | non | écartée | fauteuil et fenêtre à volets, plat |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 374010 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A02 (§4) + `QUALITY_GUARD_EMPTY` v1 | `c40982a7-bee3-4999-be85-71c1c2e24174` | 0,12 | non | écartée | cheminée et objet décoratif, bleu de fenêtre |
+| 15/10/2026 | A02 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 16:9, qualité 2k, 2048 × 1152 | 42904 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A02 (§4) + `QUALITY_GUARD_EMPTY` v1 | `2fe6e36e-4fe6-409a-8829-2ba6e36ddccc` | 0,12 | oui (candidate) | candidate | pénombre, porte-fenêtre, tomettes, fauteuil housse ; petit objet au mur à droite |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 127379 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A03 (§4) + `QUALITY_GUARD_EMPTY` v1 | `0974a053-e431-4934-9d2d-4e646c87a8fb` | 0,12 | non | seconde | lin et bord de bol, lumière rasante, très juste |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 639154 | `STYLE_ANCHOR` v1 | `STYLE_ANCHOR` v1 + scène A03 (§4) + `QUALITY_GUARD_EMPTY` v1 | `3b51337a-4e8e-43e3-99cd-7b161bed7040` | 0,12 | oui (candidate) | candidate | lin sur le bord de la table, bol de porcelaine ; bois plutôt chêne qu'olivier |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 895238 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A03 (§4) + `QUALITY_GUARD_EMPTY` v1 | `8b7d9cb1-cf59-4ccf-8370-76f64d811c3b` | 0,12 | non | écartée | tasse haute, composition posée |
+| 15/10/2026 | A03 | Higgsfield CLI 1.1.26 | `soul_cinematic` | 1:1, qualité 2k, 2048 × 2048 | 553608 | `STYLE_ANCHOR` v1.1 | `STYLE_ANCHOR` v1.1 + scène A03 (§4) + `QUALITY_GUARD_EMPTY` v1 | `d8d2d4e4-47e3-4b8f-a40d-ceed06a520c5` | 0,12 | non | écartée | angle rouge saturé en bas à droite |
+
+Passe 1 du lot 0 : 12 brouillons, 1,44 crédit (278,88 → 277,44). Trois jobs relancés après un refus « rate_limit_reached » (non facturé) : l'offre starter limite à **4 jobs simultanés**.
+**Upscales du lot 0 (15/10/2026, incident)** : 4 upscales `bytedance_image_upscale` 4k facturés (4 × 2 = **8 crédits**, 276,24 → 268,24) au lieu de 3. Les processus de la CLI semblaient bloqués (le disque externe était en train de se déconnecter) ; une relance de A02 a créé un quatrième job. La CLI ne liste pas les jobs d'upscale (`generate list` n'affiche que Soul) et les transactions ne donnent pas d'identifiant : les résultats sont à récupérer dans l'historique web de Higgsfield (« Bytedance Image Upscale », 16:07 UTC). **Leçons** : passer par `higgsfield upload create` puis `--image <upload_id>` ; enregistrer chaque identifiant de job avant d'attendre (`create` sans `--wait`, puis `generate wait <id>`) ; ne jamais relancer un job dont le statut est inconnu.
+Passe 2 du lot 0 (garde-fou « scène vide ») : 10 brouillons, 1,20 crédit (277,44 → 276,24) ; aucune personne dans les 10. Un job échoué côté Higgsfield (`ae3ed336…`, non facturé) a été relancé.
