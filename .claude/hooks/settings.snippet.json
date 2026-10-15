@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/phase-guard.sh", "args": [] },
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-secrets.sh", "args": [] },
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-third-party.sh", "args": [] }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "if": "Bash(git commit *)", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-commit-quality.sh", "args": [] }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.production)",
+      "Bash(git push --force *)"
+    ]
+  }
+}
