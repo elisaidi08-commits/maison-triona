@@ -5,18 +5,24 @@ import { afterLoad, videoAllowed } from './videoConditions'
 
 // Vidéo en boucle posée sur son poster (docs/motion-spec.md M10, M14). Décorative (aria-hidden),
 // muette, chargée après `load` puis seulement près de l'écran ; elle ne joue que visible (une seule
-// vidéo à la fois en pratique). Bouton pause obligatoire (WCAG 2.2.2), choix mémorisé pour la session.
+// vidéo à la fois en pratique). Bouton pause obligatoire (WCAG 2.2.2), choix mémorisé pour la session :
+// discret (label 13 px en bas à droite, sur la marge), mais cible de 48 px. Le nom accessible complet
+// contient le mot visible (WCAG 2.5.3) ; il change avec l'état, sans aria-pressed (un seul signal).
 
 const PAUSED_KEY = 'mt-videos-en-pause'
+
+type Label = { visible: string; full: string }
 
 type LoopVideoProps = {
   mp4: string
   webm: string
-  pauseLabel: string
-  playLabel: string
+  pause: Label
+  play: Label
+  // Même recadrage que le poster, pour que le fondu de l'un à l'autre ne se voie pas.
+  anchor?: 'center' | 'seuil'
 }
 
-export function LoopVideo({ mp4, webm, pauseLabel, playLabel }: LoopVideoProps) {
+export function LoopVideo({ mp4, webm, pause, play, anchor = 'center' }: LoopVideoProps) {
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
   const [ready, setReady] = useState(false)
@@ -79,8 +85,8 @@ export function LoopVideo({ mp4, webm, pauseLabel, playLabel }: LoopVideoProps) 
         preload="none"
         onCanPlay={() => setReady(true)}
         className={`absolute inset-0 size-full object-cover transition-opacity duration-hero ease-maison ${
-          ready ? 'opacity-100' : 'opacity-0'
-        }`}
+          anchor === 'seuil' ? 'object-seuil' : 'object-center'
+        } ${ready ? 'opacity-100' : 'opacity-0'}`}
       >
         <source src={webm} type="video/webm" />
         <source src={mp4} type="video/mp4" />
@@ -88,10 +94,10 @@ export function LoopVideo({ mp4, webm, pauseLabel, playLabel }: LoopVideoProps) 
       <button
         type="button"
         onClick={toggle}
-        aria-pressed={paused}
-        className="absolute top-24 right-24 z-0 inline-flex min-h-touch cursor-pointer items-center bg-sapin px-16 text-body-s text-ivoire"
+        aria-label={paused ? play.full : pause.full}
+        className="focus-sur-image absolute right-margin bottom-24 z-0 inline-flex min-h-touch cursor-pointer items-center bg-sapin px-16 text-label text-ivoire uppercase"
       >
-        {paused ? playLabel : pauseLabel}
+        {paused ? play.visible : pause.visible}
       </button>
     </>
   )

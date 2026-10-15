@@ -5,7 +5,9 @@ import * as rootParams from 'next/root-params'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { LanguageSuggestion } from '@/components/layout/LanguageSuggestion'
+import { MobileBar } from '@/components/layout/MobileBar'
 import { SkipLink } from '@/components/layout/SkipLink'
+import { localizedPath } from '@/i18n/pathnames'
 import { routing, type Locale } from '@/i18n/routing'
 import { manrope, newsreader } from '@/styles/fonts'
 import '@/styles/tokens.css'
@@ -38,6 +40,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
   const locale = (await rootParams.locale()) as Locale
   const other: Locale = locale === 'fr' ? 'en' : 'fr'
   const t = await getTranslations('SkipLink')
+  const bar = await getTranslations('MobileBar')
   // La suggestion s'écrit dans la langue proposée, pas dans celle de la page.
   const suggestion = await getTranslations({ locale: other, namespace: 'LanguageSuggestion' })
 
@@ -57,6 +60,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
           switchLabel={suggestion('switch')}
           closeLabel={suggestion('close')}
         />
+        <MobileBar href={localizedPath('/contact', locale)} label={bar('label')} />
       </body>
     </html>
   )

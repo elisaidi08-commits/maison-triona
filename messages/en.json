@@ -81,7 +81,7 @@
     "territories": {
       "label": "Where we work",
       "title": "Five countries, one address book.",
-      "countries": "Belgium · France · Luxembourg · Monaco · Switzerland",
+      "countries": "Belgium · France · Luxembourg · Monaco · Switzerland",
       "link": "Where we work"
     },
     "contact": {
@@ -118,7 +118,9 @@
   },
   "Video": {
     "pause": "Pause the video",
-    "play": "Play the video"
+    "play": "Play the video",
+    "pauseShort": "Pause",
+    "playShort": "Play"
   },
   "House": {
     "intro": "The house in a few words.",
@@ -169,5 +171,15 @@
         "text": "[CONTENT TO BE PROVIDED BY CAT]"
       }
     ]
+  },
+  "MiniMenu": {
+    "label": "On this page",
+    "concierge": "Concierge",
+    "senior": "Senior companionship",
+    "children": "Childcare",
+    "contact": "Contact"
+  },
+  "MobileBar": {
+    "label": "Write to us in confidence"
   }
 }

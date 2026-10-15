@@ -17,7 +17,7 @@ export default async function HousePage() {
   const t = await getTranslations('House')
   const sections = t.raw('sections') as Section[]
   return (
-    <article className="mx-auto flex max-w-content flex-col gap-96 px-margin py-section">
+    <article className="conteneur flex flex-col gap-96 py-section">
       <header className="flex flex-col gap-24">
         <Rule short />
         <h1 className="font-display text-display-l text-sapin">{pages('house')}</h1>

@@ -5,7 +5,7 @@ import { Rule } from '@/components/ui/Rule'
 
 export function PageIntro({ title }: { title: string }) {
   return (
-    <section className="mx-auto flex max-w-content flex-col gap-24 px-margin py-section">
+    <section className="conteneur flex flex-col gap-24 py-section">
       <Rule short />
       <h1 className="font-display text-display-l text-sapin">{title}</h1>
     </section>
