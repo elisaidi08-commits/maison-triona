@@ -33,6 +33,12 @@
 |---|---|---|---|---|
 | D18 | Story 1.2 (tokens, banc d'essai) | **« Okay »** de Sady : story validée, passage aux assets | Commit, PR ; serif provisoire inchangée (Newsreader sans taille optique) | Serif (reco : Newsreader locale, tailles optiques 32-72, 60 ko, 84 ko avec Manrope), vert sapin ou cyprès, italique (déconseillé), taille des libellés de la liste d'entrée (24 ou 20-22 px) |
 
+## 15/10/2026 · Home immersive
+
+| # | Sujet | Décision | Conséquence | Reste ouvert |
+|---|---|---|---|---|
+| D19 | Home immersive (références : pahari.vercel.app, theboringblog.ai) | **Direction A, « Seuil plein écran »** : premier écran = vidéo V01 plein cadre, titre sur voile sapin, les 4 besoins visibles tout de suite sur une bande ivoire ; en défilant, la caméra avance vers la fenêtre (vidéo pilotée par le scroll, « on entre »), puis chaque service arrive en plein écran | `docs/art-direction.md` §7.2 et `docs/motion-spec.md` (M13, M15) mis à jour ; V01-s (avancée) devient obligatoire au lot 1 (+12 crédits) ; story 2.1 réalisée selon cette direction | Écartés : galerie 3D flottante (B) et maison-diorama (C). Des références, on garde le plein écran, l'interface minimale et la sensation d'entrer ; on laisse la 3D WebGL (46 à 53 Mo et 1,5 à 1,9 Mo de JS mesurés, contre 320 ko et 100 ko pour notre budget) |
+
 ## Toujours ouverts (rapports précédents)
 
 Serif display (choisie au banc d'essai de la story 1.2) · vert signature · logo « le sillage » · mouvement (Q4) · « Cat », « Catriona » ou « nous » (Q9) · moodboard de référence (`ASSETS PHOTO MAQUETTE/` présumé) · domaine et adresse de réception · CMS (Sanity recommandé) · mention IA · paramètre `?service=` dans les journaux · option « Autre » dans les pays · absence de bandeau cookies (juriste).
