@@ -2,7 +2,9 @@
 // `legend`, une ligne de 56 px par option, filets or entre les lignes, comme la liste d'entrée de
 // l'accueil. Toute la ligne est le label : on clique n'importe où. Contrôles natifs (radio ou case),
 // teintés sapin : flèches et espace au clavier, mode contrastes forcés et usage sans JavaScript
-// gratuits. L'option choisie garde son filet or sous le libellé (en plus de la pastille cochée).
+// gratuits. La pastille cochée suffit à dire le choix : le filet or sous le libellé ne vient qu'au
+// survol et au focus (un soulignement permanent se lirait comme un lien). Pastille ronde native :
+// exception de lecture au « rayon 0 », à inscrire par Sady (docs/design-tokens.md §5).
 // Erreur : filet terracotta 2 px à gauche du groupe et message en encre (jamais la couleur seule).
 
 export type ChoiceOption = {
@@ -59,51 +61,53 @@ export function ChoiceRow({
         </p>
       ) : null}
       {error ? (
-        <p id={`${id}-error`} className="mb-16 text-body-s text-encre">
+        <p id={`${id}-error`} className="mb-16 text-body text-encre">
           {error}
         </p>
       ) : null}
-      <div
-        className={`border-t border-or ${columns === 3 ? 'md:grid md:grid-cols-3' : ''} ${
-          error ? 'border-l-2 border-l-terracotta pl-16' : ''
-        }`}
-      >
-        {options.map((option) => {
-          const inputId = choiceInputId(id, option.value)
-          return (
-            <div key={option.value} className="border-b border-or">
-              <label
-                htmlFor={inputId}
-                className={`group flex min-h-touch-lg cursor-pointer items-start gap-24 py-16 ${
-                  columns === 3 ? 'md:pr-24' : ''
-                }`}
-              >
-                <input
-                  id={inputId}
-                  type={type}
-                  name={name}
-                  value={option.value}
-                  defaultChecked={checked.has(option.value)}
-                  // Pour un groupe radio, `required` sur chaque option rend le groupe requis.
-                  required={type === 'radio' ? required : undefined}
-                  aria-invalid={error ? true : undefined}
-                  className="mt-4 size-24 shrink-0 cursor-pointer accent-sapin"
-                />
-                {/* 12 px entre libellé et catégorie : le filet de l'option choisie (6 px sous le
+      {/* En erreur, le filet terracotta est posé à l'extérieur de la liste : le filet or du haut
+          et ceux des lignes partent du même point. */}
+      <div className={error ? 'border-l-2 border-terracotta pl-16' : ''}>
+        <div className={`border-t border-or ${columns === 3 ? 'md:grid md:grid-cols-3' : ''}`}>
+          {options.map((option) => {
+            const inputId = choiceInputId(id, option.value)
+            return (
+              <div key={option.value} className="border-b border-or">
+                <label
+                  htmlFor={inputId}
+                  className={`group flex min-h-touch-lg cursor-pointer items-start gap-24 py-16 ${
+                    columns === 3 ? 'md:pr-24' : ''
+                  }`}
+                >
+                  <input
+                    id={inputId}
+                    type={type}
+                    name={name}
+                    value={option.value}
+                    defaultChecked={checked.has(option.value)}
+                    // Pour un groupe radio, `required` sur chaque option rend le groupe requis.
+                    required={type === 'radio' ? required : undefined}
+                    aria-invalid={error ? true : undefined}
+                    className="mt-4 size-24 shrink-0 cursor-pointer accent-sapin"
+                  />
+                  {/* 8 px entre libellé et catégorie : le filet du survol et du focus (6 px sous le
                     libellé) ne touche pas les capitales. */}
-                <span className="flex flex-col gap-12">
-                  <span className="filet-survol self-start text-choix text-encre">
-                    {option.label}
+                  <span className="flex flex-col gap-8">
+                    <span className="filet-survol self-start text-choix text-encre">
+                      {option.label}
+                    </span>
+                    {option.category ? (
+                      <span className="text-label text-encre uppercase">{option.category}</span>
+                    ) : null}
+                    {option.note ? (
+                      <span className="text-body text-encre">{option.note}</span>
+                    ) : null}
                   </span>
-                  {option.category ? (
-                    <span className="text-label text-encre uppercase">{option.category}</span>
-                  ) : null}
-                  {option.note ? <span className="text-body text-encre">{option.note}</span> : null}
-                </span>
-              </label>
-            </div>
-          )
-        })}
+                </label>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </fieldset>
   )

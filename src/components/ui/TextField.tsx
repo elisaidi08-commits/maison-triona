@@ -60,17 +60,19 @@ export function TextField({
           {hint}
         </p>
       ) : null}
+      {/* Le message d'erreur, le texte le plus utile à ce moment-là, en corps 18 px. */}
       {error ? (
-        <p id={`${id}-error`} className="text-body-s text-encre">
+        <p id={`${id}-error`} className="text-body text-encre">
           {error}
         </p>
       ) : null}
       {multiline ? (
+        // En erreur, le cadre reste ; seul le bord bas devient la ligne terracotta des champs.
         <textarea
           {...common}
           rows={rows}
-          className={`w-full resize-y rounded-none bg-transparent p-16 text-body text-encre ${
-            error ? 'border-2 border-terracotta' : 'border border-encre-68'
+          className={`w-full resize-y rounded-none border border-encre-68 bg-transparent p-16 text-body text-encre ${
+            error ? 'border-b-2 border-b-terracotta' : ''
           }`}
         />
       ) : (

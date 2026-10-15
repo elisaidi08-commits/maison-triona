@@ -500,11 +500,11 @@ export default function DemoPage() {
             errors={[
               {
                 href: `#${choiceInputId('demo-pays', 'BE')}`,
-                message: 'Erreur : merci d’indiquer le pays concerné.',
+                message: 'Merci d’indiquer le pays concerné.',
               },
               {
                 href: '#demo-email',
-                message: 'Erreur : merci d’indiquer une adresse e-mail valide.',
+                message: 'Merci d’indiquer une adresse e-mail valide.',
               },
             ]}
           />
@@ -541,9 +541,10 @@ export default function DemoPage() {
             defaultValue={['mardi', 'jeudi']}
             options={JOURS}
           />
-          <div className="flex flex-col items-start gap-24 md:flex-row md:items-center md:gap-48">
-            <Button type="submit">Continuer</Button>
+          {/* Variante A (annexe C) : Retour à gauche, Continuer à droite, même ordre au clavier. */}
+          <div className="flex items-center justify-between gap-24">
             <Button variant="discret">Retour</Button>
+            <Button type="submit">Continuer</Button>
           </div>
           <div className="flex flex-col items-start gap-24 md:flex-row md:items-center md:gap-48">
             <Button type="submit" pending="Envoi en cours">

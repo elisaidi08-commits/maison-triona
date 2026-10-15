@@ -1,12 +1,13 @@
-// Tête d'étape du formulaire (docs/architecture.md §6.1, wireframe A, D08) : « Étape 2 sur 4 » en
-// label, puis le titre de l'étape en display, dans un seul titre qui reçoit le focus à chaque
-// changement d'étape (tabIndex -1, posé par le formulaire au lot 4). Le lecteur d'écran entend
-// « Étape 2 sur 4, Votre situation ». Sous le titre, le filet de progression : un segment par
-// étape, or jusqu'à l'étape en cours, sapin 20 % ensuite ; décoratif, le texte dit déjà tout.
+// Tête d'étape du formulaire (variante A, D08 ; docs/trust-contact-launch.md annexe C) : une ligne
+// de label « ÉTAPE 2 SUR 4 · VOTRE SITUATION », titre unique qui reçoit le focus à chaque
+// changement d'étape (tabIndex -1, posé par le formulaire au lot 4) ; pas de second titre en
+// serif sous le titre display de la page. Dessous, la « barre » est un filet or qui se remplit :
+// une ligne continue, or jusqu'à l'étape en cours, sapin 20 % ensuite ; décorative, le texte dit
+// déjà tout.
 
 type StepProgressProps = {
   id: string
-  // Libellé complet fourni par messages/*.json (« Étape 2 sur 4 », « Step 2 of 4 »).
+  // Libellé fourni par messages/*.json (« Étape 2 sur 4 », « Step 2 of 4 »).
   stepLabel: string
   title: string
   current: number
@@ -15,15 +16,11 @@ type StepProgressProps = {
 
 export function StepProgress({ id, stepLabel, title, current, total }: StepProgressProps) {
   return (
-    <div className="flex flex-col gap-24">
-      <h2 id={id} tabIndex={-1} className="flex flex-col gap-12">
-        <span className="text-label text-encre uppercase">
-          {stepLabel}
-          <span className="sr-only">, </span>
-        </span>
-        <span className="font-display text-title-h2 text-sapin">{title}</span>
+    <div className="flex flex-col gap-16">
+      <h2 id={id} tabIndex={-1} className="text-label-l text-encre uppercase">
+        {stepLabel} · {title}
       </h2>
-      <div aria-hidden="true" className="flex gap-4">
+      <div aria-hidden="true" className="flex">
         {Array.from({ length: total }, (_, index) => (
           <span
             key={index}

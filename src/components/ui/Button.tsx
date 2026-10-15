@@ -6,8 +6,8 @@ import type { ReactNode } from 'react'
 // Variante `discret` (« Retour ») : texte sapin sans aplat ni bordure, filet or permanent, comme
 // le lien à filet (la commande ne repose pas sur la seule couleur, WCAG 1.4.1).
 // États du formulaire (lot 4) : `disabled` (bordure sauge, texte encre 68 %) et `pending` (envoi
-// en cours : libellé remplacé, bouton signalé inerte et occupé). L'annonce de l'envoi aux lecteurs
-// d'écran revient au formulaire, qui porte la région `aria-live`.
+// en cours : même aplat, seul le libellé change, en ivoire 80 % ; rien qui inquiète au moment
+// d'envoyer). L'annonce de l'envoi aux lecteurs d'écran revient au formulaire (`aria-live`).
 
 const BASE =
   'group inline-flex min-h-button items-center justify-center text-body transition-colors duration-micro ease-standard'
@@ -18,6 +18,7 @@ const VARIANTS = {
 } as const
 
 const INACTIF = 'cursor-not-allowed border border-sauge px-32 text-encre-68'
+const EN_COURS = 'border border-or bg-sapin px-32 text-ivoire-80'
 
 type Variant = keyof typeof VARIANTS
 
@@ -72,7 +73,7 @@ export function Button({
     // Pas de `disabled` pendant l'envoi : le bouton garde le focus ; `aria-disabled` le dit inerte
     // et le formulaire ignore un second envoi.
     return (
-      <button type={type} aria-disabled="true" aria-busy="true" className={`${BASE} ${INACTIF}`}>
+      <button type={type} aria-disabled="true" aria-busy="true" className={`${BASE} ${EN_COURS}`}>
         {pending}
       </button>
     )
