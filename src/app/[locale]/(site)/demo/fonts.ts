@@ -18,7 +18,7 @@ export const benchNewsreader = Newsreader({
 // tailles optiques 32 à 72, graisses 300 à 400, romain, sous-ensemble latin. 60 ko.
 // Recette : docs/design-tokens.md §3.1.
 export const benchNewsreaderDisplay = localFont({
-  src: '../../fonts/newsreader-display.woff2',
+  src: '../../../../fonts/newsreader-display.woff2',
   weight: '300 400',
   style: 'normal',
   display: 'swap',

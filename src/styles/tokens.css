@@ -195,6 +195,14 @@
     border-radius: var(--radius-focus);
   }
 
+  /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
   ::selection {
     background-color: var(--color-pierre);
     color: var(--color-encre);
