@@ -8,7 +8,9 @@
     "Home.choices.children",
     "Home.choices.unsure",
     "LanguageSuggestion",
-    "Footer.ai"
+    "Footer.ai",
+    "Scenes",
+    "Services"
   ],
   "en": [
     "Home.title",
@@ -19,6 +21,8 @@
     "Home.choices.children",
     "Home.choices.unsure",
     "LanguageSuggestion",
-    "Footer.ai"
+    "Footer.ai",
+    "Scenes",
+    "Services"
   ]
 }
