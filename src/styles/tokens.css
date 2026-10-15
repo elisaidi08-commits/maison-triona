@@ -201,6 +201,11 @@
 @utility min-h-scene {
   min-height: calc(100svh - var(--mini-menu-height));
 }
+/* Premier temps d'une scène : la promesse finit un peu sous le milieu de l'écran, les détails
+   suivent à un intervalle de section (au lieu d'être recentrés dans un second écran). */
+@utility min-h-scene-intro {
+  min-height: calc((100svh - var(--mini-menu-height)) / 2 + 96px);
+}
 @utility top-mini-menu {
   top: var(--mini-menu-height);
 }

@@ -13,7 +13,8 @@ import { SERVICES } from '@/lib/services'
 
 // Accueil, dans l'ordre du storyboard : S1 Seuil (D19) et son passage « on entre » (M15), puis,
 // sous le mini-menu collant (desktop, §7.9), S2 La maison, S3 à S5 les 3 services (destinations
-// des choix 1 à 3, médias alternés), S6 Territoires, S7 Contact (destination du choix 4).
+// des choix 1 à 3, médias alternés), S6 Territoires. Le mini-menu se détache avant S7 Contact
+// (destination du choix 4) : jamais trois « Contact » sur le même écran.
 
 export default async function Home() {
   const locale = await rootParams.locale()
@@ -46,8 +47,8 @@ export default async function Home() {
           />
         ))}
         <SceneTerritoires locale={locale} />
-        <ContactBlock locale={locale} />
       </div>
+      <ContactBlock locale={locale} />
     </>
   )
 }

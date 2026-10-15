@@ -11,12 +11,14 @@ import p02m from '../../../public/media/maison/P02-porte-ocre-m.jpg'
 // S7 Contact. Texte jamais posé sur l'image ; une idée par écran.
 
 // S2 : le titre sur aplat, puis l'image en pleine largeur (16:9 en desktop, la vidéo V02 n'y est
-// presque pas agrandie). Le titre de S2 ne partage pas l'écran avec celui de S3.
+// presque pas agrandie). Le titre de S2 ne partage pas l'écran avec celui de S3 ; en desktop, un
+// intervalle de section sépare l'image du média de S3 (jamais deux photos bord à bord) et accueille
+// le bouton pause, sous l'image.
 export async function SceneMaison({ locale }: { locale: string }) {
   const t = await getTranslations('Scenes.house')
   const video = await getTranslations('Video')
   return (
-    <section aria-labelledby="maison-titre">
+    <section aria-labelledby="maison-titre" className="lg:pb-section">
       <div className="flex flex-col gap-24 px-margin py-section">
         <Rule short />
         <p className="text-label text-encre uppercase">{t('label')}</p>
@@ -27,13 +29,14 @@ export async function SceneMaison({ locale }: { locale: string }) {
           <TextLink href={`/${locale}/la-maison`}>{t('link')}</TextLink>
         </p>
       </div>
-      <div className="relative aspect-portrait overflow-hidden lg:aspect-hero">
+      <div className="relative aspect-portrait lg:aspect-hero">
         <ResponsiveImage desktop={p02d} mobile={p02m} alt={t('imageAlt')} />
         <LoopVideo
           mp4="/media/maison/V02-porte-ocre.mp4"
           webm="/media/maison/V02-porte-ocre.webm"
           pause={{ visible: video('pauseShort'), full: video('pause') }}
           play={{ visible: video('playShort'), full: video('play') }}
+          controls="below"
         />
       </div>
     </section>

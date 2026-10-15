@@ -6,7 +6,8 @@ import { afterLoad, videoAllowed } from './videoConditions'
 // Vidéo en boucle posée sur son poster (docs/motion-spec.md M10, M14). Décorative (aria-hidden),
 // muette, chargée après `load` puis seulement près de l'écran ; elle ne joue que visible (une seule
 // vidéo à la fois en pratique). Bouton pause obligatoire (WCAG 2.2.2), choix mémorisé pour la session :
-// discret (label 13 px en bas à droite, sur la marge), mais cible de 48 px. Le nom accessible complet
+// discret (label 13 px en bas à droite, sur la marge), mais cible de 48 px : sur un aplat sapin dans
+// le hero, sous l'image, en encre sur l'ivoire, ailleurs (`controls="below"`). Le nom accessible complet
 // contient le mot visible (WCAG 2.5.3) ; il change avec l'état, sans aria-pressed (un seul signal).
 
 const PAUSED_KEY = 'mt-videos-en-pause'
@@ -20,9 +21,18 @@ type LoopVideoProps = {
   play: Label
   // Même recadrage que le poster, pour que le fondu de l'un à l'autre ne se voie pas.
   anchor?: 'center' | 'seuil'
+  // Bouton posé sur l'image (hero) ou sous l'image, sur l'ivoire (le conteneur ne coupe pas ce qui dépasse).
+  controls?: 'overlay' | 'below'
 }
 
-export function LoopVideo({ mp4, webm, pause, play, anchor = 'center' }: LoopVideoProps) {
+export function LoopVideo({
+  mp4,
+  webm,
+  pause,
+  play,
+  anchor = 'center',
+  controls = 'overlay',
+}: LoopVideoProps) {
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
   const [ready, setReady] = useState(false)
@@ -95,7 +105,11 @@ export function LoopVideo({ mp4, webm, pause, play, anchor = 'center' }: LoopVid
         type="button"
         onClick={toggle}
         aria-label={paused ? play.full : pause.full}
-        className="focus-sur-image absolute right-margin bottom-24 z-0 inline-flex min-h-touch cursor-pointer items-center bg-sapin px-16 text-label text-ivoire uppercase"
+        className={`absolute right-margin z-0 inline-flex min-h-touch cursor-pointer items-center text-label uppercase ${
+          controls === 'below'
+            ? 'top-full text-encre transition-colors duration-micro ease-standard hover:text-cypres'
+            : 'focus-sur-image bottom-24 bg-sapin px-16 text-ivoire'
+        }`}
       >
         {paused ? play.visible : pause.visible}
       </button>

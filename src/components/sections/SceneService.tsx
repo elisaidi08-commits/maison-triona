@@ -6,11 +6,13 @@ import { SERVICE_IMAGES, type Service } from '@/lib/services'
 
 // Scène de service, structure identique × 3 (docs/art-direction.md §7.8). Desktop : média à hauteur
 // d'écran, collant pendant que le texte défile, côté alterné d'une scène à l'autre ; la scène se lit
-// en deux temps (la promesse face à l'image, puis réassurance, étapes, modèle et CTA). L'image est
+// en deux temps (la promesse face à l'image, puis, un intervalle de section plus bas, réassurance,
+// étapes, modèle et CTA). Le texte garde la marge de page côté extérieur. L'image est
 // la version portrait (Pxx-m), faite pour une demi-largeur. Sans visuel (lot 2 à venir), aucune
 // colonne vide : la promesse et les détails se répondent sur deux colonnes de texte.
 // En mobile, le texte vient d'abord : après un choix d'entrée, le visiteur arrive sur la promesse,
-// pas sur l'image (parcours « choisir → service → contacter »).
+// pas sur l'image (parcours « choisir → service → contacter ») ; l'image suit son texte de près,
+// l'air de section la sépare de la scène suivante.
 // Aucun tarif, aucune liste de prestataires, aucune promesse médicale.
 
 type SceneServiceProps = {
@@ -120,9 +122,13 @@ export async function SceneService({
         />
       </div>
 
-      <div className="flex flex-col px-margin py-section lg:col-span-6 lg:px-64 lg:py-0">
-        <div className="flex max-w-measure flex-col justify-center lg:min-h-scene">{intro}</div>
-        <div className="mt-48 flex max-w-measure flex-col justify-center gap-48 lg:mt-0 lg:min-h-scene lg:pb-96">
+      <div
+        className={`flex flex-col px-margin pt-section pb-48 lg:col-span-6 lg:py-0 ${
+          mediaRight ? 'lg:pr-64' : 'lg:pl-64'
+        }`}
+      >
+        <div className="flex max-w-measure flex-col justify-end lg:min-h-scene-intro">{intro}</div>
+        <div className="mt-48 flex max-w-measure flex-col gap-48 lg:mt-section lg:pb-section">
           {details}
         </div>
       </div>
