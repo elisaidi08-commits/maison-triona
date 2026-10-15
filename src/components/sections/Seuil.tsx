@@ -1,5 +1,5 @@
-import { getImageProps } from 'next/image'
 import { getTranslations } from 'next-intl/server'
+import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { ChoiceList } from '@/components/ui/ChoiceList'
 import desktop from '../../../public/media/seuil/P01-fenetre-mer.jpg'
 import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
@@ -19,21 +19,6 @@ const CHOICES = [
 
 export async function Seuil({ locale }: { locale: string }) {
   const t = await getTranslations('Home')
-  const alt = t('imageAlt')
-  // Image LCP : chargement immédiat et priorité haute ; pas de `preload`, qui téléchargerait
-  // les deux variantes (desktop et mobile) d'un <picture> (doc next/image, art direction).
-  const common = {
-    alt,
-    sizes: '100vw',
-    quality: 75,
-    loading: 'eager',
-    fetchPriority: 'high',
-  } as const
-  const {
-    props: { srcSet: desktopSrcSet },
-  } = getImageProps({ ...common, src: desktop })
-  const { props: mobileProps } = getImageProps({ ...common, src: mobile })
-
   const choices = CHOICES.map(({ key, href, number }) => ({
     href: href === 'contact' ? `/${locale}/contact` : href,
     number,
@@ -45,11 +30,7 @@ export async function Seuil({ locale }: { locale: string }) {
   return (
     <section aria-labelledby="seuil-titre" className="flex flex-col lg:h-seuil">
       <div className="relative h-seuil-image overflow-hidden bg-sapin lg:h-auto lg:flex-1">
-        <picture>
-          <source media="(min-width: 64rem)" srcSet={desktopSrcSet} />
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- alt fourni par getImageProps */}
-          <img {...mobileProps} className="absolute inset-0 size-full object-cover" />
-        </picture>
+        <ResponsiveImage desktop={desktop} mobile={mobile} alt={t('imageAlt')} priority />
         <div className="absolute inset-x-0 bottom-0 px-margin pb-32 lg:pb-48">
           <h1
             id="seuil-titre"

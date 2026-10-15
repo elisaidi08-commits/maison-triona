@@ -70,5 +70,54 @@
         "note": "Parlons-en, en toute discrétion."
       }
     }
+  },
+  "Scenes": {
+    "house": {
+      "label": "La Maison",
+      "title": "Ici, on vous attend.",
+      "link": "Découvrir la maison",
+      "imageAlt": "Un mur ocre et une porte en arche entrouverte, du jasmin et un citronnier en pot."
+    },
+    "territories": {
+      "label": "Territoires",
+      "title": "Cinq pays, un carnet d’adresses.",
+      "countries": "Belgique · France · Luxembourg · Monaco · Suisse",
+      "link": "Où nous travaillons"
+    },
+    "contact": {
+      "label": "Contact",
+      "title": "Parlons-en, en toute discrétion.",
+      "reassurance": "Chaque demande est lue personnellement et reste confidentielle.",
+      "button": "Nous écrire"
+    }
+  },
+  "Services": {
+    "howItWorks": "Comment ça se passe",
+    "cta": "Parlez-nous de votre situation",
+    "reassurance": [
+      "Une interlocutrice unique",
+      "Des personnes choisies une à une",
+      "Une discrétion absolue"
+    ],
+    "steps": [
+      "Vous nous écrivez.",
+      "Nous vous répondons personnellement.",
+      "Nous vous présentons la bonne personne."
+    ],
+    "model": "Chaque personne que la maison vous présente, nous la connaissons personnellement.",
+    "concierge": {
+      "name": "Conciergerie de luxe",
+      "promise": "Une seule interlocutrice pour tout organiser.",
+      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage."
+    },
+    "senior": {
+      "name": "Accompagnement du grand âge",
+      "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
+      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés."
+    },
+    "children": {
+      "name": "Garde d’enfants",
+      "promise": "Une présence choisie, pour quelques heures ou pour une saison."
+    }
   }
 }

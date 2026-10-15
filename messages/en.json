@@ -70,5 +70,50 @@
         "note": "Let’s talk, in complete discretion."
       }
     }
+  },
+  "Scenes": {
+    "house": {
+      "label": "The House",
+      "title": "Here, you are expected.",
+      "link": "Discover the house",
+      "imageAlt": "An ochre wall and a half-open arched door, jasmine and a potted lemon tree."
+    },
+    "territories": {
+      "label": "Where we work",
+      "title": "Five countries, one address book.",
+      "countries": "Belgium · France · Luxembourg · Monaco · Switzerland",
+      "link": "Where we work"
+    },
+    "contact": {
+      "label": "Contact",
+      "title": "Let’s talk, in complete discretion.",
+      "reassurance": "Every enquiry is read in person and kept confidential.",
+      "button": "Write to us"
+    }
+  },
+  "Services": {
+    "howItWorks": "How it works",
+    "cta": "Tell us about your situation",
+    "reassurance": ["A single point of contact", "People chosen one by one", "Complete discretion"],
+    "steps": [
+      "You write to us.",
+      "We reply to you personally.",
+      "We introduce you to the right person."
+    ],
+    "model": "Every person we introduce to you is someone we know personally.",
+    "concierge": {
+      "name": "Luxury concierge",
+      "promise": "One person to arrange everything for you.",
+      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope."
+    },
+    "senior": {
+      "name": "Senior companionship",
+      "promise": "Days that keep their rhythm and their pleasures.",
+      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals."
+    },
+    "children": {
+      "name": "Childcare",
+      "promise": "A trusted presence, for a few hours or a whole season."
+    }
   }
 }
