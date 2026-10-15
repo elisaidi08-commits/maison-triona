@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). Groupe ① validé (D23). **En cours : groupe ② accueil immersif (2.1 à 2.5)** et vidéos du lot 1 en Kling std (D24). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). Groupe ① validé (D23). **En cours : refonte V3 (D26)**, lots et points de contrôle au §2 bis du plan : lot 1 design system (stories 1.6 et 1.7), puis lot 2 accueil et services (2.12 refondue, 2.13), arrêt au point de contrôle ②. Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 
@@ -110,6 +110,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - Le prompt V04 du brief décrivait un **portrait Unsplash réel** : la version retenue montre des mains.
 - **Grain incrusté = vidéo incompressible** : grain très léger à la génération, encodage en **deux passes** à débit cible (`docs/media-pipeline.md` §5).
 - Kling et Seedance génèrent du **son par défaut** ; Soul « 2k » = 1080p réel ; aucun modèle vidéo ne sort en 4:5.
+- `bytedance_video_upscale` 1080p : `generate cost` annonce 1 crédit, **1,61 débité** pour un clip de 8 s (essai V01, D26) ; chiffrer un lot d'agrandissements vidéo au coût réel.
 - Le logo « le sillage » **n'existe pas encore** ; tous les textes de la maquette sont **fictifs**.
 - `anti-patterns.md` n° 21 (logos), 22 (chiffres), 23 (FAQ en accordéon) et 24 (CTA) sont **assouplis** par les specs récentes : appliquer la version des specs en attendant la mise à jour du fichier par Sady.
 - **Concurrence** : ne rien affirmer sur un concurrent sans URL et date (`docs/seo-strategy.md` §B).
