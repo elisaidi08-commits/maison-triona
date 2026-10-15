@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). **Story 1.1 livrée** (PR #1 sur le dépôt privé `elisaidi08-commits/maison-triona`, CI verte), en attente de fusion par Sady. **Story suivante : 1.2 Tokens et banc d'essai** (point de contrôle visuel). Dépôt dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 (fusionnée) et 1.2 (validée, PR #2) livrées sur le dépôt privé `elisaidi08-commits/maison-triona`. **En cours : piste B, lot 0 des assets IA** (style sheet A01-A03). Prochaine story de la piste A : 1.3. Dépôt dans le dossier actuel (D17).
 
 ## Règles d'or
 

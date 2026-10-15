@@ -1,0 +1,213 @@
+/*
+ * Tokens Maison Triona : unique source de vérité et point d'entrée CSS du site
+ * (importé par src/app/layout.tsx ; docs/design-tokens.md en est la notice).
+ * Toutes les valeurs par défaut de Tailwind sont supprimées : une classe hors tokens ne génère rien.
+ * Sources limitées à src/ : les documents de cadrage citent des classes en exemple.
+ */
+@import 'tailwindcss' source(none);
+@source '../';
+
+@theme {
+  --color-*: initial;
+  --spacing-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --text-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --breakpoint-*: initial;
+  --container-*: initial;
+  --aspect-*: initial;
+  --perspective-*: initial;
+
+  /* Couleurs (§2.1). Le vert signature (sapin ou cyprès) reste à trancher. */
+  --color-ivoire: #f4ede0;
+  --color-pierre: #d8c8ae;
+  --color-sapin: #1c3b2a;
+  --color-cypres: #3f5a3c;
+  --color-sauge: #9aae8f;
+  --color-or: #b8944d;
+  --color-champagne: #d2b98a;
+  --color-encre: #1f1e1a;
+  --color-encre-68: #1f1e1aad;
+  --color-ivoire-80: #f4ede0cc;
+  --color-sapin-20: #1c3b2a33;
+  --color-terracotta: #a66a4e;
+
+  /* Espacements (§4.1) : la classe porte la valeur en px (`p-24` = 24 px). */
+  --spacing-0: 0px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-96: 96px;
+  --spacing-128: 128px;
+  --spacing-160: 160px;
+  --spacing-192: 192px;
+  /* Sémantiques (§4.2) : valeurs mobiles, redéfinies aux points de rupture plus bas. */
+  --spacing-section: 72px;
+  --spacing-margin: 24px;
+  --spacing-gutter: 16px;
+  --spacing-touch: 48px;
+  --spacing-touch-lg: 56px;
+  --spacing-button: 52px;
+
+  /* Points de rupture et largeurs (§4.3) */
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 90rem;
+  --container-content: 75rem;
+  --container-measure: 40rem;
+
+  /* Graisses */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+
+  /* Échelle typographique (§3.2) : tailles fluides entre 390 et 1440 px, zoom 200 % préservé. */
+  --text-display-xl: clamp(2.75rem, 2.1rem + 2.667vw, 4.5rem);
+  --text-display-xl--line-height: 1.06;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--font-weight: 300;
+  --text-display-l: clamp(2.375rem, 1.957rem + 1.714vw, 3.5rem);
+  --text-display-l--line-height: 1.08;
+  --text-display-l--letter-spacing: -0.02em;
+  --text-display-l--font-weight: 300;
+  --text-title-h2: clamp(2rem, 1.721rem + 1.143vw, 2.75rem);
+  --text-title-h2--line-height: 1.15;
+  --text-title-h2--letter-spacing: -0.01em;
+  --text-title-h2--font-weight: 400;
+  --text-title-h3: clamp(1.25rem, 1.157rem + 0.381vw, 1.5rem);
+  --text-title-h3--line-height: 1.35;
+  --text-title-h3--font-weight: 500;
+  --text-body-l: clamp(1.125rem, 1.079rem + 0.19vw, 1.25rem);
+  --text-body-l--line-height: 1.7;
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.65;
+  --text-body-s: 1rem;
+  --text-body-s--line-height: 1.6;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.25;
+  --text-label--letter-spacing: 0.12em;
+  --text-label--font-weight: 500;
+  --text-nav: 1rem;
+  --text-nav--line-height: 1.4;
+  --text-nav--letter-spacing: 0.01em;
+  --text-nav--font-weight: 500;
+  /* Cachet « K. » */
+  --text-stamp-sm: 1.5rem;
+  --text-stamp-sm--line-height: 1;
+  --text-stamp-md: 3rem;
+  --text-stamp-md--line-height: 1;
+  --text-stamp-lg: 4rem;
+  --text-stamp-lg--line-height: 1;
+
+  /* Formes (§5) : rayon 0 partout, 2 px pour l'anneau de focus seulement. */
+  --radius-none: 0px;
+  --radius-focus: 2px;
+  --aspect-hero: 16 / 9;
+  --aspect-portrait: 4 / 5;
+
+  /* Mouvement (§6, docs/motion-spec.md) */
+  --ease-maison: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-duration-micro: 150ms;
+  --transition-duration-hover: 300ms;
+  --transition-duration-page: 240ms;
+  --transition-duration-reveal: 700ms;
+  --transition-duration-hero: 1000ms;
+}
+
+/* Familles posées par next/font sur <html>. La serif display est provisoire (Newsreader) jusqu'au banc d'essai. */
+@theme inline {
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-text: var(--font-manrope), system-ui, sans-serif;
+}
+
+/* Arche du hero (décision en attente, docs/art-direction.md §9) : forme nommée plutôt que valeur arbitraire. */
+@utility arch {
+  border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --stroke-hairline: 1px;
+    --stroke-focus: 3px;
+    --focus-offset: 3px;
+    --focus-color: var(--color-sapin);
+    --distance-reveal: 12px;
+    --stagger: 80ms;
+  }
+
+  @media (width >= 48rem) {
+    :root {
+      --spacing-section: 112px;
+      --spacing-margin: 64px;
+      --spacing-gutter: 20px;
+    }
+  }
+
+  @media (width >= 64rem) {
+    :root {
+      --spacing-section: 160px;
+      --spacing-margin: 120px;
+      --spacing-gutter: 24px;
+    }
+  }
+
+  html {
+    background-color: var(--color-ivoire);
+    color: var(--color-encre);
+    font-family: var(--font-text);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  /* Surface sombre : texte ivoire, focus champagne (6,47:1 sur sapin). */
+  [data-surface='sapin'] {
+    --focus-color: var(--color-champagne);
+    background-color: var(--color-sapin);
+    color: var(--color-ivoire);
+  }
+
+  /* Focus 3 px, toujours visible, jamais masqué (WCAG 2.4.7, 2.4.11, 2.4.13). */
+  :focus-visible {
+    outline: var(--stroke-focus) solid var(--focus-color);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--radius-focus);
+  }
+
+  ::selection {
+    background-color: var(--color-pierre);
+    color: var(--color-encre);
+  }
+
+  /* Mouvement réduit : version statique complète (docs/motion-spec.md). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
