@@ -99,9 +99,9 @@ Le guide officiel Higgsfield est clair : en image → vidéo, **ne décrire que 
 
 | ID | Rôle | Type | Ratio | Modèle | Statut | Fichier | Notes |
 |---|---|---|---|---|---|---|---|
-| A01 | Extérieur lumineux | Image | 16:9 | `soul_location` → upscale 4k | **validé Sady**, upscalé 4k (v1.1-p1) ; en attente de **Cat** | `media-incoming/A01-exterieur.png` | Référence de style pour V02, V07, V08 |
-| A02 | Intérieur sombre à fenêtre | Image | 16:9 | `soul_cinematic` → upscale 4k | **validé Sady**, upscalé 4k (v1.1-vide-p2) ; en attente de **Cat** | `media-incoming/A02-interieur.png` | Référence pour V01, V04 |
-| A03 | Détail de matière | Image | 1:1 | `soul_cinematic` → upscale 4k | **validé Sady**, upscalé 4k (v1-vide-p2) ; en attente de **Cat** | `media-incoming/A03-matiere.png` | Référence pour P09, V06 |
+| A01 | Extérieur lumineux | Image | 16:9 | `soul_location` → upscale 4k | **validé Sady**, upscalé 4k (v1.1-p1)  ; **validé Cat** (D20) | `media-incoming/A01-exterieur.png` | Référence de style pour V02, V07, V08 |
+| A02 | Intérieur sombre à fenêtre | Image | 16:9 | `soul_cinematic` → upscale 4k | **validé Sady**, upscalé 4k (v1.1-vide-p2)  ; **validé Cat** (D20) | `media-incoming/A02-interieur.png` | Référence pour V01, V04 |
+| A03 | Détail de matière | Image | 1:1 | `soul_cinematic` → upscale 4k | **validé Sady**, upscalé 4k (v1-vide-p2)  ; **validé Cat** (D20) | `media-incoming/A03-matiere.png` | Référence pour P09, V06 |
 
 Les ancres ne sont **jamais publiées** : elles servent de référence de style (`--image A0x.png`, une référence par génération Soul).
 
