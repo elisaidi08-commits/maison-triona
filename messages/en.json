@@ -47,5 +47,28 @@
   "NotFound": {
     "title": "This page does not exist.",
     "back": "Back to the home page"
+  },
+  "Home": {
+    "title": "A second life, like a holiday that never ends.",
+    "question": "What can we do for you, or for someone close to you?",
+    "imageAlt": "A dim room, French windows open onto the sea and a linen curtain lifted by the breeze.",
+    "choices": {
+      "concierge": {
+        "label": "Take care of everyday life",
+        "category": "Luxury concierge"
+      },
+      "senior": {
+        "label": "Support a loved one, or yourself",
+        "category": "Senior companionship"
+      },
+      "children": {
+        "label": "Look after the children",
+        "category": "Childcare"
+      },
+      "unsure": {
+        "label": "I’m not sure yet",
+        "note": "Let’s talk, in complete discretion."
+      }
+    }
   }
 }

@@ -47,6 +47,13 @@
 | D21 | Autonomie sur le lot 1 | **Images en autonomie** : Claude génère et choisit les images (12 brouillons, 3 upscales, 3 versions mobiles, ≈ 19 crédits), relecture du directeur artistique, sélection montrée à Sady. **Vidéos** (≈ 84 crédits) : seulement après l'OK de Sady sur les images | Journal tenu à jour à chaque job | — |
 | D22 | Rythme de construction | **Par groupes** : Claude enchaîne les stories, **fusionne lui-même chaque PR quand la CI est verte**, et s'arrête à 4 points de contrôle : ① fondations (1.3, 1.4, 1.5) ; ② accueil immersif (2.1 à 2.5) ; ③ pages (2.6 à 2.11) ; ④ contact et coffre (3.x) | Remplace la règle d'or n° 3 (un arrêt par story) ; le site local reste à jour sur localhost:3000 | Serif et vert : valeurs provisoires (Newsreader locale 32-72, sapin) tant que Sady n'a pas tranché |
 
+## 15/10/2026 · Point de contrôle ① et vidéos
+
+| # | Sujet | Décision | Conséquence | Reste ouvert |
+|---|---|---|---|---|
+| D23 | Point de contrôle ① (fondations, images du lot 1) | **Validé**, vidéos du lot 1 approuvées (84 crédits prévus) | Groupe ② lancé | — |
+| D24 | Vidéos sur l'offre starter | Kling 3.0 « pro » et Nano Banana Pro 4k **exigent l'offre Pro** (refus à la création, `generate cost` ne le signale pas). Test V01 en **Kling 3.0 « std »** (720p, 10 crédits) jugé suffisant par Sady : **une prise chacune** pour V01-s, V02, V03 (30 crédits) | Vidéos en 720p (1280 × 720), affichées en desktop seulement ; poster 4k toujours net pour le LCP. CLAUDE.md : « Vidéo : `kling3_0 --mode std` tant que l'offre est starter » | Passage en offre Pro pour le 1080p : décision de Sady, plus tard |
+
 ## Toujours ouverts (rapports précédents)
 
 Serif display (choisie au banc d'essai de la story 1.2) · vert signature · logo « le sillage » · mouvement (Q4) · « Cat », « Catriona » ou « nous » (Q9) · moodboard de référence (`ASSETS PHOTO MAQUETTE/` présumé) · domaine et adresse de réception · CMS (Sanity recommandé) · mention IA · paramètre `?service=` dans les journaux · option « Autre » dans les pays · absence de bandeau cookies (juriste).

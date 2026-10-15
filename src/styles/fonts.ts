@@ -1,7 +1,7 @@
-import { Manrope, Newsreader } from 'next/font/google'
+import { Manrope } from 'next/font/google'
+import localFont from 'next/font/local'
 
 // Polices du site, auto-hébergées par next/font (aucune requête du navigateur vers Google).
-// Deux fichiers préchargés au plus (docs/design-tokens.md §3.1).
 
 export const manrope = Manrope({
   subsets: ['latin'],
@@ -10,13 +10,13 @@ export const manrope = Manrope({
   variable: '--font-manrope',
 })
 
-// Serif display PROVISOIRE : Newsreader (recommandée) tant que le banc d'essai n'a pas tranché.
-// Light et Regular sans l'axe de taille optique : 56 ko, contre 128 ko avec l'axe `opsz`
-// (budget : 80 ko pour les deux fichiers préchargés, Manrope compris).
-export const newsreader = Newsreader({
-  subsets: ['latin'],
-  weight: ['300', '400'],
-  style: ['normal'],
+// Serif display PROVISOIRE (D22) : Newsreader instanciée en local, tailles optiques 32 à 72,
+// Light et Regular (60 ko ; licence OFL dans src/fonts/OFL.txt). Recommandée par le directeur
+// artistique ; 84 ko préchargés avec Manrope, pour un budget de 80 ko : à trancher par Sady.
+export const newsreader = localFont({
+  src: '../fonts/newsreader-display.woff2',
+  weight: '300 400',
+  style: 'normal',
   display: 'swap',
   variable: '--font-newsreader',
 })

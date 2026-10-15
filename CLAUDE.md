@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). **En cours : groupe ① fondations (1.3, 1.4, 1.5)** et, en parallèle, images du lot 1 en autonomie (D21). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). Groupe ① validé (D23). **En cours : groupe ② accueil immersif (2.1 à 2.5)** et vidéos du lot 1 en Kling std (D24). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 
@@ -93,7 +93,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 
 - Le **moodboard** est une référence de style **interne** : jamais publié, jamais dans `public/`, **jamais passé en entrée** d'une génération (`--image`, `--start-image`…), jamais reproduit (lieu, visage, scène, cadrage).
 - **Aucune ressemblance** avec une personne réelle ; jamais le visage de Cat ni d'un client sans accord écrit. **Aucun lieu identifiable**. Ni texte, ni logo, ni marque, ni écran dans les images.
-- **Higgsfield** : CLI installée et connectée (offre starter, budget limité). **Toujours** `higgsfield generate cost` puis **accord explicite de Sady** avant toute génération. Vidéo : `kling3_0 --mode pro --sound off` ; jamais Seedance 2.5 sans demande (128 crédits / clip).
+- **Higgsfield** : CLI installée et connectée (offre starter, budget limité). **Toujours** `higgsfield generate cost` puis **accord explicite de Sady** avant toute génération. Vidéo : `kling3_0 --mode std --sound off` (720p, 10 crédits ; « pro » et Nano Banana Pro 4k exigent l'offre Pro, D24) ; jamais Seedance 2.5 sans demande. Toujours `upload create` puis `--image <id>`, création sans `--wait`, identifiant noté, puis `generate wait`. Ne jamais passer une ancre en `--image` à Soul pour une autre scène (elle recopie le contenu).
 - Chaque génération est notée dans le journal du manifeste. Sorties brutes dans `media-incoming/`, intégration par `/ingest-media` après contrôle qualité et validations Sady puis Cat.
 
 ## Agents, skills, commandes

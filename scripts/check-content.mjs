@@ -35,6 +35,16 @@ for (const file of files) {
   })
 }
 
+// Brouillons balisés hors de l'interface : content/brouillons.json liste les clés non validées.
+try {
+  const drafts = JSON.parse(readFileSync(new URL('../content/brouillons.json', import.meta.url), 'utf8'))
+  for (const locale of ['fr', 'en']) {
+    for (const key of drafts[locale] ?? []) findings.push(`messages/${locale}.json  brouillon : ${key}`)
+  }
+} catch {
+  // Pas de registre de brouillons : rien à signaler.
+}
+
 if (findings.length > 0) {
   console.error(
     `check:content : ${findings.length} contenu(s) provisoire(s) à remplacer avant publication.`,
