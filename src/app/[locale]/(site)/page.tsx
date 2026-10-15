@@ -1,9 +1,9 @@
-import { getTranslations } from 'next-intl/server'
-import { PageIntro } from '@/components/layout/PageIntro'
+import * as rootParams from 'next/root-params'
+import { Seuil } from '@/components/sections/Seuil'
 
-// Accueil provisoire : le premier écran immersif (D19, « Seuil plein écran ») arrive en story 2.1.
+// Accueil : premier écran « Seuil plein écran » (D19). Les scènes suivent en stories 2.2 et 2.3.
 
 export default async function Home() {
-  const t = await getTranslations('Pages')
-  return <PageIntro title={t('home')} />
+  const locale = await rootParams.locale()
+  return <Seuil locale={locale} />
 }

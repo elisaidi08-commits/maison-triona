@@ -12,14 +12,27 @@ export type Choice = {
   note?: string
 }
 
-export function ChoiceList({ choices }: { choices: Choice[] }) {
+type ChoiceListProps = {
+  choices: Choice[]
+  // En ligne à partir de 1024 px (seuil de l'accueil, D19) : 4 colonnes, filets or verticaux.
+  rowOnDesktop?: boolean
+}
+
+export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
   return (
-    <ul className="border-t border-or">
+    <ul
+      className={`border-t border-or ${rowOnDesktop ? 'lg:grid lg:grid-cols-4 lg:border-b' : ''}`}
+    >
       {choices.map((choice) => (
-        <li key={choice.href + choice.label} className="border-b border-or">
+        <li
+          key={choice.href + choice.label}
+          className={`border-b border-or ${rowOnDesktop ? 'lg:border-b-0 lg:border-l lg:first:border-l-0' : ''}`}
+        >
           <a
             href={choice.href}
-            className="group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre"
+            className={`group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre ${
+              rowOnDesktop ? 'lg:h-full lg:flex-col lg:gap-12 lg:px-24 lg:py-24' : ''
+            }`}
           >
             <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
               {choice.number}

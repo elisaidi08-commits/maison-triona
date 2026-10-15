@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Images : AVIF puis WebP, deux qualités autorisées (obligatoire depuis Next 16).
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    qualities: [60, 75],
+  },
   // Préproduction (story 1.5) : tout ce qui n'est pas la production Vercel porte X-Robots-Tag
   // noindex, même si un domaine personnalisé est attribué à une branche (docs/trust-contact-launch.md D.6).
   async headers() {

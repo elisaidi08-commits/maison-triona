@@ -41,6 +41,8 @@
   --color-ivoire-80: #f4ede0cc;
   --color-sapin-20: #1c3b2a33;
   --color-terracotta: #a66a4e;
+  /* Voile du titre posé sur l'image du hero : sapin à 60 % (≥ 58 %, docs/design-tokens.md §2.4). */
+  --color-voile: #1c3b2a99;
 
   /* Espacements (§4.1) : la classe porte la valeur en px (`p-24` = 24 px). */
   --spacing-0: 0px;
@@ -71,6 +73,8 @@
   --breakpoint-xl: 90rem;
   --container-content: 75rem;
   --container-measure: 40rem;
+  /* Titre du seuil : trois lignes au plus en display-xl (docs/art-direction.md §7.2). */
+  --container-titre: 52rem;
 
   /* Graisses */
   --font-weight-light: 300;
@@ -137,6 +141,17 @@
   --font-text: var(--font-manrope), system-ui, sans-serif;
 }
 
+/* Seuil plein écran (D19) : l'écran 1 occupe toute la hauteur visible sous l'en-tête. */
+@utility h-seuil {
+  height: calc(100svh - var(--header-height));
+}
+
+/* Image du seuil en mobile : un peu plus de la moitié de l'écran, pour que le premier choix
+   reste visible sans défiler sur 390 × 844 (docs/art-direction.md §7.2). */
+@utility h-seuil-image {
+  height: 52svh;
+}
+
 /* Arche du hero (décision en attente, docs/art-direction.md §9) : forme nommée plutôt que valeur arbitraire. */
 @utility arch {
   border-radius: 50% 50% 0 0 / 40% 40% 0 0;
@@ -149,6 +164,8 @@
     --stroke-focus: 3px;
     --focus-offset: 3px;
     --focus-color: var(--color-sapin);
+    /* En-tête : 16 px de marge haute et basse + cible de 48 px. */
+    --header-height: 80px;
     --distance-reveal: 12px;
     --stagger: 80ms;
   }

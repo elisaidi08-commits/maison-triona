@@ -1,0 +1,24 @@
+{
+  "_lisezmoi": "Clés de messages encore en brouillon (textes de la maquette ou propositions de Claude, docs/ux-entry-i18n-a11y.md annexe C). check:content échoue tant que cette liste n'est pas vide. Retirer une clé quand Cat a validé son texte, en français et en anglais.",
+  "fr": [
+    "Home.question",
+    "Home.imageAlt",
+    "Home.choices.concierge",
+    "Home.choices.senior",
+    "Home.choices.children",
+    "Home.choices.unsure",
+    "LanguageSuggestion",
+    "Footer.ai"
+  ],
+  "en": [
+    "Home.title",
+    "Home.question",
+    "Home.imageAlt",
+    "Home.choices.concierge",
+    "Home.choices.senior",
+    "Home.choices.children",
+    "Home.choices.unsure",
+    "LanguageSuggestion",
+    "Footer.ai"
+  ]
+}

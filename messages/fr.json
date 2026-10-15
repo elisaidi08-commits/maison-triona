@@ -47,5 +47,28 @@
   "NotFound": {
     "title": "Cette page n’existe pas.",
     "back": "Revenir à l’accueil"
+  },
+  "Home": {
+    "title": "Une seconde vie, comme des vacances qui ne s’arrêtent pas.",
+    "question": "Que pouvons-nous faire pour vous, ou pour l’un de vos proches ?",
+    "imageAlt": "Une pièce dans la pénombre, une porte-fenêtre ouverte sur la mer et un rideau de lin soulevé par la brise.",
+    "choices": {
+      "concierge": {
+        "label": "Organiser le quotidien",
+        "category": "Conciergerie de luxe"
+      },
+      "senior": {
+        "label": "Accompagner un proche, ou vous‑même",
+        "category": "Accompagnement du grand âge"
+      },
+      "children": {
+        "label": "Prendre soin des enfants",
+        "category": "Garde d’enfants"
+      },
+      "unsure": {
+        "label": "Je ne sais pas encore",
+        "note": "Parlons-en, en toute discrétion."
+      }
+    }
   }
 }
