@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { ChoiceList } from '@/components/ui/ChoiceList'
+import { AnchorFocus } from './AnchorFocus'
 import desktop from '../../../public/media/seuil/P01-fenetre-mer.jpg'
 import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 
@@ -34,7 +35,7 @@ export async function Seuil({ locale }: { locale: string }) {
         <div className="absolute inset-x-0 bottom-0 px-margin pb-32 lg:pb-48">
           <h1
             id="seuil-titre"
-            className="w-fit max-w-titre bg-voile px-24 py-24 font-display text-display-xl text-balance text-ivoire lg:px-32 lg:py-32"
+            className="w-fit max-w-titre animate-entree bg-voile px-24 py-24 font-display text-display-xl text-balance text-ivoire lg:px-32 lg:py-32"
           >
             {t('title')}
           </h1>
@@ -43,6 +44,7 @@ export async function Seuil({ locale }: { locale: string }) {
       <div className="bg-ivoire px-margin pt-32 pb-16 lg:pt-48 lg:pb-32">
         <h2 className="mb-24 text-title-h3 text-encre">{t('question')}</h2>
         <ChoiceList choices={choices} rowOnDesktop />
+        <AnchorFocus />
       </div>
     </section>
   )
