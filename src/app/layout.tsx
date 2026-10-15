@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import './globals.css'
+import { manrope, newsreader } from '@/styles/fonts'
+import '@/styles/tokens.css'
 
 // Garde-fou : le build échoue si un rendu à la requête s'introduit (docs/architecture.md §2).
 export const ensureStatic = 'navigation'
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 // Racine provisoire : la langue passera par le segment [locale] en story 1.4.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${manrope.variable} ${newsreader.variable}`}>
       <body>{children}</body>
     </html>
   )

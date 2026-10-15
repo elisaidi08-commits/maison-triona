@@ -99,7 +99,6 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   │   ├── cron/retention/route.ts ← suppression des demandes échues
 │   │   │   └── email-events/route.ts   ← rebonds et plaintes (webhook signé du fournisseur)
 │   │   ├── sitemap.ts · robots.ts · icon.svg
-│   │   └── globals.css                 ← importe styles/tokens.css
 │   ├── actions/
 │   │   ├── request.ts                  ← formulaire en étapes ('use server')
 │   │   └── callback.ts                 ← rappel ('use server')
@@ -121,7 +120,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   ├── security/   rate-limit, honeypot, time-trap, hash d'IP
 │   │   ├── validation/ schémas Zod (demande, rappel)
 │   │   └── seo/        métadonnées, alternates, JSON-LD
-│   ├── styles/       tokens.css (unique source de vérité), base.css, print.css
+│   ├── styles/       tokens.css (unique source de vérité et point d'entrée CSS, importé par layout.tsx), fonts.ts, print.css
 │   └── proxy.ts      ← next-intl (ex-middleware) ; protection de la préproduction en repli
 ├── tests/
 │   ├── e2e/          request.spec.ts, callback.spec.ts, i18n.spec.ts, navigation.spec.ts, share.spec.ts

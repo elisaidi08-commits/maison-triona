@@ -13,6 +13,7 @@ const MARKERS = [
   '[SI VRAI]',
   '[BROUILLON',
   '[TO BE CONFIRMED]',
+  '[CONTENT TO BE PROVIDED',
   '[DRAFT',
 ]
 

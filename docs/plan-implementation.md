@@ -102,7 +102,7 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **CA** : le projet démarre ; la CI passe ; aucun fichier de travail suivi par Git.
 
 **1.2 Tokens et banc d'essai ⛳** — `src/styles/tokens.css` (`docs/design-tokens.md`), palettes par défaut supprimées ; page `/fr/demo` (`noindex`) : palette et ratios, échelle typographique, filets, cachet, bouton, champs, liste d'entrée ; banc d'essai des serifs sur ivoire et sur sapin.
-**CA** : `p-4` ou `bg-red-500` ne compilent pas ; corps 18 px ; focus 3 px ; Sady choisit la serif sur pièce.
+**CA** : `bg-red-500`, `text-sm`, `mt-6` ne compilent pas et `p-4` vaut 4 px (token d'échelle, plus les 16 px de Tailwind) ; corps 18 px ; focus 3 px ; Sady choisit la serif sur pièce. *Réalisation* : la démo est servie sur `/demo` jusqu'à la story 1.4, puis déplacée sous `/fr/demo`.
 
 **1.3 Logo, favicon, image OG ⛳** — SVG « le sillage » dans `public/brand/` ; favicon ; OG FR et EN (composition typographique sur un recadrage de P01-d quand il existe, sinon sur ivoire). Sans logo : wordmark et emplacement réservé, story laissée ouverte.
 

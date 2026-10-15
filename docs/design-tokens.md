@@ -1,6 +1,6 @@
 # Design tokens v2 — Maison Triona
 
-> **Statut** : proposition phase 0 (15/10/2026). Les valeurs marquées `[À TRANCHER]` attendent une décision de Sady (voir `docs/art-direction.md` §9).
+> **Statut** : **implémenté en story 1.2** (15/10/2026) dans `src/styles/tokens.css`, qui fait foi ; ce document en est la notice. Les valeurs marquées `[À TRANCHER]` attendent une décision de Sady (voir `docs/art-direction.md` §9).
 > **Source de vérité** : ce document, jusqu'à l'implémentation. En phase 1, les tokens vivent dans **un seul fichier CSS** (`src/styles/tokens.css`, bloc `@theme` de Tailwind v4) et ce document en devient la notice.
 > **Origine** : collection Figma v2 (`color`, `space`, `type`), corrigée par la DA v2. La collection Figma v1 (`maison-triona/*`) est **dépréciée** : ne jamais en extraire de valeur.
 > **Contrastes** : recalculables à tout moment avec `node docs/tools/contrast-check.mjs`.
@@ -35,6 +35,7 @@
 | `--color-encre-68` | `#1F1E1AAD` | Encre 68 % | Texte secondaire, placeholders, ligne des champs | Figma v2 |
 | `--color-ivoire-80` | `#F4EDE0CC` | Ivoire 80 % | Texte secondaire sur sapin (7,37:1, AAA ; 72 % ne donnait que 6,29:1) | Nouveau |
 | `--color-terracotta` | `#A66A4E` | Terracotta | Ligne des champs en erreur (assombri : `#C4876A` échouait à 2,57:1) | Figma v2 corrigé |
+| `--color-sapin-20` | `#1C3B2A33` | Sapin 20 % | Filet discret sur ivoire (séparations, bordures du banc d'essai) | Ajouté en story 1.2 |
 
 Si Sady garde le **cyprès comme signature**, seul `--color-sapin` change de rôle : les titres passent en cyprès (6,58:1, conforme) et le bloc Contact reste en sapin pour garder la profondeur.
 
@@ -149,6 +150,17 @@ Chargement : `next/font` (la doc Next.js confirme que les fichiers sont téléch
 | Manrope | OFL | Oui | `wght` 200-800 | **Non** |
 | Satoshi | ITF FFL v2.0 | Oui | `wght` 300-900 | Oui |
 
+**Mesures de la story 1.2** (sous-ensemble latin, woff2, 15/10/2026) : Newsreader de Google avec l'axe de taille optique complet (6 à 72) = 128 ko ; sans l'axe = 56 ko, mais Google sert alors la taille optique **par défaut, 18 (texte)**, visiblement plus épaisse en grand ; Cormorant Garamond Light + Regular = 36 ko ; Instrument Serif = 14 ko ; Manrope 400 + 500 = 24 ko.
+**Newsreader instanciée en local** (licence OFL sans *Reserved Font Name* : instanciation permise, licence jointe dans `src/fonts/OFL.txt` et dans la table `name` du fichier) : tailles optiques 32 à 72 + graisses 300 à 400 = **60 ko** (`src/fonts/newsreader-display.woff2`, rendu identique à la référence entre 32 et 72 px) ; taille optique figée à 72 + 300 à 400 = 34 ko ; Light 72 seul = 19 ko, Regular 36 seul = 20 ko. Recette (fontTools, hors dépendances du projet) :
+
+```bash
+fonttools varLib.instancer "Newsreader[opsz,wght].ttf" "opsz=32:72" "wght=300:400" -o display.ttf
+pyftsubset display.ttf --unicodes="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD" \
+  --flavor=woff2 --layout-features='kern,liga,calt,ccmp,locl,mark,mkmk' --name-IDs='*' --output-file=newsreader-display.woff2
+```
+
+Source : `ofl/newsreader/Newsreader[opsz,wght].ttf` du dépôt `google/fonts`.
+
 Si Satoshi devait revenir : `next/font/local` avec les WOFF2 fournis **tels quels** (la licence interdit subsetting et conversion), dépôt git **privé** (redistribution interdite), et licence acceptée **par Cat elle-même** (la FFL interdit de transmettre les fichiers à des prestataires).
 
 ### 3.2 Échelle
@@ -200,6 +212,7 @@ Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empile
 | `--container-measure` (`max-w-measure`) | 640 px | 640 px | 640 px |
 | `--spacing-touch` (`min-h-touch`) | 48 px | 48 px | 48 px |
 | `--spacing-touch-lg` (`min-h-touch-lg`) | 56 px | 56 px | 56 px (choix d'entrée, barre mobile) |
+| `--spacing-button` (`min-h-button`) | 52 px | 52 px | 52 px (bouton sur sapin, DA §7.5) |
 
 Les trois tokens qui varient se déclarent dans `@theme` avec leur valeur mobile, puis sont redéfinis sur `:root` aux points de rupture `md` et `lg` (les utilitaires lisent la variable CSS, la redéfinition suffit).
 
@@ -257,6 +270,12 @@ Détail et catalogue : `docs/motion-spec.md`.
 ---
 
 ## 8. Esquisse d'implémentation (phase 1)
+
+**Implémentation réelle (story 1.2)** : voir `src/styles/tokens.css`. Écarts et constats par rapport à l'esquisse ci-dessous :
+- `tokens.css` est le **point d'entrée CSS unique**, importé par `src/app/layout.tsx`, et commence par `@import 'tailwindcss' source(none); @source '../';`. Un `@import` de `tokens.css` depuis un autre fichier CSS **n'est pas traité** par le chargeur `@tailwindcss/turbopack` : les tokens étaient ignorés (constaté le 15/10/2026).
+- Toutes les familles par défaut sont remises à zéro (`--font-*`, `--text-*`, `--radius-*`, `--shadow-*`, `--blur-*`, `--ease-*`, `--breakpoint-*`, `--container-*`…). Vérifié : `bg-red-500`, `text-sm`, `shadow`, `rounded-lg`, `mt-6` ne génèrent rien. **`p-4` génère `padding: var(--spacing-4)` = 4 px** : 4 fait partie de notre échelle ; ce n'est plus le `p-4` de Tailwind (16 px).
+- Ajouts : `--color-sapin-20` (filet discret), `--spacing-button` (52 px), `--text-stamp-sm|md|lg`, graisse incluse dans chaque token de texte (`--text-*--font-weight`), `--radius-focus`. Les variables sans utilitaire (traits, focus, `--distance-reveal`, `--stagger`) vivent sur `:root` dans `@layer base` ; `[data-surface='sapin']` passe le focus en champagne.
+- Polices (`src/styles/fonts.ts`) : Manrope 400 + 500 (24 ko) et, **provisoirement**, Newsreader Light + Regular **sans** axe de taille optique (56 ko) ; total préchargé 80 ko, pile au budget. Avec l'axe `opsz`, Newsreader pèse 128 ko (mesures du sous-ensemble latin, 15/10/2026). Cormorant Garamond Light + Regular : 36 ko ; Instrument Serif : 14 ko.
 
 Illustration de la cible, **pas du code à copier tel quel**. Comportements vérifiés le 15/10/2026 en compilant avec `tailwindcss@4.3.3` :
 - `--color-*: initial` supprime toute la palette par défaut (`bg-red-500` n'est plus générée).

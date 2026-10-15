@@ -29,3 +29,10 @@ test('le site reste en noindex tant que SITE_INDEXABLE ne vaut pas « true »', 
   await page.goto('/')
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
 })
+
+test('le banc d’essai /demo répond et n’est jamais indexé', async ({ page }) => {
+  const response = await page.goto('/demo')
+  expect(response?.status()).toBe(200)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tokens et typographie')
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+})

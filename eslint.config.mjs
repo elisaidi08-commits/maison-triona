@@ -9,7 +9,12 @@ const eslintConfig = defineConfig([
   // Accessibilité : toutes les règles recommandées de jsx-a11y (le plugin est déjà déclaré par eslint-config-next).
   {
     files: ['**/*.{jsx,tsx}'],
-    rules: jsxA11y.flatConfigs.recommended.rules,
+    rules: {
+      ...jsxA11y.flatConfigs.recommended.rules,
+      // Une zone défilante (tableau en mobile) doit être focalisable pour défiler au clavier :
+      // motif role="region" + aria-label + tabIndex={0}, exigé par axe (scrollable-region-focusable).
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['tabpanel', 'region'] }],
+    },
   },
   globalIgnores([
     '.next/**',

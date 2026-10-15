@@ -27,6 +27,12 @@
 | D16 | Passage en phase 1 | **`GO PHASE 1` confirmé** (réponse explicite, 15/10/2026) | Phase 1 ouverte : une story à la fois, dans l'ordre du plan ; première story : 1.1 | — |
 | D17 | Emplacement du dépôt | ~~Renommer les dossiers~~ → **« Travaille dans ce repo-là »** : le dépôt reste dans le dossier actuel, `/Volumes/DISQUE SADY/06_CLIENTS/MAMAN /MAISON TRIONA ` (espaces finaux conservés). | Dépôt git privé à cet endroit ; dossiers de travail exclus de Git par motif ; build vérifié malgré les espaces finaux (story 1.1) | Le disque externe peut s'éjecter : pousser souvent vers le dépôt distant privé |
 
+## 15/10/2026 · Story 1.2
+
+| # | Sujet | Décision | Conséquence | Reste ouvert |
+|---|---|---|---|---|
+| D18 | Story 1.2 (tokens, banc d'essai) | **« Okay »** de Sady : story validée, passage aux assets | Commit, PR ; serif provisoire inchangée (Newsreader sans taille optique) | Serif (reco : Newsreader locale, tailles optiques 32-72, 60 ko, 84 ko avec Manrope), vert sapin ou cyprès, italique (déconseillé), taille des libellés de la liste d'entrée (24 ou 20-22 px) |
+
 ## Toujours ouverts (rapports précédents)
 
 Serif display (choisie au banc d'essai de la story 1.2) · vert signature · logo « le sillage » · mouvement (Q4) · « Cat », « Catriona » ou « nous » (Q9) · moodboard de référence (`ASSETS PHOTO MAQUETTE/` présumé) · domaine et adresse de réception · CMS (Sanity recommandé) · mention IA · paramètre `?service=` dans les journaux · option « Autre » dans les pays · absence de bandeau cookies (juriste).
