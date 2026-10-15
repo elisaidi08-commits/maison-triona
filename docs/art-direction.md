@@ -171,6 +171,13 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 
 ### 7.2 Hero et entrée par besoin (Accueil, scène S1)
 Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (Annexe B).
+
+> **Décision D19 (15/10/2026) : « Seuil plein écran ».** Elle prime sur la composition « colonne + vidéo » ci-dessous pour le desktop :
+> - **Écran 1 = 100 % de la hauteur** (`100svh`) : vidéo V01 **plein cadre**, titre display posé dessus sur voile sapin ≥ 58 %, en-tête transparent.
+> - **Bande ivoire en bas de l'écran 1** (aplat, environ un tiers de la hauteur) : la question puis les **4 choix côte à côte** en desktop (4 colonnes, filets or verticaux, mêmes contenus et mêmes règles que la liste : vrais liens, numéro cyprès, catégorie en label, choix 4 moins appuyé, cible ≥ 56 px). En dessous de 1024 px, la liste verticale de la variante B.
+> - **On entre** : en défilant hors de l'écran 1, la vidéo V01-s (avancée lente vers la fenêtre) suit le scroll (M13), puis les scènes de service arrivent chacune en **plein écran** (média plein cadre, texte sur aplat à côté). Défilement natif, aucune bibliothèque de « smooth scroll », aucune 3D.
+> - **Mobile** : photo P01-m plein écran (sans vidéo), titre sur voile, puis les 4 lignes juste en dessous ; le premier choix doit être visible sans défiler sur un écran de 390 × 844.
+> - Mouvement réduit ou JavaScript absent : poster fixe, scènes simplement empilées, tout reste lisible.
 - **Desktop** : colonne de texte sur **aplat ivoire** (colonnes 1 à 5) ; vidéo V01 en plein cadre sur le reste de l'écran, poster P01-d. Le titre peut déborder sur l'image avec un voile sapin ≥ 58 %.
 - Titre display-xl **72/76 Light** (contre 88 Medium dans la maquette), 3 lignes maximum, sapin.
 - Question (h2, Manrope 20/34) puis **liste de 4 choix** : vrais liens, filet or 1 px entre chaque ligne ; numéro 01-03 en cyprès, libellé en Manrope Medium 20-22, sous-libellé en label capitales (« CONCIERGERIE DE LUXE ») ; ligne ≥ 56 px. Le choix 4 (« Je ne sais pas encore ») n'a pas de numéro : c'est une porte de sortie.

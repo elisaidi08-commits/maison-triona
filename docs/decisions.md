@@ -33,6 +33,20 @@
 |---|---|---|---|---|
 | D18 | Story 1.2 (tokens, banc d'essai) | **« Okay »** de Sady : story validée, passage aux assets | Commit, PR ; serif provisoire inchangée (Newsreader sans taille optique) | Serif (reco : Newsreader locale, tailles optiques 32-72, 60 ko, 84 ko avec Manrope), vert sapin ou cyprès, italique (déconseillé), taille des libellés de la liste d'entrée (24 ou 20-22 px) |
 
+## 15/10/2026 · Home immersive
+
+| # | Sujet | Décision | Conséquence | Reste ouvert |
+|---|---|---|---|---|
+| D19 | Home immersive (références : pahari.vercel.app, theboringblog.ai) | **Direction A, « Seuil plein écran »** : premier écran = vidéo V01 plein cadre, titre sur voile sapin, les 4 besoins visibles tout de suite sur une bande ivoire ; en défilant, la caméra avance vers la fenêtre (vidéo pilotée par le scroll, « on entre »), puis chaque service arrive en plein écran | `docs/art-direction.md` §7.2 et `docs/motion-spec.md` (M13, M15) mis à jour ; V01-s (avancée) devient obligatoire au lot 1 (+12 crédits) ; story 2.1 réalisée selon cette direction | Écartés : galerie 3D flottante (B) et maison-diorama (C). Des références, on garde le plein écran, l'interface minimale et la sensation d'entrer ; on laisse la 3D WebGL (46 à 53 Mo et 1,5 à 1,9 Mo de JS mesurés, contre 320 ko et 100 ko pour notre budget) |
+
+## 15/10/2026 · Lancement de la construction
+
+| # | Sujet | Décision | Conséquence | Reste ouvert |
+|---|---|---|---|---|
+| D20 | Lot 0 (ancres de style) | **Validé** (« c'est validé », Sady pour Cat) | A01, A02, A03 passent en « validé Cat » ; le lot 1 peut démarrer | — |
+| D21 | Autonomie sur le lot 1 | **Images en autonomie** : Claude génère et choisit les images (12 brouillons, 3 upscales, 3 versions mobiles, ≈ 19 crédits), relecture du directeur artistique, sélection montrée à Sady. **Vidéos** (≈ 84 crédits) : seulement après l'OK de Sady sur les images | Journal tenu à jour à chaque job | — |
+| D22 | Rythme de construction | **Par groupes** : Claude enchaîne les stories, **fusionne lui-même chaque PR quand la CI est verte**, et s'arrête à 4 points de contrôle : ① fondations (1.3, 1.4, 1.5) ; ② accueil immersif (2.1 à 2.5) ; ③ pages (2.6 à 2.11) ; ④ contact et coffre (3.x) | Remplace la règle d'or n° 3 (un arrêt par story) ; le site local reste à jour sur localhost:3000 | Serif et vert : valeurs provisoires (Newsreader locale 32-72, sapin) tant que Sady n'a pas tranché |
+
 ## Toujours ouverts (rapports précédents)
 
 Serif display (choisie au banc d'essai de la story 1.2) · vert signature · logo « le sillage » · mouvement (Q4) · « Cat », « Catriona » ou « nous » (Q9) · moodboard de référence (`ASSETS PHOTO MAQUETTE/` présumé) · domaine et adresse de réception · CMS (Sanity recommandé) · mention IA · paramètre `?service=` dans les journaux · option « Autre » dans les pays · absence de bandeau cookies (juriste).
