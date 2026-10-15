@@ -10,7 +10,9 @@
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
-    "Services"
+    "Services",
+    "House.intro",
+    "House.sections (titres)"
   ],
   "en": [
     "Home.title",
@@ -23,6 +25,8 @@
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
-    "Services"
+    "Services",
+    "House.intro",
+    "House.sections (titres)"
   ]
 }

@@ -123,5 +123,55 @@
   "Video": {
     "pause": "Mettre la vidéo en pause",
     "play": "Lire la vidéo"
+  },
+  "House": {
+    "intro": "La maison en quelques mots.",
+    "sections": [
+      {
+        "title": "L’histoire",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "title": "L’exigence",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "title": "La discrétion",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "title": "Le sens du nom",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "title": "L’expérience",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      }
+    ]
+  },
+  "Territories": {
+    "intro": "Belgique · France · Luxembourg · Monaco · Suisse",
+    "countries": [
+      {
+        "name": "Belgique",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "name": "France",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "name": "Luxembourg",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "name": "Monaco",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      },
+      {
+        "name": "Suisse",
+        "text": "[CONTENU À FOURNIR PAR CAT]"
+      }
+    ]
   }
 }
