@@ -37,3 +37,10 @@ test('les choix font au moins 56 px de haut', async ({ page }) => {
     .evaluateAll((links) => links.map((link) => link.getBoundingClientRect().height))
   for (const height of heights) expect(height).toBeGreaterThanOrEqual(56)
 })
+
+test('un choix d’entrée mène à sa scène et y place le focus (M12)', async ({ page }) => {
+  await page.goto('/fr')
+  await page.getByRole('link', { name: /Accompagner un proche/ }).click()
+  await expect(page).toHaveURL(/#grand-age$/)
+  await expect(page.locator('#grand-age-titre')).toBeFocused()
+})

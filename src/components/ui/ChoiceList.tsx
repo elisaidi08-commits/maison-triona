@@ -1,6 +1,6 @@
 // Liste d'entrée par besoin (docs/art-direction.md §7.2) : vrais liens, filet or entre les lignes,
 // numéro en cyprès aligné sur la première ligne, libellé Manrope Medium, catégorie en label capitales.
-// Survol et focus : le libellé se souligne d'un filet or (tracé animé en story 2.4, mouvement M4).
+// Survol et focus : un filet or se dessine sous le libellé (mouvement M4).
 // Aucune icône, aucune flèche. Le choix sans numéro est une porte de sortie, moins appuyée :
 // libellé plus petit et phrase de conversation en corps de texte.
 
@@ -39,7 +39,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
             </span>
             <span className="flex flex-col gap-4">
               <span
-                className={`${choice.number ? 'text-title-h3' : 'text-body-l font-medium'} decoration-or decoration-1 underline-offset-8 group-hover:underline group-focus-visible:underline`}
+                className={`${choice.number ? 'text-title-h3' : 'text-body-l font-medium'} filet-survol self-start`}
               >
                 {choice.label}
               </span>
