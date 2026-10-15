@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { Chapter } from '@/components/sections/Chapter'
 import { ChapterIndex } from '@/components/sections/ChapterIndex'
+import { TerritoriesMap } from '@/components/sections/TerritoriesMap'
 import { Button } from '@/components/ui/Button'
 import { ChoiceList } from '@/components/ui/ChoiceList'
 import { ChoiceRow, choiceInputId } from '@/components/ui/ChoiceRow'
@@ -594,6 +595,27 @@ export default function DemoPage() {
             et si l’image tient sa place.
           </p>
         </Chapter>
+      </section>
+
+      <section aria-labelledby="carte" className="flex flex-col gap-48">
+        <SectionTitle id="carte" label="Territoires · story 1.7" title="Carte au trait" />
+        <p className="max-w-measure">
+          Natural Earth au 1:10 000 000, projection européenne EPSG:3035, figée dans le dépôt
+          (scripts/carte-territoires.mjs). La Belgique est teintée comme le sera le pays choisi au
+          lot 5 ; liste, panneaux et choix viendront avec la page.
+        </p>
+        <div className="grid grid-cols-1 items-start gap-48 lg:grid-cols-12 lg:gap-gutter">
+          <div className="max-w-measure lg:col-span-6">
+            <TerritoriesMap highlighted="BE" />
+          </div>
+          <ul className="border-t border-or lg:col-span-4 lg:col-start-8">
+            {['Belgique', 'France', 'Luxembourg', 'Monaco', 'Suisse'].map((pays) => (
+              <li key={pays} className="flex min-h-touch items-center border-b border-or text-nav">
+                {pays}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
     </main>
   )
