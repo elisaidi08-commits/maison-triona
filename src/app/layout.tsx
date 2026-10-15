@@ -1,0 +1,23 @@
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
+import './globals.css'
+
+// Garde-fou : le build échoue si un rendu à la requête s'introduit (docs/architecture.md §2).
+export const ensureStatic = 'navigation'
+
+// Le site reste en noindex tant que SITE_INDEXABLE ne vaut pas « true » (ouverture, story 5.5).
+const indexable = process.env.SITE_INDEXABLE === 'true'
+
+export const metadata: Metadata = {
+  title: 'Maison Triona',
+  robots: { index: indexable, follow: indexable },
+}
+
+// Racine provisoire : la langue passera par le segment [locale] en story 1.4.
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="fr">
+      <body>{children}</body>
+    </html>
+  )
+}

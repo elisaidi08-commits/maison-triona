@@ -1,0 +1,45 @@
+# Dépendances
+/node_modules
+
+# Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# Tests et mesures
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/.lighthouse/
+
+# Environnement : seul .env.example est versionné
+.env*
+!.env.example
+
+# Vercel
+.vercel
+
+# Système et journaux
+.DS_Store
+*.pem
+npm-debug.log*
+
+# Claude Code : réglages personnels
+.claude/settings.local.json
+
+# Médias bruts générés (docs/media-pipeline.md), jamais versionnés
+/media-incoming/
+
+# Dossiers et fichiers de travail, hors dépôt (droits, poids, licence Satoshi).
+# Leurs noms finissent par une espace, que Git ignore si elle n'est pas échappée :
+# on utilise donc des motifs.
+/ASSETS PHOTO MAQUETTE*/
+/MOODBOARD*/
+/LOGO*/
+/TYPO*/
+/maison-triona-prd.pdf
+/bascule-satoshi.js

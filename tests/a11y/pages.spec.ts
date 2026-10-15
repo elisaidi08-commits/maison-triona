@@ -1,0 +1,16 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+
+// WCAG 2.2 AA (CLAUDE.md § Accessibilité). La liste s'allonge à chaque story, FR et EN dès la story 1.4.
+const PAGES = ['/']
+const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
+
+for (const path of PAGES) {
+  test(`axe : ${path}`, async ({ page }) => {
+    await page.goto(path)
+    const results = await new AxeBuilder({ page }).withTags(TAGS).analyze()
+    expect(
+      results.violations.map(({ id, help, nodes }) => ({ id, help, nodes: nodes.length })),
+    ).toEqual([])
+  })
+}

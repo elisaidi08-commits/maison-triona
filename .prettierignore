@@ -1,0 +1,26 @@
+# Prettier ne formate que le code. La documentation (tableaux Markdown) est écrite à la main.
+/docs
+/.claude
+/CLAUDE.md
+/AGENTS.md
+/README.md
+/anti-patterns.md
+
+# Généré
+/.next
+/out
+/node_modules
+package-lock.json
+next-env.d.ts
+/test-results
+/playwright-report
+/.lighthouse
+
+# Médias et dossiers de travail
+/public/media
+/media-incoming
+/ASSETS PHOTO MAQUETTE*
+/MOODBOARD*
+/LOGO*
+/TYPO*
+/bascule-satoshi.js
