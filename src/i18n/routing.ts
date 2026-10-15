@@ -1,26 +1,15 @@
 import { defineRouting } from 'next-intl/routing'
+import { LOCALES, PATHNAMES } from './pathnames'
 
 // Langues et chemins localisés (docs/architecture.md §4).
 // Toujours préfixé (/fr, /en), aucune détection automatique, aucun cookie de langue.
 export const routing = defineRouting({
-  locales: ['fr', 'en'],
+  locales: LOCALES,
   defaultLocale: 'fr',
   localePrefix: 'always',
   localeDetection: false,
   localeCookie: false,
-  pathnames: {
-    '/': '/',
-    '/la-maison': { fr: '/la-maison', en: '/the-house' },
-    '/services': '/services',
-    '/services/conciergerie': { fr: '/services/conciergerie', en: '/services/concierge' },
-    '/services/grand-age': { fr: '/services/grand-age', en: '/services/senior-companionship' },
-    '/services/enfants': { fr: '/services/enfants', en: '/services/childcare' },
-    '/territoires': { fr: '/territoires', en: '/where-we-work' },
-    '/contact': '/contact',
-    '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
-    '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
-    '/demo': '/demo',
-  },
+  pathnames: PATHNAMES,
 })
 
-export type Locale = (typeof routing.locales)[number]
+export type { Locale } from './pathnames'

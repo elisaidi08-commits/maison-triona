@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { LoopVideo } from '@/components/media/LoopVideo'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { ChoiceList } from '@/components/ui/ChoiceList'
 import { AnchorFocus } from './AnchorFocus'
@@ -20,6 +21,7 @@ const CHOICES = [
 
 export async function Seuil({ locale }: { locale: string }) {
   const t = await getTranslations('Home')
+  const video = await getTranslations('Video')
   const choices = CHOICES.map(({ key, href, number }) => ({
     href: href === 'contact' ? `/${locale}/contact` : href,
     number,
@@ -32,6 +34,12 @@ export async function Seuil({ locale }: { locale: string }) {
     <section aria-labelledby="seuil-titre" className="flex flex-col lg:h-seuil">
       <div className="relative h-seuil-image overflow-hidden bg-sapin lg:h-auto lg:flex-1">
         <ResponsiveImage desktop={desktop} mobile={mobile} alt={t('imageAlt')} priority />
+        <LoopVideo
+          mp4="/media/seuil/V01-fenetre-mer.mp4"
+          webm="/media/seuil/V01-fenetre-mer.webm"
+          pauseLabel={video('pause')}
+          playLabel={video('play')}
+        />
         <div className="absolute inset-x-0 bottom-0 px-margin pb-32 lg:pb-48">
           <h1
             id="seuil-titre"

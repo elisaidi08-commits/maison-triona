@@ -115,5 +115,9 @@
       "name": "Childcare",
       "promise": "A trusted presence, for a few hours or a whole season."
     }
+  },
+  "Video": {
+    "pause": "Pause the video",
+    "play": "Play the video"
   }
 }

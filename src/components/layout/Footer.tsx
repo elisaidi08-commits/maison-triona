@@ -2,11 +2,12 @@ import { getTranslations } from 'next-intl/server'
 import { Stamp } from '@/components/ui/Stamp'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { NavLink } from './NavLink'
+import { localizedPath, type Locale } from '@/i18n/pathnames'
 
 // Pied de page (docs/art-direction.md §7.6) : filet or pleine largeur, « K. » 48 px,
 // liens légaux et contact, FR · EN, mention des images générées par IA (privacy.md §4).
 
-export async function Footer() {
+export async function Footer({ locale }: { locale: Locale }) {
   const t = await getTranslations('Footer')
   const lang = await getTranslations('Locale')
   const names = { fr: lang('fr'), en: lang('en') }
@@ -21,17 +22,17 @@ export async function Footer() {
         <Stamp size="md" />
         <ul className="flex flex-col items-center gap-8 lg:flex-row lg:gap-32">
           <li>
-            <NavLink href="/mentions-legales">{t('legal')}</NavLink>
+            <NavLink href={localizedPath('/mentions-legales', locale)}>{t('legal')}</NavLink>
           </li>
           <li>
-            <NavLink href="/confidentialite">{t('privacy')}</NavLink>
+            <NavLink href={localizedPath('/confidentialite', locale)}>{t('privacy')}</NavLink>
           </li>
           <li>
-            <NavLink href="/contact">{t('contact')}</NavLink>
+            <NavLink href={localizedPath('/contact', locale)}>{t('contact')}</NavLink>
           </li>
         </ul>
         <div className="flex flex-col items-center gap-8 lg:items-end">
-          <LanguageSwitcher label={lang('label')} names={names} />
+          <LanguageSwitcher label={lang('label')} active={locale} names={names} />
           <p className="text-body-s">{t('copyright')}</p>
         </div>
       </div>

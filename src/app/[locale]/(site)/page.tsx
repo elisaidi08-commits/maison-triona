@@ -1,10 +1,15 @@
 import * as rootParams from 'next/root-params'
 import { ContactBlock, SceneMaison, SceneTerritoires } from '@/components/sections/HomeScenes'
 import { SceneService } from '@/components/sections/SceneService'
+import { ResponsiveImage } from '@/components/media/ResponsiveImage'
+import { ScrubVideo } from '@/components/media/ScrubVideo'
 import { Seuil } from '@/components/sections/Seuil'
+import { SeuilPassage } from '@/components/sections/SeuilPassage'
+import p01d from '../../../../public/media/seuil/P01-fenetre-mer.jpg'
+import p01m from '../../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 import { SERVICES } from '@/lib/services'
 
-// Accueil, dans l'ordre du storyboard : S1 Seuil (D19), S2 La maison, S3 à S5 les 3 services
+// Accueil, dans l'ordre du storyboard : S1 Seuil (D19) et son passage « on entre » (M15), S2 La maison, S3 à S5 les 3 services
 // (destinations des choix 1 à 3), S6 Territoires, S7 Contact (destination du choix 4).
 
 export default async function Home() {
@@ -12,6 +17,10 @@ export default async function Home() {
   return (
     <>
       <Seuil locale={locale} />
+      <SeuilPassage>
+        <ResponsiveImage desktop={p01d} mobile={p01m} alt="" />
+        <ScrubVideo src="/media/seuil/V01-s-fenetre-mer-scrub.mp4" trackId="seuil-passage" />
+      </SeuilPassage>
       <SceneMaison locale={locale} />
       {SERVICES.map((service, index) => (
         <SceneService
