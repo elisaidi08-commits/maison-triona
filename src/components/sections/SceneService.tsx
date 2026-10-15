@@ -7,7 +7,8 @@ import { TextLink } from '@/components/ui/TextLink'
 import { SERVICE_IMAGES, type Service } from '@/lib/services'
 
 // Scène de service, structure identique × 3 (docs/art-direction.md §7.8) : média plein cadre,
-// texte sur aplat ivoire à côté. Nom du service en label, promesse en titre display, 3 points de
+// texte sur aplat ivoire à côté. En mobile, le texte vient d'abord : après un choix d'entrée, le
+// visiteur arrive sur la promesse, pas sur l'image (parcours « choisir → service → contacter »). Nom du service en label, promesse en titre display, 3 points de
 // réassurance, 3 étapes, la phrase du modèle, un seul CTA vers le contact prérempli.
 // Aucun tarif, aucune liste de prestataires, aucune promesse médicale.
 
@@ -38,7 +39,7 @@ export async function SceneService({
       className="flex flex-col lg:grid lg:min-h-svh lg:grid-cols-12"
     >
       <div
-        className={`relative aspect-portrait lg:col-span-7 lg:aspect-auto ${mediaRight ? 'lg:order-2' : ''}`}
+        className={`relative order-last aspect-portrait lg:order-none lg:col-span-7 lg:aspect-auto ${mediaRight ? 'lg:order-2' : ''}`}
       >
         {image ? (
           <ResponsiveImage
