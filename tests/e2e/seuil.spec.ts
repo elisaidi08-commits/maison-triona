@@ -44,3 +44,10 @@ test('un choix d’entrée mène à sa scène et y place le focus (M12)', async 
   await expect(page).toHaveURL(/#grand-age$/)
   await expect(page.locator('#grand-age-titre')).toBeFocused()
 })
+
+test('mobile : après un choix, le titre de la scène est visible', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr')
+  await page.getByRole('link', { name: /Accompagner un proche/ }).click()
+  await expect(page.locator('#grand-age-titre')).toBeInViewport()
+})
