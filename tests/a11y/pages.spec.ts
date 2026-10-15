@@ -11,6 +11,7 @@ const PAGES = [
   '/fr/services/grand-age',
   '/en/services/concierge',
   '/fr/demo',
+  '/en/demo',
   '/fr/adresse-inconnue',
 ]
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']

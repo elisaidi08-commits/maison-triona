@@ -1,27 +1,86 @@
 import type { ReactNode } from 'react'
 
-// Bouton sur fond sapin (docs/art-direction.md §7.5) : texte ivoire, bordure or 1 px, rayon 0,
+// Bouton plein (docs/art-direction.md §7.5) : aplat sapin, texte ivoire, bordure or 1 px, rayon 0,
 // hauteur 52 px, libellé en corps 18 px comme le lien. Survol : bordure champagne et filet sous
-// le texte qui se dessine (M4). Sur ivoire : TextLink.
+// le texte qui se dessine (M4). Lisible sur sapin comme sur ivoire (« Continuer » du formulaire).
+// Variante `discret` (« Retour ») : texte sapin sans aplat ni bordure, filet or permanent, comme
+// le lien à filet (la commande ne repose pas sur la seule couleur, WCAG 1.4.1).
+// États du formulaire (lot 4) : `disabled` (bordure sauge, texte encre 68 %) et `pending` (envoi
+// en cours : libellé remplacé, bouton signalé inerte et occupé). L'annonce de l'envoi aux lecteurs
+// d'écran revient au formulaire, qui porte la région `aria-live`.
 
-const CLASSES =
-  'group inline-flex min-h-button items-center justify-center border border-or px-32 text-body text-ivoire transition-colors duration-micro ease-standard hover:border-champagne'
+const BASE =
+  'group inline-flex min-h-button items-center justify-center text-body transition-colors duration-micro ease-standard'
+
+const VARIANTS = {
+  plein: 'border border-or bg-sapin px-32 text-ivoire hover:border-champagne',
+  discret: 'text-sapin hover:text-cypres',
+} as const
+
+const INACTIF = 'cursor-not-allowed border border-sauge px-32 text-encre-68'
+
+type Variant = keyof typeof VARIANTS
+
+type CommonProps = {
+  children: ReactNode
+  variant?: Variant
+}
 
 type ButtonProps =
-  | { children: ReactNode; href: string; type?: never }
-  | { children: ReactNode; href?: never; type?: 'button' | 'submit' }
+  | (CommonProps & { href: string; type?: never; disabled?: never; pending?: never })
+  | (CommonProps & {
+      href?: never
+      type?: 'button' | 'submit'
+      disabled?: boolean
+      // Libellé affiché pendant l'envoi (« Envoi en cours »), fourni par messages/*.json.
+      pending?: string
+    })
 
-export function Button({ children, href, type = 'button' }: ButtonProps) {
+function Label({ children, variant }: { children: ReactNode; variant: Variant }) {
+  return variant === 'discret' ? (
+    <span className="underline decoration-or decoration-1 underline-offset-8">{children}</span>
+  ) : (
+    <span className="filet-survol">{children}</span>
+  )
+}
+
+export function Button({
+  children,
+  href,
+  type = 'button',
+  variant = 'plein',
+  disabled = false,
+  pending,
+}: ButtonProps) {
   if (href) {
     return (
-      <a href={href} className={CLASSES}>
-        <span className="filet-survol">{children}</span>
+      <a href={href} className={`${BASE} ${VARIANTS[variant]}`}>
+        <Label variant={variant}>{children}</Label>
       </a>
     )
   }
+
+  if (disabled) {
+    return (
+      <button type={type} disabled className={`${BASE} ${INACTIF}`}>
+        {children}
+      </button>
+    )
+  }
+
+  if (pending) {
+    // Pas de `disabled` pendant l'envoi : le bouton garde le focus ; `aria-disabled` le dit inerte
+    // et le formulaire ignore un second envoi.
+    return (
+      <button type={type} aria-disabled="true" aria-busy="true" className={`${BASE} ${INACTIF}`}>
+        {pending}
+      </button>
+    )
+  }
+
   return (
-    <button type={type} className={`${CLASSES} cursor-pointer bg-sapin`}>
-      <span className="filet-survol">{children}</span>
+    <button type={type} className={`${BASE} ${VARIANTS[variant]} cursor-pointer`}>
+      <Label variant={variant}>{children}</Label>
     </button>
   )
 }

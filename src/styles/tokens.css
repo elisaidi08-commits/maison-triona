@@ -228,7 +228,9 @@
 }
 
 /* M4 : filet or qui se dessine de gauche à droite au survol ou au focus d'un parent `group`.
-   En mouvement réduit, il apparaît sans transition (règle globale plus bas). */
+   Choix du formulaire (ChoiceRow) : le `group` est le label, le focus et l'état coché sont ceux de
+   l'input qu'il contient ; l'option cochée garde son filet, comme le lien en cours d'un sommaire
+   (`aria-current`). En mouvement réduit, il apparaît sans transition (règle globale plus bas). */
 @utility filet-survol {
   position: relative;
   &::after {
@@ -244,7 +246,10 @@
     transition: transform var(--transition-duration-hover) var(--ease-maison);
   }
   :where(.group):hover &::after,
-  :where(.group):focus-visible &::after {
+  :where(.group):focus-visible &::after,
+  :where(.group):has(:focus-visible) &::after,
+  :where(.group):has(:checked) &::after,
+  :where(.group[aria-current]) &::after {
     transform: scaleX(1);
   }
 }
