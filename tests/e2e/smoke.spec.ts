@@ -40,3 +40,11 @@ test('une adresse inconnue répond 404 dans la langue de la page', async ({ page
   expect(response?.status()).toBe(404)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cette page n’existe pas.')
 })
+
+test('hors production, chaque réponse porte X-Robots-Tag noindex', async ({ request }) => {
+  test.skip(process.env.VERCEL_ENV === 'production', 'production')
+  for (const path of ['/fr', '/en/the-house', '/fr/demo']) {
+    const response = await request.get(path)
+    expect(response.headers()['x-robots-tag']).toContain('noindex')
+  }
+})

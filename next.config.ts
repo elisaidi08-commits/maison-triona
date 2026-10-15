@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Préproduction (story 1.5) : tout ce qui n'est pas la production Vercel porte X-Robots-Tag
+  // noindex, même si un domaine personnalisé est attribué à une branche (docs/trust-contact-launch.md D.6).
+  async headers() {
+    if (process.env.VERCEL_ENV === 'production') return []
+    return [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+  },
   experimental: {
     // Page 404 unique pour les adresses qui ne passent par aucune langue (fichiers inconnus).
     globalNotFound: true,
