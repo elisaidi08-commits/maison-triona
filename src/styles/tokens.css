@@ -63,6 +63,7 @@
   --spacing-touch: 48px;
   --spacing-touch-lg: 56px;
   --spacing-button: 52px;
+  --spacing-logo: 28px;
 
   /* Points de rupture et largeurs (§4.3) */
   --breakpoint-md: 48rem;
