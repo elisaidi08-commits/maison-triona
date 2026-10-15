@@ -1,23 +1,23 @@
 'use client'
 
-import { useLocale } from 'next-intl'
-import { Link, usePathname } from '@/i18n/navigation'
-import { routing } from '@/i18n/routing'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { LOCALES, switchLocalePath, type Locale } from '@/i18n/pathnames'
 
 // Sélecteur typographique FR · EN : vrais liens vers la même page dans l'autre langue,
 // `lang` et `hrefLang` sur chaque lien, langue active en encre, inactive en encre 68 %.
 
 type LanguageSwitcherProps = {
   label: string
-  names: Record<(typeof routing.locales)[number], string>
+  active: Locale
+  names: Record<Locale, string>
 }
 
-export function LanguageSwitcher({ label, names }: LanguageSwitcherProps) {
-  const active = useLocale()
+export function LanguageSwitcher({ label, active, names }: LanguageSwitcherProps) {
   const pathname = usePathname()
   return (
     <nav aria-label={label} className="flex items-center gap-8 text-label uppercase">
-      {routing.locales.map((locale, index) => (
+      {LOCALES.map((locale, index) => (
         <span key={locale} className="flex items-center gap-8">
           {index > 0 ? (
             <span aria-hidden="true" className="text-encre-68">
@@ -25,8 +25,7 @@ export function LanguageSwitcher({ label, names }: LanguageSwitcherProps) {
             </span>
           ) : null}
           <Link
-            href={pathname}
-            locale={locale}
+            href={switchLocalePath(pathname, locale)}
             lang={locale}
             hrefLang={locale}
             aria-current={locale === active ? 'true' : undefined}

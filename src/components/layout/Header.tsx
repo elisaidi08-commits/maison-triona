@@ -4,6 +4,7 @@ import { Stamp } from '@/components/ui/Stamp'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
 import { NavLink } from './NavLink'
+import { localizedPath, type Locale } from '@/i18n/pathnames'
 
 // En-tête (docs/art-direction.md §7.1) : wordmark, 4 entrées, FR · EN. Transparent, non collant.
 // Desktop : navigation en ligne. Mobile : « Menu » ouvre un menu plein écran (MobileMenu).
@@ -15,7 +16,7 @@ const ENTRIES = [
   { href: '/contact', key: 'contact' },
 ] as const
 
-export async function Header({ locale }: { locale: string }) {
+export async function Header({ locale }: { locale: Locale }) {
   const t = await getTranslations('Header')
   const nav = await getTranslations('Nav')
   const lang = await getTranslations('Locale')
@@ -30,12 +31,12 @@ export async function Header({ locale }: { locale: string }) {
           <ul className="flex items-center gap-32">
             {ENTRIES.map(({ href, key }) => (
               <li key={key}>
-                <NavLink href={href}>{nav(key)}</NavLink>
+                <NavLink href={localizedPath(href, locale)}>{nav(key)}</NavLink>
               </li>
             ))}
           </ul>
         </nav>
-        <LanguageSwitcher label={lang('label')} names={names} />
+        <LanguageSwitcher label={lang('label')} active={locale} names={names} />
       </div>
 
       <MobileMenu openLabel={t('menu')} closeLabel={t('close')}>
@@ -43,7 +44,7 @@ export async function Header({ locale }: { locale: string }) {
           <ul className="flex flex-col gap-16">
             {ENTRIES.map(({ href, key }) => (
               <li key={key}>
-                <NavLink href={href} large>
+                <NavLink href={localizedPath(href, locale)} large>
                   {nav(key)}
                 </NavLink>
               </li>
@@ -52,7 +53,7 @@ export async function Header({ locale }: { locale: string }) {
         </nav>
         <div className="flex items-end justify-between">
           <Stamp size="sm" />
-          <LanguageSwitcher label={lang('label')} names={names} />
+          <LanguageSwitcher label={lang('label')} active={locale} names={names} />
         </div>
       </MobileMenu>
     </header>

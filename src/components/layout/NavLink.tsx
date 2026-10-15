@@ -1,19 +1,20 @@
 'use client'
 
-import type { ComponentProps, ReactNode } from 'react'
-import { Link, usePathname } from '@/i18n/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 
 // Lien de navigation : la page courante porte aria-current et un filet or (docs/art-direction.md §7.1).
+// `href` est le chemin public déjà localisé (calculé côté serveur).
 
 type NavLinkProps = {
-  href: ComponentProps<typeof Link>['href']
+  href: string
   children: ReactNode
   large?: boolean
 }
 
 export function NavLink({ href, children, large = false }: NavLinkProps) {
-  const pathname = usePathname()
-  const current = typeof href === 'string' && pathname === href
+  const current = usePathname() === href
   return (
     <Link
       href={href}

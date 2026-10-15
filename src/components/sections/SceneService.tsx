@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { MediaPlaceholder } from '@/components/media/MediaPlaceholder'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
+import { ScrubVideo } from '@/components/media/ScrubVideo'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
 import { SERVICE_IMAGES, type Service } from '@/lib/services'
@@ -49,6 +50,12 @@ export async function SceneService({
         ) : (
           <MediaPlaceholder />
         )}
+        {service.id === 'conciergerie' ? (
+          <ScrubVideo
+            src="/media/conciergerie/V03-bateau-quai-scrub.mp4"
+            trackId={service.anchor}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-col justify-center gap-48 px-margin py-section lg:col-span-5">

@@ -160,6 +160,11 @@
   height: calc(100svh - var(--header-height));
 }
 
+/* Passage « on entre » (D19, M15) : 1,5 écran de défilement pour l'avancée vers la fenêtre. */
+@utility h-passage {
+  height: 150svh;
+}
+
 /* Image du seuil en mobile : un peu plus de la moitié de l'écran, pour que le premier choix
    reste visible sans défiler sur 390 × 844 (docs/art-direction.md §7.2). */
 @utility h-seuil-image {

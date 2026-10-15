@@ -119,5 +119,9 @@
       "name": "Garde d’enfants",
       "promise": "Une présence choisie, pour quelques heures ou pour une saison."
     }
+  },
+  "Video": {
+    "pause": "Mettre la vidéo en pause",
+    "play": "Lire la vidéo"
   }
 }

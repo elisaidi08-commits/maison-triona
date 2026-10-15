@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { LoopVideo } from '@/components/media/LoopVideo'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { MediaPlaceholder } from '@/components/media/MediaPlaceholder'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +13,7 @@ import p02m from '../../../public/media/maison/P02-porte-ocre-m.jpg'
 
 export async function SceneMaison({ locale }: { locale: string }) {
   const t = await getTranslations('Scenes.house')
+  const video = await getTranslations('Video')
   return (
     <section aria-labelledby="maison-titre" className="flex flex-col lg:grid lg:grid-cols-12">
       <div className="flex flex-col justify-center gap-24 px-margin py-section lg:col-span-5">
@@ -30,6 +32,12 @@ export async function SceneMaison({ locale }: { locale: string }) {
           mobile={p02m}
           alt={t('imageAlt')}
           sizes="(min-width: 64rem) 58vw, 100vw"
+        />
+        <LoopVideo
+          mp4="/media/maison/V02-porte-ocre.mp4"
+          webm="/media/maison/V02-porte-ocre.webm"
+          pauseLabel={video('pause')}
+          playLabel={video('play')}
         />
       </div>
     </section>

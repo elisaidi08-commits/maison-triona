@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Link, usePathname } from '@/i18n/navigation'
-import type { Locale } from '@/i18n/routing'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { switchLocalePath, type Locale } from '@/i18n/pathnames'
 
 // Suggestion de langue (docs/art-direction.md §7.11) : proposer sans imposer. Jamais de redirection,
 // jamais de modale ; refermable, mémorisée pour la session. Posée en bas d'écran (position fixe)
@@ -76,8 +77,7 @@ export function LanguageSuggestion({
     >
       <p>{text}</p>
       <Link
-        href={pathname}
-        locale={target}
+        href={switchLocalePath(pathname, target)}
         hrefLang={target}
         className="inline-flex min-h-touch items-center underline decoration-or decoration-1 underline-offset-8"
       >

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { Footer } from '@/components/layout/Footer'
@@ -45,21 +44,19 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
   return (
     <html lang={locale} className={`${manrope.variable} ${newsreader.variable}`}>
       <body>
-        <NextIntlClientProvider>
-          <SkipLink label={t('label')} />
-          <Header locale={locale} />
-          <main id="contenu" tabIndex={-1}>
-            {children}
-          </main>
-          <Footer />
-          <LanguageSuggestion
-            current={locale}
-            target={other}
-            text={suggestion('text')}
-            switchLabel={suggestion('switch')}
-            closeLabel={suggestion('close')}
-          />
-        </NextIntlClientProvider>
+        <SkipLink label={t('label')} />
+        <Header locale={locale} />
+        <main id="contenu" tabIndex={-1}>
+          {children}
+        </main>
+        <Footer locale={locale} />
+        <LanguageSuggestion
+          current={locale}
+          target={other}
+          text={suggestion('text')}
+          switchLabel={suggestion('switch')}
+          closeLabel={suggestion('close')}
+        />
       </body>
     </html>
   )
