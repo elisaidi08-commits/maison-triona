@@ -119,5 +119,55 @@
   "Video": {
     "pause": "Pause the video",
     "play": "Play the video"
+  },
+  "House": {
+    "intro": "The house in a few words.",
+    "sections": [
+      {
+        "title": "Our story",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "title": "Our standards",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "title": "Discretion",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "title": "The meaning of the name",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "title": "Experience",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      }
+    ]
+  },
+  "Territories": {
+    "intro": "Belgium · France · Luxembourg · Monaco · Switzerland",
+    "countries": [
+      {
+        "name": "Belgium",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "name": "France",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "name": "Luxembourg",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "name": "Monaco",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      },
+      {
+        "name": "Switzerland",
+        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+      }
+    ]
   }
 }
