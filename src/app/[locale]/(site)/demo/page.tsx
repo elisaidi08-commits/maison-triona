@@ -177,7 +177,7 @@ export default function DemoPage() {
   if (process.env.VERCEL_ENV === 'production') notFound()
 
   return (
-    <main className="mx-auto flex max-w-content flex-col gap-128 px-margin py-96">
+    <main className="conteneur flex flex-col gap-128 py-96">
       <header className="flex max-w-measure flex-col gap-24">
         <p className="text-label text-encre uppercase">Banc d’essai · story 1.2</p>
         <h1 className="font-display text-display-l text-sapin">Tokens et typographie</h1>

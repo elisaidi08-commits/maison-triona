@@ -59,7 +59,7 @@
       },
       "senior": {
         "label": "Accompagner un proche, ou vous‑même",
-        "category": "Accompagnement du grand âge"
+        "category": "Accompagnement du grand âge"
       },
       "children": {
         "label": "Prendre soin des enfants",
@@ -81,7 +81,7 @@
     "territories": {
       "label": "Territoires",
       "title": "Cinq pays, un carnet d’adresses.",
-      "countries": "Belgique · France · Luxembourg · Monaco · Suisse",
+      "countries": "Belgique · France · Luxembourg · Monaco · Suisse",
       "link": "Où nous travaillons"
     },
     "contact": {
@@ -122,7 +122,9 @@
   },
   "Video": {
     "pause": "Mettre la vidéo en pause",
-    "play": "Lire la vidéo"
+    "play": "Lire la vidéo",
+    "pauseShort": "Pause",
+    "playShort": "Lire"
   },
   "House": {
     "intro": "La maison en quelques mots.",
@@ -173,5 +175,15 @@
         "text": "[CONTENU À FOURNIR PAR CAT]"
       }
     ]
+  },
+  "MiniMenu": {
+    "label": "Sur cette page",
+    "concierge": "Conciergerie",
+    "senior": "Grand âge",
+    "children": "Enfants",
+    "contact": "Contact"
+  },
+  "MobileBar": {
+    "label": "Écrire en toute discrétion"
   }
 }

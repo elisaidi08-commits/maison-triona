@@ -177,6 +177,8 @@ Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empile
 | `body` | Manrope Regular | **18** | **18** | **18** | 1.65 | 0 | `1.125rem` |
 | `body-s` | Manrope Regular | 16 | 16 | 16 | 1.6 | 0 | `1rem` (mentions, aides de champ ; jamais de paragraphe) |
 | `label` | Manrope Medium, capitales | 13 | 13 | 13 | 1.25 | +0.12em | `0.8125rem` |
+| `label-l` | Manrope Medium, capitales | 15 | 15 | 15 | 1.5 | +0.12em | `0.9375rem` (ligne des pays, DA §7.4) |
+| `choix` | Manrope Medium | 20 | 21 | 22 | 1.35 | 0 | `clamp(1.25rem, 1.203rem + 0.19vw, 1.375rem)` (libellés des choix d'entrée, DA §7.2 ; D18 encore ouverte) |
 | `nav` | Manrope Medium | 16 | 16 | 16 | 1.4 | +0.01em | `1rem` |
 
 | Cachet « K. » | Taille | Usage |
@@ -213,6 +215,18 @@ Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empile
 | `--spacing-touch` (`min-h-touch`) | 48 px | 48 px | 48 px |
 | `--spacing-touch-lg` (`min-h-touch-lg`) | 56 px | 56 px | 56 px (choix d'entrée, barre mobile) |
 | `--spacing-button` (`min-h-button`) | 52 px | 52 px | 52 px (bouton sur sapin, DA §7.5) |
+
+**Utilitaires de mise en page** (`src/styles/tokens.css`, revue DA du point de contrôle ②) :
+
+| Utilitaire | Rôle |
+|---|---|
+| `conteneur` | Contenu aligné sur la marge : largeur max `1200 + 2 × marge`, marge comprise (remplace `mx-auto max-w-content px-margin`, qui décalait le texte de 120 px à 1440) |
+| `h-scene` · `min-h-scene` · `top-mini-menu` | Scène à média collant : hauteur visible sous le mini-menu (`--mini-menu-height`, 48 px en desktop sur l'accueil, 0 ailleurs) |
+| `bottom-barre` | Élément fixé en bas posé au-dessus de la barre mobile (`--barre-mobile-height`, 56 px sous 1024 px quand la barre existe, 0 sinon) |
+| `focus-sur-image` · `focus-interieur` | Anneau de focus champagne collé à l'aplat sapin (bouton pause sur image) ; anneau tracé à l'intérieur (barre mobile) |
+| `object-seuil` | Recadrage de P01 et de V01 (50 % 60 %) : la mer et le sol restent visibles quand la bande des choix réduit l'image |
+
+La page réserve la hauteur du mini-menu (`scroll-padding-top`) et de la barre mobile (`padding-bottom` et `scroll-padding-bottom`) : un élément focalisé n'est jamais masqué (WCAG 2.4.11).
 
 Les trois tokens qui varient se déclarent dans `@theme` avec leur valeur mobile, puis sont redéfinis sur `:root` aux points de rupture `md` et `lg` (les utilitaires lisent la variable CSS, la redéfinition suffit).
 

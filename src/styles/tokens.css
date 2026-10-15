@@ -97,6 +97,10 @@
   --text-title-h3: clamp(1.25rem, 1.157rem + 0.381vw, 1.5rem);
   --text-title-h3--line-height: 1.35;
   --text-title-h3--font-weight: 500;
+  /* Libellé des choix d'entrée : 20 px en mobile, 22 px à 1440 (docs/art-direction.md §7.2). */
+  --text-choix: clamp(1.25rem, 1.203rem + 0.19vw, 1.375rem);
+  --text-choix--line-height: 1.35;
+  --text-choix--font-weight: 500;
   --text-body-l: clamp(1.125rem, 1.079rem + 0.19vw, 1.25rem);
   --text-body-l--line-height: 1.7;
   --text-body: 1.125rem;
@@ -107,6 +111,11 @@
   --text-label--line-height: 1.25;
   --text-label--letter-spacing: 0.12em;
   --text-label--font-weight: 500;
+  /* Ligne des pays (Territoires, §7.4) : capitales 15 px, +0,12 em. */
+  --text-label-l: 0.9375rem;
+  --text-label-l--line-height: 1.5;
+  --text-label-l--letter-spacing: 0.12em;
+  --text-label-l--font-weight: 500;
   --text-nav: 1rem;
   --text-nav--line-height: 1.4;
   --text-nav--letter-spacing: 0.01em;
@@ -165,10 +174,52 @@
   height: 150svh;
 }
 
+/* Recadrage de P01 (et de son poster) : un peu sous le centre, pour garder la mer et le sol. */
+@utility object-seuil {
+  object-position: 50% 60%;
+}
+
 /* Image du seuil en mobile : un peu plus de la moitié de l'écran, pour que le premier choix
    reste visible sans défiler sur 390 × 844 (docs/art-direction.md §7.2). */
 @utility h-seuil-image {
   height: 52svh;
+}
+
+/* Conteneur de contenu : marge latérale comprise dans la largeur maximale, pour que le texte
+   s'aligne sur la marge (120 px à 1440) au lieu de s'en écarter d'autant. */
+@utility conteneur {
+  width: 100%;
+  max-width: calc(var(--container-content) + 2 * var(--spacing-margin));
+  margin-inline: auto;
+  padding-inline: var(--spacing-margin);
+}
+
+/* Scène à média collant (docs/art-direction.md §7.8) : hauteur visible sous le mini-menu. */
+@utility h-scene {
+  height: calc(100svh - var(--mini-menu-height));
+}
+@utility min-h-scene {
+  min-height: calc(100svh - var(--mini-menu-height));
+}
+@utility top-mini-menu {
+  top: var(--mini-menu-height);
+}
+
+/* Éléments fixés en bas (suggestion de langue) : au-dessus de la barre mobile quand elle existe. */
+@utility bottom-barre {
+  bottom: var(--barre-mobile-height);
+}
+
+/* Bouton posé sur une image (pause vidéo) : anneau champagne collé à l'aplat sapin du bouton,
+   pour qu'il contraste toujours avec ce qu'il touche (6,47:1), quelle que soit l'image. */
+@utility focus-sur-image {
+  --focus-color: var(--color-champagne);
+  --focus-offset: 0px;
+}
+
+/* Lien qui occupe toute une barre (barre mobile) : anneau tracé à l'intérieur, sur l'aplat. */
+@utility focus-interieur {
+  --focus-offset: -6px;
 }
 
 /* M4 : filet or qui se dessine de gauche à droite au survol ou au focus d'un parent `group`.
@@ -207,6 +258,9 @@
     --focus-color: var(--color-sapin);
     /* En-tête : 16 px de marge haute et basse + cible de 48 px. */
     --header-height: 80px;
+    /* Mini-menu (§7.9, desktop, accueil) et barre mobile (§7.10) : 0 tant qu'ils n'existent pas. */
+    --mini-menu-height: 0px;
+    --barre-mobile-height: 0px;
     --distance-reveal: 12px;
     --stagger: 80ms;
   }
@@ -227,6 +281,22 @@
     }
   }
 
+  /* Le mini-menu collant ne masque jamais l'élément focalisé ni la cible d'une ancre (2.4.11). */
+  @media (width >= 64rem) {
+    :root:has([data-mini-menu]) {
+      --mini-menu-height: 48px;
+      scroll-padding-top: var(--mini-menu-height);
+    }
+  }
+
+  /* La barre mobile réserve sa hauteur : le pied de page et le focus restent visibles (2.4.11). */
+  @media (width < 64rem) {
+    :root:has([data-barre-mobile]) {
+      --barre-mobile-height: 56px;
+      scroll-padding-bottom: var(--barre-mobile-height);
+    }
+  }
+
   /* M12 : défilement doux vers la scène choisie, seulement sans préférence de mouvement réduit. */
   @media (prefers-reduced-motion: no-preference) {
     html {
@@ -242,6 +312,7 @@
   }
 
   body {
+    padding-bottom: var(--barre-mobile-height);
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
   }

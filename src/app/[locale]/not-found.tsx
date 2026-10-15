@@ -9,7 +9,7 @@ export default async function NotFound() {
   const t = await getTranslations('NotFound')
   const locale = await rootParams.locale()
   return (
-    <section className="mx-auto flex max-w-content flex-col gap-24 px-margin py-section">
+    <section className="conteneur flex flex-col gap-24 py-section">
       <Rule short />
       <h1 className="font-display text-display-l text-sapin">{t('title')}</h1>
       <p>

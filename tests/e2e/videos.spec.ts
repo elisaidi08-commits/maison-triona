@@ -36,6 +36,8 @@ test('desktop : la vidéo du seuil joue et se met en pause au clavier', async ({
   await expect(pause).toBeVisible({ timeout: 10000 })
   await pause.focus()
   await page.keyboard.press('Enter')
+  // Le nom accessible change avec l'état et contient le mot visible (WCAG 2.5.3).
   const play = page.getByRole('button', { name: 'Lire la vidéo' }).first()
-  await expect(play).toHaveAttribute('aria-pressed', 'true')
+  await expect(play).toHaveText('Lire')
+  await expect(play).toBeFocused()
 })

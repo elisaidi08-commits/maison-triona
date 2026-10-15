@@ -3,7 +3,13 @@ import { getImageProps, type StaticImageData } from 'next/image'
 // Image « art direction » : 16:9 à partir de 1024 px, 4:5 en dessous (docs/assets-manifest.md :
 // Pxx-d et Pxx-m). Remplit son conteneur (object-cover). AVIF puis WebP via next/image.
 // `priority` : image LCP (chargement immédiat, priorité haute ; jamais `preload`, qui
-// téléchargerait les deux variantes d'un <picture>).
+// téléchargerait les deux variantes d'un <picture>). `anchor` : point d'ancrage du recadrage
+// (`seuil` garde l'horizon et une partie du sol de P01 quand la bande des choix réduit la hauteur).
+
+const ANCHORS = {
+  center: 'object-center',
+  seuil: 'object-seuil',
+} as const
 
 type ResponsiveImageProps = {
   desktop: StaticImageData
@@ -11,6 +17,7 @@ type ResponsiveImageProps = {
   alt: string
   sizes?: string
   priority?: boolean
+  anchor?: keyof typeof ANCHORS
 }
 
 export function ResponsiveImage({
@@ -19,6 +26,7 @@ export function ResponsiveImage({
   alt,
   sizes = '100vw',
   priority = false,
+  anchor = 'center',
 }: ResponsiveImageProps) {
   const common = {
     alt,
@@ -36,7 +44,10 @@ export function ResponsiveImage({
     <picture>
       <source media="(min-width: 64rem)" srcSet={desktopSrcSet} />
       {/* eslint-disable-next-line jsx-a11y/alt-text -- alt fourni par getImageProps */}
-      <img {...mobileProps} className="absolute inset-0 size-full object-cover" />
+      <img
+        {...mobileProps}
+        className={`absolute inset-0 size-full object-cover ${ANCHORS[anchor]}`}
+      />
     </picture>
   )
 }

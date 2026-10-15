@@ -14,7 +14,7 @@ export default function GlobalNotFound() {
   return (
     <html lang="fr" className={`${manrope.variable} ${newsreader.variable}`}>
       <body>
-        <main className="mx-auto flex max-w-content flex-col gap-24 px-margin py-section">
+        <main className="conteneur flex flex-col gap-24 py-section">
           <Rule short />
           <h1 className="font-display text-display-l text-sapin">Cette page n’existe pas.</h1>
           <p>

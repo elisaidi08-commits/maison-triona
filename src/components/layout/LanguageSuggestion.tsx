@@ -7,7 +7,8 @@ import { switchLocalePath, type Locale } from '@/i18n/pathnames'
 
 // Suggestion de langue (docs/art-direction.md §7.11) : proposer sans imposer. Jamais de redirection,
 // jamais de modale ; refermable, mémorisée pour la session. Posée en bas d'écran (position fixe)
-// pour ne provoquer aucun décalage de mise en page à son apparition (CLS 0), sous le menu mobile.
+// pour ne provoquer aucun décalage de mise en page à son apparition (CLS 0), sous le menu mobile,
+// au-dessus de la barre mobile quand elle existe (--barre-mobile-height).
 
 const STORAGE_KEY = 'mt-lang-suggestion-closed'
 
@@ -49,8 +50,9 @@ export function LanguageSuggestion({
   useEffect(() => {
     const root = document.documentElement
     const height = visible ? (bar.current?.offsetHeight ?? 0) : 0
-    document.body.style.paddingBottom = height ? `${height}px` : ''
-    root.style.scrollPaddingBottom = height ? `${height}px` : ''
+    const reserved = height ? `calc(${height}px + var(--barre-mobile-height))` : ''
+    document.body.style.paddingBottom = reserved
+    root.style.scrollPaddingBottom = reserved
     return () => {
       document.body.style.paddingBottom = ''
       root.style.scrollPaddingBottom = ''
@@ -73,7 +75,7 @@ export function LanguageSuggestion({
       ref={bar}
       lang={target}
       aria-label={text}
-      className="fixed inset-x-0 bottom-0 flex flex-wrap items-center justify-center gap-x-24 gap-y-8 border-t border-sapin-20 bg-pierre px-margin py-12 text-body-s text-encre"
+      className="fixed inset-x-0 bottom-barre flex flex-wrap items-center justify-center gap-x-24 gap-y-8 border-t border-sapin-20 bg-pierre px-margin py-12 text-body-s text-encre"
     >
       <p>{text}</p>
       <Link
