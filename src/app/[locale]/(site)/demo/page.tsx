@@ -1,12 +1,19 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { ResponsiveImage } from '@/components/media/ResponsiveImage'
+import { Chapter } from '@/components/sections/Chapter'
+import { ChapterIndex } from '@/components/sections/ChapterIndex'
 import { Button } from '@/components/ui/Button'
 import { ChoiceList } from '@/components/ui/ChoiceList'
+import { ChoiceRow, choiceInputId } from '@/components/ui/ChoiceRow'
+import { ErrorSummary } from '@/components/ui/ErrorSummary'
 import { Rule } from '@/components/ui/Rule'
 import { Stamp } from '@/components/ui/Stamp'
+import { StepProgress } from '@/components/ui/StepProgress'
 import { TextField } from '@/components/ui/TextField'
 import { TextLink } from '@/components/ui/TextLink'
 import { contrastLevel, contrastRatio } from '@/lib/contrast'
+import p02m from '../../../../../public/media/maison/P02-porte-ocre-m.jpg'
 import {
   benchCormorant,
   benchInstrument,
@@ -161,6 +168,51 @@ const CHOICES = [
   { href: '#liste', label: 'Je ne sais pas encore', note: 'Parlons-en, en toute discrétion.' },
 ]
 
+// Options d'essai du formulaire (story 1.6) : sous-choix et libellés à valider par Cat au lot 4.
+const BESOINS = [
+  { value: 'conciergerie', label: 'Organiser le quotidien', category: 'Conciergerie de luxe' },
+  {
+    value: 'grand-age',
+    label: 'Accompagner un proche, ou vous-même',
+    category: 'Accompagnement du grand âge',
+  },
+  { value: 'enfants', label: 'Prendre soin des enfants', category: 'Garde d’enfants' },
+  { value: 'autre', label: 'Évoquer une demande particulière' },
+]
+
+const POUR_QUI = [
+  { value: 'moi', label: 'Pour moi' },
+  { value: 'proche', label: 'Pour un proche' },
+  { value: 'non-dit', label: 'Je préfère ne pas le dire' },
+]
+
+const PAYS = [
+  { value: 'BE', label: 'Belgique' },
+  { value: 'FR', label: 'France' },
+  { value: 'LU', label: 'Luxembourg' },
+  { value: 'MC', label: 'Monaco' },
+  { value: 'CH', label: 'Suisse' },
+  { value: 'ailleurs', label: 'Ailleurs' },
+]
+
+const JOURS = [
+  { value: 'lundi', label: 'Lundi' },
+  { value: 'mardi', label: 'Mardi' },
+  { value: 'mercredi', label: 'Mercredi' },
+  { value: 'jeudi', label: 'Jeudi' },
+  { value: 'vendredi', label: 'Vendredi' },
+  { value: 'samedi', label: 'Samedi' },
+]
+
+const CHAPITRES = [
+  { href: '#demo-accueil', number: '01', title: 'Une philosophie d’accueil' },
+  { href: '#chapitres', number: '02', title: 'L’histoire' },
+  { href: '#chapitres', number: '03', title: 'L’exigence' },
+  { href: '#chapitres', number: '04', title: 'La discrétion' },
+  { href: '#chapitres', number: '05', title: 'Le sillage' },
+  { href: '#chapitres', number: '06', title: 'L’expérience' },
+]
+
 function SectionTitle({ id, label, title }: { id: string; label: string; title: string }) {
   return (
     <div className="flex flex-col gap-16">
@@ -179,7 +231,7 @@ export default function DemoPage() {
   return (
     <main className="conteneur flex flex-col gap-128 py-96">
       <header className="flex max-w-measure flex-col gap-24">
-        <p className="text-label text-encre uppercase">Banc d’essai · story 1.2</p>
+        <p className="text-label text-encre uppercase">Banc d’essai · stories 1.2 et 1.6</p>
         <h1 className="font-display text-display-l text-sapin">Tokens et typographie</h1>
         <p>
           Page interne, jamais indexée et absente de la production. Elle sert à choisir la serif
@@ -408,19 +460,100 @@ export default function DemoPage() {
         <div className="flex max-w-measure flex-col gap-48">
           <TextField id="demo-nom" name="nom" label="Nom" autoComplete="name" />
           <TextField
-            id="demo-message"
-            name="message"
-            label="Un mot libre (facultatif)"
-            hint="Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix."
-          />
-          <TextField
             id="demo-email"
             name="email"
             type="email"
             label="E-mail"
             autoComplete="email"
+            defaultValue="cat@exemple"
             error="Erreur : merci d’indiquer une adresse e-mail valide."
           />
+          <TextField
+            id="demo-message"
+            name="message"
+            label="Un mot libre (facultatif)"
+            multiline
+            maxLength={2000}
+            hint="Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. 2 000 caractères au plus."
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="etapes" className="flex flex-col gap-48">
+        <SectionTitle id="etapes" label="Formulaire · story 1.6" title="Étape, erreurs et choix" />
+        <p className="max-w-measure">
+          Une étape du formulaire telle qu’elle s’assemblera au lot 4 : tête d’étape, résumé
+          d’erreurs, choix en lignes. Les liens du résumé placent le focus sur leur champ. Textes
+          d’essai, à valider.
+        </p>
+        <div className="flex max-w-measure flex-col gap-64">
+          <StepProgress
+            id="demo-etape"
+            stepLabel="Étape 2 sur 4"
+            title="Votre situation"
+            current={2}
+            total={4}
+          />
+          <ErrorSummary
+            id="demo-erreurs"
+            title="Deux points à revoir avant de continuer"
+            errors={[
+              {
+                href: `#${choiceInputId('demo-pays', 'BE')}`,
+                message: 'Merci d’indiquer le pays concerné.',
+              },
+              {
+                href: '#demo-email',
+                message: 'Merci d’indiquer une adresse e-mail valide.',
+              },
+            ]}
+          />
+          <ChoiceRow
+            id="demo-besoin"
+            name="besoin"
+            legend="De quoi s’agit-il ?"
+            required
+            defaultValue="grand-age"
+            options={BESOINS}
+          />
+          <ChoiceRow
+            id="demo-pour-qui"
+            name="pour-qui"
+            legend="Pour qui est la demande ? (facultatif)"
+            options={POUR_QUI}
+          />
+          <ChoiceRow
+            id="demo-pays"
+            name="pays"
+            legend="Dans quel pays ?"
+            required
+            columns={3}
+            error="Erreur : merci d’indiquer le pays concerné."
+            options={PAYS}
+          />
+          <ChoiceRow
+            id="demo-jours"
+            name="jours"
+            type="checkbox"
+            legend="Quels jours vous conviennent ? (facultatif)"
+            hint="Une préférence, pas un rendez-vous."
+            columns={3}
+            defaultValue={['mardi', 'jeudi']}
+            options={JOURS}
+          />
+          {/* Variante A (annexe C) : Retour à gauche, Continuer à droite, même ordre au clavier. */}
+          <div className="flex items-center justify-between gap-24">
+            <Button variant="discret">Retour</Button>
+            <Button type="submit">Continuer</Button>
+          </div>
+          <div className="flex flex-col items-start gap-24 md:flex-row md:items-center md:gap-48">
+            <Button type="submit" pending="Envoi en cours">
+              Envoyer ma demande
+            </Button>
+            <Button type="submit" disabled>
+              Envoyer ma demande
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -429,6 +562,38 @@ export default function DemoPage() {
         <div className="max-w-measure">
           <ChoiceList choices={CHOICES} />
         </div>
+      </section>
+
+      <section aria-labelledby="chapitres" className="flex flex-col gap-48">
+        <SectionTitle id="chapitres" label="La Maison · story 1.6" title="Sommaire et chapitre" />
+        <p className="max-w-measure">
+          La grammaire de chapitre de « L’enfilade » (D26), sans l’image collante ni son fondu, qui
+          viendront au lot 3. Le sommaire marque le chapitre en cours. Titres et texte d’essai.
+        </p>
+        <div className="max-w-measure">
+          <ChapterIndex label="Sommaire" chapters={CHAPITRES} currentHref="#demo-accueil" />
+        </div>
+        <Chapter
+          id="demo-accueil"
+          number="01"
+          name="Une philosophie d’accueil"
+          title="Le privilège de se sentir attendu."
+          media={
+            <ResponsiveImage
+              desktop={p02m}
+              mobile={p02m}
+              alt="Une porte ocre entrouverte sur un intérieur baigné de lumière."
+              sizes="(min-width: 64rem) 50vw, 100vw"
+            />
+          }
+        >
+          <p>
+            Texte d’essai : un paragraphe de quarante à soixante mots, pour juger la mesure de la
+            colonne, l’interligne et l’air autour du titre. Le vrai récit attend les faits de Cat ;
+            rien ici n’est publié. On regarde seulement si la page respire, si le filet tombe juste
+            et si l’image tient sa place.
+          </p>
+        </Chapter>
       </section>
     </main>
   )

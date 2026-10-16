@@ -67,6 +67,30 @@ Total estimé : **~35 jours** de développement assisté (v2 : ~20), hors attent
 
 ---
 
+## 2 bis. Refonte V3 : ordre des lots (D26, 16/10/2026)
+
+L'ordre ci-dessous **prime sur le tableau du §2** pour les stories qu'il cite ; les autres gardent leur place. Une branche par story ; Claude fusionne chaque PR quand la CI est verte (D22) et s'arrête au point de contrôle de chaque lot, à partir du lot 2, avec les captures 1440, 834 et 390.
+
+| Lot | Stories | Contenu | Point de contrôle |
+|---|---|---|---|
+| 1 · Design system | **1.6** Composants de la refonte · **1.7** Carte des territoires (outil et tracé) | Formulaire (choix en lignes, progression, résumé d'erreurs, zone de texte, états du bouton), chapitre et sommaire de La Maison, carte au trait ; tout présenté sur `/demo` | Aucun (vus sur `/demo` au point ②) |
+| 2 · Accueil et services | **2.12** Accueil en neuf séquences (refondue par D26) · **2.13** Pages de service et page Services | Seuil, passage V01-s, promesse, 3 scènes, La Maison, Territoires, Contact ; page de service en 5 questions ; `/services` ; médias ≈ 30 crédits (chiffrés lot par lot) | ② |
+| 3 · La Maison | **2.6** reprise | Six chapitres « L'enfilade », sommaire, image collante ; médias 10 à 20 crédits | ③ La Maison |
+| 4 · Formulaire | **3.1**, **3.4** (présélection par `sessionStorage`, D26), **3.5** | Interface complète, sans JavaScript compris, validation Zod ; envoi désactivé tant que le coffre n'existe pas | ④ Formulaire (interface) |
+| 5 · Territoires | **2.7** reprise | Carte, liste des pays, panneaux, P07 | ③ Territoires |
+| 6 · Pages secondaires | 2.8 à 2.11, 4.4 | FAQ, Comment ça se passe, Notre indépendance, partage, pages légales | ③ Pages |
+| 7 · Harmonisation et QA | 5.3, 4.3 | Lighthouse, axe, VoiceOver et NVDA, FR et EN, SEO technique | Avant la mise en ligne |
+
+Le coffre et l'envoi réel (3.2, 3.3, 3.6) suivent le lot 4 dès que l'infrastructure (D07) et l'avis juridique sont là, avec le point de contrôle ④ complet.
+
+**1.6 Composants de la refonte (lot 1)** — Dans `src/components/ui/` : `Button` (états désactivé et envoi en cours, variante discrète pour « Retour ») ; `TextField` (zone de texte, valeur initiale, longueur maximale) ; `ChoiceRow` (boutons radio ou cases en lignes de 56 px dans un `fieldset` et sa `legend`, filets or, catégorie en label, aide et erreur) ; `StepProgress` (titre d'étape en une ligne de label, « Étape 2 sur 4 · Votre situation », qui peut recevoir le focus ; filet or continu qui se remplit, annexe C) ; `ErrorSummary` (titre focalisable, liens vers chaque champ fautif, ligne terracotta). Dans `src/components/sections/` : `Chapter` et `ChapterIndex` (numéro, titre display Light, filet or 48 px, paragraphe, emplacement d'image ; sommaire en vrais liens avec `aria-current`). Tous présentés sur `/demo`, sans logique de formulaire (lot 4) ni d'image collante (lot 3).
+**CA** : axe 0 violation sur `/demo` en FR et EN ; chaque état atteignable et lisible au clavier ; cibles ≥ 48 px (56 px pour `ChoiceRow`) ; focus 3 px jamais masqué ; contrôles natifs, donc utilisables sans JavaScript ; l'erreur ne repose jamais sur la seule couleur ; aucune classe arbitraire ; tests E2E : choix au clavier (flèches et espace), lien du résumé d'erreurs qui place le focus sur le champ.
+
+**1.7 Carte des territoires : outil et tracé (lot 1)** — Script `scripts/carte-territoires.mjs`, lancé à la main : frontières Natural Earth (pays au 1:10 000 000, domaine public), projection Lambert azimutale équivalente (EPSG:3035), simplification avec **mapshaper** (dépendance de développement, D26), SVG figé dans le dépôt avec sa provenance (source, version, date, licence). Composant serveur `TerritoriesMap` : les cinq pays en filet sapin, les voisins en filet sauge, un point or par pays, Monaco en point seul. Présenté sur `/demo` ; liste, panneaux et choix d'un pays au lot 5.
+**CA** : SVG ≤ 60 ko ; aucune bibliothèque envoyée au navigateur ; carte décorative (`aria-hidden`), les noms de pays portés par du texte réel ; aucune ville, adresse ni partenaire ; provenance et licence écrites ; aucune image générée par IA.
+
+---
+
 ## 3. Point de contrôle visuel ⛳
 
 À la fin de chaque story marquée ⛳, Claude Code **s'arrête** et remet à Sady :
