@@ -1,19 +1,41 @@
 import { expect, test } from '@playwright/test'
 
-// Story 2.1 : premier écran « Seuil plein écran » (D19).
+// Premier écran de l'accueil (D25, D26) : le nom de la maison, l'accroche, ce qu'elle fait,
+// l'entrée par besoin.
 
-test('le seuil donne le titre, la question et 4 vrais liens', async ({ page }) => {
+test('le premier écran donne le nom, l’accroche, ce que fait la maison et 4 vrais liens', async ({
+  page,
+}) => {
   await page.goto('/fr')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Une seconde vie, comme des vacances qui ne s’arrêtent pas.',
-  )
-  await expect(
-    page.getByRole('heading', { level: 2, name: /Que pouvons-nous faire/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Maison Triona')
+  await expect(page.getByText('L’attention portée à l’essentiel.')).toBeVisible()
+  await expect(page.getByText(/Conciergerie de luxe, accompagnement du grand/)).toBeVisible()
   const hrefs = await page
     .locator('section[aria-labelledby="seuil-titre"] ul a')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')))
   expect(hrefs).toEqual(['#conciergerie', '#grand-age', '#enfants', '/fr/contact'])
+  await expect(page.getByRole('link', { name: /Évoquer une demande particulière/ })).toHaveCount(1)
+})
+
+test('l’accueil suit les neuf séquences de la refonte V3', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  // Le passage s'insère après l'hydratation, seulement si la vidéo peut jouer.
+  await expect(page.locator('#seuil-passage')).toHaveCount(1)
+  const order = await page
+    .locator('main section[aria-labelledby], main #seuil-passage')
+    .evaluateAll((nodes) => nodes.map((node) => node.id || node.getAttribute('aria-labelledby')))
+  expect(order).toEqual([
+    'seuil-titre',
+    'seuil-passage',
+    'promesse-titre',
+    'conciergerie',
+    'grand-age',
+    'enfants',
+    'maison-titre',
+    'territoires-titre',
+    'contact-titre',
+  ])
 })
 
 for (const [width, height] of [

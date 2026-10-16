@@ -2,27 +2,26 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { afterLoad, videoAllowed } from './videoConditions'
+import { setVideosPaused, useVideosPaused } from './videoPause'
 
 // Vidéo en boucle posée sur son poster (docs/motion-spec.md M10, M14). Décorative (aria-hidden),
-// muette, chargée après `load` puis seulement près de l'écran ; elle ne joue que visible (une seule
-// vidéo à la fois en pratique). Bouton pause obligatoire (WCAG 2.2.2), choix mémorisé pour la session :
-// discret (label 13 px en bas à droite, sur la marge), mais cible de 48 px : sur un aplat sapin dans
-// le hero, sous l'image, en encre sur l'ivoire, ailleurs (`controls="below"`). Le nom accessible complet
-// contient le mot visible (WCAG 2.5.3) ; il change avec l'état, sans aria-pressed (un seul signal).
+// muette, chargée après `load` puis seulement près de l'écran ; elle ne joue que visible.
+// Pause obligatoire (WCAG 2.2.2), partagée par toutes les vidéos et mémorisée pour la session
+// (videoPause.ts). Bouton discret (label 13 px, cible de 48 px) : sur un aplat sapin posé sur l'image
+// (`overlay`), sous l'image en encre sur l'ivoire (`below`), ou absent quand un bouton de groupe le
+// remplace (`none`, PauseVideosButton). Le nom accessible complet contient le mot visible (WCAG
+// 2.5.3) ; il change avec l'état, sans aria-pressed (un seul signal).
 
-const PAUSED_KEY = 'mt-videos-en-pause'
-
-type Label = { visible: string; full: string }
+export type PauseLabel = { visible: string; full: string }
 
 type LoopVideoProps = {
   mp4: string
   webm: string
-  pause: Label
-  play: Label
+  pause: PauseLabel
+  play: PauseLabel
   // Même recadrage que le poster, pour que le fondu de l'un à l'autre ne se voie pas.
   anchor?: 'center' | 'seuil'
-  // Bouton posé sur l'image (hero) ou sous l'image, sur l'ivoire (le conteneur ne coupe pas ce qui dépasse).
-  controls?: 'overlay' | 'below'
+  controls?: 'overlay' | 'below' | 'none'
 }
 
 export function LoopVideo({
@@ -36,20 +35,11 @@ export function LoopVideo({
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
   const [ready, setReady] = useState(false)
-  const [paused, setPaused] = useState(false)
+  const paused = useVideosPaused()
 
   useEffect(() => {
     if (!videoAllowed()) return
-    let pausedBefore = false
-    try {
-      pausedBefore = sessionStorage.getItem(PAUSED_KEY) === '1'
-    } catch {
-      pausedBefore = false
-    }
-    return afterLoad(() => {
-      setPaused(pausedBefore)
-      setEnabled(true)
-    })
+    return afterLoad(() => setEnabled(true))
   }, [])
 
   useEffect(() => {
@@ -72,18 +62,6 @@ export function LoopVideo({
 
   if (!enabled) return null
 
-  const toggle = () => {
-    const next = !paused
-    setPaused(next)
-    try {
-      sessionStorage.setItem(PAUSED_KEY, next ? '1' : '0')
-    } catch {
-      // Stockage indisponible : le choix vaut pour cette page.
-    }
-    if (next) video.current?.pause()
-    else void video.current?.play().catch(() => {})
-  }
-
   return (
     <>
       <video
@@ -101,18 +79,20 @@ export function LoopVideo({
         <source src={webm} type="video/webm" />
         <source src={mp4} type="video/mp4" />
       </video>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={paused ? play.full : pause.full}
-        className={`absolute right-margin z-0 inline-flex min-h-touch cursor-pointer items-center text-label uppercase ${
-          controls === 'below'
-            ? 'top-full text-encre transition-colors duration-micro ease-standard hover:text-cypres'
-            : 'focus-sur-image bottom-24 bg-sapin px-16 text-ivoire'
-        }`}
-      >
-        {paused ? play.visible : pause.visible}
-      </button>
+      {controls === 'none' ? null : (
+        <button
+          type="button"
+          onClick={() => setVideosPaused(!paused)}
+          aria-label={paused ? play.full : pause.full}
+          className={`absolute right-margin z-10 inline-flex min-h-touch cursor-pointer items-center text-label uppercase ${
+            controls === 'below'
+              ? 'top-full text-encre transition-colors duration-micro ease-standard hover:text-cypres'
+              : 'focus-sur-image bottom-24 bg-sapin px-16 text-ivoire'
+          }`}
+        >
+          {paused ? play.visible : pause.visible}
+        </button>
+      )}
     </>
   )
 }

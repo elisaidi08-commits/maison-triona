@@ -50,7 +50,8 @@
   },
   "Home": {
     "title": "Une seconde vie, comme des vacances qui ne s’arrêtent pas.",
-    "question": "Que pouvons-nous faire pour vous, ou pour l’un de vos proches ?",
+    "accroche": "L’attention portée à l’essentiel.",
+    "intro": "Conciergerie de luxe, accompagnement du grand âge et garde d’enfants : la maison vous présente des personnes de confiance, choisies une à une.",
     "imageAlt": "Une pièce dans la pénombre, une porte-fenêtre ouverte sur la mer et un rideau de lin soulevé par la brise.",
     "choices": {
       "concierge": {
@@ -66,10 +67,19 @@
         "category": "Garde d’enfants"
       },
       "unsure": {
-        "label": "Je ne sais pas encore",
+        "label": "Évoquer une demande particulière",
         "note": "Parlons-en, en toute discrétion."
       }
     }
+  },
+  "Promise": {
+    "label": "Notre promesse",
+    "points": [
+      "Une interlocutrice unique",
+      "Des personnes choisies une à une",
+      "Une discrétion absolue",
+      "Une relation personnelle, dans la durée"
+    ]
   },
   "Scenes": {
     "house": {
@@ -105,20 +115,41 @@
       "Nous vous présentons la bonne personne."
     ],
     "model": "Chaque personne que la maison vous présente, nous la connaissons personnellement.",
+    "situationsLabel": "Par exemple",
+    "process": "Vous nous écrivez, nous vous répondons personnellement, puis nous vous présentons la bonne personne.",
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
-      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage."
+      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
+      "link": "Découvrir la conciergerie de luxe",
+      "situations": [
+        "Préparer une résidence avant votre arrivée.",
+        "Organiser un séjour, un déplacement ou une réception.",
+        "Trouver la bonne personne pour une tâche du quotidien."
+      ]
     },
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
-      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés."
+      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés.",
+      "link": "Découvrir l’accompagnement du grand âge",
+      "situations": [
+        "Une présence régulière pour une promenade, un repas, une conversation.",
+        "Un quotidien organisé pour un parent qui vit seul.",
+        "Des sorties et des activités qui lui ressemblent."
+      ]
     },
     "children": {
       "name": "Garde d’enfants",
-      "promise": "Une présence choisie, pour quelques heures ou pour une saison."
-    }
+      "promise": "Une présence choisie, pour quelques heures ou pour une saison.",
+      "link": "Découvrir la garde d’enfants",
+      "situations": [
+        "Quelques heures, un soir ou pendant un rendez-vous.",
+        "Une présence régulière après l’école.",
+        "Une saison, des vacances, une période particulière."
+      ]
+    },
+    "title": "Nos services"
   },
   "Video": {
     "pause": "Mettre la vidéo en pause",
@@ -175,13 +206,6 @@
         "text": "[CONTENU À FOURNIR PAR CAT]"
       }
     ]
-  },
-  "MiniMenu": {
-    "label": "Sur cette page",
-    "concierge": "Conciergerie",
-    "senior": "Grand âge",
-    "children": "Enfants",
-    "contact": "Contact"
   },
   "MobileBar": {
     "label": "Écrire en toute discrétion"

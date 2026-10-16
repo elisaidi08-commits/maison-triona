@@ -8,12 +8,12 @@ import { AnchorFocus } from './AnchorFocus'
 import desktop from '../../../public/media/seuil/P01-fenetre-mer.jpg'
 import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 
-// Écran 1 de l'accueil, « Seuil plein écran » (D19, docs/art-direction.md §7.2).
-// Image plein cadre et vidéo V01 (desktop), titre display sur un voile sapin à 60 % (seul texte
-// autorisé sur image). Le voile n'est pas un cartouche : il part du bord gauche et du bas de l'image,
-// dans le prolongement de la bande ivoire, et le titre s'aligne sur la marge, comme la question.
-// Bande ivoire : la question, les 4 choix (en ligne en desktop), puis le « K. » de fin de hero.
-// Mobile : image recadrée, puis la liste ; le premier choix reste visible sans défiler sur 390 × 844.
+// Premier écran de l'accueil (D25, gardé par D26) : la vidéo V01 en plein cadre (photo P01 en
+// mobile), sous un voile sapin à 50 % mesuré sur ces images, et le nom de la maison en grand,
+// centré, signé du « K. ». Seul texte posé sur l'image. Bande ivoire (D26) : l'accroche, une phrase
+// qui dit ce que fait la maison, puis l'entrée par besoin (les 3 services et « Évoquer une demande
+// particulière »), vrais liens. Un seul titre display à l'écran : l'accroche est en Manrope.
+// Le premier choix reste visible sans défiler sur 390 × 844.
 
 const CHOICES = [
   { key: 'concierge', href: '#conciergerie', number: '01' },
@@ -22,17 +22,9 @@ const CHOICES = [
   { key: 'unsure', href: 'contact', number: undefined },
 ] as const
 
-function HeroStamp() {
-  return (
-    <span aria-hidden="true" className="flex items-center gap-16">
-      <Rule short />
-      <Stamp />
-    </span>
-  )
-}
-
 export async function Seuil({ locale }: { locale: string }) {
   const t = await getTranslations('Home')
+  const meta = await getTranslations('Meta')
   const video = await getTranslations('Video')
   const choices = CHOICES.map(({ key, href, number }) => ({
     href: href === 'contact' ? `/${locale}/contact` : href,
@@ -59,26 +51,28 @@ export async function Seuil({ locale }: { locale: string }) {
           play={{ visible: video('playShort'), full: video('play') }}
           anchor="seuil"
         />
-        <div className="absolute bottom-0 left-0 max-w-titre bg-voile pt-24 pr-24 pb-24 pl-margin lg:pt-32 lg:pr-48 lg:pb-32">
+        <div aria-hidden="true" className="absolute inset-0 bg-voile-leger" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-24 px-margin text-center">
           <h1
             id="seuil-titre"
-            className="animate-entree font-display text-display-xl text-balance text-ivoire"
+            tabIndex={-1}
+            className="animate-entree font-display text-marque text-ivoire"
           >
-            {t('title')}
+            {meta('siteName')}
           </h1>
-        </div>
-      </div>
-      <div className="bg-ivoire px-margin pt-32 pb-24">
-        <div className="mb-16 flex items-center justify-between gap-24">
-          <h2 className="text-title-h3 text-encre">{t('question')}</h2>
-          <span className="hidden lg:block">
-            <HeroStamp />
+          <span aria-hidden="true" className="flex items-center gap-16">
+            <Rule short />
+            <Stamp onDark />
+            <Rule short />
           </span>
         </div>
+      </div>
+      <div className="bg-ivoire px-margin pt-24 pb-24 lg:pt-32">
+        <div className="mb-16 flex max-w-titre flex-col gap-4 lg:mb-24">
+          <p className="text-title-h3 text-balance text-sapin">{t('accroche')}</p>
+          <p className="text-body text-balance text-encre">{t('intro')}</p>
+        </div>
         <ChoiceList choices={choices} rowOnDesktop />
-        <span className="mt-24 block lg:hidden">
-          <HeroStamp />
-        </span>
         <AnchorFocus />
       </div>
     </section>

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
-// Story 2.5 : vidéos conditionnelles (desktop, sans mouvement réduit), bouton pause, aucune vidéo
-// en mobile ni en mouvement réduit.
+// Vidéos conditionnelles (desktop, sans mouvement réduit), bouton pause, aucune vidéo en mobile ni
+// en mouvement réduit, passage V01-s (M15) seulement en desktop.
 
 const videoRequests = (page: import('@playwright/test').Page) => {
   const urls: string[] = []
@@ -26,10 +26,9 @@ test('aucune vidéo en mouvement réduit', async ({ page }) => {
   await page.goto('/fr')
   await page.waitForTimeout(2500)
   expect(urls).toEqual([])
-  await expect(page.locator('#seuil-passage')).toHaveCount(0)
 })
 
-test('desktop : la vidéo du seuil joue et se met en pause au clavier', async ({ page }) => {
+test('desktop : la vidéo du premier écran joue et se met en pause au clavier', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
   const pause = page.getByRole('button', { name: 'Mettre la vidéo en pause' }).first()
@@ -40,4 +39,21 @@ test('desktop : la vidéo du seuil joue et se met en pause au clavier', async ({
   const play = page.getByRole('button', { name: 'Lire la vidéo' }).first()
   await expect(play).toHaveText('Lire')
   await expect(play).toBeFocused()
+})
+
+test('passage V01-s : présent en desktop, absent en mobile et en mouvement réduit', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(1)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(0)
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(0)
 })

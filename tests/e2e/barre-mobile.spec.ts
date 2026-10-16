@@ -1,32 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-// Mini-menu desktop (docs/art-direction.md §7.9) et barre mobile « Écrire en toute discrétion » (§7.10).
+// Barre mobile « Écrire en toute discrétion » (docs/art-direction.md §7.10).
 
-test('desktop : le mini-menu reste en haut pendant les scènes et marque la scène en cours', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr')
-  const menu = page.getByRole('navigation', { name: 'Sur cette page' })
-  await expect(menu).toBeVisible()
-  await page
-    .locator('#grand-age-titre')
-    .evaluate((title) => title.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  const box = await menu.boundingBox()
-  expect(box?.y).toBe(0)
-  await expect(menu.getByRole('link', { name: 'Grand âge' })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-  await expect(page.locator('[data-barre-mobile]')).toBeHidden()
-})
-
-test('mobile : pas de mini-menu, la barre mène au contact sans masquer le premier choix', async ({
-  page,
-}) => {
+test('mobile : la barre mène au contact sans masquer le premier choix', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fr')
-  await expect(page.getByRole('navigation', { name: 'Sur cette page' })).toBeHidden()
   const bar = page.locator('[data-barre-mobile]')
   await expect(bar).toBeVisible()
   await expect(bar.getByRole('link', { name: 'Écrire en toute discrétion' })).toHaveAttribute(

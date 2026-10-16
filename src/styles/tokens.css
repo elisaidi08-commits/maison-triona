@@ -43,6 +43,9 @@
   --color-terracotta: #a66a4e;
   /* Voile du titre posé sur l'image du hero : sapin à 60 % (≥ 58 %, docs/design-tokens.md §2.4). */
   --color-voile: #1c3b2a99;
+  /* Voile plein cadre du premier écran (D25) : 50 %, mesuré sur V01 et P01 (pixel le plus clair de la
+     zone du nom : 3:1 dès 24 %, 4,5:1 à 49 %) ; jamais sur une autre image sans nouvelle mesure. */
+  --color-voile-leger: #1c3b2a80;
 
   /* Espacements (§4.1) : la classe porte la valeur en px (`p-24` = 24 px). */
   --spacing-0: 0px;
@@ -82,6 +85,11 @@
   --font-weight-medium: 500;
 
   /* Échelle typographique (§3.2) : tailles fluides entre 390 et 1440 px, zoom 200 % préservé. */
+  /* Nom de la maison sur le premier écran (D25) : 52 px en mobile, 112 px à 1440. */
+  --text-marque: clamp(3.25rem, 2.2rem + 4.3vw, 7rem);
+  --text-marque--line-height: 1;
+  --text-marque--letter-spacing: -0.02em;
+  --text-marque--font-weight: 300;
   --text-display-xl: clamp(2.75rem, 2.1rem + 2.667vw, 4.5rem);
   --text-display-xl--line-height: 1.06;
   --text-display-xl--letter-spacing: -0.02em;
@@ -179,10 +187,11 @@
   object-position: 50% 60%;
 }
 
-/* Image du seuil en mobile : un peu plus de la moitié de l'écran, pour que le premier choix
-   reste visible sans défiler sur 390 × 844 (docs/art-direction.md §7.2). */
+/* Image du seuil en mobile : la moitié de l'écran, pour que le premier choix reste visible sans
+   défiler sur 390 × 844, au-dessus de la barre mobile, avec l'accroche de D26 dans la bande
+   (docs/art-direction.md §7.2). */
 @utility h-seuil-image {
-  height: 52svh;
+  height: 50svh;
 }
 
 /* Conteneur de contenu : marge latérale comprise dans la largeur maximale, pour que le texte
@@ -267,7 +276,8 @@
     --focus-color: var(--color-sapin);
     /* En-tête : 16 px de marge haute et basse + cible de 48 px. */
     --header-height: 80px;
-    /* Mini-menu (§7.9, desktop, accueil) et barre mobile (§7.10) : 0 tant qu'ils n'existent pas. */
+    /* Hauteur collante sous laquelle se calent les médias des scènes (0 : le mini-menu de §7.9 a été
+       retiré par D25) et barre mobile (§7.10, 0 tant qu'elle n'existe pas). */
     --mini-menu-height: 0px;
     --barre-mobile-height: 0px;
     --distance-reveal: 12px;
@@ -287,14 +297,6 @@
       --spacing-section: 160px;
       --spacing-margin: 120px;
       --spacing-gutter: 24px;
-    }
-  }
-
-  /* Le mini-menu collant ne masque jamais l'élément focalisé ni la cible d'une ancre (2.4.11). */
-  @media (width >= 64rem) {
-    :root:has([data-mini-menu]) {
-      --mini-menu-height: 48px;
-      scroll-padding-top: var(--mini-menu-height);
     }
   }
 
@@ -353,6 +355,14 @@
   textarea:autofill {
     -webkit-text-fill-color: var(--color-encre);
     box-shadow: inset 0 0 0 1000px var(--color-ivoire);
+  }
+
+  /* Cibles de focus programmé, hors de l'ordre de tabulation (titre d'une scène après un choix,
+     titre d'un chapitre ou d'une étape, contenu principal après le lien d'évitement) : le focus
+     y est placé pour la lecture, pas pour une action ; aucun cadre autour d'un titre. Les éléments
+     interactifs gardent toujours leur anneau de 3 px. */
+  :is(h1, h2, h3, main)[tabindex='-1']:focus-visible {
+    outline: none;
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */

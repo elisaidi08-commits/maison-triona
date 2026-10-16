@@ -50,7 +50,8 @@
   },
   "Home": {
     "title": "A second life, like a holiday that never ends.",
-    "question": "What can we do for you, or for someone close to you?",
+    "accroche": "Attention to what matters most.",
+    "intro": "Luxury concierge, senior companionship and childcare: the house introduces you to trusted people, chosen one by one.",
     "imageAlt": "A dim room, French windows open onto the sea and a linen curtain lifted by the breeze.",
     "choices": {
       "concierge": {
@@ -66,10 +67,19 @@
         "category": "Childcare"
       },
       "unsure": {
-        "label": "I’m not sure yet",
+        "label": "Discuss a particular request",
         "note": "Let’s talk, in complete discretion."
       }
     }
+  },
+  "Promise": {
+    "label": "Our promise",
+    "points": [
+      "A single point of contact",
+      "People chosen one by one",
+      "Complete discretion",
+      "A personal relationship that lasts"
+    ]
   },
   "Scenes": {
     "house": {
@@ -101,20 +111,41 @@
       "We introduce you to the right person."
     ],
     "model": "Every person we introduce to you is someone we know personally.",
+    "situationsLabel": "For example",
+    "process": "You write to us, we reply to you personally, then we introduce you to the right person.",
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
-      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope."
+      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
+      "link": "Discover our luxury concierge",
+      "situations": [
+        "Getting a residence ready before you arrive.",
+        "Arranging a stay, a journey or a reception.",
+        "Finding the right person for an everyday task."
+      ]
     },
     "senior": {
       "name": "Senior companionship",
       "promise": "Days that keep their rhythm and their pleasures.",
-      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals."
+      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals.",
+      "link": "Discover senior companionship",
+      "situations": [
+        "A regular presence for a walk, a meal, a conversation.",
+        "Everyday life organised for a parent who lives alone.",
+        "Outings and activities that suit them."
+      ]
     },
     "children": {
       "name": "Childcare",
-      "promise": "A trusted presence, for a few hours or a whole season."
-    }
+      "promise": "A trusted presence, for a few hours or a whole season.",
+      "link": "Discover childcare",
+      "situations": [
+        "A few hours, an evening or during an appointment.",
+        "A regular presence after school.",
+        "A season, a holiday, a particular time."
+      ]
+    },
+    "title": "Our services"
   },
   "Video": {
     "pause": "Pause the video",
@@ -171,13 +202,6 @@
         "text": "[CONTENT TO BE PROVIDED BY CAT]"
       }
     ]
-  },
-  "MiniMenu": {
-    "label": "On this page",
-    "concierge": "Concierge",
-    "senior": "Senior companionship",
-    "children": "Childcare",
-    "contact": "Contact"
   },
   "MobileBar": {
     "label": "Write to us in confidence"

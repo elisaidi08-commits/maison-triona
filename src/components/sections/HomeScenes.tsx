@@ -7,13 +7,48 @@ import { TextLink } from '@/components/ui/TextLink'
 import p02d from '../../../public/media/maison/P02-porte-ocre.jpg'
 import p02m from '../../../public/media/maison/P02-porte-ocre-m.jpg'
 
-// Scènes de l'accueil hors services (storyboard du brief §3) : S2 La maison, S6 Territoires,
-// S7 Contact. Texte jamais posé sur l'image ; une idée par écran.
+// Scènes de l'accueil hors services (D26) : la promesse, La Maison, Territoires, Contact.
+// Texte jamais posé sur l'image ; une idée par écran.
 
-// S2 : le titre sur aplat, puis l'image en pleine largeur (16:9 en desktop, la vidéo V02 n'y est
-// presque pas agrandie). Le titre de S2 ne partage pas l'écran avec celui de S3 ; en desktop, un
-// intervalle de section sépare l'image du média de S3 (jamais deux photos bord à bord) et accueille
-// le bouton pause, sous l'image.
+// Séquence 03, la promesse : l'accroche validée par Cat en grand à gauche ; à droite, quatre lignes
+// courtes, l'interlocutrice unique, la sélection, la discrétion, la relation. « Comment ça se
+// passe » n'a plus de section : une phrase par scène de service le dit (D26), les pages de service
+// gardent les trois étapes.
+export async function ScenePromise() {
+  const t = await getTranslations('Promise')
+  const home = await getTranslations('Home')
+  const points = t.raw('points') as string[]
+  return (
+    <section aria-labelledby="promesse-titre" className="py-section">
+      <div className="conteneur grid gap-48 lg:grid-cols-12 lg:gap-gutter">
+        <div className="flex flex-col gap-24 lg:col-span-6">
+          <Rule short />
+          <p className="text-label text-encre uppercase">{t('label')}</p>
+          <h2
+            id="promesse-titre"
+            className="max-w-titre font-display text-display-l text-balance text-sapin"
+          >
+            {home('title')}
+          </h2>
+        </div>
+        <ul className="flex flex-col lg:col-span-5 lg:col-start-8 lg:self-end">
+          {points.map((point) => (
+            <li
+              key={point}
+              className="border-b border-sapin-20 py-24 text-title-h3 text-encre first:border-t"
+            >
+              {point}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+// La maison : le titre sur aplat, puis l'image en pleine largeur (16:9 en desktop, la vidéo V02 n'y
+// est presque pas agrandie). En desktop, un intervalle de section sépare l'image de la section
+// suivante et accueille le bouton pause, sous l'image.
 export async function SceneMaison({ locale }: { locale: string }) {
   const t = await getTranslations('Scenes.house')
   const video = await getTranslations('Video')

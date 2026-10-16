@@ -1,15 +1,19 @@
 import { getTranslations } from 'next-intl/server'
+import { LoopVideo } from '@/components/media/LoopVideo'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
-import { SERVICE_IMAGES, type Service } from '@/lib/services'
+import { localizedPath } from '@/i18n/pathnames'
+import type { Locale } from '@/i18n/routing'
+import { SERVICE_MEDIA, SERVICE_PATHS, type Service } from '@/lib/services'
 
-// Scène de service, structure identique × 3 (docs/art-direction.md §7.8). Desktop : média à hauteur
-// d'écran, collant pendant que le texte défile, côté alterné d'une scène à l'autre ; la scène se lit
-// en deux temps (la promesse face à l'image, puis, un intervalle de section plus bas, réassurance,
-// étapes, modèle et CTA). Le texte garde la marge de page côté extérieur. L'image est
-// la version portrait (Pxx-m), faite pour une demi-largeur. Sans visuel (lot 2 à venir), aucune
-// colonne vide : la promesse et les détails se répondent sur deux colonnes de texte.
+// Scène de service, structure identique × 3 (docs/art-direction.md §7.8, refonte V3 D26). Desktop :
+// média à hauteur d'écran, collant pendant que le texte défile, côté alterné d'une scène à l'autre ;
+// la vidéo du service y joue en boucle (desktop seulement, bouton pause posé sur l'image). La scène
+// se lit en deux temps : la promesse face à l'image, puis, un intervalle de section plus bas, trois
+// situations, une phrase sur le fonctionnement, une réassurance et le CTA. Le texte garde la marge
+// de page côté extérieur. L'image est la version portrait (Pxx-m), faite pour une demi-largeur.
+// Sans visuel, aucune colonne vide : la promesse et les détails se répondent sur deux colonnes.
 // En mobile, le texte vient d'abord : après un choix d'entrée, le visiteur arrive sur la promesse,
 // pas sur l'image (parcours « choisir → service → contacter ») ; l'image suit son texte de près,
 // l'air de section la sépare de la scène suivante.
@@ -17,9 +21,11 @@ import { SERVICE_IMAGES, type Service } from '@/lib/services'
 
 type SceneServiceProps = {
   service: Service
-  locale: string
+  locale: Locale
   heading?: 'h1' | 'h2'
   mediaRight?: boolean
+  // Sur l'accueil : lien vers la page du service, sous le CTA.
+  pageLink?: boolean
 }
 
 export async function SceneService({
@@ -27,11 +33,12 @@ export async function SceneService({
   locale,
   heading = 'h2',
   mediaRight = false,
+  pageLink = false,
 }: SceneServiceProps) {
   const t = await getTranslations('Services')
-  const reassurance = t.raw('reassurance') as string[]
-  const steps = t.raw('steps') as string[]
-  const image = SERVICE_IMAGES[service.id]
+  const video = await getTranslations('Video')
+  const situations = t.raw(`${service.key}.situations`) as string[]
+  const image = SERVICE_MEDIA[service.id]
   const Heading = heading
   const titleId = `${service.anchor}-titre`
 
@@ -55,36 +62,32 @@ export async function SceneService({
     </div>
   )
 
+  // Réassurance : pour le grand âge, la précision « une présence, pas des soins » ; sinon le modèle
+  // de la maison (des personnes qu'elle connaît personnellement).
   const details = (
     <>
-      <ul className="flex flex-col">
-        {reassurance.map((item) => (
-          <li key={item} className="border-b border-sapin-20 py-12 first:border-t">
-            {item}
-          </li>
-        ))}
-      </ul>
-
       <div className="flex flex-col gap-16">
-        <h3 className="text-label text-encre uppercase">{t('howItWorks')}</h3>
-        <ol className="flex flex-col gap-12">
-          {steps.map((step, index) => (
-            <li key={step} className="flex items-baseline gap-16">
-              <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              {step}
+        <h3 className="text-label text-encre uppercase">{t('situationsLabel')}</h3>
+        <ul className="flex flex-col">
+          {situations.map((situation) => (
+            <li key={situation} className="border-b border-sapin-20 py-12 first:border-t">
+              {situation}
             </li>
           ))}
-        </ol>
+        </ul>
       </div>
 
-      <p>{t('model')}</p>
-      {service.key === 'senior' ? <p>{t('senior.precision')}</p> : null}
+      <p>{t('process')}</p>
+      <p>{service.key === 'senior' ? t('senior.precision') : t('model')}</p>
 
-      <p>
+      <div className="flex flex-col items-start gap-8">
         <TextLink href={`/${locale}/contact?service=${service.id}`}>{t('cta')}</TextLink>
-      </p>
+        {pageLink ? (
+          <TextLink href={localizedPath(SERVICE_PATHS[service.id], locale)}>
+            {t(`${service.key}.link`)}
+          </TextLink>
+        ) : null}
+      </div>
     </>
   )
 
@@ -120,6 +123,14 @@ export async function SceneService({
           alt={t(`${service.key}.imageAlt`)}
           sizes="(min-width: 64rem) 50vw, 100vw"
         />
+        {image.video ? (
+          <LoopVideo
+            mp4={image.video.mp4}
+            webm={image.video.webm}
+            pause={{ visible: video('pauseShort'), full: video('pause') }}
+            play={{ visible: video('playShort'), full: video('play') }}
+          />
+        ) : null}
       </div>
 
       <div
