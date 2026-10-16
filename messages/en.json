@@ -116,6 +116,7 @@
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
       "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
       "link": "Discover our luxury concierge",
       "situations": [
@@ -127,6 +128,7 @@
     "senior": {
       "name": "Senior companionship",
       "promise": "Days that keep their rhythm and their pleasures.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
       "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals.",
       "link": "Discover senior companionship",
       "situations": [
@@ -138,6 +140,7 @@
     "children": {
       "name": "Childcare",
       "promise": "A trusted presence, for a few hours or a whole season.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
       "link": "Discover childcare",
       "situations": [
         "A few hours, an evening or during an appointment.",
@@ -146,6 +149,21 @@
       ]
     },
     "title": "Our services"
+  },
+  "ServicePage": {
+    "needLabel": "The need",
+    "forWhomLabel": "Who it is for",
+    "forWhom": "For you, or for someone close to you.",
+    "situationsLabel": "A few situations",
+    "steps": [
+      "You write to us.",
+      "We reply to you personally, usually by email, within 48 hours.",
+      "We introduce you to the right person."
+    ],
+    "selectionLabel": "How we choose",
+    "discretionLabel": "In complete confidence",
+    "contactLabel": "Write to us",
+    "othersLabel": "Our other services"
   },
   "Video": {
     "pause": "Pause the video",
