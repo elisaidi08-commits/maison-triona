@@ -17,6 +17,7 @@ export const PATHNAMES = {
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
   '/demo': '/demo',
+  '/prototype': '/prototype',
 } as const
 
 export type InternalPath = keyof typeof PATHNAMES

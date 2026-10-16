@@ -96,6 +96,12 @@ ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libvpx-vp9 -b:v 1800k -row-mt 1
 ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libx264 -preset slow -g 1 -b:v 3800k -maxrate 4000k -bufsize 8000k -pass 1 -passlogfile /tmp/s -f mp4 /dev/null
 ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libx264 -preset slow -g 1 -b:v 3800k -maxrate 4000k -bufsize 8000k -pass 2 -passlogfile /tmp/s -pix_fmt yuv420p -movflags +faststart out-scrub.mp4
 
+# Scrub long (16 s, prototype V5) : 12 images par seconde, toutes images clés, ~3,2 Mo en 720p.
+# À poids égal (~4 Mo), mesuré le 16/10/2026 : -g 1 à 24 i/s SSIM 0,974 ; -g 1 à 12 i/s 0,984 ;
+# -g 6 à 24 i/s 0,987 mais recherche moins sûre dans Safari. Retenu : 12 i/s, 1 600 kbit/s (0,982).
+ffmpeg -y -i in.mp4 -an -vf fps=12 -c:v libx264 -preset slow -g 1 -b:v 1600k -pass 1 -passlogfile /tmp/s -f mp4 /dev/null
+ffmpeg -y -i in.mp4 -an -vf fps=12 -c:v libx264 -preset slow -g 1 -b:v 1600k -maxrate 2200k -bufsize 3200k -pass 2 -passlogfile /tmp/s -movflags +faststart out-scrub.mp4
+
 # Essai rapide (CRF, commande du brief)
 ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -movflags +faststart out-crf.mp4
 ```
@@ -136,7 +142,7 @@ Refuser : piste audio · > 2,5 Mo (> 4 Mo en scrub) · > 1080p · poster absent 
 4. **Hero (V01)** : demandée après l'événement `load` puis un moment d'inactivité (`requestIdleCallback`, délai maximal ~2 s).
 5. **Scènes suivantes** : chaque vidéo n'est demandée qu'à l'approche de sa scène (IntersectionObserver, marge d'environ un demi-écran). **Une seule vidéo joue à la fois** ; celles qui sortent de l'écran se mettent en pause.
 6. **Pause** : un bouton texte « Mettre la vidéo en pause / Lire la vidéo », atteignable au clavier, sur chaque vidéo qui joue (WCAG 2.2.2). Un choix « pause » s'applique à toutes les scènes pour la session (`sessionStorage`).
-7. **Scrub** (V01 et V07 au plus) : `currentTime` piloté par la progression de la scène dans le viewport, en `requestAnimationFrame`, uniquement quand la scène est visible. **Aucun épinglage** si un test clavier, lecteur d'écran ou zoom le dégrade : la section reste une section normale avec son poster. Défilement natif, jamais détourné.
+7. **Scrub** (V01 et V07 au plus) : `currentTime` piloté par la progression de la scène dans le viewport, en `requestAnimationFrame`, uniquement quand la scène est visible. **Aucun épinglage** si un test clavier, lecteur d'écran ou zoom le dégrade : la section reste une section normale avec son poster. Défilement natif, jamais détourné. Un plan qui accélère (lent au début, rapide à la fin) passerait d'un coup au défilement : `node scripts/scrub-timeline.mjs <vidéo>` calcule une courbe « progression → temps » qui donne plus de défilement aux passages rapides (prop `timeline` de `ScrubVideo`). Sur le franchissement du prototype V5, le changement à l'image entre le premier et le dernier cinquième de la piste passe d'un rapport de 5,3 à 2,2.
 8. **Texte sur la vidéo** : seulement le titre display, avec un voile sapin ≥ 58 % (grand texte, 3:1 dans le pire cas) ; tout texte courant sur aplat (`docs/design-tokens.md` §2.4). Variante : mesurer à l'ingestion le pixel le plus clair sous la zone de texte, sur plusieurs images du clip, et ajuster le voile avec une marge.
 
 ---

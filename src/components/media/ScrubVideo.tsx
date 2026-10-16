@@ -10,9 +10,23 @@ import { afterLoad, videoAllowed } from './videoConditions'
 type ScrubVideoProps = {
   src: string
   trackId: string
+  // Courbe « progression → temps » (fractions de la durée à pas de progression réguliers, de 0 à 1,
+  // scripts/scrub-timeline.mjs) : un plan qui accélère reçoit plus de défilement sur ses passages
+  // rapides. Absente : la position suit le défilement linéairement.
+  timeline?: readonly number[]
 }
 
-export function ScrubVideo({ src, trackId }: ScrubVideoProps) {
+// Position dans la courbe pour une progression de 0 à 1 (interpolation linéaire entre deux points).
+function along(timeline: readonly number[], progress: number): number {
+  const last = timeline.length - 1
+  const x = progress * last
+  const i = Math.min(last - 1, Math.floor(x))
+  const from = timeline[i] ?? 0
+  const to = timeline[i + 1] ?? 1
+  return from + (to - from) * (x - i)
+}
+
+export function ScrubVideo({ src, trackId, timeline }: ScrubVideoProps) {
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
   const [ready, setReady] = useState(false)
@@ -55,8 +69,9 @@ export function ScrubVideo({ src, trackId }: ScrubVideoProps) {
           ? -box.top / span
           : (window.innerHeight - box.top) / (box.height + window.innerHeight)
       const clamped = Math.min(1, Math.max(0, progress))
+      const position = timeline && timeline.length > 1 ? along(timeline, clamped) : clamped
       if (Number.isFinite(element.duration))
-        element.currentTime = clamped * (element.duration - 0.05)
+        element.currentTime = position * (element.duration - 0.05)
     }
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
@@ -69,7 +84,7 @@ export function ScrubVideo({ src, trackId }: ScrubVideoProps) {
       window.removeEventListener('resize', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [enabled, ready, trackId])
+  }, [enabled, ready, trackId, timeline])
 
   if (!enabled) return null
 

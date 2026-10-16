@@ -209,5 +209,21 @@
   },
   "MobileBar": {
     "label": "Écrire en toute discrétion"
+  },
+  "Prototype": {
+    "title": "Une maison. Mille attentions.",
+    "metier": "Conciergerie privée et mise en relation personnalisée avec des professionnels indépendants, pour votre quotidien et ceux qui vous sont chers.",
+    "question": "Comment pouvons-nous vous accompagner ?",
+    "imageAlt": "Un vestibule dans la pénombre : deux portes de bois entrouvertes sur un jardin, un rai de lumière sur le sol.",
+    "gestureAlt": "Sur une console de bois sombre, un petit bouquet de fleurs blanches dans un vase de céramique.",
+    "replay": "Revoir la vidéo",
+    "replayShort": "Revoir",
+    "conciergeAlt": "Une console de noyer contre un mur clair : un vase de fleurs blanches, des clés sur un plateau de laiton, un carnet, des gants et du linge plié.",
+    "seniorAlt": "Une main âgée portant une alliance, posée sur un livre ouvert, près d’une tasse de porcelaine.",
+    "childrenAlt": "Une main d’enfant glisse un brin de romarin dans un verre que tient une main d’adulte.",
+    "particular": {
+      "title": "Une demande particulière",
+      "cta": "Écrire en toute discrétion"
+    }
   }
 }

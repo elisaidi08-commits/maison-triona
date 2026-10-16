@@ -205,5 +205,21 @@
   },
   "MobileBar": {
     "label": "Write to us in confidence"
+  },
+  "Prototype": {
+    "title": "One house. A thousand thoughtful touches.",
+    "metier": "Private concierge services and personal introductions to independent professionals, for your everyday life and the people you hold dear.",
+    "question": "How may we help you?",
+    "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
+    "gestureAlt": "On a dark wooden console, a small bunch of white flowers in a ceramic vase.",
+    "replay": "Watch the video again",
+    "replayShort": "Replay",
+    "conciergeAlt": "A walnut console against a pale wall: a vase of white flowers, keys on a brass tray, a notebook, gloves and folded linen.",
+    "seniorAlt": "An older hand wearing a wedding ring, resting on an open book beside a porcelain cup.",
+    "childrenAlt": "A child’s hand slips a sprig of rosemary into a glass held by an adult’s hand.",
+    "particular": {
+      "title": "A particular request",
+      "cta": "Write to us in confidence"
+    }
   }
 }
