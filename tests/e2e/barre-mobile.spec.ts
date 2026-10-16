@@ -1,4 +1,4 @@
-import { expect, test } from '../fixtures'
+import { expect, test } from '@playwright/test'
 
 // Barre mobile « Écrire en toute discrétion » (docs/art-direction.md §7.10).
 

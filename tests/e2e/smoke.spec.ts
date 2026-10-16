@@ -1,4 +1,4 @@
-import { expect, test } from '../fixtures'
+import { expect, test } from '@playwright/test'
 
 // Socle : redirection vers /fr, aucune requête tierce, aucun cookie, noindex hors production.
 test('/ mène à /fr, sans requête tierce ni cookie', async ({ page, context, baseURL }) => {

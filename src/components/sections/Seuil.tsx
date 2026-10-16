@@ -8,10 +8,11 @@ import { AnchorFocus } from './AnchorFocus'
 import desktop from '../../../public/media/seuil/P01-fenetre-mer.jpg'
 import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 
-// Premier écran de l'accueil (D25, « la marque d'abord ») : la vidéo V01 en plein cadre (photo P01
-// en mobile), sous un voile sapin à 50 % mesuré sur ces images, et le nom de la maison en grand,
-// centré, signé du « K. ». Seul texte posé sur l'image. Bande ivoire : une phrase qui dit ce que fait
-// la maison, puis l'entrée par besoin (les 3 services et « Je ne sais pas encore »), vrais liens.
+// Premier écran de l'accueil (D25, gardé par D26) : la vidéo V01 en plein cadre (photo P01 en
+// mobile), sous un voile sapin à 50 % mesuré sur ces images, et le nom de la maison en grand,
+// centré, signé du « K. ». Seul texte posé sur l'image. Bande ivoire (D26) : l'accroche, une phrase
+// qui dit ce que fait la maison, puis l'entrée par besoin (les 3 services et « Évoquer une demande
+// particulière »), vrais liens. Un seul titre display à l'écran : l'accroche est en Manrope.
 // Le premier choix reste visible sans défiler sur 390 × 844.
 
 const CHOICES = [
@@ -67,9 +68,10 @@ export async function Seuil({ locale }: { locale: string }) {
         </div>
       </div>
       <div className="bg-ivoire px-margin pt-24 pb-24 lg:pt-32">
-        <p className="mb-16 max-w-titre text-title-h3 text-balance text-encre lg:mb-24">
-          {t('intro')}
-        </p>
+        <div className="mb-16 flex max-w-titre flex-col gap-4 lg:mb-24">
+          <p className="text-title-h3 text-balance text-sapin">{t('accroche')}</p>
+          <p className="text-body text-balance text-encre">{t('intro')}</p>
+        </div>
         <ChoiceList choices={choices} rowOnDesktop />
         <AnchorFocus />
       </div>

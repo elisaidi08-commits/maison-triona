@@ -1,4 +1,4 @@
-import { expect, test } from '../fixtures'
+import { expect, test } from '@playwright/test'
 
 // Story 1.4 : layout global, chemins localisés, sélecteur de langue, lien d'évitement, menu mobile.
 

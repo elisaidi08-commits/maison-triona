@@ -7,8 +7,44 @@ import { TextLink } from '@/components/ui/TextLink'
 import p02d from '../../../public/media/maison/P02-porte-ocre.jpg'
 import p02m from '../../../public/media/maison/P02-porte-ocre-m.jpg'
 
-// Scènes de l'accueil hors services (D25) : La maison, Comment ça se passe, Territoires, Contact.
+// Scènes de l'accueil hors services (D26) : la promesse, La Maison, Territoires, Contact.
 // Texte jamais posé sur l'image ; une idée par écran.
+
+// Séquence 03, la promesse : l'accroche validée par Cat en grand à gauche ; à droite, quatre lignes
+// courtes, l'interlocutrice unique, la sélection, la discrétion, la relation. « Comment ça se
+// passe » n'a plus de section : une phrase par scène de service le dit (D26), les pages de service
+// gardent les trois étapes.
+export async function ScenePromise() {
+  const t = await getTranslations('Promise')
+  const home = await getTranslations('Home')
+  const points = t.raw('points') as string[]
+  return (
+    <section aria-labelledby="promesse-titre" className="py-section">
+      <div className="conteneur grid gap-48 lg:grid-cols-12 lg:gap-gutter">
+        <div className="flex flex-col gap-24 lg:col-span-6">
+          <Rule short />
+          <p className="text-label text-encre uppercase">{t('label')}</p>
+          <h2
+            id="promesse-titre"
+            className="max-w-titre font-display text-display-l text-balance text-sapin"
+          >
+            {home('title')}
+          </h2>
+        </div>
+        <ul className="flex flex-col lg:col-span-5 lg:col-start-8 lg:self-end">
+          {points.map((point) => (
+            <li
+              key={point}
+              className="border-b border-sapin-20 py-24 text-title-h3 text-encre first:border-t"
+            >
+              {point}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
 
 // La maison : le titre sur aplat, puis l'image en pleine largeur (16:9 en desktop, la vidéo V02 n'y
 // est presque pas agrandie). En desktop, un intervalle de section sépare l'image de la section
@@ -37,39 +73,6 @@ export async function SceneMaison({ locale }: { locale: string }) {
           play={{ visible: video('playShort'), full: video('play') }}
           controls="below"
         />
-      </div>
-    </section>
-  )
-}
-
-// Comment ça se passe : le modèle de la maison, une seule fois pour les trois services (les pages
-// de service le reprennent). Trois étapes numérotées, en grand corps, filets entre les lignes.
-export async function HowItWorks() {
-  const t = await getTranslations('Services')
-  const steps = t.raw('steps') as string[]
-  return (
-    <section aria-labelledby="etapes-titre" className="py-section">
-      <div className="conteneur grid gap-48 lg:grid-cols-12 lg:gap-gutter">
-        <div className="flex flex-col gap-24 lg:col-span-5">
-          <Rule short />
-          <h2 id="etapes-titre" className="font-display text-display-l text-sapin">
-            {t('howItWorks')}
-          </h2>
-          <p className="max-w-measure">{t('model')}</p>
-        </div>
-        <ol className="flex flex-col lg:col-span-6 lg:col-start-7">
-          {steps.map((step, index) => (
-            <li
-              key={step}
-              className="flex items-baseline gap-24 border-b border-sapin-20 py-24 first:border-t"
-            >
-              <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <span className="text-title-h3 text-encre">{step}</span>
-            </li>
-          ))}
-        </ol>
       </div>
     </section>
   )

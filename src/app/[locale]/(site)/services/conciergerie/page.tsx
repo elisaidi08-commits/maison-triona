@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { SceneService } from '@/components/sections/SceneService'
+import type { Locale } from '@/i18n/pathnames'
 import { SERVICES } from '@/lib/services'
 
 // Page dédiée (partage, SEO) : même scène que sur l'accueil, titre de page en h1.
@@ -14,6 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ServicePage() {
-  const locale = await rootParams.locale()
+  const locale = (await rootParams.locale()) as Locale
   return <SceneService service={service} locale={locale} heading="h1" />
 }

@@ -1,8 +1,7 @@
-import { expect, test as base } from '@playwright/test'
-import { test } from '../fixtures'
+import { expect, test } from '@playwright/test'
 
 // Vidéos conditionnelles (desktop, sans mouvement réduit), bouton pause, aucune vidéo en mobile ni
-// en mouvement réduit, ouverture comprise (`base` : premier passage, l'ouverture s'affiche).
+// en mouvement réduit, passage V01-s (M15) seulement en desktop.
 
 const videoRequests = (page: import('@playwright/test').Page) => {
   const urls: string[] = []
@@ -12,16 +11,15 @@ const videoRequests = (page: import('@playwright/test').Page) => {
   return urls
 }
 
-base('aucune vidéo téléchargée en mobile, ouverture comprise', async ({ page }) => {
+test('aucune vidéo téléchargée en mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const urls = videoRequests(page)
   await page.goto('/fr')
-  await expect(page.getByRole('dialog')).toBeVisible()
   await page.waitForTimeout(2500)
   expect(urls).toEqual([])
 })
 
-base('aucune vidéo en mouvement réduit, ouverture comprise', async ({ page }) => {
+test('aucune vidéo en mouvement réduit', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
   const urls = videoRequests(page)
@@ -41,4 +39,21 @@ test('desktop : la vidéo du premier écran joue et se met en pause au clavier',
   const play = page.getByRole('button', { name: 'Lire la vidéo' }).first()
   await expect(play).toHaveText('Lire')
   await expect(play).toBeFocused()
+})
+
+test('passage V01-s : présent en desktop, absent en mobile et en mouvement réduit', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(1)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(0)
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  await expect(page.locator('#seuil-passage')).toHaveCount(0)
 })

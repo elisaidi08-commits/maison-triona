@@ -1,12 +1,39 @@
-import { expect, test } from '../fixtures'
+import { expect, test } from '@playwright/test'
 
-// Accueil (D25) : les trois services ; pages de service (stories 2.2 et 2.3).
+// Accueil (D26) : la promesse et les trois scènes de service ; pages de service (stories 2.2, 2.3).
 
 test('chaque choix d’entrée mène à une scène existante', async ({ page }) => {
   await page.goto('/fr')
   for (const anchor of ['conciergerie', 'grand-age', 'enfants']) {
     await expect(page.locator(`#${anchor}`)).toHaveCount(1)
     await expect(page.locator(`#${anchor}-titre`)).toBeVisible()
+  }
+})
+
+test('la promesse tient en quatre lignes courtes', async ({ page }) => {
+  await page.goto('/fr')
+  const promesse = page.locator('section[aria-labelledby="promesse-titre"]')
+  await expect(promesse.getByRole('heading', { level: 2 })).toHaveText(
+    'Une seconde vie, comme des vacances qui ne s’arrêtent pas.',
+  )
+  await expect(promesse.locator('li')).toHaveCount(4)
+})
+
+test('chaque scène donne trois situations, le fonctionnement et la page du service', async ({
+  page,
+}) => {
+  await page.goto('/fr')
+  for (const [anchor, path] of [
+    ['conciergerie', '/fr/services/conciergerie'],
+    ['grand-age', '/fr/services/grand-age'],
+    ['enfants', '/fr/services/enfants'],
+  ] as const) {
+    const scene = page.locator(`section#${anchor}`)
+    await expect(scene.locator('ul li')).toHaveCount(3)
+    await expect(
+      scene.getByText(/Vous nous écrivez, nous vous répondons personnellement/),
+    ).toHaveCount(1)
+    await expect(scene.locator(`a[href="${path}"]`)).toHaveCount(1)
   }
 })
 
