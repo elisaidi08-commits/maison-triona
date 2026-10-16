@@ -14,7 +14,8 @@
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Prototype"
   ],
   "en": [
     "Home.title",
@@ -31,6 +32,7 @@
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Prototype"
   ]
 }

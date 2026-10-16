@@ -46,6 +46,11 @@
   /* Voile plein cadre du premier écran (D25) : 50 %, mesuré sur V01 et P01 (pixel le plus clair de la
      zone du nom : 3:1 dès 24 %, 4,5:1 à 49 %) ; jamais sur une autre image sans nouvelle mesure. */
   --color-voile-leger: #1c3b2a80;
+  /* Voile du prototype V5 sur P10 (portes), desktop : 50 %. Mesuré sous le titre sur 10 tailles de
+     1024 à 2560 px : 0 % requis en français, 39 % en anglais (la 2ᵉ ligne passe sur les portes),
+     + 10 points de marge. Sous 1024 px, le voile du hero (60 %) : jusqu'à 47 % mesurés (57 % en
+     anglais à 360 et 375 px). */
+  --color-voile-portes: #1c3b2a80;
 
   /* Espacements (§4.1) : la classe porte la valeur en px (`p-24` = 24 px). */
   --spacing-0: 0px;
@@ -180,6 +185,17 @@
 /* Passage « on entre » (D19, M15) : 1,5 écran de défilement pour l'avancée vers la fenêtre. */
 @utility h-passage {
   height: 150svh;
+}
+
+/* Prototype V5 (/prototype) : le franchissement, plans 01 et 02 enchaînés (16 s), suit le
+   défilement sur deux écrans, l'image restant collée sur un. */
+@utility h-franchissement {
+  height: 300svh;
+}
+/* Image de l'invitation du prototype en mobile : la bande porte la phrase métier et la question,
+   l'image cède 4 % de la hauteur pour que le premier choix reste au-dessus de la barre mobile. */
+@utility h-invitation-image {
+  height: 46svh;
 }
 
 /* Recadrage de P01 (et de son poster) : un peu sous le centre, pour garder la mer et le sol. */
