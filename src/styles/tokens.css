@@ -187,10 +187,11 @@
   object-position: 50% 60%;
 }
 
-/* Image du seuil en mobile : un peu plus de la moitié de l'écran, pour que le premier choix
-   reste visible sans défiler sur 390 × 844 (docs/art-direction.md §7.2). */
+/* Image du seuil en mobile : la moitié de l'écran, pour que le premier choix reste visible sans
+   défiler sur 390 × 844, au-dessus de la barre mobile, avec l'accroche de D26 dans la bande
+   (docs/art-direction.md §7.2). */
 @utility h-seuil-image {
-  height: 52svh;
+  height: 50svh;
 }
 
 /* Conteneur de contenu : marge latérale comprise dans la largeur maximale, pour que le texte

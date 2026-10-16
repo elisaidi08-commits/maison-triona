@@ -20,6 +20,8 @@ test('le premier écran donne le nom, l’accroche, ce que fait la maison et 4 v
 test('l’accueil suit les neuf séquences de la refonte V3', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
+  // Le passage s'insère après l'hydratation, seulement si la vidéo peut jouer.
+  await expect(page.locator('#seuil-passage')).toHaveCount(1)
   const order = await page
     .locator('main section[aria-labelledby], main #seuil-passage')
     .evaluateAll((nodes) => nodes.map((node) => node.id || node.getAttribute('aria-labelledby')))
