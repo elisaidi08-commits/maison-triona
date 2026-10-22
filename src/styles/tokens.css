@@ -192,12 +192,18 @@
 
 /* Prototype V5 (/prototype), film d'entrée (desktop) : chaque chapitre garde son image collée sur
    un écran pendant que sa légende défile ; le suivant glisse par-dessus. L'ouverture dure plus
-   longtemps (les portes s'ouvrent sur 1,2 écran), une pièce de service 1,6 écran. */
+   longtemps (les portes s'ouvrent puis la caméra glisse jusqu'à la console, 16 s sur 2,4 écrans),
+   une pièce de service 1,6 écran. */
 @utility h-ouverture {
-  height: 220svh;
+  height: 340svh;
 }
 @utility h-chapitre {
   height: 160svh;
+}
+/* Raccord sans couture (RaccordFilm.tsx) : la pièce de la conciergerie chevauche le dernier écran
+   de l'ouverture. */
+@utility raccord-film {
+  margin-top: -100svh;
 }
 /* Pièce dont la vidéo suit le défilement (le geste de la conciergerie) : un écran de plus. */
 @utility h-chapitre-geste {

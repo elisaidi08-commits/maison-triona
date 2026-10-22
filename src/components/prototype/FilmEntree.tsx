@@ -13,6 +13,7 @@ import { SERVICE_PATHS, SERVICES, type Service } from '@/lib/services'
 import { FilmProgress } from './FilmProgress'
 import { Apparition } from './Apparition'
 import { ParallaxForeground } from './ParallaxForeground'
+import { RaccordFilm } from './RaccordFilm'
 import p04d from '../../../public/media/prototype/P04-mains-livre.jpg'
 import p04m from '../../../public/media/prototype/P04-mains-livre-m.jpg'
 import p06d from '../../../public/media/prototype/P06-mains-romarin.jpg'
@@ -28,7 +29,8 @@ import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
 // pièce par service). Desktop : chaque chapitre garde son image collée sur un écran pendant que sa
 // légende, sur un aplat sapin, défile puis reste en place ; le chapitre suivant glisse par-dessus.
 // L'ouverture : P10, le titre sur le mur sombre, la barre des choix ; les portes s'ouvrent seules
-// trois secondes après le chargement, puis suivent le défilement. Les pièces : le geste d'accueil
+// trois secondes après le chargement, puis suivent le défilement, et la caméra glisse jusqu'à la
+// console (plan de liaison) : la pièce de la conciergerie s'enchaîne sans coupure. Les pièces : le geste d'accueil
 // (il suit le défilement), le salon, la table, puis la demande particulière. Aucun texte courant sur
 // l'image (aplats). Mobile, mouvement réduit, économie de données, sans JavaScript : la même suite
 // en images fixes, chaque légende sous son image. Les quatre choix mènent à leur chapitre. En
@@ -42,6 +44,16 @@ const CHOICES = [
   { key: 'unsure', href: '#demande-particuliere', number: undefined },
 ] as const
 
+// Ouverture (section 2, plan de liaison) : les portes s'ouvrent (8 s), puis la caméra quitte les
+// portes et glisse jusqu'à la console où commence le geste (8 s, plus rapide) ; la courbe donne plus
+// de défilement à la liaison. `node scripts/scrub-timeline.mjs
+// media-incoming/lot3/proto/ouverture-master-1080p.mp4` (33 points, part linéaire 0,35).
+const OUVERTURE = [
+  0, 0.051, 0.1, 0.146, 0.193, 0.242, 0.289, 0.331, 0.374, 0.417, 0.459, 0.501, 0.548, 0.58, 0.605,
+  0.629, 0.655, 0.674, 0.691, 0.708, 0.724, 0.743, 0.762, 0.781, 0.8, 0.818, 0.836, 0.853, 0.87,
+  0.891, 0.917, 0.953, 1,
+] as const
+
 type Room = {
   // Légende à gauche ou à droite de l'image, selon le sujet de la pièce.
   side: 'start' | 'end'
@@ -52,7 +64,13 @@ type Room = {
   height?: string
   // Légende légère (choix de Sady, section 2) : la promesse, une phrase et le bouton seulement.
   sentence?: string
+  // Raccord sans couture avec la fin de l'ouverture (RaccordFilm).
+  seamless?: boolean
 }
+
+// Image d'une pièce : collée sur un écran en desktop, dans la même case que sa légende.
+const backdrop =
+  'relative overflow-hidden bg-sapin lg:pile lg:sticky lg:top-0 lg:h-svh lg:self-start lg:aspect-auto'
 
 // Pièce d'un chapitre : l'image (collée en desktop), puis sa légende sur aplat sapin.
 function Chapter({
@@ -67,12 +85,18 @@ function Chapter({
   children: ReactNode
 }) {
   return (
-    <section id={id} aria-labelledby={titleId} className={`grid ${room.height ?? 'lg:h-chapitre'}`}>
-      <div
-        className={`relative overflow-hidden bg-sapin ${room.frame} lg:pile lg:sticky lg:top-0 lg:h-svh lg:self-start lg:aspect-auto`}
-      >
-        {room.media}
-      </div>
+    <section
+      id={id}
+      aria-labelledby={titleId}
+      className={`grid ${room.height ?? 'lg:h-chapitre'} ${room.seamless ? 'lg:raccord-film' : ''}`}
+    >
+      {room.seamless ? (
+        <RaccordFilm sectionId={id} className={`${backdrop} ${room.frame}`}>
+          {room.media}
+        </RaccordFilm>
+      ) : (
+        <div className={`${backdrop} ${room.frame}`}>{room.media}</div>
+      )}
       <div
         data-surface="sapin"
         className={`px-margin py-48 lg:pile lg:sticky lg:top-96 lg:mt-96 lg:max-w-panneau lg:self-start lg:p-48 ${
@@ -108,6 +132,7 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
       // Le geste suit le défilement (choix de Sady, section 2) : la main pose le bouquet pendant
       // que la légende reste en place ; la dernière image tient lieu de vidéo en version fixe.
       height: 'lg:h-chapitre-geste',
+      seamless: true,
       sentence: t('rooms.concierge'),
       media: (
         <>
@@ -134,8 +159,13 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
       <section id="ouverture" aria-labelledby="seuil-titre" className="grid lg:h-ouverture">
         <div className="relative pile h-invitation-image self-start overflow-hidden bg-sapin lg:sticky lg:top-0 lg:h-svh">
           <ResponsiveImage desktop={p10d} mobile={p10m} alt={t('imageAlt')} priority />
-          <ScrubVideo src="/media/prototype/V10-portes-scrub.mp4" trackId="ouverture" intro={3} />
-          <ParallaxForeground trackId="ouverture" curtain={curtain} />
+          <ScrubVideo
+            src="/media/prototype/ouverture-scrub.mp4"
+            trackId="ouverture"
+            intro={3}
+            timeline={OUVERTURE}
+          />
+          <ParallaxForeground trackId="ouverture" curtain={curtain} until={0.2} />
         </div>
         <div className="relative pile flex flex-col self-start lg:h-seuil">
           {/* Positionnée pour passer au-dessus de l'image collée. Le voile (mesuré par langue,

@@ -135,7 +135,7 @@ test('desktop : les portes s’ouvrent seules, puis suivent le défilement', asy
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr/prototype')
   const video = page.locator('#ouverture video')
-  await expect(video).toHaveAttribute('src', /V10-portes-scrub\.mp4$/)
+  await expect(video).toHaveAttribute('src', /ouverture-scrub\.mp4$/)
   // Ouverture jouée seule : trois secondes, puis arrêt.
   await expect
     .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime), {
@@ -150,7 +150,7 @@ test('desktop : les portes s’ouvrent seules, puis suivent le défilement', asy
   })
   await expect
     .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime))
-    .toBeGreaterThan(7.5)
+    .toBeGreaterThan(15.5)
 })
 
 test('desktop : le geste suit le défilement dans sa pièce, légende légère', async ({ page }) => {
