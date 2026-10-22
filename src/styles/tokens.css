@@ -205,6 +205,10 @@
 @utility raccord-film {
   margin-top: -100svh;
 }
+/* Pièce dont la vidéo enchaîne un geste et un plan de liaison vers la pièce suivante (16 s). */
+@utility h-chapitre-liaison {
+  height: 300svh;
+}
 /* Pièce dont la vidéo suit le défilement (le geste de la conciergerie) : un écran de plus. */
 @utility h-chapitre-geste {
   height: 200svh;

@@ -161,7 +161,7 @@ test('desktop : le geste suit le défilement dans sa pièce, légende légère',
   await expect(room.getByText(/^Une résidence prête à votre arrivée/)).toBeVisible()
   await expect(room.getByRole('link')).toHaveCount(1)
   const video = room.locator('video')
-  await expect(video).toHaveAttribute('src', /V12-geste-scrub\.mp4$/)
+  await expect(video).toHaveAttribute('src', /conciergerie-scrub\.mp4$/)
   await page.waitForFunction(() => {
     const element = document.querySelector<HTMLVideoElement>('#conciergerie video')
     return !!element && element.readyState >= 2
@@ -204,4 +204,25 @@ test('desktop : le voilage s’écarte en défilant, le filet suit le film ; rie
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fr/prototype')
   await expect(page.locator('#ouverture .w-voilage')).toHaveCount(0)
+})
+
+test('desktop : le salon s’enchaîne sans couture, légende légère avec la précision', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr/prototype#grand-age')
+  const room = page.locator('#grand-age')
+  await expect(room.locator('ul')).toHaveCount(0)
+  await expect(room.getByText(/^Une présence, pas des soins/)).toBeVisible()
+  await expect(room.getByRole('link')).toHaveCount(1)
+  await expect(room.locator('video')).toHaveAttribute('src', /salon-scrub\.mp4$/)
+  // L'image de la pièce reste masquée tant que la pièce n'est pas en haut de l'écran.
+  await page.evaluate(() => {
+    const element = document.getElementById('grand-age')!
+    window.scrollTo({
+      top: element.getBoundingClientRect().top + window.scrollY - 300,
+      behavior: 'instant',
+    })
+  })
+  await expect(room.locator('> div').first()).toHaveClass(/opacity-0/)
 })

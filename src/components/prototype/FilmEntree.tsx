@@ -14,14 +14,14 @@ import { FilmProgress } from './FilmProgress'
 import { Apparition } from './Apparition'
 import { ParallaxForeground } from './ParallaxForeground'
 import { RaccordFilm } from './RaccordFilm'
-import p04d from '../../../public/media/prototype/P04-mains-livre.jpg'
-import p04m from '../../../public/media/prototype/P04-mains-livre-m.jpg'
 import p06d from '../../../public/media/prototype/P06-mains-romarin.jpg'
 import p06m from '../../../public/media/prototype/P06-mains-romarin-m.jpg'
 import p10d from '../../../public/media/prototype/P10-seuil-portes.jpg'
 import p10m from '../../../public/media/prototype/P10-seuil-portes-m.jpg'
 import p13d from '../../../public/media/prototype/P13-console.jpg'
 import p13m from '../../../public/media/prototype/P13-console-m.jpg'
+import p15m from '../../../public/media/prototype/P15-salon-m.jpg'
+import salonEnd from '../../../public/media/prototype/salon-fin.jpg'
 import curtain from '../../../public/media/prototype/P14-voilage.webp'
 import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
 
@@ -54,6 +54,14 @@ const OUVERTURE = [
   0.891, 0.917, 0.953, 1,
 ] as const
 
+// Conciergerie (section 3) : le geste (8 s), puis la liaison vers le salon (8 s, plus rapide).
+// `node scripts/scrub-timeline.mjs media-incoming/lot4-openart/salon/conciergerie-master.mp4`.
+const CONCIERGERIE = [
+  0, 0.028, 0.056, 0.084, 0.112, 0.14, 0.17, 0.203, 0.236, 0.269, 0.302, 0.335, 0.366, 0.391, 0.413,
+  0.436, 0.468, 0.509, 0.553, 0.598, 0.637, 0.663, 0.684, 0.702, 0.721, 0.739, 0.759, 0.781, 0.808,
+  0.837, 0.873, 0.925, 1,
+] as const
+
 type Room = {
   // Légende à gauche ou à droite de l'image, selon le sujet de la pièce.
   side: 'start' | 'end'
@@ -66,6 +74,9 @@ type Room = {
   sentence?: string
   // Raccord sans couture avec la fin de l'ouverture (RaccordFilm).
   seamless?: boolean
+  // Hauteur desktop pendant laquelle la légende reste en place, si elle doit partir avant la fin
+  // du chapitre (pendant le plan de liaison vers la pièce suivante).
+  captionSpan?: string
 }
 
 // Image d'une pièce : collée sur un écran en desktop, dans la même case que sa légende.
@@ -98,14 +109,16 @@ function Chapter({
         <div className={`${backdrop} ${room.frame}`}>{room.media}</div>
       )}
       <div
-        data-surface="sapin"
-        className={`px-margin py-48 lg:pile lg:sticky lg:top-96 lg:mt-96 lg:max-w-panneau lg:self-start lg:p-48 ${
-          room.side === 'end'
-            ? 'lg:mr-margin lg:justify-self-end'
-            : 'lg:ml-margin lg:justify-self-start'
-        }`}
+        className={`lg:pile ${room.captionSpan ? `lg:self-start ${room.captionSpan}` : 'lg:self-stretch'}`}
       >
-        <Apparition className="flex flex-col gap-24">{children}</Apparition>
+        <div
+          data-surface="sapin"
+          className={`px-margin py-48 lg:sticky lg:top-96 lg:mt-96 lg:max-w-panneau lg:p-48 ${
+            room.side === 'end' ? 'lg:mr-margin lg:ml-auto' : 'lg:ml-margin'
+          }`}
+        >
+          <Apparition className="flex flex-col gap-24">{children}</Apparition>
+        </div>
       </div>
     </section>
   )
@@ -131,20 +144,36 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
       frame: 'aspect-hero',
       // Le geste suit le défilement (choix de Sady, section 2) : la main pose le bouquet pendant
       // que la légende reste en place ; la dernière image tient lieu de vidéo en version fixe.
-      height: 'lg:h-chapitre-geste',
+      // Puis la caméra quitte la console pour le salon (plan de liaison, section 3).
+      height: 'lg:h-chapitre-liaison',
+      captionSpan: 'lg:h-chapitre',
       seamless: true,
       sentence: t('rooms.concierge'),
       media: (
         <>
           <ResponsiveImage desktop={gestureEnd} mobile={gestureEnd} alt={t('gestureAlt')} />
-          <ScrubVideo src="/media/prototype/V12-geste-scrub.mp4" trackId="conciergerie" />
+          <ScrubVideo
+            src="/media/prototype/conciergerie-scrub.mp4"
+            trackId="conciergerie"
+            timeline={CONCIERGERIE}
+          />
         </>
       ),
     },
+    // Le salon (choix de Sady, section 3) : la main tourne une page au rythme du défilement ; le
+    // côté droit reste calme pour la légende, qui garde la précision « une présence, pas des soins ».
     'grand-age': {
       side: 'end',
       frame: 'aspect-portrait',
-      media: <ResponsiveImage desktop={p04d} mobile={p04m} alt={t('seniorAlt')} />,
+      height: 'lg:h-chapitre-geste',
+      seamless: true,
+      sentence: services('senior.precision'),
+      media: (
+        <>
+          <ResponsiveImage desktop={salonEnd} mobile={p15m} alt={t('seniorAlt')} />
+          <ScrubVideo src="/media/prototype/salon-scrub.mp4" trackId="grand-age" />
+        </>
+      ),
     },
     enfants: {
       side: 'start',
