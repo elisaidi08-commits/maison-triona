@@ -11,7 +11,7 @@ import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES, type Service } from '@/lib/services'
 import { FilmProgress } from './FilmProgress'
-import { GesturePlay } from './GesturePlay'
+import { Apparition } from './Apparition'
 import { ParallaxForeground } from './ParallaxForeground'
 import p04d from '../../../public/media/prototype/P04-mains-livre.jpg'
 import p04m from '../../../public/media/prototype/P04-mains-livre-m.jpg'
@@ -29,7 +29,7 @@ import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
 // légende, sur un aplat sapin, défile puis reste en place ; le chapitre suivant glisse par-dessus.
 // L'ouverture : P10, le titre sur le mur sombre, la barre des choix ; les portes s'ouvrent seules
 // trois secondes après le chargement, puis suivent le défilement. Les pièces : le geste d'accueil
-// (lu quand on y arrive), le salon, la table, puis la demande particulière. Aucun texte courant sur
+// (il suit le défilement), le salon, la table, puis la demande particulière. Aucun texte courant sur
 // l'image (aplats). Mobile, mouvement réduit, économie de données, sans JavaScript : la même suite
 // en images fixes, chaque légende sous son image. Les quatre choix mènent à leur chapitre. En
 // desktop, « Faites défiler pour entrer », un filet or qui suit la progression du film, et un
@@ -48,6 +48,10 @@ type Room = {
   // Format en mobile (l'image suit son cadre ; plein écran en desktop).
   frame: string
   media: ReactNode
+  // Hauteur desktop du chapitre, si la pièce demande plus de défilement (geste lié au défilement).
+  height?: string
+  // Légende légère (choix de Sady, section 2) : la promesse, une phrase et le bouton seulement.
+  sentence?: string
 }
 
 // Pièce d'un chapitre : l'image (collée en desktop), puis sa légende sur aplat sapin.
@@ -63,7 +67,7 @@ function Chapter({
   children: ReactNode
 }) {
   return (
-    <section id={id} aria-labelledby={titleId} className="grid lg:h-chapitre">
+    <section id={id} aria-labelledby={titleId} className={`grid ${room.height ?? 'lg:h-chapitre'}`}>
       <div
         className={`relative overflow-hidden bg-sapin ${room.frame} lg:pile lg:sticky lg:top-0 lg:h-svh lg:self-start lg:aspect-auto`}
       >
@@ -71,13 +75,13 @@ function Chapter({
       </div>
       <div
         data-surface="sapin"
-        className={`flex flex-col gap-24 px-margin py-48 lg:pile lg:sticky lg:top-96 lg:mt-96 lg:max-w-panneau lg:self-start lg:p-48 ${
+        className={`px-margin py-48 lg:pile lg:sticky lg:top-96 lg:mt-96 lg:max-w-panneau lg:self-start lg:p-48 ${
           room.side === 'end'
             ? 'lg:mr-margin lg:justify-self-end'
             : 'lg:ml-margin lg:justify-self-start'
         }`}
       >
-        {children}
+        <Apparition className="flex flex-col gap-24">{children}</Apparition>
       </div>
     </section>
   )
@@ -87,7 +91,6 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
   const t = await getTranslations('Prototype')
   const home = await getTranslations('Home')
   const services = await getTranslations('Services')
-  const video = await getTranslations('Video')
   const choices = CHOICES.map(({ key, href, number }) => ({
     href,
     number,
@@ -102,17 +105,15 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
     conciergerie: {
       side: 'start',
       frame: 'aspect-hero',
+      // Le geste suit le défilement (choix de Sady, section 2) : la main pose le bouquet pendant
+      // que la légende reste en place ; la dernière image tient lieu de vidéo en version fixe.
+      height: 'lg:h-chapitre-geste',
+      sentence: t('rooms.concierge'),
       media: (
-        <GesturePlay
-          fill
-          src="/media/prototype/V12-geste.mp4"
-          poster="/media/prototype/V12-geste-debut.jpg"
-          pause={{ visible: video('pauseShort'), full: video('pause') }}
-          play={{ visible: video('playShort'), full: video('play') }}
-          replay={{ visible: t('replayShort'), full: t('replay') }}
-        >
+        <>
           <ResponsiveImage desktop={gestureEnd} mobile={gestureEnd} alt={t('gestureAlt')} />
-        </GesturePlay>
+          <ScrubVideo src="/media/prototype/V12-geste-scrub.mp4" trackId="conciergerie" />
+        </>
       ),
     },
     'grand-age': {
@@ -178,8 +179,9 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
       {SERVICES.map((service) => {
         const situations = services.raw(`${service.key}.situations`) as string[]
         const titleId = `${service.anchor}-titre`
+        const room = rooms[service.id]
         return (
-          <Chapter key={service.id} id={service.anchor} titleId={titleId} room={rooms[service.id]}>
+          <Chapter key={service.id} id={service.anchor} titleId={titleId} room={room}>
             <div className="flex flex-col gap-16">
               <Rule short />
               <p className="text-label text-champagne uppercase">
@@ -195,21 +197,27 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
                 {services(`${service.key}.promise`)}
               </h2>
             </div>
-            <ul className="flex flex-col">
-              {situations.map((situation) => (
-                <li
-                  key={situation}
-                  className="border-b border-sauge py-12 text-ivoire-80 first:border-t"
-                >
-                  {situation}
-                </li>
-              ))}
-            </ul>
+            {room.sentence ? (
+              <p className="text-body-l text-ivoire-80">{room.sentence}</p>
+            ) : (
+              <ul className="flex flex-col">
+                {situations.map((situation) => (
+                  <li
+                    key={situation}
+                    className="border-b border-sauge py-12 text-ivoire-80 first:border-t"
+                  >
+                    {situation}
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="flex flex-col items-start gap-16">
               <Button href={`/${locale}/contact?service=${service.id}`}>{services('cta')}</Button>
-              <TextLink onDark href={localizedPath(SERVICE_PATHS[service.id], locale)}>
-                {services(`${service.key}.link`)}
-              </TextLink>
+              {room.sentence ? null : (
+                <TextLink onDark href={localizedPath(SERVICE_PATHS[service.id], locale)}>
+                  {services(`${service.key}.link`)}
+                </TextLink>
+              )}
             </div>
           </Chapter>
         )

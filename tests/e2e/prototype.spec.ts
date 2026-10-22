@@ -126,7 +126,7 @@ test('mobile et mouvement réduit : aucune vidéo, toutes les pièces en images 
   await page.goto('/fr/prototype')
   await page.waitForTimeout(2000)
   expect(urls).toEqual([])
-  await expect(page.locator('#conciergerie button')).toHaveCount(0)
+  await expect(page.locator('#conciergerie video')).toHaveCount(0)
   await expect(page.getByRole('img', { name: /bouquet de fleurs blanches/ })).toHaveCount(1)
   await expect(page.getByRole('img', { name: /main âgée/ })).toHaveCount(1)
 })
@@ -153,25 +153,29 @@ test('desktop : les portes s’ouvrent seules, puis suivent le défilement', asy
     .toBeGreaterThan(7.5)
 })
 
-test('desktop : le geste se lance dans sa pièce, se met en pause au clavier, se relance', async ({
-  page,
-}) => {
+test('desktop : le geste suit le défilement dans sa pièce, légende légère', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr/prototype#conciergerie')
-  const button = page.locator('#conciergerie button')
-  await expect(button).toHaveAccessibleName('Mettre la vidéo en pause', { timeout: 10000 })
+  const room = page.locator('#conciergerie')
+  await expect(room.locator('ul')).toHaveCount(0)
+  await expect(room.getByText(/^Une résidence prête à votre arrivée/)).toBeVisible()
+  await expect(room.getByRole('link')).toHaveCount(1)
+  const video = room.locator('video')
+  await expect(video).toHaveAttribute('src', /V12-geste-scrub\.mp4$/)
+  await page.waitForFunction(() => {
+    const element = document.querySelector<HTMLVideoElement>('#conciergerie video')
+    return !!element && element.readyState >= 2
+  })
+  const start = await video.evaluate((element: HTMLVideoElement) => element.currentTime)
+  await page.evaluate(() => {
+    const element = document.getElementById('conciergerie')!
+    const top = element.getBoundingClientRect().top + window.scrollY
+    window.scrollTo({ top: top + element.offsetHeight - window.innerHeight, behavior: 'instant' })
+  })
   await expect
-    .poll(() =>
-      page.locator('#conciergerie video').evaluate((element: HTMLVideoElement) => element.paused),
-    )
-    .toBe(false)
-  await button.focus()
-  await page.keyboard.press('Enter')
-  await expect(button).toHaveText('Lire')
-  await expect(button).toHaveAccessibleName('Lire la vidéo')
-  await expect(button).toBeFocused()
-  await page.keyboard.press('Enter')
-  await expect(button).toHaveAccessibleName('Mettre la vidéo en pause')
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime))
+    .toBeGreaterThan(start + 6)
+  await expect(video).toHaveJSProperty('paused', true)
 })
 
 test('desktop : le voilage s’écarte en défilant, le filet suit le film ; rien en mobile', async ({

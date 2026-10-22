@@ -199,6 +199,10 @@
 @utility h-chapitre {
   height: 160svh;
 }
+/* Pièce dont la vidéo suit le défilement (le geste de la conciergerie) : un écran de plus. */
+@utility h-chapitre-geste {
+  height: 200svh;
+}
 /* Titre de l'ouverture : 9 cadratins au plus, pour qu'il reste sur le mur sombre de P10 (le titre
    anglais passe sur trois lignes, le français tient sur deux). */
 @utility titre-seuil {
@@ -411,6 +415,26 @@
      interactifs gardent toujours leur anneau de 3 px. */
   :is(h1, h2, h3, main)[tabindex='-1']:focus-visible {
     outline: none;
+  }
+
+  /* M3 (prototype V5) : légende qui apparaît en cascade (Apparition.tsx), opacité et 12 px. */
+  [data-apparition] > * {
+    transition:
+      opacity var(--transition-duration-reveal) var(--ease-maison),
+      transform var(--transition-duration-reveal) var(--ease-maison);
+  }
+  [data-apparition] > :nth-child(2) {
+    transition-delay: 90ms;
+  }
+  [data-apparition] > :nth-child(3) {
+    transition-delay: 180ms;
+  }
+  [data-apparition] > :nth-child(4) {
+    transition-delay: 270ms;
+  }
+  [data-apparition='attente'] > * {
+    opacity: 0;
+    transform: translateY(var(--distance-reveal));
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
