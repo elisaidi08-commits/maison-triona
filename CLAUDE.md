@@ -93,6 +93,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 
 - Le **moodboard** est une référence de style **interne** : jamais publié, jamais dans `public/`, **jamais passé en entrée** d'une génération (`--image`, `--start-image`…), jamais reproduit (lieu, visage, scène, cadrage).
 - **Aucune ressemblance** avec une personne réelle ; jamais le visage de Cat ni d'un client sans accord écrit. **Aucun lieu identifiable**. Ni texte, ni logo, ni marque, ni écran dans les images.
+- **OpenArt** (D29, remplace Higgsfield pour les générations suivantes) : connecteur MCP, offre Plus. **Toujours** `openart_model_cost` à la configuration exacte, puis **accord explicite de Sady** avant toute génération ; prompts positifs (les listes d'interdits ont fait apparaître des visages chez Kling 3 Omni) ; sorties dans `media-incoming/lot4-openart/`, journal du manifeste.
 - **Higgsfield** : CLI installée et connectée (offre starter, budget limité). **Toujours** `higgsfield generate cost` puis **accord explicite de Sady** avant toute génération. Vidéo : `kling3_0 --mode std --sound off` (720p, 10 crédits ; « pro » et Nano Banana Pro 4k exigent l'offre Pro, D24) ; jamais Seedance 2.5 sans demande. Toujours `upload create` puis `--image <id>`, création sans `--wait`, identifiant noté, puis `generate wait`. Ne jamais passer une ancre en `--image` à Soul pour une autre scène (elle recopie le contenu).
 - Chaque génération est notée dans le journal du manifeste. Sorties brutes dans `media-incoming/`, intégration par `/ingest-media` après contrôle qualité et validations Sady puis Cat.
 
@@ -119,4 +120,4 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 
 ## Outils externes
 
-Figma MCP (claude.ai) : disponible. **Higgsfield CLI** : installée et connectée (workspace « Private ») ; le connecteur MCP Higgsfield de claude.ai n'est pas autorisé et n'est pas nécessaire. Playwright (plugin) et Chrome DevTools MCP (Lighthouse, traces) : disponibles pour la QA. ffmpeg, ffprobe, ImageMagick : installés.
+Figma MCP (claude.ai) : disponible. **OpenArt** (MCP) : connecté, offre Plus (D29). **Higgsfield CLI** : installée et connectée (workspace « Private ») ; le connecteur MCP Higgsfield de claude.ai n'est pas autorisé et n'est pas nécessaire. Playwright (plugin) et Chrome DevTools MCP (Lighthouse, traces) : disponibles pour la QA. ffmpeg, ffprobe, ImageMagick : installés.
