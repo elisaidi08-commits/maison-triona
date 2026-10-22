@@ -10,7 +10,9 @@ import { Stamp } from '@/components/ui/Stamp'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES, type Service } from '@/lib/services'
+import { FilmProgress } from './FilmProgress'
 import { GesturePlay } from './GesturePlay'
+import { ParallaxForeground } from './ParallaxForeground'
 import p04d from '../../../public/media/prototype/P04-mains-livre.jpg'
 import p04m from '../../../public/media/prototype/P04-mains-livre-m.jpg'
 import p06d from '../../../public/media/prototype/P06-mains-romarin.jpg'
@@ -19,6 +21,7 @@ import p10d from '../../../public/media/prototype/P10-seuil-portes.jpg'
 import p10m from '../../../public/media/prototype/P10-seuil-portes-m.jpg'
 import p13d from '../../../public/media/prototype/P13-console.jpg'
 import p13m from '../../../public/media/prototype/P13-console-m.jpg'
+import curtain from '../../../public/media/prototype/P14-voilage.webp'
 import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
 
 // Prototype V5, le film d'entrée (référence de Sady : un film qui fait entrer dans la maison, une
@@ -28,7 +31,9 @@ import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
 // trois secondes après le chargement, puis suivent le défilement. Les pièces : le geste d'accueil
 // (lu quand on y arrive), le salon, la table, puis la demande particulière. Aucun texte courant sur
 // l'image (aplats). Mobile, mouvement réduit, économie de données, sans JavaScript : la même suite
-// en images fixes, chaque légende sous son image. Les quatre choix mènent à leur chapitre.
+// en images fixes, chaque légende sous son image. Les quatre choix mènent à leur chapitre. En
+// desktop, « Faites défiler pour entrer », un filet or qui suit la progression du film, et un
+// voilage au premier plan qui s'écarte en défilant (parallaxe par calques).
 
 const CHOICES = [
   { key: 'concierge', href: '#conciergerie', number: '01' },
@@ -123,11 +128,13 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
   }
 
   return (
-    <>
+    <div id="film" className="relative">
+      <FilmProgress trackId="film" />
       <section id="ouverture" aria-labelledby="seuil-titre" className="grid lg:h-ouverture">
         <div className="relative pile h-invitation-image self-start overflow-hidden bg-sapin lg:sticky lg:top-0 lg:h-svh">
           <ResponsiveImage desktop={p10d} mobile={p10m} alt={t('imageAlt')} priority />
           <ScrubVideo src="/media/prototype/V10-portes-scrub.mp4" trackId="ouverture" intro={3} />
+          <ParallaxForeground trackId="ouverture" curtain={curtain} />
         </div>
         <div className="relative pile flex flex-col self-start lg:h-seuil">
           {/* Positionnée pour passer au-dessus de l'image collée. Le voile (mesuré par langue,
@@ -152,9 +159,15 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
             <Stamp onDark />
           </div>
           <div className="surface-sapin-desktop bg-ivoire px-margin pt-24 pb-24 lg:bg-sapin lg:pt-32">
-            <div className="mb-16 flex max-w-titre flex-col gap-8 lg:mb-24">
-              <p className="text-body text-balance text-encre lg:text-ivoire-80">{t('metier')}</p>
-              <h2 className="text-title-h3 text-sapin lg:text-ivoire">{t('question')}</h2>
+            <div className="mb-16 flex flex-col gap-8 lg:mb-24 lg:flex-row lg:items-end lg:justify-between lg:gap-48">
+              <div className="flex max-w-titre flex-col gap-8">
+                <p className="text-body text-balance text-encre lg:text-ivoire-80">{t('metier')}</p>
+                <h2 className="text-title-h3 text-sapin lg:text-ivoire">{t('question')}</h2>
+              </div>
+              {/* L'invitation de la référence : le film avance avec le défilement (desktop). */}
+              <p className="hidden shrink-0 text-label text-ivoire-80 uppercase lg:block">
+                {t('scrollHint')}
+              </p>
             </div>
             <ChoiceList choices={choices} rowOnDesktop darkOnDesktop />
             <AnchorFocus />
@@ -226,6 +239,6 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
           <Button href={`/${locale}/contact`}>{t('particular.cta')}</Button>
         </div>
       </Chapter>
-    </>
+    </div>
   )
 }

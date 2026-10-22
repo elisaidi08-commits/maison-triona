@@ -173,3 +173,31 @@ test('desktop : le geste se lance dans sa pièce, se met en pause au clavier, se
   await page.keyboard.press('Enter')
   await expect(button).toHaveAccessibleName('Mettre la vidéo en pause')
 })
+
+test('desktop : le voilage s’écarte en défilant, le filet suit le film ; rien en mobile', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr/prototype')
+  const right = page.locator('#ouverture .w-voilage')
+  await expect(right).toHaveCount(1)
+  // Le pan gauche ne passe jamais sous le titre.
+  const pane = await page.locator('#ouverture .w-voilage-etroit').boundingBox()
+  const title = await page.locator('#seuil-titre').boundingBox()
+  expect((pane?.x ?? 0) + (pane?.width ?? 0)).toBeLessThan(title?.x ?? 0)
+  await page.evaluate(() => {
+    const element = document.getElementById('ouverture')!
+    window.scrollTo({ top: element.offsetHeight - window.innerHeight, behavior: 'instant' })
+  })
+  await expect
+    .poll(() => right.evaluate((element) => element.style.transform))
+    .toBe('translateX(105%)')
+  await expect
+    .poll(() =>
+      page.locator('#film > div[aria-hidden] span').evaluate((element) => element.style.transform),
+    )
+    .not.toBe('scaleX(0)')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr/prototype')
+  await expect(page.locator('#ouverture .w-voilage')).toHaveCount(0)
+})

@@ -204,6 +204,14 @@
 @utility titre-seuil {
   max-width: 9em;
 }
+/* Avant-plan de l'ouverture (parallaxe par calques) : pan gauche plus étroit que la marge de page,
+   pour ne jamais passer sous le titre ; pan droit sur le cinquième du cadre. */
+@utility w-voilage-etroit {
+  width: calc(var(--spacing-margin) - var(--spacing-16));
+}
+@utility w-voilage {
+  width: 18vw;
+}
 /* Image et légende d'un chapitre dans la même case de grille (superposées). */
 @utility pile {
   grid-area: 1 / 1;
