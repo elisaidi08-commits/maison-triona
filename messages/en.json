@@ -223,6 +223,14 @@
     "rooms": {
       "concierge": "A residence ready for your arrival, a stay arranged, the right person for every task.",
       "children": "An evening, after school or during the holidays: someone we know, attentive to their routines."
+    },
+    "calme": {
+      "servicesLabel": "Services",
+      "servicesTitle": "What the house takes care of.",
+      "concierge": "Residences, travel, reservations, household management: a single point of contact to organise everything.",
+      "senior": "A carefully chosen companion, and days that keep their rhythm and their pleasures, at home or away.",
+      "children": "People chosen one by one, for a few hours or for a whole season.",
+      "conciergeAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall."
     }
   }
 }

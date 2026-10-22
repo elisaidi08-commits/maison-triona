@@ -227,6 +227,14 @@
     "rooms": {
       "concierge": "Une résidence prête à votre arrivée, un séjour organisé, la bonne personne pour chaque tâche.",
       "children": "Un soir, après l’école ou pendant les vacances : quelqu’un que nous connaissons, attentif à leurs habitudes."
+    },
+    "calme": {
+      "servicesLabel": "Services",
+      "servicesTitle": "Ce dont la maison s’occupe.",
+      "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice pour tout organiser.",
+      "senior": "Une présence choisie, des journées qui gardent leur rythme et leurs plaisirs, à la maison comme en voyage.",
+      "children": "Des personnes choisies une à une, pour quelques heures comme pour une saison.",
+      "conciergeAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair."
     }
   }
 }

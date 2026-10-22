@@ -244,6 +244,12 @@
   height: 46svh;
 }
 
+/* Accueil calme du prototype (maquette Figma D·01) : P10 et l'ouverture des portes (V10) dans un
+   cadre portrait, recadrés sur les deux battants et le rai de lumière. */
+@utility object-portes {
+  object-position: 67% 50%;
+}
+
 /* Recadrage de P01 (et de son poster) : un peu sous le centre, pour garder la mer et le sol. */
 @utility object-seuil {
   object-position: 50% 60%;
