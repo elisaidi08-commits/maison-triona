@@ -14,6 +14,9 @@ type ScrubVideoProps = {
   // scripts/scrub-timeline.mjs) : un plan qui accélère reçoit plus de défilement sur ses passages
   // rapides. Absente : la position suit le défilement linéairement.
   timeline?: readonly number[]
+  // Secondes jouées d'elles-mêmes après le chargement, tant que le visiteur n'a pas défilé (moins
+  // de 5 s : aucune pause exigée, WCAG 2.2.2) ; le défilement reprend ensuite à partir de ce point.
+  intro?: number
 }
 
 // Position dans la courbe pour une progression de 0 à 1 (interpolation linéaire entre deux points).
@@ -26,7 +29,7 @@ function along(timeline: readonly number[], progress: number): number {
   return from + (to - from) * (x - i)
 }
 
-export function ScrubVideo({ src, trackId, timeline }: ScrubVideoProps) {
+export function ScrubVideo({ src, trackId, timeline, intro = 0 }: ScrubVideoProps) {
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
   const [ready, setReady] = useState(false)
@@ -60,31 +63,57 @@ export function ScrubVideo({ src, trackId, timeline }: ScrubVideoProps) {
     const track = document.getElementById(trackId)
     if (!enabled || !ready || !element || !track) return
     let frame = 0
-    const update = () => {
-      frame = 0
+    let playing = false
+    const progressOf = () => {
       const box = track.getBoundingClientRect()
       const span = box.height - window.innerHeight
       const progress =
         span > 0
           ? -box.top / span
           : (window.innerHeight - box.top) / (box.height + window.innerHeight)
-      const clamped = Math.min(1, Math.max(0, progress))
+      return Math.min(1, Math.max(0, progress))
+    }
+    const update = () => {
+      frame = 0
+      const clamped = progressOf()
+      // Le défilement interrompt l'ouverture jouée seule.
+      if (playing) {
+        if (clamped <= 0) return
+        playing = false
+        element.pause()
+      }
       const position = timeline && timeline.length > 1 ? along(timeline, clamped) : clamped
       if (Number.isFinite(element.duration))
-        element.currentTime = position * (element.duration - 0.05)
+        element.currentTime = intro + position * (element.duration - 0.05 - intro)
+    }
+    const endIntro = () => {
+      if (!playing || element.currentTime < intro) return
+      playing = false
+      element.pause()
+      element.currentTime = intro
     }
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
     }
-    update()
+    if (intro > 0 && progressOf() <= 0 && element.currentTime < intro) {
+      playing = true
+      element.addEventListener('timeupdate', endIntro)
+      void element.play().catch(() => {
+        playing = false
+        update()
+      })
+    } else {
+      update()
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     return () => {
+      element.removeEventListener('timeupdate', endIntro)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [enabled, ready, trackId, timeline])
+  }, [enabled, ready, trackId, timeline, intro])
 
   if (!enabled) return null
 

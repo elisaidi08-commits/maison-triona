@@ -102,6 +102,13 @@ ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libx264 -preset slow -g 1 -b:v 
 ffmpeg -y -i in.mp4 -an -vf fps=12 -c:v libx264 -preset slow -g 1 -b:v 1600k -pass 1 -passlogfile /tmp/s -f mp4 /dev/null
 ffmpeg -y -i in.mp4 -an -vf fps=12 -c:v libx264 -preset slow -g 1 -b:v 1600k -maxrate 2200k -bufsize 3200k -pass 2 -passlogfile /tmp/s -movflags +faststart out-scrub.mp4
 
+# Scrub à cadence variable (22/10/2026) : 12 i/s sur la partie lente, 24 i/s sur la fin rapide
+# (ici à partir de 12 s), pour qu'un pas de défilement ne saute pas d'un coup. Sur la chaîne V10 +
+# V11 en 1080p : 242 images, 3,85 Mo à 1 900 kbit/s ; plus grand écart entre deux pas de défilement
+# ramené de 4,9 à 2,8 fois la médiane. La courbe de défilement se calcule sur le master à cadence fixe.
+ffmpeg -y -i in.mp4 -an -vf "select='if(gte(t\,12)\,1\,not(mod(n\,2)))'" -fps_mode vfr -c:v libx264 -preset slow -g 1 -b:v 1900k -pass 1 -passlogfile /tmp/s -f mp4 /dev/null
+ffmpeg -y -i in.mp4 -an -vf "select='if(gte(t\,12)\,1\,not(mod(n\,2)))'" -fps_mode vfr -c:v libx264 -preset slow -g 1 -b:v 1900k -maxrate 2660k -bufsize 3800k -pass 2 -passlogfile /tmp/s -movflags +faststart out-scrub.mp4
+
 # Essai rapide (CRF, commande du brief)
 ffmpeg -y -i in.mp4 -an -vf "scale=1920:-2" -c:v libx264 -crf 24 -preset slow -pix_fmt yuv420p -movflags +faststart out-crf.mp4
 ```
