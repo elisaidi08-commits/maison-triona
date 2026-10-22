@@ -214,14 +214,15 @@
     "gestureAlt": "On a dark wooden console, a small bunch of white flowers in a ceramic vase.",
     "conciergeAlt": "A walnut console against a pale wall: a vase of white flowers, keys on a brass tray, a notebook, gloves and folded linen.",
     "seniorAlt": "An older hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window.",
-    "childrenAlt": "A child’s hand slips a sprig of rosemary into a glass held by an adult’s hand.",
+    "childrenAlt": "A child’s hand holds a sprig of rosemary above a glass held by an adult’s hand, against a pale wall lit by a window.",
     "particular": {
       "title": "A particular request",
       "cta": "Write to us in confidence"
     },
     "scrollHint": "Scroll to enter",
     "rooms": {
-      "concierge": "A residence ready for your arrival, a stay arranged, the right person for every task."
+      "concierge": "A residence ready for your arrival, a stay arranged, the right person for every task.",
+      "children": "An evening, after school or during the holidays: someone we know, attentive to their routines."
     }
   }
 }

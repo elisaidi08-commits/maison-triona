@@ -14,13 +14,13 @@ import { FilmProgress } from './FilmProgress'
 import { Apparition } from './Apparition'
 import { ParallaxForeground } from './ParallaxForeground'
 import { RaccordFilm } from './RaccordFilm'
-import p06d from '../../../public/media/prototype/P06-mains-romarin.jpg'
-import p06m from '../../../public/media/prototype/P06-mains-romarin-m.jpg'
 import p10d from '../../../public/media/prototype/P10-seuil-portes.jpg'
 import p10m from '../../../public/media/prototype/P10-seuil-portes-m.jpg'
 import p13d from '../../../public/media/prototype/P13-console.jpg'
 import p13m from '../../../public/media/prototype/P13-console-m.jpg'
 import p15m from '../../../public/media/prototype/P15-salon-m.jpg'
+import p16m from '../../../public/media/prototype/P16-enfants-m.jpg'
+import childrenEnd from '../../../public/media/prototype/enfants-fin.jpg'
 import salonEnd from '../../../public/media/prototype/salon-fin.jpg'
 import curtain from '../../../public/media/prototype/P14-voilage.webp'
 import gestureEnd from '../../../public/media/prototype/V12-geste-fin.jpg'
@@ -60,6 +60,14 @@ const CONCIERGERIE = [
   0, 0.028, 0.056, 0.084, 0.112, 0.14, 0.17, 0.203, 0.236, 0.269, 0.302, 0.335, 0.366, 0.391, 0.413,
   0.436, 0.468, 0.509, 0.553, 0.598, 0.637, 0.663, 0.684, 0.702, 0.721, 0.739, 0.759, 0.781, 0.808,
   0.837, 0.873, 0.925, 1,
+] as const
+
+// Salon (section 4) : le geste de la page (8 s), puis la liaison vers la table des enfants (8 s).
+// `node scripts/scrub-timeline.mjs media-incoming/lot4-openart/salon/salon-chaine-master.mp4`.
+const SALON = [
+  0, 0.058, 0.099, 0.125, 0.154, 0.193, 0.227, 0.253, 0.275, 0.298, 0.329, 0.358, 0.382, 0.407,
+  0.446, 0.499, 0.545, 0.589, 0.634, 0.676, 0.71, 0.734, 0.754, 0.772, 0.792, 0.815, 0.837, 0.859,
+  0.879, 0.901, 0.926, 0.957, 1,
 ] as const
 
 type Room = {
@@ -165,20 +173,32 @@ export async function FilmEntree({ locale }: { locale: Locale }) {
     'grand-age': {
       side: 'end',
       frame: 'aspect-portrait',
-      height: 'lg:h-chapitre-geste',
+      // Puis la caméra longe la table jusqu'aux enfants (plan de liaison, section 4).
+      height: 'lg:h-chapitre-liaison',
+      captionSpan: 'lg:h-chapitre',
       seamless: true,
       sentence: services('senior.precision'),
       media: (
         <>
           <ResponsiveImage desktop={salonEnd} mobile={p15m} alt={t('seniorAlt')} />
-          <ScrubVideo src="/media/prototype/salon-scrub.mp4" trackId="grand-age" />
+          <ScrubVideo src="/media/prototype/salon-scrub.mp4" trackId="grand-age" timeline={SALON} />
         </>
       ),
     },
+    // La table des enfants (choix de Sady, section 4) : la main de l'enfant glisse le romarin dans
+    // le verre au rythme du défilement ; le côté gauche reste calme pour la légende.
     enfants: {
       side: 'start',
       frame: 'aspect-portrait',
-      media: <ResponsiveImage desktop={p06d} mobile={p06m} alt={t('childrenAlt')} />,
+      height: 'lg:h-chapitre-geste',
+      seamless: true,
+      sentence: t('rooms.children'),
+      media: (
+        <>
+          <ResponsiveImage desktop={childrenEnd} mobile={p16m} alt={t('childrenAlt')} />
+          <ScrubVideo src="/media/prototype/enfants-scrub.mp4" trackId="enfants" />
+        </>
+      ),
     },
   }
 

@@ -226,3 +226,21 @@ test('desktop : le salon s’enchaîne sans couture, légende légère avec la p
   })
   await expect(room.locator('> div').first()).toHaveClass(/opacity-0/)
 })
+
+test('desktop : la table des enfants s’enchaîne sans couture, légende légère', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr/prototype#enfants')
+  const room = page.locator('#enfants')
+  await expect(room.locator('ul')).toHaveCount(0)
+  await expect(room.getByText(/^Un soir, après l’école ou pendant les vacances/)).toBeVisible()
+  await expect(room.getByRole('link')).toHaveCount(1)
+  await expect(room.locator('video')).toHaveAttribute('src', /enfants-scrub\.mp4$/)
+  await page.evaluate(() => {
+    const element = document.getElementById('enfants')!
+    window.scrollTo({
+      top: element.getBoundingClientRect().top + window.scrollY - 300,
+      behavior: 'instant',
+    })
+  })
+  await expect(room.locator('> div').first()).toHaveClass(/opacity-0/)
+})
