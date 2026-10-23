@@ -120,6 +120,7 @@
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
+      "need": "[CONTENU À FOURNIR PAR CAT]",
       "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
       "link": "Découvrir la conciergerie de luxe",
       "situations": [
@@ -131,6 +132,7 @@
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
+      "need": "[CONTENU À FOURNIR PAR CAT]",
       "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés.",
       "link": "Découvrir l’accompagnement du grand âge",
       "situations": [
@@ -142,6 +144,7 @@
     "children": {
       "name": "Garde d’enfants",
       "promise": "Une présence choisie, pour quelques heures ou pour une saison.",
+      "need": "[CONTENU À FOURNIR PAR CAT]",
       "link": "Découvrir la garde d’enfants",
       "situations": [
         "Quelques heures, un soir ou pendant un rendez-vous.",
@@ -150,6 +153,21 @@
       ]
     },
     "title": "Nos services"
+  },
+  "ServicePage": {
+    "needLabel": "Le besoin",
+    "forWhomLabel": "Pour qui",
+    "forWhom": "Pour vous, ou pour l’un de vos proches.",
+    "situationsLabel": "Quelques situations",
+    "steps": [
+      "Vous nous écrivez.",
+      "Nous vous répondons personnellement, le plus souvent par e-mail, sous 48 heures.",
+      "Nous vous présentons la bonne personne."
+    ],
+    "selectionLabel": "Notre sélection",
+    "discretionLabel": "En toute confidentialité",
+    "contactLabel": "Nous écrire",
+    "othersLabel": "Les autres services"
   },
   "Video": {
     "pause": "Mettre la vidéo en pause",
