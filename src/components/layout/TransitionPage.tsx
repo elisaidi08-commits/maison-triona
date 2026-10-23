@@ -17,7 +17,9 @@ import { useEffect, type ReactNode } from 'react'
 //   pas. Jamais le titre : la position restaurée est souvent loin du haut de la page.
 // Défilement de ces retours : c'est le navigateur qui restaure la position. Le défilement doux de
 // M12 la faisait glisser depuis la position de la page quittée (Chromium, Firefox) : il est coupé
-// le temps de la restauration, deux images.
+// dès le début du retour et jusqu'au clic suivant. Firefox restaure plus tard que Chromium (vers
+// 30 ms), et seuls les clics sur les ancres de M12 ont besoin du défilement doux. Le style est relu
+// aussitôt changé : sinon le navigateur garde l'ancien.
 
 // API Navigation (Chromium, Firefox, Safari 26.2 et suivants), absente des types de TypeScript 5.9.
 type NavigationApi = {
@@ -38,34 +40,43 @@ const departures = new Map<string, { href: string; index: number }>()
 
 const navigationApi = () => (window as { navigation?: NavigationApi }).navigation
 const entryKey = () => navigationApi()?.currentEntry?.key ?? window.location.pathname
-const linksTo = (href: string) =>
-  document.querySelectorAll<HTMLElement>(`a[href="${CSS.escape(href)}"]`)
+// Éléments affichés seulement : Next.js garde la page quittée dans le DOM, cachée (display: none).
+const visible = (selector: string, root: ParentNode = document) =>
+  [...root.querySelectorAll<HTMLElement>(selector)].filter((element) => element.checkVisibility())
+const linksTo = (href: string) => visible(`a[href="${CSS.escape(href)}"]`)
+const smoothScroll = (on: boolean) => {
+  const html = document.documentElement
+  if (on) html.style.removeProperty('scroll-behavior')
+  else html.style.scrollBehavior = 'auto'
+  void getComputedStyle(html).scrollBehavior
+}
 
 if (typeof window !== 'undefined') {
-  // `navigate` annonce l'entrée visée avant que Next.js n'affiche la page. `popstate` arrive trop
-  // tard pour cela sous Chromium (l'écouteur de Next.js passe avant) : il ne sert qu'en repli.
-  // Next.js réécrit l'entrée (`replaceState`) à chaque affichage : un remplacement garde la clé.
+  // `navigate` distingue un retour ou une avance (« traverse ») d'un clic sur une ancre, qui change
+  // aussi d'entrée, et l'annonce avant que Next.js n'affiche la page. Next.js réécrit l'entrée
+  // (`replaceState`) à chaque affichage : un remplacement garde la clé.
   const api = navigationApi()
   api?.addEventListener('navigate', (event) => {
-    if (event.navigationType === 'traverse') traversedTo = event.destination.key
-    else if (event.navigationType !== 'replace') traversedTo = null
+    if (event.navigationType === 'traverse') {
+      traversedTo = event.destination.key
+      smoothScroll(false)
+    } else if (event.navigationType !== 'replace') traversedTo = null
   })
-  window.addEventListener('popstate', () => {
-    if (!api) traversedTo = window.location.pathname
-    const html = document.documentElement
-    html.style.scrollBehavior = 'auto'
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => html.style.removeProperty('scroll-behavior')),
-    )
-  })
+  // Sans l'API Navigation, la page retrouvée est reconnue à son adresse, et le retour garde le
+  // défilement doux. (`popstate` passe après l'écouteur de Next.js sous Chromium.)
+  if (!api)
+    window.addEventListener('popstate', () => {
+      traversedTo = window.location.pathname
+    })
   document.addEventListener(
     'click',
     (event) => {
       if (!api) traversedTo = null
+      smoothScroll(true)
       const link = (event.target as Element | null)?.closest?.<HTMLElement>('a[href]')
       if (!link) return
       const href = link.getAttribute('href') ?? ''
-      departures.set(entryKey(), { href, index: [...linksTo(href)].indexOf(link) })
+      departures.set(entryKey(), { href, index: linksTo(href).indexOf(link) })
     },
     true,
   )
@@ -80,7 +91,7 @@ export function TransitionPage({ children }: { children: ReactNode }) {
       if (departure) linksTo(departure.href)[departure.index]?.focus({ preventScroll: true })
     } else if (navigated) {
       const main = document.getElementById('contenu')
-      const title = main?.querySelector<HTMLElement>('h1')
+      const title = main ? visible('h1', main)[0] : undefined
       if (title && !title.hasAttribute('tabindex')) title.tabIndex = -1
       ;(title ?? main)?.focus({ preventScroll: true })
     }
