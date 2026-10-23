@@ -46,12 +46,6 @@
   /* Voile plein cadre du premier écran (D25) : 50 %, mesuré sur V01 et P01 (pixel le plus clair de la
      zone du nom : 3:1 dès 24 %, 4,5:1 à 49 %) ; jamais sur une autre image sans nouvelle mesure. */
   --color-voile-leger: #1c3b2a80;
-  /* Voiles du prototype V5 sur P10 (portes), desktop, mesurés sous le titre sur 10 tailles de 1024
-     à 2560 px, + 10 points de marge (choix de Sady, 22/10/2026) : français 20 % (0 % requis, le
-     titre tient sur le mur sombre) ; anglais 50 % (39 % requis, la 2ᵉ ligne passe sur les portes).
-     Sous 1024 px, le voile du hero (60 %) : jusqu'à 47 % mesurés (57 % en anglais à 360 et 375 px). */
-  --color-voile-portes-fr: #1c3b2a33;
-  --color-voile-portes: #1c3b2a80;
 
   /* Espacements (§4.1) : la classe porte la valeur en px (`p-24` = 24 px). */
   --spacing-0: 0px;
@@ -84,8 +78,6 @@
   --container-measure: 40rem;
   /* Titre du seuil : trois lignes au plus en display-xl (docs/art-direction.md §7.2). */
   --container-titre: 52rem;
-  /* Légende d'un chapitre du film d'entrée (prototype V5). */
-  --container-panneau: 30rem;
 
   /* Graisses */
   --font-weight-light: 300;
@@ -188,60 +180,6 @@
 /* Passage « on entre » (D19, M15) : 1,5 écran de défilement pour l'avancée vers la fenêtre. */
 @utility h-passage {
   height: 150svh;
-}
-
-/* Prototype V5 (/prototype), film d'entrée (desktop) : chaque chapitre garde son image collée sur
-   un écran pendant que sa légende défile ; le suivant glisse par-dessus. L'ouverture dure plus
-   longtemps (les portes s'ouvrent puis la caméra glisse jusqu'à la console, 16 s sur 2,4 écrans),
-   une pièce de service 1,6 écran. */
-@utility h-ouverture {
-  height: 340svh;
-}
-@utility h-chapitre {
-  height: 160svh;
-}
-/* Raccord sans couture (RaccordFilm.tsx) : la pièce de la conciergerie chevauche le dernier écran
-   de l'ouverture. */
-@utility raccord-film {
-  margin-top: -100svh;
-}
-/* Pièce dont la vidéo enchaîne un geste et un plan de liaison vers la pièce suivante (16 s). */
-@utility h-chapitre-liaison {
-  height: 300svh;
-}
-/* Pièce dont la vidéo suit le défilement (le geste de la conciergerie) : un écran de plus. */
-@utility h-chapitre-geste {
-  height: 200svh;
-}
-/* Titre de l'ouverture : 9 cadratins au plus, pour qu'il reste sur le mur sombre de P10 (le titre
-   anglais passe sur trois lignes, le français tient sur deux). */
-@utility titre-seuil {
-  max-width: 9em;
-}
-/* Avant-plan de l'ouverture (parallaxe par calques) : pan gauche plus étroit que la marge de page,
-   pour ne jamais passer sous le titre ; pan droit sur le cinquième du cadre. */
-@utility w-voilage-etroit {
-  width: calc(var(--spacing-margin) - var(--spacing-16));
-}
-@utility w-voilage {
-  width: 18vw;
-}
-/* Image et légende d'un chapitre dans la même case de grille (superposées). */
-@utility pile {
-  grid-area: 1 / 1;
-}
-/* Surface sombre à partir de 1024 px seulement (barre des choix de l'ouverture, ivoire en mobile) :
-   focus et filets champagne ; l'aplat lui-même est porté par `lg:bg-sapin`. */
-@utility surface-sapin-desktop {
-  @media (width >= 64rem) {
-    --focus-color: var(--color-champagne);
-    --filet-couleur: var(--color-champagne);
-  }
-}
-/* Image de l'invitation du prototype en mobile : la bande porte la phrase métier et la question,
-   l'image cède 4 % de la hauteur pour que le premier choix reste au-dessus de la barre mobile. */
-@utility h-invitation-image {
-  height: 46svh;
 }
 
 /* Accueil calme du prototype (maquette Figma D·01) : P10 et l'ouverture des portes (V10) dans un
@@ -431,26 +369,6 @@
      interactifs gardent toujours leur anneau de 3 px. */
   :is(h1, h2, h3, main)[tabindex='-1']:focus-visible {
     outline: none;
-  }
-
-  /* M3 (prototype V5) : légende qui apparaît en cascade (Apparition.tsx), opacité et 12 px. */
-  [data-apparition] > * {
-    transition:
-      opacity var(--transition-duration-reveal) var(--ease-maison),
-      transform var(--transition-duration-reveal) var(--ease-maison);
-  }
-  [data-apparition] > :nth-child(2) {
-    transition-delay: 90ms;
-  }
-  [data-apparition] > :nth-child(3) {
-    transition-delay: 180ms;
-  }
-  [data-apparition] > :nth-child(4) {
-    transition-delay: 270ms;
-  }
-  [data-apparition='attente'] > * {
-    opacity: 0;
-    transform: translateY(var(--distance-reveal));
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */

@@ -211,23 +211,9 @@
     "label": "Écrire en toute discrétion"
   },
   "Prototype": {
-    "title": "Une maison. Mille attentions.",
-    "metier": "Conciergerie privée et mise en relation personnalisée avec des professionnels indépendants, pour votre quotidien et ceux qui vous sont chers.",
-    "question": "Comment pouvons-nous vous accompagner ?",
     "imageAlt": "Un vestibule dans la pénombre : deux portes de bois entrouvertes sur un jardin, un rai de lumière sur le sol.",
-    "gestureAlt": "Sur une console de bois sombre, un petit bouquet de fleurs blanches dans un vase de céramique.",
-    "conciergeAlt": "Une console de noyer contre un mur clair : un vase de fleurs blanches, des clés sur un plateau de laiton, un carnet, des gants et du linge plié.",
     "seniorAlt": "Une main âgée portant une alliance, posée sur un livre ouvert près d’une tasse de porcelaine, devant un mur clair éclairé par une fenêtre.",
     "childrenAlt": "Une main d’enfant tient un brin de romarin au-dessus d’un verre que tient une main d’adulte, devant un mur clair éclairé par une fenêtre.",
-    "particular": {
-      "title": "Une demande particulière",
-      "cta": "Écrire en toute discrétion"
-    },
-    "scrollHint": "Faites défiler pour entrer",
-    "rooms": {
-      "concierge": "Une résidence prête à votre arrivée, un séjour organisé, la bonne personne pour chaque tâche.",
-      "children": "Un soir, après l’école ou pendant les vacances : quelqu’un que nous connaissons, attentif à leurs habitudes."
-    },
     "calme": {
       "servicesLabel": "Services",
       "servicesTitle": "Ce dont la maison s’occupe.",

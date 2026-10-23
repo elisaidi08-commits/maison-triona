@@ -17,16 +17,9 @@ type ChoiceListProps = {
   // En ligne à partir de 1024 px (seuil de l'accueil, D19) : 4 colonnes, filets or verticaux,
   // la première colonne sur la marge.
   rowOnDesktop?: boolean
-  // Sur un aplat sapin à partir de 1024 px (ouverture du prototype V5) : libellés ivoire, numéros
-  // champagne (le cyprès est interdit sur sapin), filets or.
-  darkOnDesktop?: boolean
 }
 
-export function ChoiceList({
-  choices,
-  rowOnDesktop = false,
-  darkOnDesktop = false,
-}: ChoiceListProps) {
+export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
   return (
     <ul
       className={`border-t border-or ${rowOnDesktop ? 'lg:grid lg:grid-cols-4 lg:border-b' : ''}`}
@@ -39,18 +32,13 @@ export function ChoiceList({
           <a
             href={choice.href}
             className={`group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre ${
-              darkOnDesktop ? 'lg:text-ivoire' : ''
-            } ${
               rowOnDesktop
                 ? `lg:h-full lg:flex-col lg:gap-8 lg:px-24 lg:py-16 ${index === 0 ? 'lg:pl-0' : ''}`
                 : ''
             }`}
           >
             {/* Sans numéro, la ligne garde sa place : les libellés partagent la même ligne de base. */}
-            <span
-              aria-hidden="true"
-              className={`w-32 shrink-0 text-label text-cypres ${darkOnDesktop ? 'lg:text-champagne' : ''}`}
-            >
+            <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
               {choice.number ?? ' '}
             </span>
             <span className="flex flex-col gap-4">
@@ -60,19 +48,9 @@ export function ChoiceList({
                 {choice.label}
               </span>
               {choice.category ? (
-                <span
-                  className={`text-label text-encre uppercase ${darkOnDesktop ? 'lg:text-ivoire-80' : ''}`}
-                >
-                  {choice.category}
-                </span>
+                <span className="text-label text-encre uppercase">{choice.category}</span>
               ) : null}
-              {choice.note ? (
-                <span
-                  className={`text-body text-encre ${darkOnDesktop ? 'lg:text-ivoire-80' : ''}`}
-                >
-                  {choice.note}
-                </span>
-              ) : null}
+              {choice.note ? <span className="text-body text-encre">{choice.note}</span> : null}
             </span>
           </a>
         </li>
