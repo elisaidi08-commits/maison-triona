@@ -4,11 +4,13 @@ import { getImageProps, type StaticImageData } from 'next/image'
 // Pxx-d et Pxx-m). Remplit son conteneur (object-cover). AVIF puis WebP via next/image.
 // `priority` : image LCP (chargement immédiat, priorité haute ; jamais `preload`, qui
 // téléchargerait les deux variantes d'un <picture>). `anchor` : point d'ancrage du recadrage
-// (`seuil` garde l'horizon et une partie du sol de P01 quand la bande des choix réduit la hauteur).
+// (`seuil` garde l'horizon et une partie du sol de P01 quand la bande des choix réduit la hauteur ;
+// `portes` cadre les deux battants de P10 dans un cadre portrait).
 
 const ANCHORS = {
   center: 'object-center',
   seuil: 'object-seuil',
+  portes: 'object-portes',
 } as const
 
 type ResponsiveImageProps = {

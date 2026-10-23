@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 // Bouton plein (docs/art-direction.md §7.5) : aplat sapin, texte ivoire, bordure or 1 px, rayon 0,
@@ -55,9 +56,9 @@ export function Button({
 }: ButtonProps) {
   if (href) {
     return (
-      <a href={href} className={`${BASE} ${VARIANTS[variant]}`}>
+      <Link href={href} className={`${BASE} ${VARIANTS[variant]}`}>
         <Label variant={variant}>{children}</Label>
-      </a>
+      </Link>
     )
   }
 
