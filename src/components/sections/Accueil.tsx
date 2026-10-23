@@ -1,9 +1,12 @@
 import { getTranslations } from 'next-intl/server'
+import { ViewTransition, type ReactNode } from 'react'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
+import { ChoiceList } from '@/components/ui/ChoiceList'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
 import { OuverturePortes } from '@/components/media/OuverturePortes'
+import { AnchorFocus } from './AnchorFocus'
 import { Revelation } from './Revelation'
 import { ServicesVitrine } from './ServicesVitrine'
 import p10d from '../../../public/media/accueil/P10-seuil-portes.jpg'
@@ -16,14 +19,32 @@ import p16m from '../../../public/media/accueil/P16-enfants-m.jpg'
 // par section, beaucoup d'air, de grandes images, aucun texte sur l'image. Le titre validé par Cat
 // et la phrase qui dit ce que fait la maison, face aux portes ; les trois services, chacun avec son
 // image ; les territoires ; le contact sur pierre. Mobile (M·01) : le texte, puis l'image.
+// Prototype MT-03 : P01 remet les quatre entrées par besoin sous la phrase (spec d'entrée,
+// variante B) ; P02 partage l'image de la conciergerie avec sa page (passage de pièce, M20).
 
 const SERVICE_IMAGES = { concierge: p13m, senior: p15m, children: p16m } as const
 
-export async function HeroAccueil() {
+export async function HeroAccueil({ locale }: { locale: Locale }) {
   const home = await getTranslations('Home')
+  // Les trois services mènent à leur pièce sur l'accueil (le focus suit, M12) ; la demande
+  // particulière, au contact. Brouillons de D26, en attente de Cat.
+  const choices = [
+    ...SERVICES.map((service) => ({
+      href: `#${service.anchor}`,
+      number: service.number,
+      label: home(`choices.${service.key}.label`),
+      category: home(`choices.${service.key}.category`),
+    })),
+    {
+      href: localizedPath('/contact', locale),
+      label: home('choices.unsure.label'),
+      note: home('choices.unsure.note'),
+    },
+  ]
   return (
-    <section aria-labelledby="accueil-titre" className="flex flex-col lg:h-seuil lg:flex-row">
-      <div className="flex flex-col justify-center gap-32 px-margin py-48 lg:w-7/12 lg:py-0 lg:pr-96">
+    <section aria-labelledby="accueil-titre" className="flex flex-col lg:min-h-seuil lg:flex-row">
+      <AnchorFocus />
+      <div className="flex flex-col justify-center gap-32 px-margin py-48 lg:w-7/12 lg:pr-96">
         <h1
           id="accueil-titre"
           className="animate-entree font-display text-display-xl text-balance text-sapin"
@@ -31,6 +52,9 @@ export async function HeroAccueil() {
           {home('title')}
         </h1>
         <p className="max-w-measure text-body-l">{home('intro')}</p>
+        <div className="max-w-measure">
+          <ChoiceList choices={choices} />
+        </div>
       </div>
       <div className="relative aspect-portrait overflow-hidden bg-pierre lg:aspect-auto lg:w-5/12">
         <ResponsiveImage
@@ -55,6 +79,20 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
     senior: t('alt.senior'),
     children: t('alt.children'),
   }
+  // P02 : l'image collante de la conciergerie (desktop) porte le même nom que l'image de sa page.
+  // Elle ne se déplace que sur un lien marqué « vers-piece » ; au retour, rien ne s'anime.
+  const shared = (key: keyof typeof SERVICE_IMAGES, node: ReactNode) =>
+    key === 'concierge' ? (
+      <ViewTransition
+        name="piece-conciergerie"
+        share={{ 'vers-piece': 'piece', default: 'none' }}
+        default="none"
+      >
+        <div className="absolute inset-0">{node}</div>
+      </ViewTransition>
+    ) : (
+      node
+    )
   const image = (key: keyof typeof SERVICE_IMAGES, sizes: string) => (
     <ResponsiveImage
       desktop={SERVICE_IMAGES[key]}
@@ -67,7 +105,9 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
   return (
     <section aria-labelledby="services-titre" className="conteneur py-section">
       <ServicesVitrine
-        images={SERVICES.map((service) => image(service.key, '(min-width: 64rem) 34vw, 100vw'))}
+        images={SERVICES.map((service) =>
+          shared(service.key, image(service.key, '(min-width: 64rem) 34vw, 100vw')),
+        )}
       >
         <div className="flex flex-col gap-24">
           <p className="text-label text-encre uppercase">{t('label')}</p>
@@ -89,10 +129,15 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
               <p aria-hidden="true" className="text-label text-cypres">
                 {service.number}
               </p>
-              <h3 className="text-title-h3 text-sapin">{services(`${service.key}.name`)}</h3>
+              <h3 id={`${service.anchor}-titre`} tabIndex={-1} className="text-title-h3 text-sapin">
+                {services(`${service.key}.name`)}
+              </h3>
               <p className="max-w-measure">{t(`text.${service.key}`)}</p>
               <p>
-                <TextLink href={localizedPath(SERVICE_PATHS[service.id], locale)}>
+                <TextLink
+                  href={localizedPath(SERVICE_PATHS[service.id], locale)}
+                  transitionTypes={service.key === 'concierge' ? ['vers-piece'] : undefined}
+                >
                   {services(`${service.key}.link`)}
                 </TextLink>
               </p>

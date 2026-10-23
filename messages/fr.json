@@ -51,6 +51,24 @@
   "Home": {
     "title": "Une seconde vie, comme des vacances qui ne s’arrêtent pas.",
     "intro": "Conciergerie de luxe, accompagnement du grand âge et garde d’enfants : la maison vous présente des personnes de confiance, choisies une à une.",
+    "choices": {
+      "concierge": {
+        "label": "Organiser le quotidien",
+        "category": "Conciergerie de luxe"
+      },
+      "senior": {
+        "label": "Accompagner un proche, ou vous‑même",
+        "category": "Accompagnement du grand âge"
+      },
+      "children": {
+        "label": "Prendre soin des enfants",
+        "category": "Garde d’enfants"
+      },
+      "unsure": {
+        "label": "Évoquer une demande particulière",
+        "note": "Parlons-en, en toute discrétion."
+      }
+    },
     "imageAlt": "Un vestibule dans la pénombre : deux portes de bois entrouvertes sur un jardin, un rai de lumière sur le sol.",
     "services": {
       "label": "Services",
@@ -100,7 +118,7 @@
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
-      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
+      "imageAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
       "link": "Découvrir la conciergerie de luxe",
       "situations": [
         "Préparer une résidence avant votre arrivée.",

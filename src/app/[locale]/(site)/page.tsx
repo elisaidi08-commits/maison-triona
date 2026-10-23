@@ -15,7 +15,7 @@ export default async function Home() {
   const locale = (await rootParams.locale()) as Locale
   return (
     <>
-      <HeroAccueil />
+      <HeroAccueil locale={locale} />
       <ServicesAccueil locale={locale} />
       <TerritoiresAccueil locale={locale} />
       <ContactAccueil locale={locale} />

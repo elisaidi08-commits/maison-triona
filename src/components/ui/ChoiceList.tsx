@@ -3,6 +3,11 @@
 // label capitales. Survol et focus : un filet or se dessine sous le libellé (mouvement M4).
 // Aucune icône, aucune flèche. Le choix sans numéro est une porte de sortie, moins appuyée :
 // libellé en graisse normale et phrase de conversation en corps de texte.
+// Un lien vers une autre page passe par la navigation interne de Next.js (D37) ; une ancre de la
+// même page reste un lien simple, pour que le focus suive le saut (M12, AnchorFocus).
+
+import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 export type Choice = {
   href: string
@@ -19,6 +24,26 @@ type ChoiceListProps = {
   rowOnDesktop?: boolean
 }
 
+function ChoiceLink({
+  href,
+  className,
+  children,
+}: {
+  href: string
+  className: string
+  children: ReactNode
+}) {
+  return href.startsWith('#') ? (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  )
+}
+
 export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
   return (
     <ul
@@ -29,7 +54,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
           key={choice.href + choice.label}
           className={`border-b border-or ${rowOnDesktop ? 'lg:border-b-0 lg:border-l lg:first:border-l-0' : ''}`}
         >
-          <a
+          <ChoiceLink
             href={choice.href}
             className={`group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre ${
               rowOnDesktop
@@ -52,7 +77,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
               ) : null}
               {choice.note ? <span className="text-body text-encre">{choice.note}</span> : null}
             </span>
-          </a>
+          </ChoiceLink>
         </li>
       ))}
     </ul>

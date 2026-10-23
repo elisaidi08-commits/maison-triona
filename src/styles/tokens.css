@@ -184,6 +184,11 @@
 @utility h-seuil {
   height: calc(100svh - var(--header-height));
 }
+/* Prototype MT-03 (P01) : le seuil fait au moins un écran, et s'allonge si la liste des entrées
+   ne tient pas (petits écrans, zoom) au lieu de déborder. */
+@utility min-h-seuil {
+  min-height: calc(100svh - var(--header-height));
+}
 
 /* Accueil (maquette Figma D·01, D36) : P10 et l'ouverture des portes (V10) dans un
    cadre portrait, recadrés sur les deux battants et le rai de lumière. */
@@ -381,6 +386,46 @@
   [data-revelation='attente'] > * {
     opacity: 0;
     translate: 0 var(--spacing-8);
+  }
+
+  /* M20 (prototype MT-03, passage de pièce) : l'image de la conciergerie va de l'accueil au haut de
+     sa page (React <ViewTransition>, classe « piece »), 500 ms ; elle garde son recadrage pendant le
+     trajet. Le reste de la page ne joue pas de fondu croisé : l'ancienne page disparaît, la
+     nouvelle arrive avec M6 (un seul fondu). La couche de transition laisse passer les clics. */
+  ::view-transition {
+    pointer-events: none;
+  }
+  ::view-transition-old(root) {
+    display: none;
+  }
+  ::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(.piece) {
+    animation-duration: 500ms;
+    animation-timing-function: var(--ease-maison);
+  }
+  ::view-transition-old(.piece),
+  ::view-transition-new(.piece) {
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Sous 1024 px, l'image collante de l'accueil n'existe pas : l'image d'arrivée s'affiche sans
+     animation au lieu d'apparaître seule en fondu. */
+  @media (width < 64rem) {
+    ::view-transition-group(.piece),
+    ::view-transition-old(.piece),
+    ::view-transition-new(.piece) {
+      animation: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+    }
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
