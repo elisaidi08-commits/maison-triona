@@ -405,10 +405,14 @@
     animation-duration: 500ms;
     animation-timing-function: var(--ease-maison);
   }
+  /* `overflow: clip` (MT-03B) : sans lui, l'image recadrée déborde de son cadre quand départ et
+     arrivée n'ont pas la même proportion (4:5 contre 0,67 à 1024 px, 0,89 à 1280 et 1920 px), et
+     les deux instantanés se voient l'un sur l'autre pendant le fondu. */
   ::view-transition-old(.piece),
   ::view-transition-new(.piece) {
     height: 100%;
     object-fit: cover;
+    overflow: clip;
   }
   /* Sous 1024 px, l'image collante de l'accueil n'existe pas : l'image d'arrivée s'affiche sans
      animation au lieu d'apparaître seule en fondu. */

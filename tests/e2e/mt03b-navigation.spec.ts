@@ -240,3 +240,44 @@ test.describe('MT-03B · arrivée et focus', () => {
     expect(await listeners()).toEqual(start)
   })
 })
+
+test.describe('MT-03B · passage de pièce', () => {
+  // Départ en 4:5, arrivée en 0,67 (1024 px) ou 0,89 (1920 px) : chaque instantané agrandi doit rester
+  // dans son cadre, sinon les deux images se voient l'une sur l'autre pendant le fondu.
+  for (const viewport of [
+    { width: 1024, height: 768 },
+    { width: 1920, height: 1080 },
+  ]) {
+    test(`les deux instantanés restent dans leur cadre (${viewport.width} px)`, async ({
+      page,
+    }) => {
+      await page.addInitScript(() => {
+        const w = window as Window & { clipped?: string[] }
+        const start = document.startViewTransition?.bind(document)
+        if (!start) return
+        document.startViewTransition = ((...args: Parameters<typeof start>) => {
+          const transition = start(...args)
+          transition.ready
+            .then(() => {
+              w.clipped = ['old', 'new'].map(
+                (part) =>
+                  getComputedStyle(
+                    document.documentElement,
+                    `::view-transition-${part}(piece-conciergerie)`,
+                  ).overflow,
+              )
+            })
+            .catch(() => {})
+          return transition
+        }) as typeof document.startViewTransition
+      })
+      await page.setViewportSize(viewport)
+      await page.goto('/fr')
+      await (await conciergeLink(page)).click()
+      await expect(page).toHaveURL(/\/fr\/services\/conciergerie$/)
+      await expect
+        .poll(() => page.evaluate(() => (window as Window & { clipped?: string[] }).clipped))
+        .toEqual(['clip', 'clip'])
+    })
+  }
+})
