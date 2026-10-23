@@ -3,36 +3,24 @@
   "fr": [
     "Home.imageAlt",
     "Home.intro",
-    "Promise",
-    "Home.accroche",
-    "Home.choices.concierge",
-    "Home.choices.senior",
-    "Home.choices.children",
-    "Home.choices.unsure",
+    "Home.services",
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)",
-    "Prototype"
+    "House.sections (titres)"
   ],
   "en": [
     "Home.title",
     "Home.intro",
-    "Promise",
-    "Home.accroche",
+    "Home.services",
     "Home.imageAlt",
-    "Home.choices.concierge",
-    "Home.choices.senior",
-    "Home.choices.children",
-    "Home.choices.unsure",
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)",
-    "Prototype"
+    "House.sections (titres)"
   ]
 }

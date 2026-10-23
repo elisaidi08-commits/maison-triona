@@ -12,8 +12,6 @@ const PAGES = [
   '/en/services/concierge',
   '/fr/demo',
   '/en/demo',
-  '/fr/prototype',
-  '/en/prototype',
   '/fr/adresse-inconnue',
 ]
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
@@ -21,8 +19,8 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 for (const path of PAGES) {
   test(`axe : ${path}`, async ({ page }) => {
     await page.goto(path)
-    // État final de la page : on la parcourt pour que les légendes qui apparaissent au défilement
-    // (prototype V5, fondu de 700 ms) aient fini leur fondu ; axe ne mesure pas un état transitoire.
+    // État final de la page : on la parcourt pour que les fondus (image des services de l'accueil,
+    // 1 s) soient finis ; axe ne mesure pas un état transitoire.
     await page.evaluate(async () => {
       for (let y = 0; y < document.body.scrollHeight; y += window.innerHeight / 2) {
         window.scrollTo({ top: y, behavior: 'instant' })

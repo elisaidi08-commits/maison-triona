@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from 'react'
 
-// Services de l'accueil calme (maquette Figma D·01) : en desktop, une seule grande image, collante à
+// Services de l'accueil (maquette Figma D·01) : en desktop, une seule grande image, collante à
 // gauche, montre le service que l'on lit ; elle passe en fondu à la suivante quand un autre service
 // arrive au milieu de l'écran ou reçoit le focus. Sans JavaScript, la première image reste. En
 // mobile, cette colonne n'existe pas : chaque service porte sa propre image (rendue par le serveur).

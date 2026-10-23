@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// Prototype V5, accueil calme (/prototype, maquette Figma D·01) : le titre validé et ce que fait la
-// maison face aux portes, les trois services avec leurs images, les territoires, le contact sur
-// pierre. Jamais indexé ; la version fixe (mobile, mouvement réduit) est complète.
+// Accueil (maquette Figma D·01, D36) : le titre validé et ce que fait la maison face aux portes, les
+// trois services avec leurs images, les territoires, le contact sur pierre. La version fixe
+// (mobile, mouvement réduit) est complète.
 
 const videoRequests = (page: Page) => {
   const urls: string[] = []
@@ -16,7 +16,7 @@ test('premier écran : le titre validé et la phrase qui dit ce que fait la mais
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Une seconde vie, comme des vacances qui ne s’arrêtent pas.',
   )
@@ -26,7 +26,7 @@ test('premier écran : le titre validé et la phrase qui dit ce que fait la mais
 })
 
 test('une idée par section, dans l’ordre de la maquette', async ({ page }) => {
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   const order = await page
     .locator('main section[aria-labelledby]')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-labelledby')))
@@ -38,13 +38,13 @@ test('les trois services mènent à leur page, en français comme en anglais', a
     page
       .locator('section[aria-labelledby="services-titre"] ol a')
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')))
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   expect(await links()).toEqual([
     '/fr/services/conciergerie',
     '/fr/services/grand-age',
     '/fr/services/enfants',
   ])
-  await page.goto('/en/prototype')
+  await page.goto('/en')
   expect(await links()).toEqual([
     '/en/services/concierge',
     '/en/services/senior-companionship',
@@ -56,8 +56,10 @@ test('les trois services mènent à leur page, en français comme en anglais', a
   )
 })
 
-test('jamais indexé, en français comme en anglais', async ({ page }) => {
-  for (const path of ['/fr/prototype', '/en/prototype']) {
+test('noindex tant que le site n’est pas ouvert, en français comme en anglais', async ({
+  page,
+}) => {
+  for (const path of ['/fr', '/en']) {
     await page.goto(path)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
   }
@@ -68,7 +70,7 @@ test('jamais indexé, en français comme en anglais', async ({ page }) => {
 
 test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   const video = page.locator('section[aria-labelledby="accueil-titre"] video')
   await expect(video).toHaveCount(1)
   await expect(video).toHaveJSProperty('loop', false)
@@ -82,7 +84,7 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
 
 test('desktop : l’image des services suit le service que l’on lit', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   const visible = () =>
     page
       .locator('[data-vitrine-images] > *')
@@ -103,14 +105,14 @@ test('mobile et mouvement réduit : aucune vidéo, chaque service garde son imag
 }) => {
   const urls = videoRequests(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   await page.waitForTimeout(2000)
   for (const id of ['conciergerie', 'grand-age', 'enfants']) {
     await expect(page.locator(`#${id} img`)).toBeVisible()
   }
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr')
   await page.waitForTimeout(2000)
   expect(urls).toEqual([])
 })

@@ -50,44 +50,24 @@
   },
   "Home": {
     "title": "A second life, like a holiday that never ends.",
-    "accroche": "Attention to what matters most.",
     "intro": "Luxury concierge, senior companionship and childcare: the house introduces you to trusted people, chosen one by one.",
-    "imageAlt": "A dim room, French windows open onto the sea and a linen curtain lifted by the breeze.",
-    "choices": {
-      "concierge": {
-        "label": "Take care of everyday life",
-        "category": "Luxury concierge"
+    "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
+    "services": {
+      "label": "Services",
+      "title": "What the house takes care of.",
+      "text": {
+        "concierge": "Residences, travel, reservations, household management: a single point of contact to organise everything.",
+        "senior": "A carefully chosen companion, and days that keep their rhythm and their pleasures, at home or away.",
+        "children": "People chosen one by one, for a few hours or for a whole season."
       },
-      "senior": {
-        "label": "Support a loved one, or yourself",
-        "category": "Senior companionship"
-      },
-      "children": {
-        "label": "Look after the children",
-        "category": "Childcare"
-      },
-      "unsure": {
-        "label": "Discuss a particular request",
-        "note": "Let’s talk, in complete discretion."
+      "alt": {
+        "concierge": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
+        "senior": "An older hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window.",
+        "children": "A child’s hand holds a sprig of rosemary above a glass held by an adult’s hand, against a pale wall lit by a window."
       }
     }
   },
-  "Promise": {
-    "label": "Our promise",
-    "points": [
-      "A single point of contact",
-      "People chosen one by one",
-      "Complete discretion",
-      "A personal relationship that lasts"
-    ]
-  },
   "Scenes": {
-    "house": {
-      "label": "The House",
-      "title": "Here, you are expected.",
-      "link": "Discover the house",
-      "imageAlt": "An ochre wall and a half-open arched door, jasmine and a potted lemon tree."
-    },
     "territories": {
       "label": "Where we work",
       "title": "Five countries, one address book.",
@@ -205,18 +185,5 @@
   },
   "MobileBar": {
     "label": "Write to us in confidence"
-  },
-  "Prototype": {
-    "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
-    "seniorAlt": "An older hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window.",
-    "childrenAlt": "A child’s hand holds a sprig of rosemary above a glass held by an adult’s hand, against a pale wall lit by a window.",
-    "calme": {
-      "servicesLabel": "Services",
-      "servicesTitle": "What the house takes care of.",
-      "concierge": "Residences, travel, reservations, household management: a single point of contact to organise everything.",
-      "senior": "A carefully chosen companion, and days that keep their rhythm and their pleasures, at home or away.",
-      "children": "People chosen one by one, for a few hours or for a whole season.",
-      "conciergeAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall."
-    }
   }
 }

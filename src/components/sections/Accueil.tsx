@@ -3,24 +3,23 @@ import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
-import { OuverturePortes } from './OuverturePortes'
+import { OuverturePortes } from '@/components/media/OuverturePortes'
 import { ServicesVitrine } from './ServicesVitrine'
-import p10d from '../../../public/media/prototype/P10-seuil-portes.jpg'
-import p10m from '../../../public/media/prototype/P10-seuil-portes-m.jpg'
-import p13m from '../../../public/media/prototype/P13-console-vase-m.jpg'
-import p15m from '../../../public/media/prototype/P15-salon-m.jpg'
-import p16m from '../../../public/media/prototype/P16-enfants-m.jpg'
+import p10d from '../../../public/media/accueil/P10-seuil-portes.jpg'
+import p10m from '../../../public/media/accueil/P10-seuil-portes-m.jpg'
+import p13m from '../../../public/media/accueil/P13-console-vase-m.jpg'
+import p15m from '../../../public/media/accueil/P15-salon-m.jpg'
+import p16m from '../../../public/media/accueil/P16-enfants-m.jpg'
 
-// Accueil calme du prototype (retour de Sady à la maquette Figma D·01, 22/10/2026) : une idée par
-// section, beaucoup d'air, de grandes images, aucun texte sur l'image. Le titre validé par Cat et
-// la phrase qui dit ce que fait la maison, face aux portes ; les trois services, chacun avec son
+// Accueil (maquette Figma D·01, retenu par Sady le 23/10/2026, D36 ; à valider par Cat) : une idée
+// par section, beaucoup d'air, de grandes images, aucun texte sur l'image. Le titre validé par Cat
+// et la phrase qui dit ce que fait la maison, face aux portes ; les trois services, chacun avec son
 // image ; les territoires ; le contact sur pierre. Mobile (M·01) : le texte, puis l'image.
 
 const SERVICE_IMAGES = { concierge: p13m, senior: p15m, children: p16m } as const
 
-export async function HeroCalme() {
+export async function HeroAccueil() {
   const home = await getTranslations('Home')
-  const t = await getTranslations('Prototype')
   return (
     <section aria-labelledby="accueil-titre" className="flex flex-col lg:h-seuil lg:flex-row">
       <div className="flex flex-col justify-center gap-32 px-margin py-48 lg:w-7/12 lg:py-0 lg:pr-96">
@@ -36,24 +35,24 @@ export async function HeroCalme() {
         <ResponsiveImage
           desktop={p10d}
           mobile={p10m}
-          alt={t('imageAlt')}
+          alt={home('imageAlt')}
           sizes="100vw"
           anchor="portes"
           priority
         />
-        <OuverturePortes src="/media/prototype/V10-portes-intro.mp4" />
+        <OuverturePortes src="/media/accueil/V10-portes-intro.mp4" />
       </div>
     </section>
   )
 }
 
-export async function ServicesCalmes({ locale }: { locale: Locale }) {
-  const t = await getTranslations('Prototype')
+export async function ServicesAccueil({ locale }: { locale: Locale }) {
+  const t = await getTranslations('Home.services')
   const services = await getTranslations('Services')
   const alts = {
-    concierge: t('calme.conciergeAlt'),
-    senior: t('seniorAlt'),
-    children: t('childrenAlt'),
+    concierge: t('alt.concierge'),
+    senior: t('alt.senior'),
+    children: t('alt.children'),
   }
   const image = (key: keyof typeof SERVICE_IMAGES, sizes: string) => (
     <ResponsiveImage
@@ -70,9 +69,9 @@ export async function ServicesCalmes({ locale }: { locale: Locale }) {
         images={SERVICES.map((service) => image(service.key, '(min-width: 64rem) 34vw, 100vw'))}
       >
         <div className="flex flex-col gap-24">
-          <p className="text-label text-encre uppercase">{t('calme.servicesLabel')}</p>
+          <p className="text-label text-encre uppercase">{t('label')}</p>
           <h2 id="services-titre" className="font-display text-title-h2 text-balance text-sapin">
-            {t('calme.servicesTitle')}
+            {t('title')}
           </h2>
         </div>
         <ol className="mt-64 flex flex-col gap-96 lg:mt-96 lg:gap-128">
@@ -90,7 +89,7 @@ export async function ServicesCalmes({ locale }: { locale: Locale }) {
                 {service.number}
               </p>
               <h3 className="text-title-h3 text-sapin">{services(`${service.key}.name`)}</h3>
-              <p className="max-w-measure">{t(`calme.${service.key}`)}</p>
+              <p className="max-w-measure">{t(`text.${service.key}`)}</p>
               <p>
                 <TextLink href={localizedPath(SERVICE_PATHS[service.id], locale)}>
                   {services(`${service.key}.link`)}
@@ -104,7 +103,7 @@ export async function ServicesCalmes({ locale }: { locale: Locale }) {
   )
 }
 
-export async function TerritoiresCalmes({ locale }: { locale: Locale }) {
+export async function TerritoiresAccueil({ locale }: { locale: Locale }) {
   const t = await getTranslations('Scenes.territories')
   return (
     <section aria-labelledby="territoires-titre" className="py-section">
@@ -125,7 +124,7 @@ export async function TerritoiresCalmes({ locale }: { locale: Locale }) {
   )
 }
 
-export async function ContactCalme({ locale }: { locale: Locale }) {
+export async function ContactAccueil({ locale }: { locale: Locale }) {
   const t = await getTranslations('Scenes.contact')
   return (
     <section aria-labelledby="contact-titre" className="bg-pierre py-section">

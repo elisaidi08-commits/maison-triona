@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { afterLoad, videoAllowed } from '@/components/media/videoConditions'
 
-// Accueil calme du prototype : les portes de P10 s'ouvrent une seule fois après le chargement (V10,
+// Accueil : les portes de P10 s'ouvrent une seule fois après le chargement (V10,
 // 5 s, muette, décorative), puis la dernière image reste. Cinq secondes au plus, sans boucle :
 // aucun bouton pause n'est exigé (WCAG 2.2.2). Desktop seulement, sans mouvement réduit ni économie
 // de données ; sinon l'image fixe suffit. Même recadrage que P10, dont le premier cadre est la copie
