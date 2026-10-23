@@ -116,3 +116,37 @@ test('mobile et mouvement réduit : aucune vidéo, chaque service garde son imag
   await page.waitForTimeout(2000)
   expect(urls).toEqual([])
 })
+
+test('le logo et les liens changent de page sans rechargement, la page arrive en fondu', async ({
+  page,
+}) => {
+  type Marked = Window & { marqueur?: number }
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  const wrapper = page.locator('main > div').first()
+  // Le premier affichage n'est jamais animé.
+  await expect(wrapper).not.toHaveClass(/animate-page/)
+  await page.evaluate(() => ((window as Marked).marqueur = 1))
+  await page.getByRole('link', { name: 'Où nous travaillons' }).click()
+  await expect(page).toHaveURL(/\/fr\/territoires$/)
+  expect(await page.evaluate(() => (window as Marked).marqueur)).toBe(1)
+  await expect(page.locator('main > div').first()).toHaveClass(/animate-page/)
+  await page.getByRole('link', { name: 'Maison Triona, accueil' }).click()
+  await expect(page).toHaveURL(/\/fr$/)
+  expect(await page.evaluate(() => (window as Marked).marqueur)).toBe(1)
+})
+
+test('le titre des territoires apparaît en entrant dans l’écran, tout de suite en mouvement réduit', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  const group = page.locator('[data-revelation]')
+  await expect(group).toHaveAttribute('data-revelation', 'attente')
+  await page.locator('#territoires-titre').scrollIntoViewIfNeeded()
+  await expect(group).toHaveAttribute('data-revelation', 'visible')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/fr')
+  await page.waitForTimeout(500)
+  await expect(page.locator('[data-revelation]')).toHaveAttribute('data-revelation', '')
+})

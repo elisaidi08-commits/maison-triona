@@ -153,6 +153,14 @@
 
   /* M1 (docs/motion-spec.md) : entrée du titre du seuil, une seule fois, jamais sur l'image. */
   --animate-entree: mt-entree 900ms var(--ease-maison) both;
+  /* M6 : la page qui arrive par une navigation interne apparaît en fondu (entrée seulement). */
+  --animate-page: mt-page var(--transition-duration-page) var(--ease-maison) both;
+
+  @keyframes mt-page {
+    from {
+      opacity: 0;
+    }
+  }
 
   @keyframes mt-entree {
     from {
@@ -357,6 +365,22 @@
      interactifs gardent toujours leur anneau de 3 px. */
   :is(h1, h2, h3, main)[tabindex='-1']:focus-visible {
     outline: none;
+  }
+
+  /* M3 (à l'essai sur Territoires, D37 ; Q4 en attente) : label et titre de section qui
+     apparaissent en entrant dans l'écran, 8 px et 80 ms d'écart (Revelation.tsx). Jamais les
+     paragraphes. Visible d'emblée sans JavaScript, en mouvement réduit, ou déjà à l'écran. */
+  [data-revelation] > * {
+    transition:
+      opacity var(--transition-duration-reveal) var(--ease-maison),
+      translate var(--transition-duration-reveal) var(--ease-maison);
+  }
+  [data-revelation] > :nth-child(2) {
+    transition-delay: var(--stagger);
+  }
+  [data-revelation='attente'] > * {
+    opacity: 0;
+    translate: 0 var(--spacing-8);
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */

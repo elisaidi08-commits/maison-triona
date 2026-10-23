@@ -4,6 +4,7 @@ import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
 import { OuverturePortes } from '@/components/media/OuverturePortes'
+import { Revelation } from './Revelation'
 import { ServicesVitrine } from './ServicesVitrine'
 import p10d from '../../../public/media/accueil/P10-seuil-portes.jpg'
 import p10m from '../../../public/media/accueil/P10-seuil-portes-m.jpg'
@@ -108,13 +109,16 @@ export async function TerritoiresAccueil({ locale }: { locale: Locale }) {
   return (
     <section aria-labelledby="territoires-titre" className="py-section">
       <div className="conteneur flex flex-col gap-24">
-        <p className="text-label text-encre uppercase">{t('label')}</p>
-        <h2
-          id="territoires-titre"
-          className="max-w-titre font-display text-display-l text-balance text-sapin"
-        >
-          {t('countries')}
-        </h2>
+        {/* M3 à l'essai sur cette seule section (D37) : le label et les pays apparaissent. */}
+        <Revelation>
+          <p className="text-label text-encre uppercase">{t('label')}</p>
+          <h2
+            id="territoires-titre"
+            className="max-w-titre font-display text-display-l text-balance text-sapin"
+          >
+            {t('countries')}
+          </h2>
+        </Revelation>
         <p className="text-body-l">{t('title')}</p>
         <p>
           <TextLink href={localizedPath('/territoires', locale)}>{t('link')}</TextLink>

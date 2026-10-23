@@ -24,10 +24,10 @@
 |---|---|---|---|---|---|---|---|---|---|
 | M1 | `hero-entree` | Premier affichage de l'Accueil | Titre, intro, cachet : `opacity` 0 → 1, `translateY` 12 → 0 px. **Image : aucune animation.** | 900 ms | maison | 0 / 120 / 240 ms | Aucune animation | CSS `@keyframes` | Proposé |
 | M2 | `revelation-image` | Image entrant à 20 % dans le viewport | `opacity` 0 → 1, `translateY` 12 → 0 px | 700 ms | maison | — | Aucune animation | Motion `whileInView`, `once` | **Q4** |
-| M3 | `revelation-groupe` | Titre de section entrant dans le viewport | Label + filet + titre : `opacity` 0 → 1, `translateY` 8 → 0 px. **Paragraphes jamais animés.** | 700 ms | maison | 80 ms | Aucune animation | Motion `whileInView`, `once` | **Q4** |
+| M3 | `revelation-groupe` | Titre de section entrant dans le viewport | Label + filet + titre : `opacity` 0 → 1, `translateY` 8 → 0 px. **Paragraphes jamais animés.** | 700 ms | maison | 80 ms | Aucune animation | Motion `whileInView`, `once` | **Q4** ; à l'essai sur la section Territoires de l'accueil (D37), en CSS, sans Motion |
 | M4 | `filet-survol` | Survol ou focus d'un lien, du bouton, d'une ligne de service | Filet 1 px or : `scaleX` 0 → 1, origine à gauche | 300 ms | standard | — | Filet affiché sans transition | CSS | Proposé |
 | M5 | `couleur-survol` | Survol d'un lien | Couleur encre ou sapin → cyprès ; sur sapin : ivoire → champagne | 150 ms | standard | — | Changement instantané | CSS | Proposé |
-| M6 | `transition-page` | Navigation interne | Nouvelle page : `opacity` 0 → 1 (entrée seulement) | 240 ms | maison | — | Aucune | CSS ou Motion dans `template.tsx` (à valider en phase 1) | Proposé |
+| M6 | `transition-page` | Navigation interne | Nouvelle page : `opacity` 0 → 1 (entrée seulement) | 240 ms | maison | — | Aucune | CSS ou Motion dans `template.tsx` (à valider en phase 1) | **Posé (D37)** : `template.tsx` + `TransitionPage`, CSS ; jamais au premier affichage |
 | M7 | `parallaxe-hero` | Scroll dans le hero, **desktop ≥ 1024 px et pointeur fin uniquement** | Image intérieure du cadre en arche : `translateY` de 0 à −24 px sur la hauteur du hero | lié au scroll | linéaire | — | Désactivée | Motion `useScroll` + `useTransform` | P2, **Q4** |
 | M8 | `menu-mobile` | Ouverture / fermeture du menu | Panneau `opacity` 0 → 1 ; entrées `translateY` 8 → 0 px | 240 ms | maison | 40 ms | Fondu seul, 120 ms | CSS | Proposé |
 | M9 | `confirmation` | Affichage de la confirmation d'envoi | « K. » et message : `opacity` 0 → 1 | 600 ms | maison | 120 ms | Aucune | CSS | Proposé |
