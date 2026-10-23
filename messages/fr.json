@@ -235,13 +235,6 @@
       "senior": "Une présence choisie, des journées qui gardent leur rythme et leurs plaisirs, à la maison comme en voyage.",
       "children": "Des personnes choisies une à une, pour quelques heures comme pour une saison.",
       "conciergeAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair."
-    },
-    "film": {
-      "label": "Film d’entrée",
-      "plans": "Plans du film",
-      "pause": "Pause",
-      "play": "Lecture",
-      "skip": "Passer"
     }
   }
 }

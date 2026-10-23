@@ -2,9 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 // Prototype V5, accueil calme (/prototype, maquette Figma D·01) : le titre validé et ce que fait la
 // maison face aux portes, les trois services avec leurs images, les territoires, le contact sur
-// pierre. Jamais indexé ; la version fixe (mobile, mouvement réduit) est complète. Variante
-// /prototype/chemin (D31) : en desktop, le film d'entrée passe d'abord, et l'en-tête ouvre le menu
-// plein écran à aplats.
+// pierre. Jamais indexé ; la version fixe (mobile, mouvement réduit) est complète.
 
 const videoRequests = (page: Page) => {
   const urls: string[] = []
@@ -12,11 +10,6 @@ const videoRequests = (page: Page) => {
     if (/\.(mp4|webm)(\?|$)/.test(request.url())) urls.push(request.url())
   })
   return urls
-}
-
-const passerLeFilm = async (page: Page) => {
-  await page.getByRole('button', { name: 'Passer' }).click()
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
 }
 
 test('premier écran : le titre validé et la phrase qui dit ce que fait la maison', async ({
@@ -77,8 +70,6 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr/prototype')
   const video = page.locator('section[aria-labelledby="accueil-titre"] video')
-  // Sans film d'entrée, les portes s'ouvrent dès le chargement.
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
   await expect(video).toHaveCount(1)
   await expect(video).toHaveJSProperty('loop', false)
   await expect
@@ -122,113 +113,4 @@ test('mobile et mouvement réduit : aucune vidéo, chaque service garde son imag
   await page.goto('/fr/prototype')
   await page.waitForTimeout(2000)
   expect(urls).toEqual([])
-})
-
-test('desktop : le film d’entrée passe avant l’accueil, Passer a le focus, Échap le passe', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype/chemin')
-  const film = page.getByRole('dialog', { name: 'Film d’entrée' })
-  await expect(film).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Passer' })).toBeFocused()
-  await expect(film.getByRole('list', { name: 'Plans du film' }).getByRole('button')).toHaveText([
-    'Conciergerie de luxe',
-    'Accompagnement du grand âge',
-    'Garde d’enfants',
-    'La Maison',
-  ])
-  // L'accueil est déjà rendu derrière le film.
-  await expect(page.getByRole('heading', { level: 1, includeHidden: true })).toHaveCount(1)
-  await page.keyboard.press('Escape')
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
-  await page.locator('#conciergerie a').focus()
-  await expect(page.locator('#conciergerie a')).toBeFocused()
-})
-
-test('desktop : la pause suspend le plan, un plan se choisit', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype/chemin')
-  await page.getByRole('button', { name: 'Pause' }).click()
-  await expect(page.getByRole('button', { name: 'Lecture' })).toBeVisible()
-  const state = () =>
-    page
-      .locator('[data-progression]')
-      .evaluate((line) => line.getAnimations()[0]?.playState ?? 'aucune')
-  await expect.poll(state).toBe('paused')
-  await page.getByRole('button', { name: 'Garde d’enfants' }).click()
-  await expect(page.getByRole('button', { name: 'Garde d’enfants' })).toHaveAttribute(
-    'aria-current',
-    'step',
-  )
-  await expect(page.locator('[data-film-accueil] [data-bande]')).toContainText('03 / 04')
-})
-
-test('desktop : au dernier plan, la scène rejoint les portes de l’accueil, qui s’ouvrent', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype/chemin')
-  await page.getByRole('button', { name: 'La Maison' }).click()
-  await expect(page.locator('[data-film-accueil]')).toHaveAttribute('data-etat', 'arrivee', {
-    timeout: 8000,
-  })
-  // Pendant l'arrivée, la scène se resserre exactement sur le cadre des portes de l'accueil.
-  const frame = await page.locator('[data-accueil-portes]').boundingBox()
-  const target = await page
-    .locator('[data-scene]')
-    .evaluate((scene: HTMLElement) => scene.style.clipPath)
-  const [top, right, bottom, left] = (target.match(/-?[\d.]+/g) ?? []).map(Number)
-  expect(top).toBeCloseTo(frame!.y, 1)
-  expect(left).toBeCloseTo(frame!.x, 1)
-  expect(right).toBeCloseTo(0, 1)
-  expect(bottom).toBeCloseTo(0, 1)
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
-  await expect(page.locator('section[aria-labelledby="accueil-titre"] video')).toHaveCount(1)
-})
-
-test('mobile et mouvement réduit : pas de film, l’accueil tout de suite', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/fr/prototype/chemin')
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype/chemin')
-  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
-})
-
-test('menu plein écran : aplats, quatre entrées, une pièce au survol, Échap le ferme', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype/chemin')
-  await passerLeFilm(page)
-  const header = page.getByRole('banner')
-  await expect(header.getByRole('link', { name: 'Territoires' })).toBeHidden()
-  const button = header.locator('[data-menu-panneau] summary')
-  await expect(button.getByText('Menu', { exact: true })).toBeVisible()
-  await button.click()
-  const menu = header.locator('[data-menu-panneau]')
-  await expect(
-    menu.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link'),
-  ).toHaveText(['La Maison', 'Services', 'Territoires', 'Contact'])
-  await menu.getByRole('link', { name: 'Services' }).hover()
-  await expect
-    .poll(() =>
-      menu.locator('[data-menu-image="1"]').evaluate((image) => getComputedStyle(image).opacity),
-    )
-    .toBe('1')
-  await page.keyboard.press('Escape')
-  await expect(menu).not.toHaveAttribute('open')
-  await expect(button).toBeFocused()
-})
-
-test('ailleurs, l’en-tête ne change pas : navigation en ligne en desktop', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  for (const path of ['/fr', '/fr/prototype']) {
-    await page.goto(path)
-    const header = page.getByRole('banner')
-    await expect(header.getByRole('link', { name: 'Territoires' })).toBeVisible()
-    await expect(header.locator('[data-menu-panneau]')).toBeHidden()
-  }
 })

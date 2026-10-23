@@ -158,34 +158,9 @@
   --transition-duration-page: 240ms;
   --transition-duration-reveal: 700ms;
   --transition-duration-hero: 1000ms;
-  /* Prototype V5 (D31) : ouverture d'un plan du film d'entrée et arrivée sur l'accueil (M18),
-     aplats du menu plein écran (M19). */
-  --transition-duration-film: 1400ms;
-  --transition-duration-menu: 575ms;
 
   /* M1 (docs/motion-spec.md) : entrée du titre du seuil, une seule fois, jamais sur l'image. */
   --animate-entree: mt-entree 900ms var(--ease-maison) both;
-
-  /* M18 : ligne de progression d'un plan du film d'entrée (sa durée est celle du plan). */
-  --animate-progression: mt-progression 3200ms linear both;
-  /* M18 : filet de sécurité si le script du film ne prend jamais la main (le film disparaît). */
-  --animate-film-secours: mt-film-secours 600ms 20s both;
-
-  @keyframes mt-progression {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
-    }
-  }
-
-  @keyframes mt-film-secours {
-    to {
-      opacity: 0;
-      visibility: hidden;
-    }
-  }
 
   @keyframes mt-entree {
     from {
@@ -204,16 +179,6 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-text: var(--font-manrope), system-ui, sans-serif;
 }
-
-/* Prototype V5 (D31) : le film d'entrée n'existe qu'en desktop, sans mouvement réduit et avec
-   JavaScript ; sinon l'accueil s'affiche directement, sans rien masquer. */
-@custom-variant film-entree {
-  @media (width >= 64rem) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
-    @slot;
-  }
-}
-/* Prototype V5 (D31) : en-tête à menu plein écran, sur les pages qui portent `data-entete-menu`. */
-@custom-variant entete-menu (:root:has([data-entete-menu]) &);
 
 /* Seuil plein écran (D19) : l'écran 1 occupe toute la hauteur visible sous l'en-tête. */
 @utility h-seuil {
@@ -283,15 +248,6 @@
    cadre portrait, recadrés sur les deux battants et le rai de lumière. */
 @utility object-portes {
   object-position: 67% 50%;
-}
-
-/* Film d'entrée (D31) : la bande sapin du bas porte le numéro, le titre, la phrase, les quatre
-   plans et les commandes ; l'image occupe tout ce qui est au-dessus. */
-@utility h-bande-film {
-  height: 13rem;
-}
-@utility bottom-bande-film {
-  bottom: 13rem;
 }
 
 /* Recadrage de P01 (et de son poster) : un peu sous le centre, pour garder la mer et le sol. */
@@ -495,103 +451,6 @@
   [data-apparition='attente'] > * {
     opacity: 0;
     transform: translateY(var(--distance-reveal));
-  }
-
-  /* M18 (prototype V5, D31) : film d'entrée de l'accueil calme (FilmAccueil.tsx). Chaque plan
-     s'ouvre en cercle depuis le centre, par-dessus le précédent (l'idée du « verre » de la
-     référence, sans réfraction, sans aberration ni flou) ; la progression du plan en cours se
-     suspend avec la pause (style posé par le composant). À l'arrivée, l'aplat s'efface, la bande aussi, et la scène se resserre
-     sur l'image des portes de l'accueil, qui est exactement à sa place quand le film se ferme. */
-  [data-film-accueil] {
-    background-color: var(--color-sapin);
-    transition:
-      background-color var(--transition-duration-film) var(--ease-maison),
-      opacity var(--transition-duration-hover) var(--ease-maison);
-  }
-  [data-film-accueil] [data-bande] {
-    transition: opacity var(--transition-duration-reveal) var(--ease-maison);
-  }
-  [data-film-accueil] [data-plan] {
-    clip-path: circle(0% at 50% 50%);
-    transition: clip-path var(--transition-duration-film) var(--ease-maison);
-  }
-  [data-film-accueil] [data-plan='vu'] {
-    clip-path: circle(75% at 50% 50%);
-  }
-  [data-film-accueil][data-etat='arrivee'] {
-    background-color: transparent;
-  }
-  [data-film-accueil][data-etat='arrivee'] [data-bande] {
-    opacity: 0;
-  }
-  [data-film-accueil][data-etat='arrivee'] :is([data-scene], [data-scene-portes]) {
-    transition:
-      clip-path var(--transition-duration-film) var(--ease-maison),
-      transform var(--transition-duration-film) var(--ease-maison);
-  }
-  [data-film-accueil][data-etat='sortie'] {
-    opacity: 0;
-  }
-
-  /* M19 (prototype V5, D31) : menu plein écran (MenuPanneau.tsx, l'idée « Sterling Gate » de la
-     référence) : trois aplats glissent depuis la droite l'un après l'autre (pierre, cyprès,
-     ivoire), puis les liens montent en cascade ; le survol ou le focus d'un lien montre sa pièce.
-     Sans JavaScript, il s'ouvre et se ferme aussi (<details>), sans animation de fermeture. */
-  [data-menu-panneau] [data-couche] {
-    transition: translate var(--transition-duration-menu) var(--ease-maison);
-  }
-  [data-menu-panneau] [data-couche='2'] {
-    transition-delay: 120ms;
-  }
-  [data-menu-panneau] [data-couche='3'] {
-    transition-delay: 240ms;
-  }
-  [data-menu-panneau] [data-menu-voile] {
-    transition: opacity var(--transition-duration-menu) var(--ease-maison);
-  }
-  [data-menu-panneau] [data-menu-lien] {
-    transition:
-      opacity var(--transition-duration-reveal) var(--ease-maison) 350ms,
-      translate var(--transition-duration-reveal) var(--ease-maison) 350ms;
-  }
-  [data-menu-panneau] [data-menu-lien]:nth-child(2) {
-    transition-delay: 400ms;
-  }
-  [data-menu-panneau] [data-menu-lien]:nth-child(3) {
-    transition-delay: 450ms;
-  }
-  [data-menu-panneau] [data-menu-lien]:nth-child(4) {
-    transition-delay: 500ms;
-  }
-  @starting-style {
-    [data-menu-panneau][open] [data-couche] {
-      translate: 101% 0;
-    }
-    [data-menu-panneau][open] [data-menu-voile] {
-      opacity: 0;
-    }
-    [data-menu-panneau][open] [data-menu-lien] {
-      opacity: 0;
-      translate: 0 var(--spacing-24);
-    }
-  }
-  [data-menu-panneau][data-fermeture] [data-couche] {
-    translate: 101% 0;
-    transition-delay: 0ms;
-  }
-  [data-menu-panneau][data-fermeture] :is([data-menu-voile], [data-menu-lien]) {
-    opacity: 0;
-    transition-delay: 0ms;
-  }
-  [data-menu-panneau] [data-menu-image] {
-    opacity: 0;
-    transition: opacity var(--transition-duration-hover) var(--ease-maison);
-  }
-  [data-menu-panneau]:has([data-menu-lien='0']:is(:hover, :focus-within)) [data-menu-image='0'],
-  [data-menu-panneau]:has([data-menu-lien='1']:is(:hover, :focus-within)) [data-menu-image='1'],
-  [data-menu-panneau]:has([data-menu-lien='2']:is(:hover, :focus-within)) [data-menu-image='2'],
-  [data-menu-panneau]:has([data-menu-lien='3']:is(:hover, :focus-within)) [data-menu-image='3'] {
-    opacity: 1;
   }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */

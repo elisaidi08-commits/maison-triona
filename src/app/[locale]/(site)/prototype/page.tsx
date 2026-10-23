@@ -14,8 +14,7 @@ import type { Locale } from '@/i18n/pathnames'
 // « film d'entrée » reste sur /prototype/film pour comparaison. À côté de l'accueil actuel ; rien ne
 // change sur /fr tant que Sady puis Cat ne l'ont pas validé. Comme le banc d'essai /demo : jamais
 // indexé, absent de la production, du plan du site et de la navigation. Médias de prévisualisation
-// dans public/media/prototype/, non validés par Cat. Le film d'entrée et le menu plein écran
-// (D31) sont sur /prototype/chemin.
+// dans public/media/prototype/, non validés par Cat.
 
 export const metadata: Metadata = {
   title: 'Prototype · Maison Triona',
