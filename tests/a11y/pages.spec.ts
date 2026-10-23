@@ -15,6 +15,7 @@ const PAGES = [
   '/fr/prototype',
   '/en/prototype',
   '/fr/prototype/film',
+  '/fr/prototype/chemin',
   '/fr/adresse-inconnue',
 ]
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']

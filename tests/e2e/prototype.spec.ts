@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test'
 
 // Prototype V5, accueil calme (/prototype, maquette Figma D·01) : le titre validé et ce que fait la
 // maison face aux portes, les trois services avec leurs images, les territoires, le contact sur
-// pierre. Jamais indexé ; la version fixe (mobile, mouvement réduit) est complète. En desktop, le
-// film d'entrée passe d'abord (D31), et l'en-tête ouvre le menu plein écran à aplats.
+// pierre. Jamais indexé ; la version fixe (mobile, mouvement réduit) est complète. Variante
+// /prototype/chemin (D31) : en desktop, le film d'entrée passe d'abord, et l'en-tête ouvre le menu
+// plein écran à aplats.
 
 const videoRequests = (page: Page) => {
   const urls: string[] = []
@@ -76,10 +77,8 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr/prototype')
   const video = page.locator('section[aria-labelledby="accueil-titre"] video')
-  // Les portes attendent la fin du film d'entrée.
-  await page.waitForTimeout(1500)
-  await expect(video).toHaveCount(0)
-  await passerLeFilm(page)
+  // Sans film d'entrée, les portes s'ouvrent dès le chargement.
+  await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
   await expect(video).toHaveCount(1)
   await expect(video).toHaveJSProperty('loop', false)
   await expect
@@ -93,7 +92,6 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
 test('desktop : l’image des services suit le service que l’on lit', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr/prototype')
-  await passerLeFilm(page)
   const visible = () =>
     page
       .locator('[data-vitrine-images] > *')
@@ -130,7 +128,7 @@ test('desktop : le film d’entrée passe avant l’accueil, Passer a le focus, 
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   const film = page.getByRole('dialog', { name: 'Film d’entrée' })
   await expect(film).toBeVisible()
   await expect(page.getByRole('button', { name: 'Passer' })).toBeFocused()
@@ -150,7 +148,7 @@ test('desktop : le film d’entrée passe avant l’accueil, Passer a le focus, 
 
 test('desktop : la pause suspend le plan, un plan se choisit', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   await page.getByRole('button', { name: 'Pause' }).click()
   await expect(page.getByRole('button', { name: 'Lecture' })).toBeVisible()
   const state = () =>
@@ -170,7 +168,7 @@ test('desktop : au dernier plan, la scène rejoint les portes de l’accueil, qu
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   await page.getByRole('button', { name: 'La Maison' }).click()
   await expect(page.locator('[data-film-accueil]')).toHaveAttribute('data-etat', 'arrivee', {
     timeout: 8000,
@@ -191,11 +189,11 @@ test('desktop : au dernier plan, la scène rejoint les portes de l’accueil, qu
 
 test('mobile et mouvement réduit : pas de film, l’accueil tout de suite', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   await expect(page.locator('[data-film-accueil]')).toHaveCount(0)
 })
 
@@ -203,7 +201,7 @@ test('menu plein écran : aplats, quatre entrées, une pièce au survol, Échap 
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr/prototype')
+  await page.goto('/fr/prototype/chemin')
   await passerLeFilm(page)
   const header = page.getByRole('banner')
   await expect(header.getByRole('link', { name: 'Territoires' })).toBeHidden()
@@ -227,8 +225,10 @@ test('menu plein écran : aplats, quatre entrées, une pièce au survol, Échap 
 
 test('ailleurs, l’en-tête ne change pas : navigation en ligne en desktop', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr')
-  const header = page.getByRole('banner')
-  await expect(header.getByRole('link', { name: 'Territoires' })).toBeVisible()
-  await expect(header.locator('[data-menu-panneau]')).toBeHidden()
+  for (const path of ['/fr', '/fr/prototype']) {
+    await page.goto(path)
+    const header = page.getByRole('banner')
+    await expect(header.getByRole('link', { name: 'Territoires' })).toBeVisible()
+    await expect(header.locator('[data-menu-panneau]')).toBeHidden()
+  }
 })

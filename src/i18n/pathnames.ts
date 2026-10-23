@@ -19,6 +19,7 @@ export const PATHNAMES = {
   '/demo': '/demo',
   '/prototype': '/prototype',
   '/prototype/film': '/prototype/film',
+  '/prototype/chemin': '/prototype/chemin',
 } as const
 
 export type InternalPath = keyof typeof PATHNAMES
