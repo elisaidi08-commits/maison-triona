@@ -3,20 +3,71 @@ import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
+import { FilmAccueil } from './FilmAccueil'
 import { OuverturePortes } from './OuverturePortes'
 import { ServicesVitrine } from './ServicesVitrine'
 import p10d from '../../../public/media/prototype/P10-seuil-portes.jpg'
 import p10m from '../../../public/media/prototype/P10-seuil-portes-m.jpg'
+import p13d from '../../../public/media/prototype/P13-console.jpg'
 import p13m from '../../../public/media/prototype/P13-console-vase-m.jpg'
+import p15d from '../../../public/media/prototype/P15-salon.jpg'
 import p15m from '../../../public/media/prototype/P15-salon-m.jpg'
+import p16d from '../../../public/media/prototype/P16-enfants.jpg'
 import p16m from '../../../public/media/prototype/P16-enfants-m.jpg'
 
 // Accueil calme du prototype (retour de Sady à la maquette Figma D·01, 22/10/2026) : une idée par
 // section, beaucoup d'air, de grandes images, aucun texte sur l'image. Le titre validé par Cat et
 // la phrase qui dit ce que fait la maison, face aux portes ; les trois services, chacun avec son
 // image ; les territoires ; le contact sur pierre. Mobile (M·01) : le texte, puis l'image.
+// Avant l'accueil, en desktop, le film d'entrée (D31) : les trois services, puis la maison.
 
 const SERVICE_IMAGES = { concierge: p13m, senior: p15m, children: p16m } as const
+
+// Film d'entrée : images plein cadre décoratives (la bande dit le service, la page les décrit).
+// Le premier plan est chargé tout de suite ; en mobile, sa variante est la console des services,
+// que la page charge de toute façon. Le dernier plan est P10, déjà chargé pour l'accueil.
+export async function FilmEntreeAccueil() {
+  const t = await getTranslations('Prototype.film')
+  const services = await getTranslations('Services')
+  const house = await getTranslations('Scenes.house')
+  const plans = [
+    { id: 'conciergerie', key: 'concierge', desktop: p13d, mobile: p13m },
+    { id: 'grand-age', key: 'senior', desktop: p15d, mobile: p15m },
+    { id: 'enfants', key: 'children', desktop: p16d, mobile: p16m },
+  ] as const
+  return (
+    <FilmAccueil
+      labels={{
+        film: t('label'),
+        plans: t('plans'),
+        pause: t('pause'),
+        play: t('play'),
+        skip: t('skip'),
+      }}
+      plans={[
+        ...plans.map((plan, index) => ({
+          id: plan.id,
+          title: services(`${plan.key}.name`),
+          text: services(`${plan.key}.promise`),
+          image: (
+            <ResponsiveImage
+              desktop={plan.desktop}
+              mobile={plan.mobile}
+              alt=""
+              priority={index === 0}
+            />
+          ),
+        })),
+        {
+          id: 'maison',
+          title: house('label'),
+          text: house('title'),
+          image: <ResponsiveImage desktop={p10d} mobile={p10m} alt="" anchor="center" />,
+        },
+      ]}
+    />
+  )
+}
 
 export async function HeroCalme() {
   const home = await getTranslations('Home')
@@ -32,7 +83,10 @@ export async function HeroCalme() {
         </h1>
         <p className="max-w-measure text-body-l">{home('intro')}</p>
       </div>
-      <div className="relative aspect-portrait overflow-hidden bg-pierre lg:aspect-auto lg:w-5/12">
+      <div
+        data-accueil-portes
+        className="relative aspect-portrait overflow-hidden bg-pierre lg:aspect-auto lg:w-5/12"
+      >
         <ResponsiveImage
           desktop={p10d}
           mobile={p10m}

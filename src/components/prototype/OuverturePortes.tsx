@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { afterLoad, videoAllowed } from '@/components/media/videoConditions'
+import { apresFilm } from './finDuFilm'
 
 // Accueil calme du prototype : les portes de P10 s'ouvrent une seule fois après le chargement (V10,
 // 5 s, muette, décorative), puis la dernière image reste. Cinq secondes au plus, sans boucle :
 // aucun bouton pause n'est exigé (WCAG 2.2.2). Desktop seulement, sans mouvement réduit ni économie
 // de données ; sinon l'image fixe suffit. Même recadrage que P10, dont le premier cadre est la copie
-// (écart moyen 1,8 niveau) : le passage de l'image à la vidéo ne se voit pas.
+// (écart moyen 1,8 niveau) : le passage de l'image à la vidéo ne se voit pas. Avec le film
+// d'entrée (D31), les portes attendent que le visiteur soit arrivé devant elles.
 
 export function OuverturePortes({ src }: { src: string }) {
   const video = useRef<HTMLVideoElement>(null)
@@ -16,7 +18,14 @@ export function OuverturePortes({ src }: { src: string }) {
 
   useEffect(() => {
     if (!videoAllowed()) return
-    return afterLoad(() => setEnabled(true))
+    let stop = () => {}
+    const cancel = afterLoad(() => {
+      stop = apresFilm(() => setEnabled(true))
+    })
+    return () => {
+      cancel()
+      stop()
+    }
   }, [])
 
   useEffect(() => {

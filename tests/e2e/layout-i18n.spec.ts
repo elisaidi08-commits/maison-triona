@@ -32,12 +32,13 @@ test('le lien d’évitement est le premier élément focalisable', async ({ pag
 test('menu mobile : s’ouvre, page courante marquée, Échap le ferme', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fr/services')
-  await page.getByText('Menu', { exact: true }).click()
+  // Le menu plein écran du prototype (D31) est rendu masqué sur toutes les pages : le bouton visible.
+  await page.getByText('Menu', { exact: true }).filter({ visible: true }).click()
   const current = page.getByRole('navigation', { name: 'Navigation principale' }).last()
   await expect(current.getByRole('link', { name: 'Services' })).toHaveAttribute(
     'aria-current',
     'page',
   )
   await page.keyboard.press('Escape')
-  await expect(page.locator('details')).not.toHaveAttribute('open', '')
+  await expect(page.locator('header details').first()).not.toHaveAttribute('open', '')
 })
