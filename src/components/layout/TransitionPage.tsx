@@ -20,6 +20,9 @@ import { useEffect, type ReactNode } from 'react'
 // dès le début du retour et jusqu'au clic suivant. Firefox restaure plus tard que Chromium (vers
 // 30 ms), et seuls les clics sur les ancres de M12 ont besoin du défilement doux. Le style est relu
 // aussitôt changé : sinon le navigateur garde l'ancien.
+// Sans l'API Navigation (Safari avant 26.2), rien ne distingue un retour : on garde le comportement
+// de MT-03 (focus au titre, défilement doux). `popstate` ne suffit pas : sous Chromium, l'écouteur
+// de Next.js passe avant et la page est déjà affichée.
 
 // API Navigation (Chromium, Firefox, Safari 26.2 et suivants), absente des types de TypeScript 5.9.
 type NavigationApi = {
@@ -39,14 +42,15 @@ let traversedTo: string | null = null
 const departures = new Map<string, { href: string; index: number }>()
 
 const navigationApi = () => (window as { navigation?: NavigationApi }).navigation
-const entryKey = () => navigationApi()?.currentEntry?.key ?? window.location.pathname
+const entryKey = () => navigationApi()?.currentEntry?.key
 // Éléments affichés seulement : Next.js garde la page quittée dans le DOM, cachée (display: none).
 const visible = (selector: string, root: ParentNode = document) =>
   [...root.querySelectorAll<HTMLElement>(selector)].filter((element) => element.checkVisibility())
 const linksTo = (href: string) => visible(`a[href="${CSS.escape(href)}"]`)
-const smoothScroll = (on: boolean) => {
+const setSmoothScroll = (smooth: boolean) => {
   const html = document.documentElement
-  if (on) html.style.removeProperty('scroll-behavior')
+  if (smooth === (html.style.scrollBehavior === '')) return
+  if (smooth) html.style.removeProperty('scroll-behavior')
   else html.style.scrollBehavior = 'auto'
   void getComputedStyle(html).scrollBehavior
 }
@@ -55,28 +59,21 @@ if (typeof window !== 'undefined') {
   // `navigate` distingue un retour ou une avance (« traverse ») d'un clic sur une ancre, qui change
   // aussi d'entrée, et l'annonce avant que Next.js n'affiche la page. Next.js réécrit l'entrée
   // (`replaceState`) à chaque affichage : un remplacement garde la clé.
-  const api = navigationApi()
-  api?.addEventListener('navigate', (event) => {
+  navigationApi()?.addEventListener('navigate', (event) => {
     if (event.navigationType === 'traverse') {
       traversedTo = event.destination.key
-      smoothScroll(false)
+      setSmoothScroll(false)
     } else if (event.navigationType !== 'replace') traversedTo = null
   })
-  // Sans l'API Navigation, la page retrouvée est reconnue à son adresse, et le retour garde le
-  // défilement doux. (`popstate` passe après l'écouteur de Next.js sous Chromium.)
-  if (!api)
-    window.addEventListener('popstate', () => {
-      traversedTo = window.location.pathname
-    })
   document.addEventListener(
     'click',
     (event) => {
-      if (!api) traversedTo = null
-      smoothScroll(true)
+      setSmoothScroll(true)
       const link = (event.target as Element | null)?.closest?.<HTMLElement>('a[href]')
-      if (!link) return
+      const key = entryKey()
+      if (!link || !key) return
       const href = link.getAttribute('href') ?? ''
-      departures.set(entryKey(), { href, index: linksTo(href).indexOf(link) })
+      departures.set(key, { href, index: linksTo(href).indexOf(link) })
     },
     true,
   )
@@ -86,7 +83,7 @@ export function TransitionPage({ children }: { children: ReactNode }) {
   const animate = navigated
   useEffect(() => {
     const key = entryKey()
-    if (navigated && key === traversedTo) {
+    if (navigated && key && key === traversedTo) {
       const departure = departures.get(key)
       if (departure) linksTo(departure.href)[departure.index]?.focus({ preventScroll: true })
     } else if (navigated) {

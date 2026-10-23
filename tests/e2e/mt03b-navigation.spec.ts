@@ -158,6 +158,21 @@ test.describe('MT-03B · retour arrière', () => {
     await expect(page.locator('#conciergerie a:visible')).toBeFocused()
   })
 
+  test('sans l’API Navigation (Safari avant 26.2) : la position revient, sans erreur', async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.addInitScript(() => {
+      // @ts-expect-error simulation d'un navigateur sans l'API
+      delete window.navigation
+      Object.defineProperty(window, 'navigation', { value: undefined })
+    })
+    await page.goto('/fr')
+    await roundTrip(page)
+    expect(errors).toEqual([])
+  })
+
   test('réseau lent et processeur ralenti (Chromium)', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'ralentissement par le protocole de Chromium')
     await page.goto('/fr')
