@@ -29,6 +29,8 @@
   },
   "Footer": {
     "label": "Pied de page",
+    "navigation": "Navigation",
+    "top": "Revenir en haut de la page",
     "legal": "Mentions légales",
     "privacy": "Confidentialité",
     "contact": "Contact",

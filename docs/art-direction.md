@@ -167,7 +167,7 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 - Sélecteur **FR · EN** typographique, 13 px, langue inactive en encre-68. Jamais de drapeau, jamais de globe.
 - En-tête **transparent sur ivoire**, non collant en V1. Si on le rend collant : filet 1 px sapin à 20 % au scroll, rien d'autre (n° 29).
 - Mobile : logo + « Menu » en toutes lettres ; menu plein écran ivoire, entrées en display 32 px, **sceau** en bas (D49).
-- Pied de page : le **sceau L1-D** (64 px) remplace le « K. ». Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque.
+- Pied de page (D54, prototype V4) : panneau sapin « Kiln » (disque et dalle cyprès, phrase de l'accueil, touche « revenir en haut », trois colonnes, le nom en très grand, barre filetée) ; le sceau L1-D reste dans l'en-tête et le menu. Avant D54 : le sceau (64 px) remplaçait le « K. ». Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque.
 
 ### 7.2 Hero et entrée par besoin (Accueil, scène S1)
 Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (Annexe B).
