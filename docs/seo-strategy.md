@@ -182,7 +182,7 @@ Formulations hypothétiques et naturelles. **Volumes non mesurés.** Difficulté
 | conciergerie privée Paris | FR | FR | Contact | Forte | Presse, emplois, grands acteurs | Conciergerie (pas un objectif de lancement) |
 | dame de compagnie Monaco | MC | FR | Contact | Faible | **Aucun prestataire** ; sens historique (dame d'honneur) | Grand âge |
 | accompagnement personne âgée à domicile Bruxelles | BE | FR | Comparaison / contact | Faible à moyenne | Institutions, presse, peu de prestataires | Grand âge |
-| elderly companion Geneva | CH | EN | Contact | Faible à moyenne, bruitée | Plateformes, emplois | Senior companionship (EN) |
+| elderly companion Geneva | CH | EN | Contact | Faible à moyenne, bruitée | Plateformes, emplois | Companionship in later life (EN) |
 | dame de compagnie personne âgée Paris | FR | FR | Contact | **Forte** | Annuaires (aladom ×8) | Grand âge (pas un objectif de lancement) |
 | aide personne âgée à domicile Luxembourg | LU | FR | Comparaison | Moyenne ; « aide » renvoie aux soins agréés | Emplois, réglementation | Grand âge, en évitant « aide à domicile » |
 | comment trouver une dame de compagnie pour sa mère | FR, BE | FR | Information | Moyenne | Blogs d'annuaires, offres d'emploi | **Comment ça se passe** + FAQ |
@@ -215,7 +215,7 @@ Formulations hypothétiques et naturelles. **Volumes non mesurés.** Difficulté
 |---|---|---|---|
 | Accueil (entrée par besoin) | `/fr` · `/en` | Marque, orientation | Phase 1 |
 | Conciergerie | `/fr/services/conciergerie` · `/en/services/concierge` | Contact | Phase 1 |
-| Grand âge | `/fr/services/grand-age` · `/en/services/senior-companionship` | Contact, comparaison | Phase 1 |
+| Grand âge | `/fr/services/grand-age` · `/en/services/later-life` | Contact, comparaison | Phase 1 |
 | Enfants | `/fr/services/enfants` · `/en/services/childcare` | Contact | Phase 1 |
 | Comment ça se passe (+ langage simple, PDF) | `/fr/comment-ca-se-passe` · `/en/how-it-works` | Information | Phase 1 |
 | FAQ | `/fr/faq` · `/en/faq` | Information | Phase 1 |

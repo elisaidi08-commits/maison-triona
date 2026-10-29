@@ -149,11 +149,11 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 
 | Page | FR | EN `[À VALIDER]` |
 |---|---|---|
-| Accueil (ancres `#conciergerie`, `#grand-age`, `#enfants`) | `/fr` | `/en` (ancres `#concierge`, `#senior-companionship`, `#childcare`) |
+| Accueil (ancres `#conciergerie`, `#grand-age`, `#enfants`) | `/fr` | `/en` (ancres `#concierge`, `#later-life`, `#childcare`) |
 | La Maison | `/fr/la-maison` | `/en/the-house` |
 | Services | `/fr/services` | `/en/services` |
 | Conciergerie | `/fr/services/conciergerie` | `/en/services/concierge` |
-| Grand âge | `/fr/services/grand-age` | `/en/services/senior-companionship` |
+| Grand âge | `/fr/services/grand-age` | `/en/services/later-life` |
 | Enfants | `/fr/services/enfants` | `/en/services/childcare` |
 | Territoires | `/fr/territoires` | `/en/where-we-work` |
 | FAQ (une ancre par question) | `/fr/faq` | `/en/faq` |

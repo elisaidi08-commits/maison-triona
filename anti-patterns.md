@@ -72,7 +72,7 @@ Ce document liste **ce qu'on ne fait pas**, avec pour chaque interdit **ce qu'on
   - ❌ *"Une expérience premium sur-mesure"*
   - ✅ *"Cat sélectionne chaque prestataire elle-même."*
   - ❌ *"Un savoir-faire d'exception au service de votre quotidien"*
-  - ✅ *"Vingt ans à orchestrer, en silence, ce que d'autres n'ont pas le temps de chercher."*
+  - ✅ *"Trente ans à orchestrer, en silence, ce que d'autres n'ont pas le temps de chercher."*
 
 ### 18 · Pas d'italique serif sur les mots d'accent
 - **Interdit** : italique typographique appliqué à un mot au hasard dans une phrase pour "donner du caractère". C'est un tic éditorial signature 2024.
@@ -198,7 +198,7 @@ Ce document liste **ce qu'on ne fait pas**, avec pour chaque interdit **ce qu'on
 
 ### 22 · Pas de stats en gros chiffres
 - **Interdit** : *"20+ ans d'expérience · 500 prestataires vérifiés · 98 % de satisfaction"* affichés en display 96 px.
-- **À la place** : l'expérience de Cat est **racontée** dans la page *La Maison*, en prose, dans une phrase qui respire. *"Vingt ans à orchestrer, en silence."* > *"20+ ans d'expérience"*.
+- **À la place** : l'expérience de Cat est **racontée** dans la page *La Maison*, en prose, dans une phrase qui respire. *"Trente ans à orchestrer, en silence."* > *"20+ ans d'expérience"*.
 
 ### 23 · Pas de FAQ en accordéon
 - **Interdit** : composant `<Accordion>` avec 8 questions déroulantes.

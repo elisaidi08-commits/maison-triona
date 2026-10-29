@@ -62,7 +62,7 @@ export async function SceneService({
     </div>
   )
 
-  // Réassurance : pour le grand âge, la précision « une présence, pas des soins » ; sinon le modèle
+  // Réassurance : pour le grand âge, la précision sur le médical (sans le mot « soins », D39) ; sinon le modèle
   // de la maison (des personnes qu'elle connaît personnellement).
   const details = (
     <>
