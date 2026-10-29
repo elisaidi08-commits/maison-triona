@@ -50,44 +50,24 @@
   },
   "Home": {
     "title": "Une seconde vie, comme des vacances qui ne s’arrêtent pas.",
-    "accroche": "L’attention portée à l’essentiel.",
     "intro": "Conciergerie de luxe, accompagnement du grand âge et garde d’enfants : la maison vous présente des personnes de confiance, choisies une à une.",
-    "imageAlt": "Une pièce dans la pénombre, une porte-fenêtre ouverte sur la mer et un rideau de lin soulevé par la brise.",
-    "choices": {
-      "concierge": {
-        "label": "Organiser le quotidien",
-        "category": "Conciergerie de luxe"
+    "imageAlt": "Un vestibule dans la pénombre : deux portes de bois entrouvertes sur un jardin, un rai de lumière sur le sol.",
+    "services": {
+      "label": "Services",
+      "title": "Ce dont la maison s’occupe.",
+      "text": {
+        "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice pour tout organiser.",
+        "senior": "Une présence choisie, des journées qui gardent leur rythme et leurs plaisirs, à la maison comme en voyage.",
+        "children": "Des personnes choisies une à une, pour quelques heures comme pour une saison."
       },
-      "senior": {
-        "label": "Accompagner un proche, ou vous‑même",
-        "category": "Accompagnement du grand âge"
-      },
-      "children": {
-        "label": "Veiller sur les enfants",
-        "category": "Garde d’enfants"
-      },
-      "unsure": {
-        "label": "Évoquer une demande particulière",
-        "note": "Parlons-en, en toute discrétion."
+      "alt": {
+        "concierge": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
+        "senior": "Une main portant une alliance, posée sur un livre ouvert près d’une tasse de porcelaine, devant un mur clair éclairé par une fenêtre.",
+        "children": "Une main d’enfant tient un brin de romarin au-dessus d’un verre que tient une main d’adulte, devant un mur clair éclairé par une fenêtre."
       }
     }
   },
-  "Promise": {
-    "label": "Notre promesse",
-    "points": [
-      "Une interlocutrice unique",
-      "Des personnes choisies une à une",
-      "Une discrétion absolue",
-      "Une relation personnelle, dans la durée"
-    ]
-  },
   "Scenes": {
-    "house": {
-      "label": "La Maison",
-      "title": "Ici, on vous attend.",
-      "link": "Découvrir la maison",
-      "imageAlt": "Un mur ocre et une porte en arche entrouverte, du jasmin et un citronnier en pot."
-    },
     "territories": {
       "label": "Territoires",
       "title": "Cinq pays, un carnet d’adresses.",
