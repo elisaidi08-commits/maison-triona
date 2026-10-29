@@ -13,13 +13,22 @@ type TextLinkProps = {
   children: ReactNode
   onStone?: boolean
   transitionTypes?: string[]
+  // -1 : lien d'une copie décorative (aria-hidden), hors de l'ordre de tabulation.
+  tabIndex?: number
 }
 
-export function TextLink({ href, children, onStone = false, transitionTypes }: TextLinkProps) {
+export function TextLink({
+  href,
+  children,
+  onStone = false,
+  transitionTypes,
+  tabIndex,
+}: TextLinkProps) {
   return (
     <Link
       href={href}
       transitionTypes={transitionTypes}
+      tabIndex={tabIndex}
       className={`inline-flex min-h-touch items-center underline decoration-1 underline-offset-8 transition-colors duration-micro ease-standard ${
         onStone
           ? 'text-sapin decoration-sapin hover:text-cypres'

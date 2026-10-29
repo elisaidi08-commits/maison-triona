@@ -43,12 +43,13 @@ const counts = (page: Page) =>
     return { vt: w.vt ?? 0, groups: w.groups ?? [] }
   })
 
-// Le lien est sous l'image de la bande (M21) : il est placé dans l'écran avant toute mesure, pour que
-// le clic ne fasse plus défiler la page.
+// File de cartes (M21) : au haut de sa piste, la conciergerie est en vedette et son lien visible.
 const goToConciergeLink = async (page: Page) => {
-  const link = page.locator('#conciergerie a')
-  await link.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  return link
+  await page.locator('[data-zoom]').evaluate((track) => {
+    const top = track.getBoundingClientRect().top + window.scrollY
+    window.scrollTo({ top, behavior: 'instant' })
+  })
+  return page.locator('#conciergerie [data-etiquette] a')
 }
 
 test.describe('P01 · le seuil V4', () => {
@@ -256,7 +257,7 @@ test.describe('P02 · passage de pièce', () => {
     await watchTransitions(page)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/fr')
-    await page.locator('#conciergerie a').click()
+    await page.locator('#conciergerie [data-etiquette] a').click()
     await expect(page).toHaveURL(/\/fr\/services\/conciergerie$/)
     await page.waitForTimeout(600)
     const { groups } = await counts(page)

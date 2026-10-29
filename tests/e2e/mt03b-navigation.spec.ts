@@ -27,16 +27,22 @@ const scrollY = (page: Page) => page.evaluate(() => Math.round(window.scrollY))
 // Le temps d'un geste humain entre deux actions.
 const pause = (page: Page) => page.waitForTimeout(300)
 
-// Place le bloc de la conciergerie à une hauteur donnée de l'écran (part de la hauteur).
+// Place la conciergerie à une position donnée (part de la hauteur de l'écran). Services empilés
+// (téléphone, mouvement réduit) : le haut de son bloc à cette hauteur. File de cartes (M21) : une
+// position du premier tiers de la piste, où la conciergerie est en vedette et son lien visible.
 const conciergeLink = async (page: Page, at = 0.42) => {
   await page.evaluate((at) => {
-    const block = [...document.querySelectorAll('#conciergerie')].find((element) =>
-      element.checkVisibility(),
-    )!
-    const top = block.getBoundingClientRect().top + window.scrollY
-    window.scrollTo({ top: top - window.innerHeight * at, behavior: 'instant' })
+    const track = document.querySelector<HTMLElement>('[data-zoom]')!
+    const block = document.getElementById('conciergerie')!
+    const top =
+      getComputedStyle(block).position === 'absolute'
+        ? track.getBoundingClientRect().top +
+          window.scrollY +
+          (track.offsetHeight - window.innerHeight) * at * 0.4
+        : block.getBoundingClientRect().top + window.scrollY - window.innerHeight * at
+    window.scrollTo({ top, behavior: 'instant' })
   }, at)
-  return page.locator('#conciergerie a:visible')
+  return page.locator('#conciergerie [data-etiquette] a')
 }
 
 const expectBackAt = (page: Page, before: number) =>
@@ -133,10 +139,10 @@ test.describe('MT-03B · retour arrière', () => {
     await page.goBack()
     await expect(page).toHaveURL(/\/fr$/)
     await expectBackAt(page, before)
-    await expect(page.locator('#conciergerie a:visible')).toBeFocused()
+    await expect(page.locator('#conciergerie [data-etiquette] a')).toBeFocused()
     // La tabulation suivante continue dans l'accueil, au service suivant, sans remonter.
     await page.keyboard.press(tab)
-    await expect(page.locator('#grand-age a:visible')).toBeFocused()
+    await expect(page.locator('#grand-age [data-etiquette] a')).toBeFocused()
     expect(await scrollY(page)).toBeGreaterThan(before - 2)
   })
 
@@ -155,7 +161,7 @@ test.describe('MT-03B · retour arrière', () => {
     await page.goBack()
     await expect(page).toHaveURL(/\/fr$/)
     await expectBackAt(page, before)
-    await expect(page.locator('#conciergerie a:visible')).toBeFocused()
+    await expect(page.locator('#conciergerie [data-etiquette] a')).toBeFocused()
   })
 
   test('sans l’API Navigation (Safari avant 26.2) : la position revient, sans erreur', async ({

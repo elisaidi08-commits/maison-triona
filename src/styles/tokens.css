@@ -186,12 +186,8 @@
   --font-text: var(--font-eb-garamond), Georgia, serif;
 }
 
-/* M21 (prototype MT-03, D52) : bande des services, à partir de 1024 px et avec une souris. Sur un
-   écran tactile, même large, les services restent empilés. Même requête que le bloc M21 plus bas. */
-@custom-variant bande (@media (width >= 64rem) and (hover: hover) and (pointer: fine));
-
-/* Images des services à partir de 1024 px (bande ou pile) : jamais plus de 55 % de l'écran, pour
-   que l'image, le nom, le texte et le lien du service ouvert tiennent ensemble à 900 px de haut. */
+/* Images des services empilés à partir de 1024 px (écran tactile, mouvement réduit, sans
+   JavaScript) : jamais plus de 55 % de l'écran, pour que l'image et son texte tiennent ensemble. */
 @utility h-bande {
   height: min(55svh, 36rem);
 }
@@ -448,85 +444,6 @@
     }
   }
 
-  /* M21 (prototype MT-03, D52 ; idée du « zoom slider » collé par Sady, pas son code) : bande des
-     services (ServicesBande.tsx). Les trois panneaux occupent la même cellule de grille ; le service
-     ouvert prend la moitié de la largeur, les deux autres un quart chacun. Rien ne change de taille :
-     chaque panneau est rogné à sa largeur visible (`clip-path`, qui borne aussi le survol et le
-     clic) et glisse à sa place (`transform`), son image glisse pour rester centrée, son texte
-     apparaît (`opacity`). Aucun décalage de mise en page, défilement natif, aucune boucle.
-     Service ouvert : celui qui contient le focus, sinon celui qui est survolé (CSS, sans JavaScript
-     aussi), sinon le dernier survolé ou atteint (`data-bande`, posé par le composant).
-     `--a` : rang du service ouvert ; `--a0`, `--a1`, `--a2` valent 1 pour lui, 0 pour les autres. */
-  @media (width >= 64rem) and (hover: hover) and (pointer: fine) {
-    [data-bande] {
-      --a: 0;
-      --a0: max(0, 1 - var(--a));
-      --a2: max(0, var(--a) - 1);
-      --a1: calc(1 - var(--a0) - var(--a2));
-      grid-template-columns: minmax(0, 1fr);
-    }
-    [data-bande='1'] {
-      --a: 1;
-    }
-    [data-bande='2'] {
-      --a: 2;
-    }
-    [data-bande]:has(> [data-panneau='0']:hover) {
-      --a: 0;
-    }
-    [data-bande]:has(> [data-panneau='1']:hover) {
-      --a: 1;
-    }
-    [data-bande]:has(> [data-panneau='2']:hover) {
-      --a: 2;
-    }
-    [data-bande]:has(> [data-panneau='0']:focus-within) {
-      --a: 0;
-    }
-    [data-bande]:has(> [data-panneau='1']:focus-within) {
-      --a: 1;
-    }
-    [data-bande]:has(> [data-panneau='2']:focus-within) {
-      --a: 2;
-    }
-
-    /* Panneau de la largeur du service ouvert ; resserré, il est rogné de moitié à droite. Les 8 px
-       en haut, à gauche et en bas laissent passer l'anneau de focus. */
-    [data-panneau] {
-      grid-area: 1 / 1;
-      justify-self: start;
-      width: calc(50% - var(--spacing-gutter));
-      clip-path: inset(
-        calc(-1 * var(--spacing-8)) calc(50% * (1 - var(--ouvert))) calc(-1 * var(--spacing-8))
-          calc(-1 * var(--spacing-8))
-      );
-      transition:
-        transform var(--transition-duration-reveal) var(--ease-maison),
-        clip-path var(--transition-duration-reveal) var(--ease-maison);
-    }
-    /* Position = largeur visible des panneaux précédents + gouttières (en % de la largeur d'un
-       panneau : 50 % pour un panneau resserré, 100 % pour le panneau ouvert). */
-    [data-panneau='0'] {
-      --ouvert: var(--a0);
-    }
-    [data-panneau='1'] {
-      --ouvert: var(--a1);
-      transform: translateX(calc(50% + 50% * var(--a0) + var(--spacing-gutter)));
-    }
-    [data-panneau='2'] {
-      --ouvert: var(--a2);
-      transform: translateX(calc(150% - 50% * var(--a2) + 2 * var(--spacing-gutter)));
-    }
-    [data-panneau] [data-cadrage] {
-      transform: translateX(calc(-25% * (1 - var(--ouvert))));
-      transition: transform var(--transition-duration-reveal) var(--ease-maison);
-    }
-    [data-panneau] [data-detail] {
-      opacity: var(--ouvert);
-      transition: opacity var(--transition-duration-hover) var(--ease-standard);
-    }
-  }
-
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
   summary {
     list-style: none;
@@ -550,5 +467,132 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* M21 (prototype MT-03, D52 ; idée du « Zoom Slider » collé par Sady, reprise dans nos règles) :
+   services de l'accueil en file de cartes (ServicesZoom.tsx). Hors couche, pour l'emporter sur les
+   classes de la version empilée, qui reste celle par défaut (mobile, écran tactile, sans
+   JavaScript, mouvement réduit). Desktop avec souris, mouvement autorisé et JavaScript actif :
+   - la section devient une piste sapin plus haute que l'écran ; la scène y reste collée pendant
+     `--zoom-course` de défilement natif (jamais capturé), qui fait avancer les cartes ;
+   - une carte au rang p (posé par le composant, de 0 à 6) a son bord gauche à u × p² et sa largeur
+     à u × (2p + 1) : les cartes se touchent, grandissent vers la droite, toutes posées sur le bas ;
+   - seul `transform` bouge, aucun décalage de mise en page : la carte est dessinée à sa taille
+     maximale (9u × 11,25u, le 4:5 des images), puis réduite depuis son coin bas gauche ;
+   - l'étiquette (numéro, nom, phrase, lien) apparaît au-dessus de la carte survolée ou atteinte au
+     clavier, sinon au-dessus de la carte en vedette (rang 3 à 4), sur un aplat sapin, jamais sur
+     l'image ; ses lignes montent de 12 px, 80 ms d'écart.
+   `u` : un dix-huitième de la largeur, réduit si la plus grande carte entière ne tient pas sous
+   l'en-tête de la scène. */
+@media (width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  section:has(> [data-zoom]) {
+    max-width: none;
+    padding: 0;
+  }
+  [data-zoom] {
+    --zoom-course: 160svh;
+    --zoom-entete: 10rem;
+    --focus-color: var(--color-champagne);
+    --filet-couleur: var(--color-champagne);
+    container-type: inline-size;
+    height: calc(100svh + var(--zoom-course));
+    background-color: var(--color-sapin);
+    color: var(--color-ivoire);
+  }
+  [data-zoom] [data-scene] {
+    --u: min(100cqw / 18, (100svh - var(--zoom-entete)) / 11.25);
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+  /* En-tête en haut à gauche, arrêté avant la carte en vedette (qui commence à 9u). */
+  [data-zoom] [data-entete] {
+    position: absolute;
+    z-index: 1;
+    top: var(--spacing-48);
+    left: var(--spacing-margin);
+    max-width: calc(9 * var(--u) - var(--spacing-margin) - var(--spacing-24));
+  }
+  [data-zoom] [data-entete] p,
+  [data-zoom] [data-etiquette] > p:first-child {
+    color: var(--color-champagne);
+  }
+  [data-zoom] :is([data-entete] h2, [data-etiquette] h3) {
+    color: var(--color-ivoire);
+  }
+  [data-zoom] [data-cartes] {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  [data-zoom] [data-carte-rang] {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translateX(calc(var(--u) * var(--p) * var(--p)));
+  }
+  [data-zoom] [data-carte] {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: calc(9 * var(--u));
+    height: calc(11.25 * var(--u));
+    margin: 0;
+    transform: scale(calc((2 * var(--p) + 1) / 9));
+    transform-origin: 0 100%;
+  }
+  [data-zoom] [data-etiquette] {
+    position: absolute;
+    left: 0;
+    bottom: calc(1.25 * var(--u) * (2 * var(--p) + 1) + var(--spacing-16));
+    /* Largeur de la carte, entre 5u et 7u : l'aplat déborde peu sur la carte voisine. */
+    width: clamp(5 * var(--u), var(--u) * (2 * var(--p) + 1), 7 * var(--u));
+    gap: var(--spacing-8);
+    padding-block: var(--spacing-8);
+    padding-right: var(--spacing-24);
+    background-color: var(--color-sapin);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-hover) var(--ease-standard);
+  }
+  [data-zoom] [data-etiquette] > * {
+    max-width: none;
+    transform: translateY(var(--montee, var(--distance-reveal)));
+    transition: transform var(--transition-duration-reveal) var(--ease-maison);
+  }
+  [data-zoom] [data-etiquette] > :nth-child(2) {
+    transition-delay: var(--stagger);
+  }
+  [data-zoom] [data-etiquette] > :nth-child(3) {
+    transition-delay: calc(2 * var(--stagger));
+  }
+  [data-zoom] [data-etiquette] > :nth-child(4) {
+    transition-delay: calc(3 * var(--stagger));
+  }
+  [data-zoom] [data-etiquette] a {
+    color: var(--color-ivoire);
+    text-decoration-color: var(--color-champagne);
+  }
+  [data-zoom] [data-etiquette] a:hover {
+    color: var(--color-champagne);
+  }
+  /* Étiquette visible : carte survolée ou atteinte au clavier, sinon la vedette. */
+  [data-zoom] [data-carte-rang][data-vedette] {
+    z-index: 2;
+  }
+  [data-zoom] [data-carte-rang]:is(:hover, :has(:focus-visible)) {
+    z-index: 3;
+  }
+  [data-zoom]
+    [data-cartes]:not(:has([data-carte-rang]:hover, :focus-visible))
+    [data-vedette]
+    [data-etiquette],
+  [data-zoom] [data-carte-rang]:is(:hover, :has(:focus-visible)) [data-etiquette] {
+    --montee: 0px;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
