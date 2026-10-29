@@ -1,10 +1,10 @@
 import { getTranslations } from 'next-intl/server'
-import { Stamp } from '@/components/ui/Stamp'
+import { Seal } from '@/components/brand/Seal'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { NavLink } from './NavLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 
-// Pied de page (docs/art-direction.md §7.6) : filet or pleine largeur, « K. » 48 px,
+// Pied de page (docs/art-direction.md §7.6) : filet or pleine largeur, sceau 64 px (D49),
 // liens légaux et contact, FR · EN, mention des images générées par IA (privacy.md §4).
 
 export async function Footer({ locale }: { locale: Locale }) {
@@ -19,7 +19,7 @@ export async function Footer({ locale }: { locale: Locale }) {
       className="border-t border-or px-margin py-48"
     >
       <div className="flex flex-col items-center gap-24 text-center lg:flex-row lg:justify-between lg:text-left">
-        <Stamp size="md" />
+        <Seal size="lg" />
         <ul className="flex flex-col items-center gap-8 lg:flex-row lg:gap-32">
           <li>
             <NavLink href={localizedPath('/mentions-legales', locale)}>{t('legal')}</NavLink>
