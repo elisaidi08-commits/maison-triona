@@ -1,7 +1,9 @@
-import { LOGO } from './logo-paths'
+import { SCEAU } from './sceau-paths'
 
-// Sceau (D49) : le T de l'en-tête dans un anneau fin, une seule famille avec le logo. Sapin sur
-// ivoire, champagne sur sapin. Décoratif (aria-hidden). Tailles : md 48 px (minimum), lg 64 px.
+// Sceau L1-D, logo de Maison Triona (D53) : le T en sillage dans un anneau fin, seul dans l'en-tête,
+// au pied de page et dans le menu. Sapin sur ivoire, champagne sur sapin. Décoratif (aria-hidden) :
+// le lien qui l'entoure porte le nom accessible. Tailles : md 48 px (en-tête, menu), lg 64 px (pied
+// de page) ; lisible dès 16 px (favicon). Géométrie générée par scripts/kit-sceau.mjs.
 
 const SIZES = {
   md: 'size-48',
@@ -14,20 +16,18 @@ type SealProps = {
 }
 
 export function Seal({ size = 'md', onDark = false }: SealProps) {
-  const fill = onDark ? 'fill-champagne' : 'fill-sapin'
   return (
     <svg
       aria-hidden="true"
       focusable="false"
-      viewBox="0 0 1000 1000"
-      className={`block shrink-0 ${SIZES[size]}`}
+      viewBox={SCEAU.viewBox}
+      className={`block shrink-0 ${SIZES[size]} ${onDark ? 'fill-champagne' : 'fill-sapin'}`}
     >
-      <path className={fill} fillRule="evenodd" d={LOGO.seal.ring} />
-      <path
-        className={fill}
-        transform={`translate(${LOGO.seal.markX} ${LOGO.seal.markY}) scale(${LOGO.seal.markScale})`}
-        d={LOGO.mark}
-      />
+      <g transform={SCEAU.transform}>
+        {SCEAU.paths.map((d, index) => (
+          <path key={index} d={d} />
+        ))}
+      </g>
     </svg>
   )
 }
