@@ -9,7 +9,8 @@ import { useEffect, type ReactNode } from 'react'
 // Focus après une navigation interne (prototype MT-03, revu en MT-03B). Sans rien faire, la
 // tabulation suivante partait de l'ancien lien, souvent jusqu'au pied de page (Chromium, WebKit et
 // Firefox, déjà avant MT-03).
-// - Lien suivi : le focus va au titre principal de la nouvelle page (tabIndex -1, sans cadre), à
+// - Lien suivi : le focus va au titre principal de la nouvelle page (tabIndex -1, posé dès le rendu
+//   serveur pour que l'hydratation corresponde, sans cadre), à
 //   défaut au contenu principal, sans défilement. Le titre, plutôt que `<main>`, parce que WebKit
 //   ignore le point de départ donné par `<main>`.
 // - Retour ou avance dans l'historique : le focus revient au lien par lequel on avait quitté cette

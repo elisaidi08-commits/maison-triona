@@ -47,6 +47,7 @@ export async function HeroAccueil({ locale }: { locale: Locale }) {
       <div className="flex flex-col justify-center gap-32 px-margin py-48 lg:w-7/12 lg:pr-96">
         <h1
           id="accueil-titre"
+          tabIndex={-1}
           className="animate-entree font-display text-display-xl text-balance text-sapin"
         >
           {home('title')}

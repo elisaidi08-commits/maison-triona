@@ -21,7 +21,9 @@ export default async function TerritoriesPage() {
     <article className="flex flex-col">
       <header className="conteneur flex flex-col gap-24 py-section">
         <Rule short />
-        <h1 className="font-display text-display-l text-sapin">{pages('territories')}</h1>
+        <h1 tabIndex={-1} className="font-display text-display-l text-sapin">
+          {pages('territories')}
+        </h1>
         <p className="text-label text-encre uppercase">{t('intro')}</p>
       </header>
       <ul className="conteneur grid gap-48 pb-section md:grid-cols-2">
