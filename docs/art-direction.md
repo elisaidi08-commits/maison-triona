@@ -210,11 +210,12 @@ Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (
 - Variante pour la page Contact elle-même : le bloc n'apparaît pas.
 
 ### 7.6 Pied de page
-- Fond ivoire, **filet or 1 px pleine largeur** en tête.
-- Desktop, une ligne : **« K. » 48 px** à gauche · Mentions légales · Confidentialité · Contact au centre · FR · EN et © à droite.
-- Mobile : les mêmes éléments empilés, centrés, « K. » en tête.
-- Pas de répétition de la navigation principale, pas de colonnes (n° 30).
-- Sous la ligne, en body-s : « Images créées avec l'aide de l'intelligence artificielle. » `[À CONFIRMER avec Cat]` (transparence IA, `docs/privacy.md` §4).
+- **D54, validé par Cat** : panneau « Kiln », fond **encre**, grand disque et dalle **sapin** derrière (couleurs du kit seulement), texte ivoire, focus champagne.
+- En haut : la phrase de l'accueil en deux lignes (Cormorant Garamond), la touche « revenir en haut » (vrai lien `#top`, 48 × 96 px, ivoire, flèche sapin).
+- Trois colonnes : « Maison Triona » et ses cinq pays · Navigation (les pages et les trois services) · Contact (réassurance, « Nous écrire »). Liens en capitales, un aplat ivoire se déroule dessous au survol et au focus. Assouplit `anti-patterns.md` n° 30 (colonnes, navigation répétée).
+- Le nom en très grand, Cormorant Garamond Light, sur toute la largeur utile (M22).
+- Barre filetée ivoire : © Maison Triona · « Images créées par intelligence artificielle. » (`docs/privacy.md` §4) · Mentions légales · Confidentialité · FR · EN.
+- Mobile : une seule colonne, même ordre. Aucun réseau social, aucune adresse.
 
 ### 7.7 Formulaire
 - Reprend la planche Figma `110:7` : champs soulignés, labels au-dessus, résumé d'erreurs en tête, messages en encre sous une ligne terracotta.
