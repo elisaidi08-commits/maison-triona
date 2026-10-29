@@ -184,6 +184,7 @@
   },
   "Territories": {
     "intro": "Belgique · France · Luxembourg · Monaco · Suisse",
+    "globeHint": "Faites tourner le globe",
     "countries": [
       {
         "name": "Belgique",

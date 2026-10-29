@@ -180,6 +180,7 @@
   },
   "Territories": {
     "intro": "Belgium · France · Luxembourg · Monaco · Switzerland",
+    "globeHint": "Drag to turn the globe",
     "countries": [
       {
         "name": "Belgium",

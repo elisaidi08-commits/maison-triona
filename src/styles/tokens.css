@@ -547,6 +547,52 @@
     transform: translateY(110%);
   }
 
+  /* M23 (D55 ; idée du « Wireframe Dotted Globe » collé par Sady, reprise dans nos règles) : globe
+     des Territoires (GlobeTerritoires.tsx) sur un aplat encre, carré en mobile, deux fois plus large
+     que haut dès 768 px. Le canvas couvre le cadre ; sans JavaScript, la sphère seule (sapin cerclé
+     de champagne) tient sa place. Au toucher, la page défile (`pan-y`) ; à la souris, on saisit. */
+  [data-globe-cadre] {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+  @media (width >= 48rem) {
+    [data-globe-cadre] {
+      aspect-ratio: 2 / 1;
+    }
+  }
+  [data-globe] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    [data-globe] {
+      cursor: grab;
+    }
+    [data-globe]:active {
+      cursor: grabbing;
+    }
+  }
+  [data-globe-repli] {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: calc(100% / 1.2);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 1px solid var(--color-champagne);
+    border-radius: 50%;
+    background-color: var(--color-sapin);
+  }
+  [data-globe-indication] {
+    position: absolute;
+    left: var(--spacing-24);
+    bottom: var(--spacing-16);
+  }
+
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
   summary {
     list-style: none;
