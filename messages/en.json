@@ -29,6 +29,8 @@
   },
   "Footer": {
     "label": "Footer",
+    "navigation": "Navigation",
+    "top": "Back to the top of the page",
     "legal": "Legal notice",
     "privacy": "Privacy",
     "contact": "Contact",
@@ -51,6 +53,24 @@
   "Home": {
     "title": "A second life, like a holiday that never ends.",
     "intro": "Luxury concierge, companionship in later life and childcare: the house introduces you to trusted people, chosen one by one.",
+    "choices": {
+      "concierge": {
+        "label": "Arrange everyday life",
+        "category": "Luxury concierge"
+      },
+      "senior": {
+        "label": "Support a loved one, or yourself",
+        "category": "Companionship in later life"
+      },
+      "children": {
+        "label": "Look after the children",
+        "category": "Childcare"
+      },
+      "unsure": {
+        "label": "Discuss a particular request",
+        "note": "Let’s talk, in complete discretion."
+      }
+    },
     "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
     "services": {
       "label": "Services",
@@ -96,7 +116,7 @@
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
-      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
+      "imageAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
       "link": "Discover our luxury concierge",
       "situations": [
         "Finding the right craftsman for a family house.",
@@ -160,6 +180,9 @@
   },
   "Territories": {
     "intro": "Belgium · France · Luxembourg · Monaco · Switzerland",
+    "globeHint": "Drag to turn the globe",
+    "globeLabel": "Show on the globe",
+    "globeAll": "Overview",
     "countries": [
       {
         "name": "Belgium",

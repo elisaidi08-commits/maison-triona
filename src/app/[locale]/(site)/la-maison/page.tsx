@@ -20,7 +20,9 @@ export default async function HousePage() {
     <article className="conteneur flex flex-col gap-96 py-section">
       <header className="flex flex-col gap-24">
         <Rule short />
-        <h1 className="font-display text-display-l text-sapin">{pages('house')}</h1>
+        <h1 tabIndex={-1} className="font-display text-display-l text-sapin">
+          {pages('house')}
+        </h1>
         <p className="max-w-measure text-body-l">{t('intro')}</p>
       </header>
       {sections.map(({ title, text }) => (

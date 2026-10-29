@@ -70,9 +70,6 @@
   --spacing-touch: 48px;
   --spacing-touch-lg: 56px;
   --spacing-button: 52px;
-  /* Hauteur du logo horizontal (D49) : 32 px en mobile, 44 px en desktop (« by K. » dès 40 px). */
-  --spacing-logo: 32px;
-  --spacing-logo-lg: 44px;
 
   /* Points de rupture et largeurs (§4.3) */
   --breakpoint-md: 48rem;
@@ -186,9 +183,20 @@
   --font-text: var(--font-eb-garamond), Georgia, serif;
 }
 
+/* Images des services empilés à partir de 1024 px (écran tactile, mouvement réduit, sans
+   JavaScript) : jamais plus de 55 % de l'écran, pour que l'image et son texte tiennent ensemble. */
+@utility h-bande {
+  height: min(55svh, 36rem);
+}
+
 /* Seuil plein écran (D19) : l'écran 1 occupe toute la hauteur visible sous l'en-tête. */
 @utility h-seuil {
   height: calc(100svh - var(--header-height));
+}
+/* Prototype MT-03 (P01) : le seuil fait au moins un écran, et s'allonge si la liste des entrées
+   ne tient pas (petits écrans, zoom) au lieu de déborder. */
+@utility min-h-seuil {
+  min-height: calc(100svh - var(--header-height));
 }
 
 /* Accueil (maquette Figma D·01, D36) : P10 et l'ouverture des portes (V10) dans un
@@ -389,6 +397,207 @@
     translate: 0 var(--spacing-8);
   }
 
+  /* M20 (prototype MT-03, passage de pièce) : l'image de la conciergerie va de l'accueil au haut de
+     sa page (React <ViewTransition>, classe « piece »), 500 ms ; elle garde son recadrage pendant le
+     trajet. Le reste de la page ne joue pas de fondu croisé : l'ancienne page disparaît, la
+     nouvelle arrive avec M6 (un seul fondu). La couche de transition laisse passer les clics. */
+  ::view-transition {
+    pointer-events: none;
+  }
+  ::view-transition-old(root) {
+    display: none;
+  }
+  ::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(.piece) {
+    animation-duration: 500ms;
+    animation-timing-function: var(--ease-maison);
+  }
+  /* `overflow: clip` (MT-03B) : sans lui, l'image recadrée déborde de son cadre quand départ et
+     arrivée n'ont pas la même proportion (4:5 contre 0,67 à 1024 px, 0,89 à 1280 et 1920 px), et
+     les deux instantanés se voient l'un sur l'autre pendant le fondu. */
+  ::view-transition-old(.piece),
+  ::view-transition-new(.piece) {
+    height: 100%;
+    object-fit: cover;
+    overflow: clip;
+  }
+  /* Sous 1024 px, l'image collante de l'accueil n'existe pas : l'image d'arrivée s'affiche sans
+     animation au lieu d'apparaître seule en fondu. */
+  @media (width < 64rem) {
+    ::view-transition-group(.piece),
+    ::view-transition-old(.piece),
+    ::view-transition-new(.piece) {
+      animation: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+    }
+  }
+
+  /* M22 (D54 ; idée du « Kiln Wordmark Footer » collé par Sady, reprise dans nos règles) : pied de
+     page encre (Footer.tsx). Derrière, le disque et la dalle sapin de PiedFond ; en haut, la phrase
+     et la touche « revenir en haut » sur un grand espace où le disque se voit (26 % de la largeur en
+     desktop) ; le nom en très grand sur toute la largeur utile (PiedMot : 5,3 fois la taille du
+     caractère, mesuré en Cormorant Garamond Light) ; liens en capitales, un aplat ivoire se déroule
+     sous le lien survolé ou atteint au clavier. Rayon 0 partout (la touche et la barre de l'original
+     sont arrondies). */
+  [data-pied] {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    container-type: inline-size;
+  }
+  [data-pied-fond] {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  @media (width >= 64rem) {
+    [data-pied-haut] {
+      min-height: 26cqw;
+    }
+  }
+  [data-retour] {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--spacing-48);
+    height: var(--spacing-96);
+    overflow: hidden;
+    background-color: var(--color-ivoire);
+    color: var(--color-sapin);
+    transition: transform var(--transition-duration-hover) var(--ease-maison);
+  }
+  [data-retour]:hover {
+    transform: translateY(-3px);
+  }
+  [data-retour] svg {
+    width: 62%;
+    overflow: visible;
+  }
+  /* La flèche part vers le haut et revient par le bas. */
+  [data-retour]:is(:hover, :focus-visible) svg {
+    animation: pied-fleche 700ms cubic-bezier(0.6, 0, 0.2, 1);
+  }
+  @keyframes pied-fleche {
+    45% {
+      transform: translateY(-160%);
+    }
+    46% {
+      transform: translateY(160%);
+    }
+  }
+  [data-pied] [data-lien] {
+    position: relative;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-touch);
+    font-size: var(--text-label-l);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color var(--transition-duration-hover) var(--ease-standard);
+  }
+  [data-pied] [data-lien]::before {
+    content: '';
+    position: absolute;
+    inset: var(--spacing-8) calc(-1 * var(--spacing-4));
+    z-index: -1;
+    background-color: var(--color-ivoire);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 350ms var(--ease-maison);
+  }
+  [data-pied] [data-lien]:is(:hover, :focus-visible) {
+    color: var(--color-sapin);
+  }
+  [data-pied] [data-lien]:is(:hover, :focus-visible)::before {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  [data-mot] {
+    display: flex;
+    margin-top: var(--spacing-48);
+    overflow: hidden;
+    font-size: calc((100cqw - 2 * var(--spacing-margin)) / 5.3);
+    line-height: 0.9;
+    letter-spacing: -0.01em;
+  }
+  [data-mot] [data-lettre] {
+    display: inline-block;
+    transition:
+      transform 1s var(--ease-maison),
+      font-weight var(--transition-duration-hover) var(--ease-standard);
+    transition-delay: calc(140ms + var(--rang) * 70ms), 0ms;
+  }
+  [data-mot] [data-espace] {
+    width: 0.22em;
+  }
+  [data-mot='attente'] [data-lettre] {
+    transform: translateY(110%);
+  }
+
+  /* M23 (D55 ; idée du « Wireframe Dotted Globe » collé par Sady, reprise dans nos règles) : globe
+     des Territoires (GlobeTerritoires.tsx) sur un aplat encre, carré en mobile, deux fois plus large
+     que haut dès 768 px. Le canvas couvre le cadre ; sans JavaScript, la sphère seule (sapin cerclé
+     de champagne) tient sa place. Au toucher, la page défile (`pan-y`) ; à la souris, on saisit. */
+  [data-globe-cadre] {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+  @media (width >= 48rem) {
+    [data-globe-cadre] {
+      aspect-ratio: 2 / 1;
+    }
+  }
+  [data-globe] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    [data-globe] {
+      cursor: grab;
+    }
+    [data-globe]:active {
+      cursor: grabbing;
+    }
+  }
+  [data-globe-repli] {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: calc(100% / 1.2);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 1px solid var(--color-champagne);
+    border-radius: 50%;
+    background-color: var(--color-sapin);
+  }
+  [data-globe-indication] {
+    position: absolute;
+    left: var(--spacing-24);
+    bottom: var(--spacing-16);
+  }
+  /* Boutons des pays : invisibles (place gardée) tant que le globe n'est pas prêt ; sans JavaScript,
+     ils ne commanderaient rien. */
+  [data-globe-commandes]:not([data-pret]) {
+    visibility: hidden;
+  }
+
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
   summary {
     list-style: none;
@@ -412,5 +621,132 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* M21 (prototype MT-03, D52 ; idée du « Zoom Slider » collé par Sady, reprise dans nos règles) :
+   services de l'accueil en file de cartes (ServicesZoom.tsx). Hors couche, pour l'emporter sur les
+   classes de la version empilée, qui reste celle par défaut (mobile, écran tactile, sans
+   JavaScript, mouvement réduit). Desktop avec souris, mouvement autorisé et JavaScript actif :
+   - la section devient une piste sapin plus haute que l'écran ; la scène y reste collée pendant
+     `--zoom-course` de défilement natif (jamais capturé), qui fait avancer les cartes ;
+   - une carte au rang p (posé par le composant, de 0 à 6) a son bord gauche à u × p² et sa largeur
+     à u × (2p + 1) : les cartes se touchent, grandissent vers la droite, toutes posées sur le bas ;
+   - seul `transform` bouge, aucun décalage de mise en page : la carte est dessinée à sa taille
+     maximale (9u × 11,25u, le 4:5 des images), puis réduite depuis son coin bas gauche ;
+   - l'étiquette (numéro, nom, phrase, lien) apparaît au-dessus de la carte survolée ou atteinte au
+     clavier, sinon au-dessus de la carte en vedette (rang 3 à 4), sur un aplat sapin, jamais sur
+     l'image ; ses lignes montent de 12 px, 80 ms d'écart.
+   `u` : un dix-huitième de la largeur, réduit si la plus grande carte entière ne tient pas sous
+   l'en-tête de la scène. */
+@media (width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  section:has(> [data-zoom]) {
+    max-width: none;
+    padding: 0;
+  }
+  [data-zoom] {
+    --zoom-course: 160svh;
+    --zoom-entete: 10rem;
+    --focus-color: var(--color-champagne);
+    --filet-couleur: var(--color-champagne);
+    container-type: inline-size;
+    height: calc(100svh + var(--zoom-course));
+    background-color: var(--color-sapin);
+    color: var(--color-ivoire);
+  }
+  [data-zoom] [data-scene] {
+    --u: min(100cqw / 18, (100svh - var(--zoom-entete)) / 11.25);
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+  /* En-tête en haut à gauche, arrêté avant la carte en vedette (qui commence à 9u). */
+  [data-zoom] [data-entete] {
+    position: absolute;
+    z-index: 1;
+    top: var(--spacing-48);
+    left: var(--spacing-margin);
+    max-width: calc(9 * var(--u) - var(--spacing-margin) - var(--spacing-24));
+  }
+  [data-zoom] [data-entete] p,
+  [data-zoom] [data-etiquette] > p:first-child {
+    color: var(--color-champagne);
+  }
+  [data-zoom] :is([data-entete] h2, [data-etiquette] h3) {
+    color: var(--color-ivoire);
+  }
+  [data-zoom] [data-cartes] {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  [data-zoom] [data-carte-rang] {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translateX(calc(var(--u) * var(--p) * var(--p)));
+  }
+  [data-zoom] [data-carte] {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: calc(9 * var(--u));
+    height: calc(11.25 * var(--u));
+    margin: 0;
+    transform: scale(calc((2 * var(--p) + 1) / 9));
+    transform-origin: 0 100%;
+  }
+  [data-zoom] [data-etiquette] {
+    position: absolute;
+    left: 0;
+    bottom: calc(1.25 * var(--u) * (2 * var(--p) + 1) + var(--spacing-16));
+    /* Largeur de la carte, entre 5u et 7u : l'aplat déborde peu sur la carte voisine. */
+    width: clamp(5 * var(--u), var(--u) * (2 * var(--p) + 1), 7 * var(--u));
+    gap: var(--spacing-8);
+    padding-block: var(--spacing-8);
+    padding-right: var(--spacing-24);
+    background-color: var(--color-sapin);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration-hover) var(--ease-standard);
+  }
+  [data-zoom] [data-etiquette] > * {
+    max-width: none;
+    transform: translateY(var(--montee, var(--distance-reveal)));
+    transition: transform var(--transition-duration-reveal) var(--ease-maison);
+  }
+  [data-zoom] [data-etiquette] > :nth-child(2) {
+    transition-delay: var(--stagger);
+  }
+  [data-zoom] [data-etiquette] > :nth-child(3) {
+    transition-delay: calc(2 * var(--stagger));
+  }
+  [data-zoom] [data-etiquette] > :nth-child(4) {
+    transition-delay: calc(3 * var(--stagger));
+  }
+  [data-zoom] [data-etiquette] a {
+    color: var(--color-ivoire);
+    text-decoration-color: var(--color-champagne);
+  }
+  [data-zoom] [data-etiquette] a:hover {
+    color: var(--color-champagne);
+  }
+  /* Étiquette visible : carte survolée ou atteinte au clavier, sinon la vedette. */
+  [data-zoom] [data-carte-rang][data-vedette] {
+    z-index: 2;
+  }
+  [data-zoom] [data-carte-rang]:is(:hover, :has(:focus-visible)) {
+    z-index: 3;
+  }
+  [data-zoom]
+    [data-cartes]:not(:has([data-carte-rang]:hover, :focus-visible))
+    [data-vedette]
+    [data-etiquette],
+  [data-zoom] [data-carte-rang]:is(:hover, :has(:focus-visible)) [data-etiquette] {
+    --montee: 0px;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
