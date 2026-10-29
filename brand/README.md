@@ -1,5 +1,7 @@
 # Kit du logo « le sillage »
 
+> **D53 (29/10/2026) : le logo est le sceau L1-D**, seul dans l'en-tête, au pied de page, en favicon et en image de partage. Fichiers `kit/sceau-d-or.svg` (champagne, sur sapin) et `kit/sceau-d-sapin.svg` (sur ivoire), PNG de 2 048 px dans `png/` ; régénérer par `node scripts/kit-sceau.mjs` depuis `sources/L1-D-trace.svg`. Le reste de ce kit (piste A, D49) est gardé **en archive**.
+
 Kit v1 du 29/10/2026 (D48, D49), **à valider par Cat**. Planche de marque complète dans Figma : page « 02b · Marque — le sillage » du fichier `fAbQP3eV9zM6R3Bq75ehFN`.
 
 > « Le logo trace un T comme le sillage d'une pirogue sur l'eau. On ne voit pas le navigateur, on voit seulement la trace élégante de son passage. » Catriona

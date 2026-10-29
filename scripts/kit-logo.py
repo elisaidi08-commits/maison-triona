@@ -1,4 +1,4 @@
-"""Kit du logo « le sillage » (D48, D49, piste L1-A) : symbole, nom en Cormorant Garamond vectorisé,
+"""Archive (D53 : le logo est désormais le sceau L1-D, scripts/kit-sceau.mjs). Kit du logo « le sillage » (D48, D49, piste L1-A) : symbole, nom en Cormorant Garamond vectorisé,
 déclinaisons du kit de Cat, chemins des composants du site.
 
 Prérequis (outil de développement, hors du site) :
