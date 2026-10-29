@@ -29,6 +29,8 @@
   },
   "Footer": {
     "label": "Footer",
+    "navigation": "Navigation",
+    "top": "Back to the top of the page",
     "legal": "Legal notice",
     "privacy": "Privacy",
     "contact": "Contact",

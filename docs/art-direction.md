@@ -167,7 +167,7 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 - Sélecteur **FR · EN** typographique, 13 px, langue inactive en encre-68. Jamais de drapeau, jamais de globe.
 - En-tête **transparent sur ivoire**, non collant en V1. Si on le rend collant : filet 1 px sapin à 20 % au scroll, rien d'autre (n° 29).
 - Mobile : logo + « Menu » en toutes lettres ; menu plein écran ivoire, entrées en display 32 px, **sceau** en bas (D49).
-- Pied de page : le **sceau L1-D** (64 px) remplace le « K. ». Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque.
+- Pied de page (D54, validé par Cat) : panneau encre « Kiln » (disque et dalle sapin, phrase de l'accueil, touche « revenir en haut », trois colonnes, le nom en très grand, barre filetée) ; le sceau L1-D reste dans l'en-tête et le menu. Avant D54 : le sceau (64 px) remplaçait le « K. ». Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque. Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque.
 
 ### 7.2 Hero et entrée par besoin (Accueil, scène S1)
 Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (Annexe B).
@@ -210,11 +210,12 @@ Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (
 - Variante pour la page Contact elle-même : le bloc n'apparaît pas.
 
 ### 7.6 Pied de page
-- Fond ivoire, **filet or 1 px pleine largeur** en tête.
-- Desktop, une ligne : **« K. » 48 px** à gauche · Mentions légales · Confidentialité · Contact au centre · FR · EN et © à droite.
-- Mobile : les mêmes éléments empilés, centrés, « K. » en tête.
-- Pas de répétition de la navigation principale, pas de colonnes (n° 30).
-- Sous la ligne, en body-s : « Images créées avec l'aide de l'intelligence artificielle. » `[À CONFIRMER avec Cat]` (transparence IA, `docs/privacy.md` §4).
+- **D54, validé par Cat** : panneau « Kiln », fond **encre**, grand disque et dalle **sapin** derrière (couleurs du kit seulement), texte ivoire, focus champagne.
+- En haut : la phrase de l'accueil en deux lignes (Cormorant Garamond), la touche « revenir en haut » (vrai lien `#top`, 48 × 96 px, ivoire, flèche sapin).
+- Trois colonnes : « Maison Triona » et ses cinq pays · Navigation (les pages et les trois services) · Contact (réassurance, « Nous écrire »). Liens en capitales, un aplat ivoire se déroule dessous au survol et au focus. Assouplit `anti-patterns.md` n° 30 (colonnes, navigation répétée).
+- Le nom en très grand, Cormorant Garamond Light, sur toute la largeur utile (M22).
+- Barre filetée ivoire : © Maison Triona · « Images créées par intelligence artificielle. » (`docs/privacy.md` §4) · Mentions légales · Confidentialité · FR · EN.
+- Mobile : une seule colonne, même ordre. Aucun réseau social, aucune adresse.
 
 ### 7.7 Formulaire
 - Reprend la planche Figma `110:7` : champs soulignés, labels au-dessus, résumé d'erreurs en tête, messages en encre sous une ligne terracotta.
