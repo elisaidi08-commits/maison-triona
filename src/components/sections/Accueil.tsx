@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server'
-import { ViewTransition, type ReactNode } from 'react'
+import { Fragment, ViewTransition, type ReactNode } from 'react'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { ChoiceList } from '@/components/ui/ChoiceList'
 import { TextLink } from '@/components/ui/TextLink'
@@ -105,9 +105,11 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
   return (
     <section aria-labelledby="services-titre" className="conteneur py-section">
       <ServicesVitrine
-        images={SERVICES.map((service) =>
-          shared(service.key, image(service.key, '(min-width: 64rem) 34vw, 100vw')),
-        )}
+        images={SERVICES.map((service) => (
+          <Fragment key={service.id}>
+            {shared(service.key, image(service.key, '(min-width: 64rem) 34vw, 100vw'))}
+          </Fragment>
+        ))}
       >
         <div className="flex flex-col gap-24">
           <p className="text-label text-encre uppercase">{t('label')}</p>
