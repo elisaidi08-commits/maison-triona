@@ -6,13 +6,14 @@ import { PiedMot } from './PiedMot'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
 
-// Pied de page (D54 ; idée du « Kiln Wordmark Footer » collé par Sady, reprise dans nos règles) :
-// panneau sapin, disque et dalle cyprès derrière (PiedFond), la phrase de l'accueil en deux lignes et
-// la touche « revenir en haut » ; trois colonnes (la maison et ses pays, la navigation, le contact) ;
-// le nom en très grand (PiedMot) ; une barre filetée : copyright, mention des images générées par IA
-// (privacy.md §4), liens légaux, FR · EN. Liens internes par Next.js (`Link`, D37). Aucun réseau social (CLAUDE.md, discrétion), aucun texte
-// nouveau : tout vient des messages existants. Texte ivoire partout (10,7:1 sur sapin, 6,6:1 sur le
-// disque), focus champagne.
+// Pied de page (D54 ; idée du « Kiln Wordmark Footer » collé par Sady, reprise dans nos règles,
+// validé par Cat) : panneau encre, disque et dalle sapin derrière (PiedFond), couleurs du kit
+// seulement ; la phrase de l'accueil en deux lignes et la touche « revenir en haut » ; trois colonnes
+// (la maison et ses pays, la navigation, le contact) ; le nom en très grand (PiedMot) ; une barre
+// filetée : copyright, mention des images générées par IA (privacy.md §4), liens légaux, FR · EN.
+// Liens internes par Next.js (`Link`, D37). Aucun réseau social (CLAUDE.md, discrétion), aucun texte
+// nouveau : tout vient des messages existants. Texte ivoire partout (13,1:1 sur encre, 10,7:1 sur
+// sapin), focus champagne (6,8:1 et 5,5:1).
 
 export async function Footer({ locale }: { locale: Locale }) {
   const t = await getTranslations('Footer')
@@ -38,7 +39,13 @@ export async function Footer({ locale }: { locale: Locale }) {
   ] as const
 
   return (
-    <footer id="pied-de-page" aria-label={t('label')} data-surface="sapin" data-pied>
+    <footer
+      id="pied-de-page"
+      aria-label={t('label')}
+      data-surface="sapin"
+      data-pied
+      className="bg-encre"
+    >
       <PiedFond />
       <div className="px-margin pt-48 pb-24 lg:pt-64">
         <div data-pied-haut className="flex items-start justify-between gap-24">

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 // M22 (D54 ; idée du « Kiln Wordmark Footer » collé par Sady) : derrière le pied de page, un grand
-// disque et une dalle cyprès sur le sapin, comme un émail. Le disque penche vers la souris ; un clic
+// disque et une dalle sapin sur l'encre, comme un émail (couleurs du kit). Le disque penche vers la souris ; un clic
 // sur une partie vide du pied de page passe à la composition suivante. Décoratif (aria-hidden).
 // Seul `transform` bouge (aucun décalage de mise en page) ; mouvement réduit : le disque se place
 // sans glisser. Sans JavaScript, la première composition reste.
@@ -131,14 +131,14 @@ export function PiedFond() {
         ref={disque}
         r={1}
         transform="translate(554.4 480) scale(597.6)"
-        className="fill-cypres"
+        className="fill-sapin"
       />
       <rect
         ref={dalle}
         width={1}
         height={1}
         transform="translate(1087.2 0) scale(352.8 960)"
-        className="fill-cypres"
+        className="fill-sapin"
       />
     </svg>
   )
