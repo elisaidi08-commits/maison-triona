@@ -47,7 +47,7 @@ test('les trois services mènent à leur page, en français comme en anglais', a
   await page.goto('/en')
   expect(await links()).toEqual([
     '/en/services/concierge',
-    '/en/services/senior-companionship',
+    '/en/services/later-life',
     '/en/services/childcare',
   ])
   await expect(page.getByRole('link', { name: 'Write to us' }).last()).toHaveAttribute(

@@ -13,7 +13,8 @@
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Territories.countries"
   ],
   "en": [
     "Home.title",
@@ -29,6 +30,7 @@
     "Scenes",
     "Services",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Territories.countries"
   ]
 }

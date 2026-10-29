@@ -32,7 +32,7 @@
     "legal": "Legal notice",
     "privacy": "Privacy",
     "contact": "Contact",
-    "ai": "Images created with the help of artificial intelligence.",
+    "ai": "Images created with artificial intelligence.",
     "copyright": "© Maison Triona"
   },
   "Pages": {
@@ -50,15 +50,15 @@
   },
   "Home": {
     "title": "A second life, like a holiday that never ends.",
-    "intro": "Luxury concierge, senior companionship and childcare: the house introduces you to trusted people, chosen one by one.",
+    "intro": "Luxury concierge, companionship in later life and childcare: the house introduces you to trusted people, chosen one by one.",
     "choices": {
       "concierge": {
-        "label": "Take care of everyday life",
+        "label": "Arrange everyday life",
         "category": "Luxury concierge"
       },
       "senior": {
         "label": "Support a loved one, or yourself",
-        "category": "Senior companionship"
+        "category": "Companionship in later life"
       },
       "children": {
         "label": "Look after the children",
@@ -72,7 +72,7 @@
     "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
     "services": {
       "label": "Services",
-      "title": "What the house takes care of.",
+      "title": "What the house looks after.",
       "text": {
         "concierge": "Residences, travel, reservations, household management: a single point of contact to organise everything.",
         "senior": "A carefully chosen companion, and days that keep their rhythm and their pleasures, at home or away.",
@@ -80,7 +80,7 @@
       },
       "alt": {
         "concierge": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
-        "senior": "An older hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window.",
+        "senior": "A hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window.",
         "children": "A child’s hand holds a sprig of rosemary above a glass held by an adult’s hand, against a pale wall lit by a window."
       }
     }
@@ -117,16 +117,16 @@
       "imageAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
       "link": "Discover our luxury concierge",
       "situations": [
-        "Getting a residence ready before you arrive.",
-        "Arranging a stay, a journey or a reception.",
-        "Finding the right person for an everyday task."
+        "Finding the right craftsman for a family house.",
+        "A trusted person during a stay on the Riviera.",
+        "Getting a residence ready before you arrive."
       ]
     },
     "senior": {
-      "name": "Senior companionship",
+      "name": "Companionship in later life",
       "promise": "Days that keep their rhythm and their pleasures.",
-      "precision": "Companionship, not medical care: for any medical need, we will point you to the right professionals.",
-      "link": "Discover senior companionship",
+      "precision": "For any medical need, we will refer you to the appropriate health professionals.",
+      "link": "Discover companionship in later life",
       "situations": [
         "A regular presence for a walk, a meal, a conversation.",
         "Everyday life organised for a parent who lives alone.",
@@ -181,23 +181,23 @@
     "countries": [
       {
         "name": "Belgium",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Where the house was born. Brussels, Brabant, Wallonia and, in time, Flanders."
       },
       {
         "name": "France",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Alongside families, in Paris as in their country houses or on the Côte d’Azur."
       },
       {
         "name": "Luxembourg",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "An international clientele, to whom we reply in French or in English."
       },
       {
         "name": "Monaco",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Discretion is a way of life here; it is ours too."
       },
       {
         "name": "Switzerland",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "From Geneva to Lausanne, for families settled on the shores of the lake and for those passing through."
       }
     ]
   },
