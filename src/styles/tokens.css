@@ -68,7 +68,9 @@
   --spacing-touch: 48px;
   --spacing-touch-lg: 56px;
   --spacing-button: 52px;
-  --spacing-logo: 28px;
+  /* Hauteur du logo horizontal (D49) : 32 px en mobile, 44 px en desktop (« by K. » dès 40 px). */
+  --spacing-logo: 32px;
+  --spacing-logo-lg: 44px;
 
   /* Points de rupture et largeurs (§4.3) */
   --breakpoint-md: 48rem;
