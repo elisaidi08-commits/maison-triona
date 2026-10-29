@@ -145,7 +145,7 @@ Exports de chaque photo : AVIF puis WebP, largeurs 640 · 828 · 1080 · 1280 ·
 |---|---|---|---|---|
 | 1 · Organiser le quotidien | `#conciergerie` · `/services/conciergerie` | V03 | P03-m | ✅ |
 | 2 · Accompagner un proche, ou vous-même | `#grand-age` · `/services/grand-age` | V04 | P04-m | ✅ |
-| 3 · Prendre soin des enfants | `#enfants` · `/services/enfants` | V06 (+ V05) | P06-m (+ P05-m, option P06b) | ✅ (message à confirmer) |
+| 3 · Veiller sur les enfants | `#enfants` · `/services/enfants` | V06 (+ V05) | P06-m (+ P05-m, option P06b) | ✅ (message à confirmer) |
 | 4 · Je ne sais pas encore | `/contact` | V08 | P08-m | ✅ |
 
 ---

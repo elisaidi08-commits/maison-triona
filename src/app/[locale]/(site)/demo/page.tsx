@@ -165,7 +165,7 @@ const CHOICES = [
     label: 'Accompagner un proche, ou vous-même',
     category: 'Accompagnement du grand âge',
   },
-  { href: '#liste', number: '03', label: 'Prendre soin des enfants', category: 'Garde d’enfants' },
+  { href: '#liste', number: '03', label: 'Veiller sur les enfants', category: 'Garde d’enfants' },
   { href: '#liste', label: 'Je ne sais pas encore', note: 'Parlons-en, en toute discrétion.' },
 ]
 
@@ -177,7 +177,7 @@ const BESOINS = [
     label: 'Accompagner un proche, ou vous-même',
     category: 'Accompagnement du grand âge',
   },
-  { value: 'enfants', label: 'Prendre soin des enfants', category: 'Garde d’enfants' },
+  { value: 'enfants', label: 'Veiller sur les enfants', category: 'Garde d’enfants' },
   { value: 'autre', label: 'Évoquer une demande particulière' },
 ]
 

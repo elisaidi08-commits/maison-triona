@@ -32,7 +32,7 @@
     "legal": "Mentions légales",
     "privacy": "Confidentialité",
     "contact": "Contact",
-    "ai": "Images créées avec l’aide de l’intelligence artificielle.",
+    "ai": "Images créées par intelligence artificielle.",
     "copyright": "© Maison Triona"
   },
   "Pages": {
@@ -63,7 +63,7 @@
         "category": "Accompagnement du grand âge"
       },
       "children": {
-        "label": "Prendre soin des enfants",
+        "label": "Veiller sur les enfants",
         "category": "Garde d’enfants"
       },
       "unsure": {
@@ -123,15 +123,15 @@
       "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
       "link": "Découvrir la conciergerie de luxe",
       "situations": [
-        "Préparer une résidence avant votre arrivée.",
-        "Organiser un séjour, un déplacement ou une réception.",
-        "Trouver la bonne personne pour une tâche du quotidien."
+        "Trouver l’artisan juste pour une maison de famille.",
+        "Une personne de confiance pendant un séjour sur la Riviera.",
+        "Préparer une résidence avant votre arrivée."
       ]
     },
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
-      "precision": "Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés.",
+      "precision": "Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés.",
       "link": "Découvrir l’accompagnement du grand âge",
       "situations": [
         "Une présence régulière pour une promenade, un repas, une conversation.",
@@ -187,23 +187,23 @@
     "countries": [
       {
         "name": "Belgique",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "La maison y est née. Bruxelles, le Brabant, la Wallonie et, plus tard, la Flandre."
       },
       {
         "name": "France",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Auprès des familles, à Paris comme dans leurs maisons de campagne ou sur la Côte d’Azur."
       },
       {
         "name": "Luxembourg",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Une clientèle internationale, à laquelle nous répondons en français comme en anglais."
       },
       {
         "name": "Monaco",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "La discrétion y est une règle de vie ; c’est aussi la nôtre."
       },
       {
         "name": "Suisse",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "De Genève à Lausanne, pour les familles installées sur les rives du lac comme pour celles de passage."
       }
     ]
   },

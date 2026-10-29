@@ -10,7 +10,7 @@ export const PATHNAMES = {
   '/la-maison': { fr: '/la-maison', en: '/the-house' },
   '/services': '/services',
   '/services/conciergerie': { fr: '/services/conciergerie', en: '/services/concierge' },
-  '/services/grand-age': { fr: '/services/grand-age', en: '/services/senior-companionship' },
+  '/services/grand-age': { fr: '/services/grand-age', en: '/services/later-life' },
   '/services/enfants': { fr: '/services/enfants', en: '/services/childcare' },
   '/territoires': { fr: '/territoires', en: '/where-we-work' },
   '/contact': '/contact',
