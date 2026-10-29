@@ -33,9 +33,13 @@ const PAYS = ['BE', 'FR', 'LU', 'MC', 'CH']
 // Écart entre deux points des terres, en degrés de latitude ; en longitude, l'écart grandit vers
 // les pôles pour garder des points également espacés sur la sphère.
 const PAS = 1.5
-// Part des sommets gardés : contours du monde et des cinq pays, à l'échelle d'un globe de 600 px.
+// Part des sommets gardés : contours du monde (globe entier, environ 600 px), puis les cinq pays et
+// leurs voisins assez fins pour les vues rapprochées (Monaco et Luxembourg remplissent la vue).
 const SIMPLIFICATION_TERRES = '60%'
-const SIMPLIFICATION_PAYS = '4%'
+const SIMPLIFICATION_PAYS = '15%'
+const SIMPLIFICATION_VOISINS = '8%'
+// Europe de l'Ouest autour des cinq pays (degrés) : voisins tracés dans les vues rapprochées.
+const EUROPE = '-15,34,30,62'
 
 const travail = join(tmpdir(), 'maison-triona-globe')
 mkdirSync(travail, { recursive: true })
@@ -70,10 +74,19 @@ const paysContours = join(travail, 'pays.json')
 mapshaper(
   '-i', join(travail, SOURCES.pays.shp),
   '-filter-fields', 'ISO_A2_EH',
-  '-filter', `${JSON.stringify(PAYS)}.indexOf(ISO_A2_EH) > -1 && ISO_A2_EH !== "MC"`,
+  '-filter', `${JSON.stringify(PAYS)}.indexOf(ISO_A2_EH) > -1`,
   '-clip', 'bbox=-12,38,20,56',
   '-simplify', SIMPLIFICATION_PAYS, 'keep-shapes',
   '-o', 'format=geojson', paysContours,
+) // prettier-ignore
+const voisinsContours = join(travail, 'voisins.json')
+mapshaper(
+  '-i', join(travail, SOURCES.pays.shp),
+  '-filter-fields', 'ISO_A2_EH',
+  '-filter', `${JSON.stringify(PAYS)}.indexOf(ISO_A2_EH) === -1`,
+  '-clip', `bbox=${EUROPE}`,
+  '-simplify', SIMPLIFICATION_VOISINS, 'keep-shapes',
+  '-o', 'format=geojson', voisinsContours,
 ) // prettier-ignore
 const paysPoints = join(travail, 'reperes.json')
 mapshaper(
@@ -154,6 +167,7 @@ const reperes = Object.fromEntries(
     feature.geometry.coordinates.map(arrondi),
   ]),
 )
+const voisins = anneauxDe(lire(voisinsContours))
 const tous = Object.values(reperes)
 const centre = [0, 1].map((axe) => arrondi(tous.reduce((s, p) => s + p[axe], 0) / tous.length))
 
@@ -163,6 +177,8 @@ const donnees = {
   contours: encoder(contours.flat()),
   contoursLongueurs: contours.map((anneau) => anneau.length),
   pays,
+  voisins: encoder(voisins.flat()),
+  voisinsLongueurs: voisins.map((anneau) => anneau.length),
   reperes,
   centre,
 }
@@ -172,7 +188,7 @@ const fichier = `// Fichier généré par scripts/globe-territoires.mjs le ${dat
 // 1:10 000 000 (SHA-256 ${SOURCES.pays.sha256}). Adresses dans le script : aucune URL externe
 // dans src/ (check:third-party).
 // Traitement : ${MAPSHAPER} ; ${points.length} points des terres (pas de ${PAS}°), contours simplifiés à
-// ${SIMPLIFICATION_TERRES}, cinq pays à ${SIMPLIFICATION_PAYS} (Monaco : repère seul).
+// ${SIMPLIFICATION_TERRES}, cinq pays à ${SIMPLIFICATION_PAYS}, voisins d'Europe de l'Ouest (${EUROPE}) à ${SIMPLIFICATION_VOISINS}.
 // Encodage : paires (longitude, latitude) en centièmes de degré, entiers 16 bits petit-boutistes, base64.
 // Aucune ville, adresse ni partenaire ; aucune image générée par IA.
 
@@ -183,5 +199,5 @@ export const GLOBE = ${JSON.stringify(donnees, null, 2)} as const
 writeFileSync(join(ROOT, 'src/lib/globe-territoires.ts'), fichier)
 console.log(
   `src/lib/globe-territoires.ts : ${points.length} points, ${contours.length} contours, ` +
-    `${pays.length} pays, ${(fichier.length / 1024).toFixed(1)} ko`,
+    `${pays.length} pays, ${voisins.length} anneaux voisins, ${(fichier.length / 1024).toFixed(1)} ko`,
 )

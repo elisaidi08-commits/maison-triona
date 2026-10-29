@@ -592,6 +592,11 @@
     left: var(--spacing-24);
     bottom: var(--spacing-16);
   }
+  /* Boutons des pays : invisibles (place gardée) tant que le globe n'est pas prêt ; sans JavaScript,
+     ils ne commanderaient rien. */
+  [data-globe-commandes]:not([data-pret]) {
+    visibility: hidden;
+  }
 
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
   summary {

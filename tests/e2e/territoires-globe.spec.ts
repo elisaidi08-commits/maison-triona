@@ -49,5 +49,30 @@ test.describe('sans JavaScript', () => {
     await page.goto('/fr/territoires')
     await expect(page.locator('[data-globe-repli]')).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'France' })).toBeVisible()
+    // Sans JavaScript, les boutons ne commanderaient rien : ils ne s'affichent pas.
+    await expect(page.locator('[data-globe-commandes]')).toBeHidden()
   })
+})
+
+test('au clavier, un pays choisi se rapproche sur le globe', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr/territoires')
+  const group = page.getByRole('group', { name: 'Voir sur le globe' })
+  await expect(group.getByRole('button', { name: 'Vue d’ensemble' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await page.locator('[data-globe-cadre]').scrollIntoViewIfNeeded()
+  // Image du globe avant le choix, puis après : le dessin change (rapprochement sur Monaco).
+  const snapshot = () =>
+    page.locator('[data-globe]').evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL())
+  await page.waitForTimeout(4000)
+  const before = await snapshot()
+  await group.getByRole('button', { name: 'Monaco' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(group.getByRole('button', { name: 'Monaco' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect.poll(snapshot, { timeout: 5000 }).not.toBe(before)
 })

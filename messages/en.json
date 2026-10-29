@@ -181,6 +181,8 @@
   "Territories": {
     "intro": "Belgium · France · Luxembourg · Monaco · Switzerland",
     "globeHint": "Drag to turn the globe",
+    "globeLabel": "Show on the globe",
+    "globeAll": "Overview",
     "countries": [
       {
         "name": "Belgium",
