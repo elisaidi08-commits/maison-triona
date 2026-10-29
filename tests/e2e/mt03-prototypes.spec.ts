@@ -43,13 +43,12 @@ const counts = (page: Page) =>
     return { vt: w.vt ?? 0, groups: w.groups ?? [] }
   })
 
+// Le lien est sous l'image de la bande (M21) : il est placé dans l'écran avant toute mesure, pour que
+// le clic ne fasse plus défiler la page.
 const goToConciergeLink = async (page: Page) => {
-  await page.evaluate(() => {
-    const block = document.getElementById('conciergerie')!
-    const top = block.getBoundingClientRect().top + window.scrollY
-    window.scrollTo({ top: top - window.innerHeight * 0.42, behavior: 'instant' })
-  })
-  return page.locator('#conciergerie a')
+  const link = page.locator('#conciergerie a')
+  await link.evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  return link
 }
 
 test.describe('P01 · le seuil V4', () => {

@@ -249,6 +249,8 @@ Les trois tokens qui varient se déclarent dans `@theme` avec leur valeur mobile
 | `arch` (utilitaire `@utility`) | `border-radius: 50% 50% 0 0 / 40% 40% 0 0` | Image en arche du hero `[À TRANCHER]` |
 | `--aspect-hero` (`aspect-hero`) | 16 / 9 | Vidéo et poster hero desktop |
 | `--aspect-portrait` (`aspect-portrait`) | 4 / 5 | Images de section, poster mobile, arche |
+| `h-bande` (utilitaire `@utility`) | `min(55svh, 36rem)` | Images des services à partir de 1024 px (bande M21 ou pile), prototype V4 |
+| `bande:` (variante `@custom-variant`) | ≥ 1024 px avec souris (`hover: hover`, `pointer: fine`) | Bande des services (M21, D52) ; sur écran tactile, les services restent empilés |
 | `--stroke-hairline` | 1 px | Filets, bordures, ligne des champs |
 | `--stroke-focus` | **3 px** | Anneau de focus (« épais et contrasté », spec d'entrée §4.2) |
 | `--focus-offset` | 3 px | Écart anneau / élément |

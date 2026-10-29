@@ -82,22 +82,42 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
   )
 })
 
-test('desktop : l’image des services suit le service que l’on lit', async ({ page }) => {
+// M21 (D52) : texte du service ouvert affiché, celui des services resserrés effacé.
+const openServices = (page: Page) =>
+  page
+    .locator('[data-detail]')
+    .evaluateAll((details) => details.map((detail) => getComputedStyle(detail).opacity))
+
+test('desktop : la bande ouvre le service survolé ou atteint au clavier, et le garde', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
-  const visible = () =>
-    page
-      .locator('[data-vitrine-images] > *')
-      .evaluateAll((layers) => layers.map((layer) => getComputedStyle(layer).opacity))
-  await page.evaluate(() => {
-    const block = document.getElementById('enfants')!
-    const top = block.getBoundingClientRect().top + window.scrollY
-    window.scrollTo({ top: top - window.innerHeight * 0.42, behavior: 'instant' })
+  await expect.poll(() => openServices(page)).toEqual(['1', '0', '0'])
+  await page.locator('#enfants-titre').hover()
+  await expect.poll(() => openServices(page)).toEqual(['0', '0', '1'])
+  // La souris quitte la bande : le service reste ouvert.
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(800)
+  expect(await openServices(page)).toEqual(['0', '0', '1'])
+  await page.locator('#grand-age a').focus()
+  await expect.poll(() => openServices(page)).toEqual(['0', '1', '0'])
+  // Les panneaux glissent sans rien déborder : aucun défilement horizontal.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
+})
+
+test.describe('sans JavaScript', () => {
+  test.use({ javaScriptEnabled: false })
+
+  test('desktop : le survol et le focus ouvrent quand même le bon service', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/fr')
+    await page.locator('#enfants-titre').hover()
+    await expect.poll(() => openServices(page)).toEqual(['0', '0', '1'])
+    // Le focus l'emporte sur le survol.
+    await page.locator('#grand-age a').focus()
+    await expect.poll(() => openServices(page)).toEqual(['0', '1', '0'])
   })
-  await expect.poll(visible).toEqual(['0', '0', '1'])
-  // Au clavier : le focus sur un service montre son image.
-  await page.locator('#conciergerie a').focus()
-  await expect.poll(visible).toEqual(['1', '0', '0'])
 })
 
 test('mobile et mouvement réduit : aucune vidéo, chaque service garde son image', async ({
