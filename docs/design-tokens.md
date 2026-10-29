@@ -24,18 +24,20 @@
 
 | Token CSS | Hex | Nom | Rôle | Origine |
 |---|---|---|---|---|
-| `--color-ivoire` | `#F4EDE0` | Ivoire | Fond principal | Figma v2 |
-| `--color-pierre` | `#D8C8AE` | Pierre | Surface secondaire rare, fond d'image en chargement | Figma v2 |
-| `--color-sapin` | `#1C3B2A` | Sapin profond | **Signature** `[À TRANCHER]` : titres, wordmark, bloc Contact, focus | PRD |
-| `--color-cypres` | `#3F5A3C` | Cyprès | Vert secondaire : numéros, survols, liens secondaires | Figma v2 |
-| `--color-sauge` | `#9AAE8F` | Sauge | Filets sur fond sombre, état désactivé | Figma v2 |
-| `--color-or` | `#B8944D` | Or champagne | Filets, point du « K. », bordure de bouton sur sapin | Figma v2 |
-| `--color-champagne` | `#D2B98A` | Champagne clair | **Seul or autorisé en texte**, uniquement sur sapin ; focus sur fond sombre | PRD |
-| `--color-encre` | `#1F1E1A` | Encre | Texte courant | Figma v2 |
-| `--color-encre-68` | `#1F1E1AAD` | Encre 68 % | Texte secondaire, placeholders, ligne des champs | Figma v2 |
-| `--color-ivoire-80` | `#F4EDE0CC` | Ivoire 80 % | Texte secondaire sur sapin (7,37:1, AAA ; 72 % ne donnait que 6,29:1) | Nouveau |
-| `--color-terracotta` | `#A66A4E` | Terracotta | Ligne des champs en erreur (assombri : `#C4876A` échouait à 2,57:1) | Figma v2 corrigé |
-| `--color-sapin-20` | `#1C3B2A33` | Sapin 20 % | Filet discret sur ivoire (séparations, bordures du banc d'essai) | Ajouté en story 1.2 |
+| `--color-ivoire` | `#F3EDE1` | Ivoire | Fond principal, jamais de blanc pur | **Kit de Cat (D43)** |
+| `--color-pierre` | `#D8C8AE` | Pierre | Surface secondaire rare, fond d'image en chargement | Figma v2 (hors kit, à confirmer) |
+| `--color-sapin` | `#26382F` | Vert sapin | **Signature** : titres, nom du logo, bloc Contact, focus | **Kit de Cat (D43)** |
+| `--color-cypres` | `#3F5A3C` | Cyprès | Vert secondaire : numéros, survols, liens secondaires | Figma v2 (hors kit, à confirmer) |
+| `--color-sauge` | `#9AAE8F` | Sauge | Filets sur fond sombre, état désactivé | Figma v2 (hors kit, à confirmer) |
+| `--color-or` | `#B58E4C` | Or profond | Filets, T du logo sur ivoire, point du « K. », bordure de bouton sur sapin | **Kit de Cat (D43)** |
+| `--color-champagne` | `#C6A96B` | Champagne | Le sillage, les filets, par touches ; **seul or autorisé en texte**, uniquement sur sapin ; focus sur fond sombre | **Kit de Cat (D43)** |
+| `--color-encre` | `#2A241F` | Encre | Texte courant sur ivoire | **Kit de Cat (D43)** |
+| `--color-encre-68` | `#2A241FAD` | Encre 68 % | Texte secondaire, placeholders, ligne des champs (4,99:1) | Kit, dérivé |
+| `--color-ivoire-80` | `#F3EDE1CC` | Ivoire 80 % | Texte secondaire sur sapin (7,45:1, AAA) | Kit, dérivé |
+| `--color-terracotta` | `#A66A4E` | Terracotta | Ligne des champs en erreur (3,76:1 sur ivoire du kit) | Figma v2 corrigé (hors kit) |
+| `--color-sapin-20` | `#26382F33` | Sapin 20 % | Filet discret sur ivoire (séparations, bordures du banc d'essai) | Kit, dérivé |
+
+**Palette du kit posée le 29/10/2026 (D50).** Contrastes recalculés : `node docs/tools/contrast-check.mjs`, section F (toutes les paires du site conformes ; texte courant, titres et texte sur sapin en AAA). Les tableaux du §2.2 ci-dessous gardent l'historique de l'ancienne palette.
 
 Si Sady garde le **cyprès comme signature**, seul `--color-sapin` change de rôle : les titres passent en cyprès (6,58:1, conforme) et le bloc Contact reste en sapin pour garder la profondeur.
 
@@ -137,8 +139,10 @@ Opacité minimale d'un voile pour garantir le contraste **quelle que soit l'imag
 
 | Token | Valeur | Statut |
 |---|---|---|
-| `--font-display` | Serif display, Light 300 / Regular 400 | `[À TRANCHER]` : Newsreader (reco), Cormorant Garamond, Instrument Serif |
-| `--font-text` | Manrope, Regular 400 / Medium 500 | Acté |
+| `--font-display` | **Cormorant Garamond**, Light 300 / Regular 400 (`src/fonts/cormorant-garamond.woff2`, 24 ko) | **Kit de Cat (D43, D50)** |
+| `--font-text` | **EB Garamond**, Regular 400 / Medium 500 (`src/fonts/eb-garamond.woff2`, 32 ko) | **Kit de Cat (D43, D50)** |
+
+Les deux fichiers sont produits par `scripts/polices-kit.py` (polices variables réduites à leur plage de graisses, sous-ensemble latin du français, woff2) : **56 ko préchargés** pour un budget de 80 ko. Licences OFL dans `src/fonts/`. Newsreader et Manrope ne servent plus (Newsreader reste sur le banc d'essai `/demo`).
 
 Chargement : `next/font` (la doc Next.js confirme que les fichiers sont téléchargés au build et servis par le site : aucune requête du navigateur vers Google). Préchargement limité à deux fichiers (display + texte Regular).
 
@@ -165,21 +169,21 @@ Si Satoshi devait revenir : `next/font/local` avec les WOFF2 fournis **tels quel
 
 ### 3.2 Échelle
 
-Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empilement de classes responsives). Valeurs aux trois points de contrôle des maquettes :
+Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empilement de classes responsives). Valeurs aux trois points de contrôle des maquettes. **Recalée pour les Garamond du kit (D50)** : leur œil (0,40 em) est plus petit que celui de Manrope (0,52 em), d'où un corps à 20 px et des libellés agrandis.
 
 | Token | Famille / graisse | Mobile 390 | Tablette 834 | Desktop 1440 | Interligne | Interlettrage | `clamp()` |
 |---|---|---|---|---|---|---|---|
-| `display-xl` | Display Light | 44 | 56 | 72 | 1.06 | −0.02em | `clamp(2.75rem, 2.1rem + 2.667vw, 4.5rem)` |
-| `display-l` | Display Light | 38 | 46 | 56 | 1.08 | −0.02em | `clamp(2.375rem, 1.957rem + 1.714vw, 3.5rem)` |
-| `title-h2` | Display Regular | 32 | 37 | 44 | 1.15 | −0.01em | `clamp(2rem, 1.721rem + 1.143vw, 2.75rem)` |
-| `title-h3` | Manrope Medium | 20 | 22 | 24 | 1.35 | 0 | `clamp(1.25rem, 1.157rem + 0.381vw, 1.5rem)` |
-| `body-l` | Manrope Regular | 18 | 19 | 20 | 1.7 | 0 | `clamp(1.125rem, 1.079rem + 0.19vw, 1.25rem)` |
-| `body` | Manrope Regular | **18** | **18** | **18** | 1.65 | 0 | `1.125rem` |
-| `body-s` | Manrope Regular | 16 | 16 | 16 | 1.6 | 0 | `1rem` (mentions, aides de champ ; jamais de paragraphe) |
-| `label` | Manrope Medium, capitales | 13 | 13 | 13 | 1.25 | +0.12em | `0.8125rem` |
-| `label-l` | Manrope Medium, capitales | 15 | 15 | 15 | 1.5 | +0.12em | `0.9375rem` (ligne des pays, DA §7.4) |
-| `choix` | Manrope Medium | 20 | 21 | 22 | 1.35 | 0 | `clamp(1.25rem, 1.203rem + 0.19vw, 1.375rem)` (libellés des choix d'entrée, DA §7.2 ; D18 encore ouverte) |
-| `nav` | Manrope Medium | 16 | 16 | 16 | 1.4 | +0.01em | `1rem` |
+| `display-xl` | Cormorant Garamond Light | 44 | 56 | 72 | 1.06 | −0.01em | `clamp(2.75rem, 2.1rem + 2.667vw, 4.5rem)` |
+| `display-l` | Cormorant Garamond Light | 38 | 46 | 56 | 1.08 | −0.01em | `clamp(2.375rem, 1.957rem + 1.714vw, 3.5rem)` |
+| `title-h2` | Cormorant Garamond Regular | 34 | 39 | 46 | 1.15 | 0 | `clamp(2.125rem, 1.846rem + 1.143vw, 2.875rem)` |
+| `title-h3` | EB Garamond Medium | 22 | 24 | 26 | 1.35 | 0 | `clamp(1.375rem, 1.282rem + 0.381vw, 1.625rem)` |
+| `body-l` | EB Garamond Regular | 20 | 21 | 22 | 1.7 | 0 | `clamp(1.25rem, 1.204rem + 0.19vw, 1.375rem)` |
+| `body` | EB Garamond Regular | **20** | **20** | **20** | 1.6 | 0 | `1.25rem` |
+| `body-s` | EB Garamond Regular | 18 | 18 | 18 | 1.6 | 0 | `1.125rem` (mentions, aides de champ ; jamais de paragraphe) |
+| `label` | EB Garamond Medium, capitales | 14 | 14 | 14 | 1.25 | +0.12em | `0.875rem` |
+| `label-l` | EB Garamond Medium, capitales | 16 | 16 | 16 | 1.5 | +0.12em | `1rem` (ligne des pays, DA §7.4) |
+| `choix` | EB Garamond Medium | 22 | 23 | 24 | 1.35 | 0 | `clamp(1.375rem, 1.329rem + 0.19vw, 1.5rem)` (libellés des choix d'entrée, DA §7.2) |
+| `nav` | EB Garamond Medium | 18 | 18 | 18 | 1.4 | +0.01em | `1.125rem` |
 
 | Cachet « K. » | Taille | Usage |
 |---|---|---|
