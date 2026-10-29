@@ -163,7 +163,7 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 
 ### 7.1 En-tête
 - **Logo horizontal « le sillage »** (D49, `brand/kit/`) : T-sillage version écran en or, « MAISON TRIONA » en Cormorant Garamond Medium vectorisé, capitales espacées (+24 %), en sapin, « by K. » en italique. **44 px de haut en desktop, 32 px en mobile** ; sous 40 px, « by K. » s'efface (composant `Logo`).
-- **4 entrées** : La Maison · Services · Territoires · Contact (le logo mène à l'accueil ; « Accueil » disparaît). Manrope Medium 16 px, encre ; page courante soulignée d'un filet or 1 px ; cibles ≥ 48 px.
+- **4 entrées** : La Maison · Services · Territoires · Contact (le logo mène à l'accueil ; « Accueil » disparaît). EB Garamond Medium 18 px (D50), encre ; page courante soulignée d'un filet or 1 px ; cibles ≥ 48 px.
 - Sélecteur **FR · EN** typographique, 13 px, langue inactive en encre-68. Jamais de drapeau, jamais de globe.
 - En-tête **transparent sur ivoire**, non collant en V1. Si on le rend collant : filet 1 px sapin à 20 % au scroll, rien d'autre (n° 29).
 - Mobile : logo + « Menu » en toutes lettres ; menu plein écran ivoire, entrées en display 32 px, **sceau** en bas (D49).

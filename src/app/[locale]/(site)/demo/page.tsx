@@ -89,19 +89,31 @@ function pairLevel(ratio: number, kind: (typeof PAIRS)[number][3]): string {
 }
 
 const SCALE = [
-  { token: 'display-xl', spec: 'Display Light · 44 → 72 px · interligne 1,06', display: true },
-  { token: 'display-l', spec: 'Display Light · 38 → 56 px · interligne 1,08', display: true },
-  { token: 'title-h2', spec: 'Display Regular · 32 → 44 px · interligne 1,15', display: true },
-  { token: 'title-h3', spec: 'Manrope Medium · 20 → 24 px · interligne 1,35', display: false },
-  { token: 'body-l', spec: 'Manrope Regular · 18 → 20 px · interligne 1,7', display: false },
-  { token: 'body', spec: 'Manrope Regular · 18 px partout · interligne 1,65', display: false },
+  {
+    token: 'display-xl',
+    spec: 'Cormorant Garamond Light · 44 → 72 px · interligne 1,06',
+    display: true,
+  },
+  {
+    token: 'display-l',
+    spec: 'Cormorant Garamond Light · 38 → 56 px · interligne 1,08',
+    display: true,
+  },
+  {
+    token: 'title-h2',
+    spec: 'Cormorant Garamond Regular · 34 → 46 px · interligne 1,15',
+    display: true,
+  },
+  { token: 'title-h3', spec: 'EB Garamond Medium · 22 → 26 px · interligne 1,35', display: false },
+  { token: 'body-l', spec: 'EB Garamond Regular · 20 → 22 px · interligne 1,7', display: false },
+  { token: 'body', spec: 'EB Garamond Regular · 20 px partout · interligne 1,6', display: false },
   {
     token: 'body-s',
-    spec: 'Manrope Regular · 16 px · mentions et aides seulement',
+    spec: 'EB Garamond Regular · 18 px · mentions et aides seulement',
     display: false,
   },
-  { token: 'label', spec: 'Manrope Medium · 13 px · capitales · +0,12 em', display: false },
-  { token: 'nav', spec: 'Manrope Medium · 16 px · +0,01 em', display: false },
+  { token: 'label', spec: 'EB Garamond Medium · 14 px · capitales · +0,12 em', display: false },
+  { token: 'nav', spec: 'EB Garamond Medium · 18 px · +0,01 em', display: false },
 ] as const
 
 const SCALE_CLASS: Record<(typeof SCALE)[number]['token'], string> = {
