@@ -112,7 +112,8 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **Grain incrusté = vidéo incompressible** : grain très léger à la génération, encodage en **deux passes** à débit cible (`docs/media-pipeline.md` §5).
 - Kling et Seedance génèrent du **son par défaut** ; Soul « 2k » = 1080p réel ; aucun modèle vidéo ne sort en 4:5.
 - `bytedance_video_upscale` 1080p : `generate cost` annonce 1 crédit, **1,61 débité** pour un clip de 8 s (essai V01, D26) ; chiffrer un lot d'agrandissements vidéo au coût réel.
-- Le logo « le sillage » **n'existe pas encore** ; tous les textes de la maquette sont **fictifs**.
+- Le logo « le sillage » **existe** (kit de Cat : SVG, PNG, guide ; fichiers à recevoir, D43). Ses couleurs et sa typo (Cormorant Garamond, EB Garamond) **font foi** sur `tokens.css`, qui n'est pas encore passé ; tous les textes de la maquette sont **fictifs**.
+- **Réponses de Cat du 26/10** (`docs/reponses-cat-2026-10-26.md`, D38 à D47) : ouverture **pas avant janvier 2027** ; mots bannis « aide », « soins » (même en négation), « bénéficiaire », « dépendance », « personnes âgées », « seniors » ; CMS après l'ouverture.
 - `anti-patterns.md` n° 21 (logos), 22 (chiffres), 23 (FAQ en accordéon) et 24 (CTA) sont **assouplis** par les specs récentes : appliquer la version des specs en attendant la mise à jour du fichier par Sady.
 - **Concurrence** : ne rien affirmer sur un concurrent sans URL et date (`docs/seo-strategy.md` §B).
 - Le dossier du projet garde ses **espaces finaux** (`MAMAN `, `MAISON TRIONA `, D17), comme les **dossiers de travail** (`ASSETS PHOTO MAQUETTE `, `LOGO `, `MOODBOARD LOGO `, `MOODBOARD PHOTO `, `TYPO `) : toujours citer les chemins entre guillemets. Dans `.gitignore` et `.vercelignore`, un espace final est **ignoré** sauf s'il est échappé (`\ `) : utiliser des motifs (`/LOGO*/`).
