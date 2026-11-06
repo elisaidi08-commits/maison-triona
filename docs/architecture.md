@@ -122,7 +122,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   ├── outbox/     boîte d'envoi, reprises, alertes
 │   │   ├── email/      adaptateur unique (fournisseur interchangeable), gabarits FR/EN
 │   │   ├── sms/        adaptateur SMS (fournisseur interchangeable, D57)
-│   │   ├── booking/    slots (calcul des créneaux), tokens, ics, repository (D57)
+│   │   ├── booking/    zoned-time, belgian-holidays, settings, slots (moteur pur : imports relatifs avec « .ts », jamais l'alias « @/ », testé par node --test) ; tokens, ics, repository (D57)
 │   │   ├── security/   rate-limit, honeypot, time-trap, hash d'IP
 │   │   ├── validation/ schémas Zod (demande, réservation)
 │   │   └── seo/        métadonnées, alternates, JSON-LD
@@ -130,7 +130,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   └── proxy.ts      ← next-intl (ex-middleware) ; protection de la préproduction en repli
 ├── tests/
 │   ├── e2e/          request.spec.ts, booking.spec.ts, i18n.spec.ts, navigation.spec.ts, share.spec.ts
-│   ├── unit/         slots.test.ts (testeur intégré de Node, `node --test`)
+│   ├── unit/         zoned-time, belgian-holidays, slots (*.test.ts, testeur intégré de Node, `node --test`)
 │   └── a11y/         pages.spec.ts (axe, WCAG 2.2 AA, FR et EN)
 ├── scripts/          check-content (placeholders), check-third-party (domaines interdits), check-i18n (parité des clés FR/EN), build-pdf, ingest-media.sh, lighthouse
 ├── media-incoming/   ← dépôt des sorties Higgsfield brutes (ignoré par Git ET par Vercel)

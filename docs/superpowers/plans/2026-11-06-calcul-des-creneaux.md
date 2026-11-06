@@ -12,6 +12,8 @@
 
 **Vérifié avant d'écrire ce plan (06/11/2026)** : les 30 tests ci-dessous passent sur le code ci-dessous ; ESLint et Prettier du projet passent ; `tsc` strict ne signale rien dans ces fichiers ; `--disable-warning=MODULE_TYPELESS_PACKAGE_JSON` coupe l'avertissement de Node ; Pâques 2024 à 2028 et les changements d'heure de 2027 contrôlés avec `Intl`.
 
+> **Écarts du code livré (relecture finale, 06/11/2026)** : `bookings` est un `BookedCall[]` (`start`, `occupiedUntil` : plage `slot` enregistrée en base, pause comprise) et non un `TimeInterval[]` sans pause ; les réglages sont validés (`Réglages invalides`) ; les dates impossibles sont refusées ; la suite compte **41 tests**, pas 30. Le code de `src/lib/booking/` et `docs/reservation-appel.md` §4.3 font foi : les blocs de code ci-dessous sont l'état initial du plan.
+
 ---
 
 ## Fichiers
