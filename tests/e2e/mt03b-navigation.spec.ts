@@ -78,28 +78,19 @@ test.describe('MT-03B · retour arrière', () => {
     })
   }
 
-  for (const afterRoundTrip of [false, true]) {
-    test(`une entrée du seuil défile toujours en douceur (M12)${afterRoundTrip ? ', après un retour' : ''}`, async ({
-      page,
-    }) => {
-      await page.goto('/fr')
-      if (afterRoundTrip) {
-        await roundTrip(page)
-        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-        await pause(page)
-      }
-      const positions = await page.evaluate(() => {
-        const seen: number[] = []
-        addEventListener('scroll', () => seen.push(Math.round(window.scrollY)), { passive: true })
-        return new Promise<number[]>((resolve) => {
-          document.querySelector<HTMLElement>('a[href="#conciergerie"]')!.click()
-          setTimeout(() => resolve(seen), 1200)
-        })
-      })
-      // Plusieurs positions intermédiaires : le défilement est animé, il ne saute pas.
-      expect(new Set(positions).size).toBeGreaterThan(3)
-    })
-  }
+  // Les entrées du seuil mènent directement à la page du service (Sady, 06/11/2026) : plus de
+  // défilement vers une ancre de l'accueil ; le retour rend le seuil, sans glissement.
+  test('une entrée du seuil ouvre la page du service ; le retour rend le seuil sans glisser', async ({
+    page,
+  }) => {
+    await page.goto('/fr')
+    await page.locator('a[href="/fr/services/conciergerie"]').first().click()
+    await expect(page).toHaveURL(/\/fr\/services\/conciergerie$/)
+    await page.goBack()
+    await expect(page).toHaveURL(/\/fr$/)
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBeLessThanOrEqual(2)
+  })
 
   test('trois allers-retours, depuis trois positions', async ({ page }) => {
     await page.goto('/fr')
