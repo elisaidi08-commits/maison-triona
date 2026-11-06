@@ -13,7 +13,7 @@ test('le premier écran donne le nom, l’accroche, ce que fait la maison et 4 v
   const hrefs = await page
     .locator('section[aria-labelledby="seuil-titre"] ul a')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-  // D59 : chaque service mène directement à sa page.
+  // D60 : chaque service mène directement à sa page.
   expect(hrefs).toEqual([
     '/fr/services/conciergerie',
     '/fr/services/grand-age',
@@ -66,7 +66,7 @@ test('les choix font au moins 56 px de haut', async ({ page }) => {
   for (const height of heights) expect(height).toBeGreaterThanOrEqual(56)
 })
 
-test('un choix d’entrée mène directement à la page du service (D59)', async ({ page }) => {
+test('un choix d’entrée mène directement à la page du service (D60)', async ({ page }) => {
   await page.goto('/fr')
   await page.getByRole('link', { name: /Accompagner un proche/ }).click()
   await expect(page).toHaveURL(/\/fr\/services\/grand-age$/)

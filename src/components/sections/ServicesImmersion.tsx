@@ -7,7 +7,7 @@ import { afterLoad, videoAllowed } from '@/components/media/videoConditions'
 import { setVideosPaused, useVideosPaused } from '@/components/media/videoPause'
 import { Button } from '@/components/ui/Button'
 
-// M25 (D57, D59 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady,
+// M25 (D58, D60 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady,
 // reprises dans nos règles) : les trois services de la page Services en une scène plein écran,
 // collante, que le défilement de la page (natif, jamais capturé) fait avancer.
 // - À gauche, l'image du service, puis sa vidéo : le geste (la main qui pose les fleurs, la page

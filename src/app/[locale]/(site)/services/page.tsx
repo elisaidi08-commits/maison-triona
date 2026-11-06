@@ -12,7 +12,7 @@ import { SERVICES, SERVICE_MEDIA, SERVICE_PATHS } from '@/lib/services'
 // donne envie d'entrer dans chaque service ; le détail (situations, déroulé, ce qu'il faut savoir)
 // est sur les pages de service.
 // 1. l'en-tête : trois services, une seule interlocutrice (Cat, D40) ;
-// 2. les trois services en une scène immersive (M25, D57 : images dévoilées par bandes, texte sur
+// 2. les trois services en une scène immersive (M25, D58 : images dévoilées par bandes, texte sur
 //    aplat sapin, vignettes sur la jointure), empilés hors desktop avec souris ;
 // 3. le modèle en trois temps, puis la confidentialité ;
 // 4. le bloc Contact.

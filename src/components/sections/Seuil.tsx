@@ -15,7 +15,7 @@ import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 // centré, signé du « K. ». Seul texte posé sur l'image. Bande ivoire (D26) : l'accroche, une phrase
 // qui dit ce que fait la maison, puis l'entrée par besoin (les 3 services et « Évoquer une demande
 // particulière »), vrais liens. Un seul titre display à l'écran : l'accroche est en Manrope.
-// D59 (Sady, 06/11/2026) : chaque service mène directement à sa page, sans repasser par une ancre
+// D60 (Sady, 06/11/2026) : chaque service mène directement à sa page, sans repasser par une ancre
 // de l'accueil ni par la page Services (un seul clic pour découvrir un service).
 // Le premier choix reste visible sans défiler sur 390 × 844.
 
