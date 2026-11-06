@@ -2,6 +2,7 @@
 
 > **Statut** : brouillon phase 0 (15/10/2026), rédigé par Claude pour Sady, mis à jour après la spec **confiance, contact, sécurité, lancement** (`docs/trust-contact-launch.md` : coffre chiffré, formulaire en étapes, rappel, confirmation au visiteur) et la spec **partenaires** (`docs/partners-credibility.md`). **Ce n'est pas un avis juridique.** Chaque point `[À VALIDER JURIDIQUEMENT]` doit être relu par un professionnel du droit (RGPD, ePrivacy, nLPD suisse, loi monégasque) avant la mise en ligne.
 > **Sources** : PRD NFR5, `docs/ux-entry-i18n-a11y.md` §5, `docs/trust-contact-launch.md` §4 et annexe D, `docs/architecture.md` §6 et §9.
+> **Dossier RGPD** (06/11/2026) : registre des traitements, analyse d'impact, procédures et sous-traitants dans `docs/rgpd/` ; ce document reste la référence technique de ce que le site collecte.
 > **Principe** : la discrétion est la promesse de la maison. On collecte le moins possible, on chiffre ce qu'on garde, on ne garde rien plus longtemps que nécessaire, on ne partage rien.
 
 **Changement de règle (15/10/2026)** : jusqu'ici, le site ne stockait aucune copie des demandes (seul l'e-mail reçu par Cat en gardait trace). Désormais, **chaque demande est enregistrée chiffrée dans un coffre hébergé dans l'UE**, et l'e-mail n'est plus qu'une **notification sans contenu**. Raison : une panne d'e-mail ne doit jamais faire perdre un contact, et une demande sensible ne doit pas dormir en clair dans une messagerie.
