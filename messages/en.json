@@ -229,7 +229,7 @@
       "items": [
         {
           "title": "You write to us.",
-          "text": "Or you ask us to call you back. A few lines are enough, for yourself or for someone close to you."
+          "text": "Or you choose a time for a call. A few lines are enough, for yourself or for someone close to you."
         },
         {
           "title": "We reply to you.",
@@ -467,9 +467,19 @@
           "The service, the country, the urgency, your name, an email address or a telephone number, the language and your consent are needed to reply to you; everything else is optional. [À CONFIRMER avec le formulaire]",
           "There is no need to share any medical details; we will talk about it in person. If your message contains some all the same, ticking the box before sending gives your explicit consent to their processing, for this enquiry only (Article 9(2)(a) GDPR). [À VALIDER JURIDIQUEMENT]",
           "If you choose to meet a professional, we pass on to them, with your consent, your name, your contact details and what is useful to them about your situation. [À VALIDER JURIDIQUEMENT]",
-          "If you ask us to call you back, we keep your name, your number, and the language and time you chose. We never leave a voicemail.",
           "If you give an email address, you receive a short confirmation. It repeats nothing of your enquiry.",
           "No decision is made by automated means: every enquiry is read by a person."
+        ]
+      },
+      {
+        "id": "call",
+        "title": "When you arrange a call",
+        "paragraphs": [
+          "You may also arrange a call with us. You receive by email a personal link, valid for 48 hours, to choose your time; no account or cookie is needed.",
+          "We then keep your email address, your name, your number, the language and time you chose, your “no voicemail” preference and, if you wish to say, how you heard of the house. We never leave a voicemail.",
+          "You receive a confirmation, then a reminder the day before, by email. By text message only if you ask: a confirmation, then a reminder two hours before. These messages rest on the steps you take before any agreement (Article 6(1)(b) GDPR). [À VALIDER JURIDIQUEMENT]",
+          "So that we can write to you until the call, your email address and number are also encrypted with a key our server can use; in that form, they are erased 24 hours after the call. Everything else is protected like an enquiry.",
+          "The invitation added to the founder’s calendar (Google Calendar) contains neither your name nor your contact details: only the time and a link to the vault."
         ]
       },
       {
@@ -532,6 +542,14 @@
             "value": "Audience measurement as totals, without cookies; data hosted in Germany."
           },
           {
+            "term": "Text message provider",
+            "value": "Call confirmations and reminders, only if you ask, within the European Union. [À DÉFINIR]"
+          },
+          {
+            "term": "Google (United States)",
+            "value": "The founder’s calendar: the time of the call and a link to the vault, with no name or contact details."
+          },
+          {
             "term": "House mailbox",
             "value": "[À DÉFINIR]"
           }
@@ -541,7 +559,7 @@
         "id": "transfers",
         "title": "Outside the European Union",
         "paragraphs": [
-          "Vercel and Upstash are American companies: even when processed on European servers, data may be accessible from the United States. These transfers rely on the data protection framework between the European Union and the United States, to which both companies have signed up, and on the safeguards set out in their contracts. [À VALIDER JURIDIQUEMENT]"
+          "Vercel, Upstash and Google are American companies: even when processed on European servers, data may be accessible from the United States. Google receives no data that names you. These transfers rely on the data protection framework between the European Union and the United States, to which these companies have signed up, and on the safeguards set out in their contracts. [À VALIDER JURIDIQUEMENT]"
         ]
       },
       {
@@ -549,7 +567,7 @@
         "title": "How long we keep your information",
         "items": [
           "Your enquiry: for as long as we are in touch, then no more than 12 months after our last exchange, whether or not it led anywhere. We may erase it sooner, and you may ask us to. [À VALIDER JURIDIQUEMENT]",
-          "Your call-back request: the same length of time.",
+          "Your call: the same length of time as an enquiry. Your email address and number, in the form used for messages, are erased 24 hours after the call; personal links, 7 days after they expire.",
           "Backups: an erased enquiry may remain there for 7 days before it disappears; its content stays encrypted.",
           "Our host’s logs: one day. [À CONFIRMER à la mise en ligne]",
           "Protection against abusive submissions: 24 hours at most.",
@@ -582,6 +600,8 @@
         "items": [
           "Our host, Vercel, is an American company. Your enquiry passes through its servers in readable form until it is encrypted; we do not store it there. Like any American company, Vercel may be required by American law to hand over data, even data processed in Europe.",
           "An erased enquiry remains in the backups for up to 7 days; its content stays encrypted.",
+          "Until 24 hours after a call, your email address and number remain readable by our server, so that it can send you the messages for the call: a compromised server would allow them to be read.",
+          "The personal booking link appears in our host’s logs. It is only valid for 48 hours and no longer works once the call is booked.",
           "The confirmation is sent to the address typed into the form. If it reaches you although you did not write to us, please ignore it: it contains nothing but an acknowledgement of receipt."
         ]
       },

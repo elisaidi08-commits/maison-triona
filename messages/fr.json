@@ -233,7 +233,7 @@
       "items": [
         {
           "title": "Vous nous écrivez.",
-          "text": "Ou vous nous demandez de vous rappeler. Quelques lignes suffisent, pour vous ou pour un proche."
+          "text": "Ou vous choisissez un moment pour un appel. Quelques lignes suffisent, pour vous ou pour un proche."
         },
         {
           "title": "Nous vous répondons.",
@@ -471,9 +471,19 @@
           "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif. [À CONFIRMER avec le formulaire]",
           "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. Si votre message en contient malgré tout, la case cochée avant l’envoi vaut consentement explicite à leur traitement, pour cette seule demande (article 9.2.a du RGPD). [À VALIDER JURIDIQUEMENT]",
           "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation. [À VALIDER JURIDIQUEMENT]",
-          "Si vous demandez à être rappelé, nous gardons votre nom, votre numéro, la langue et le créneau choisis. Nous ne laissons jamais de message vocal.",
           "Si vous indiquez une adresse e-mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
           "Aucune décision n’est prise de façon automatisée : chaque demande est lue par une personne."
+        ]
+      },
+      {
+        "id": "appel",
+        "title": "Lorsque vous convenez d’un appel",
+        "paragraphs": [
+          "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e-mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Nous gardons alors votre adresse e-mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
+          "Vous recevez une confirmation, puis un rappel la veille, par e-mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant. Ces messages reposent sur les démarches que vous engagez avant un éventuel accord (article 6.1.b du RGPD). [À VALIDER JURIDIQUEMENT]",
+          "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e-mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
+          "L’invitation ajoutée à l’agenda de la fondatrice (Google Agenda) ne contient ni votre nom ni vos coordonnées : seulement l’heure et un lien vers le coffre."
         ]
       },
       {
@@ -536,6 +546,14 @@
             "value": "Mesure d’audience en totaux, sans cookie ; données hébergées en Allemagne."
           },
           {
+            "term": "Fournisseur de SMS",
+            "value": "Confirmation et rappel des appels, seulement si vous le demandez, dans l’Union européenne. [À DÉFINIR]"
+          },
+          {
+            "term": "Google (États-Unis)",
+            "value": "Agenda de la fondatrice : l’heure de l’appel et un lien vers le coffre, sans nom ni coordonnées."
+          },
+          {
             "term": "Messagerie de la maison",
             "value": "[À DÉFINIR]"
           }
@@ -545,7 +563,7 @@
         "id": "transferts",
         "title": "Hors de l’Union européenne",
         "paragraphs": [
-          "Vercel et Upstash sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Ces transferts reposent sur le cadre de protection des données entre l’Union européenne et les États-Unis, auquel les deux sociétés ont adhéré, et sur les garanties prévues dans leurs contrats. [À VALIDER JURIDIQUEMENT]"
+          "Vercel, Upstash et Google sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Google ne reçoit aucune donnée qui vous nomme. Ces transferts reposent sur le cadre de protection des données entre l’Union européenne et les États-Unis, auquel ces sociétés ont adhéré, et sur les garanties prévues dans leurs contrats. [À VALIDER JURIDIQUEMENT]"
         ]
       },
       {
@@ -553,7 +571,7 @@
         "title": "Combien de temps nous gardons vos informations",
         "items": [
           "Votre demande : le temps de nos échanges, puis au plus 12 mois après le dernier, qu’elle ait abouti ou non. Nous pouvons l’effacer plus tôt, et vous pouvez nous le demander. [À VALIDER JURIDIQUEMENT]",
-          "Votre demande de rappel : la même durée.",
+          "Votre appel : la même durée qu’une demande. Votre adresse e-mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
           "Les sauvegardes : une demande effacée peut y subsister 7 jours avant de disparaître ; son contenu y reste chiffré.",
           "Les journaux de l’hébergeur : un jour. [À CONFIRMER à la mise en ligne]",
           "La protection contre les envois abusifs : 24 heures au plus.",
@@ -586,6 +604,8 @@
         "items": [
           "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
           "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
+          "Jusqu’à 24 heures après un appel, votre adresse e-mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
+          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures et ne sert plus une fois l’appel réservé.",
           "Le message de confirmation part à l’adresse saisie dans le formulaire. S’il vous parvient sans que vous ayez écrit, ignorez-le : il ne contient rien d’autre qu’un accusé de réception."
         ]
       },
