@@ -26,11 +26,12 @@ const SERVICE_IMAGES = { concierge: p13m, senior: p15m, children: p16m } as cons
 
 export async function HeroAccueil({ locale }: { locale: Locale }) {
   const home = await getTranslations('Home')
-  // Les trois services mènent à leur pièce sur l'accueil (le focus suit, M12) ; la demande
-  // particulière, au contact. Brouillons de D26, en attente de Cat.
+  // Les trois services mènent directement à leur page (Sady, 06/11/2026 : un clic au lieu de
+  // deux, sans repasser par la file de cartes) ; la demande particulière, au contact. Brouillons de
+  // D26, en attente de Cat.
   const choices = [
     ...SERVICES.map((service) => ({
-      href: `#${service.anchor}`,
+      href: localizedPath(SERVICE_PATHS[service.id], locale),
       number: service.number,
       label: home(`choices.${service.key}.label`),
       category: home(`choices.${service.key}.category`),
