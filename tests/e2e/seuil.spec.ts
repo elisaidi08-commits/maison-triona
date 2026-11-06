@@ -13,7 +13,13 @@ test('le premier écran donne le nom, l’accroche, ce que fait la maison et 4 v
   const hrefs = await page
     .locator('section[aria-labelledby="seuil-titre"] ul a')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-  expect(hrefs).toEqual(['#conciergerie', '#grand-age', '#enfants', '/fr/contact'])
+  // D60 : chaque service mène directement à sa page.
+  expect(hrefs).toEqual([
+    '/fr/services/conciergerie',
+    '/fr/services/grand-age',
+    '/fr/services/enfants',
+    '/fr/contact',
+  ])
   await expect(page.getByRole('link', { name: /Évoquer une demande particulière/ })).toHaveCount(1)
 })
 
@@ -60,14 +66,16 @@ test('les choix font au moins 56 px de haut', async ({ page }) => {
   for (const height of heights) expect(height).toBeGreaterThanOrEqual(56)
 })
 
-test('un choix d’entrée mène à sa scène et y place le focus (M12)', async ({ page }) => {
+test('un choix d’entrée mène directement à la page du service (D60)', async ({ page }) => {
   await page.goto('/fr')
   await page.getByRole('link', { name: /Accompagner un proche/ }).click()
-  await expect(page).toHaveURL(/#grand-age$/)
-  await expect(page.locator('#grand-age-titre')).toBeFocused()
+  await expect(page).toHaveURL(/\/fr\/services\/grand-age$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Des journées qui gardent leur rythme et leurs plaisirs.',
+  )
 })
 
-test('mobile : après un choix, le titre de la scène est visible', async ({ page }) => {
+test('mobile : après un choix, la promesse du service est visible', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fr')
   await page.getByRole('link', { name: /Accompagner un proche/ }).click()

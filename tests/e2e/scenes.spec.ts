@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Accueil (D26) : la promesse et les trois scènes de service ; pages de service (stories 2.2, 2.3).
 
-test('chaque choix d’entrée mène à une scène existante', async ({ page }) => {
+test('les trois scènes de service restent sur l’accueil', async ({ page }) => {
   await page.goto('/fr')
   for (const anchor of ['conciergerie', 'grand-age', 'enfants']) {
     await expect(page.locator(`#${anchor}`)).toHaveCount(1)
@@ -54,13 +54,16 @@ const PAGES = [
   ['/en/services/childcare', 'enfants', 'A trusted presence, for a few hours or a whole season.'],
 ] as const
 
-for (const [path, id, title] of PAGES) {
+for (const [path, , title] of PAGES) {
   test(`page de service ${path}`, async ({ page }) => {
     const response = await page.goto(path)
     expect(response?.status()).toBe(200)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(title)
+    // Story 2.14 : la page de service mène au formulaire sans `?service=` ; la présélection passera
+    // par le stockage de session (D26, story 3.4).
     const locale = path.slice(1, 3)
-    await expect(page.locator(`a[href="/${locale}/contact?service=${id}"]`)).toHaveCount(1)
+    await expect(page.locator('main a[href*="?service="]')).toHaveCount(0)
+    await expect(page.locator(`main a[href="/${locale}/contact"]`).first()).toBeVisible()
   })
 }
 

@@ -474,6 +474,307 @@
     transform: translateY(110%);
   }
 
+  /* M25 (D58 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady, reprises
+     dans nos règles ; vidéos et amorti, D60) : les services de la page Services
+     (ServicesImmersion.tsx).
+     Version empilée par défaut (mobile, tactile, mouvement réduit, sans JavaScript) : une rangée
+     par service entre filets or, l'image en 4:5 puis le texte ; la rangée garde la marge de page. */
+  [data-immersion] {
+    width: 100%;
+    max-width: calc(var(--container-content) + 2 * var(--spacing-margin));
+    margin-inline: auto;
+    padding-inline: var(--spacing-margin);
+  }
+  [data-plan] {
+    display: grid;
+    gap: var(--spacing-24);
+    padding-block: var(--spacing-48);
+    border-top: 1px solid var(--color-or);
+  }
+  [data-plan]:last-child {
+    border-bottom: 1px solid var(--color-or);
+  }
+  @media (width >= 48rem) {
+    [data-plan] {
+      grid-template-columns: 5fr 7fr;
+      column-gap: var(--spacing-48);
+      align-items: center;
+    }
+  }
+  [data-plan-image] {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background-color: var(--color-pierre);
+  }
+  [data-plan-media] {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+  }
+  [data-plan-image] img {
+    object-fit: cover;
+  }
+  [data-plan-video],
+  [data-immersion-progression],
+  [data-immersion-pause] {
+    display: none;
+  }
+  [data-plan-texte] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-24);
+    max-width: var(--container-measure);
+  }
+  [data-plan-nom] {
+    font-family: var(--font-display);
+    font-size: var(--text-title-h2);
+    font-weight: var(--text-title-h2--font-weight);
+    line-height: var(--text-title-h2--line-height);
+    letter-spacing: var(--text-title-h2--letter-spacing);
+    color: var(--color-sapin);
+    text-wrap: balance;
+  }
+  [data-plan-nom] [data-ligne],
+  [data-plan-nom] [data-ligne] > span {
+    display: block;
+  }
+  [data-plan-promesse] {
+    font-size: var(--text-body-l);
+    line-height: var(--text-body-l--line-height);
+    text-wrap: balance;
+  }
+  /* Compteur 01 / 03 barré d'un filet (idée du panneau partagé), dans chaque service. */
+  [data-compteur] {
+    position: relative;
+    width: 2.6em;
+    height: 2.5em;
+    font-size: var(--text-label);
+    letter-spacing: 0.08em;
+    color: var(--color-cypres);
+  }
+  [data-compteur] span {
+    position: absolute;
+    line-height: 1;
+  }
+  [data-compteur] span:first-child {
+    top: 0;
+    left: 0;
+  }
+  [data-compteur] span:last-child {
+    right: 0;
+    bottom: 0;
+  }
+  [data-compteur] i {
+    position: absolute;
+    top: 50%;
+    left: 0.35em;
+    width: 2.2em;
+    height: 1px;
+    background-color: var(--color-or);
+    transform: rotate(-48deg);
+  }
+  [data-immersion-vignettes] {
+    display: none;
+  }
+
+  /* Version immersive : desktop avec souris, mouvement autorisé, JavaScript actif. La piste fait un
+     écran, plus un pas (90 % d'écran) par service suivant et une attente (35 %) avant et après ;
+     la scène y reste collée. Image à gauche, texte sur aplat sapin à droite, vignettes sur la
+     jointure. Seuls `transform`, `opacity` et le masque bougent (aucun décalage de mise en page). */
+  @media (width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    [data-immersion] {
+      --immersion-pas: 90svh;
+      --immersion-attente: 35svh;
+      max-width: none;
+      height: calc(
+        100svh + (var(--plans) - 1) * var(--immersion-pas) + 2 * var(--immersion-attente)
+      );
+      padding-inline: 0;
+    }
+    [data-immersion-scene] {
+      --focus-color: var(--color-champagne);
+      position: sticky;
+      top: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: 'image texte';
+      height: 100svh;
+      overflow: hidden;
+      background-color: var(--color-sapin);
+      color: var(--color-ivoire);
+    }
+    [data-plan] {
+      display: contents;
+    }
+    [data-plan-image] {
+      grid-area: image;
+      aspect-ratio: auto;
+      background-color: var(--color-sapin);
+    }
+    [data-plan-image] {
+      contain: paint;
+    }
+    [data-plan-media] {
+      transform: scale(1.12);
+      will-change: transform;
+    }
+    /* La vidéo du geste apparaît en fondu sur l'image, puis s'arrête sur sa dernière image. */
+    [data-plan-video] {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 900ms var(--ease-standard);
+    }
+    [data-plan-video][data-joue] {
+      opacity: 1;
+    }
+    /* Filet champagne de progression, au pied du texte. */
+    [data-immersion-progression] {
+      z-index: 1;
+      display: block;
+      grid-area: texte;
+      align-self: end;
+      width: 100%;
+      height: 1px;
+      background-color: var(--color-champagne);
+      transform: scaleX(var(--avancee, 0));
+      transform-origin: left;
+    }
+    [data-immersion-pause] {
+      z-index: 2;
+      display: inline-flex;
+      grid-area: texte;
+      align-items: center;
+      align-self: end;
+      justify-self: end;
+      min-height: var(--spacing-touch);
+      margin: 0 var(--spacing-64) var(--spacing-16) 0;
+      padding: 0 var(--spacing-8);
+      border: 0;
+      background: none;
+      color: var(--color-ivoire-80);
+      font-size: var(--text-label);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color var(--transition-duration-micro) var(--ease-standard);
+    }
+    [data-immersion-pause]:hover {
+      color: var(--color-champagne);
+    }
+    [data-plan-texte] {
+      grid-area: texte;
+      align-self: center;
+      padding-inline: var(--spacing-96) var(--spacing-64);
+      visibility: hidden;
+      opacity: 0;
+      transition:
+        opacity 400ms var(--ease-standard),
+        visibility 0s linear 400ms;
+    }
+    [data-plan-texte][data-etat='actif'] {
+      visibility: visible;
+      opacity: 1;
+      transition:
+        opacity 600ms var(--ease-standard) 120ms,
+        visibility 0s;
+    }
+    [data-plan-nom] {
+      color: var(--color-ivoire);
+    }
+    [data-plan-nom] [data-ligne] {
+      overflow: hidden;
+      padding-bottom: 0.08em;
+    }
+    /* Le nom glisse dans sa fenêtre (idée de la galerie) ; le reste monte de 16 px, ligne à ligne. */
+    [data-plan-nom] [data-ligne] > span {
+      transform: translateY(105%);
+      transition: transform 900ms var(--ease-maison);
+    }
+    [data-etat='apres'] [data-plan-nom] [data-ligne] > span {
+      transform: translateY(-105%);
+    }
+    [data-etat='actif'] [data-plan-nom] [data-ligne] > span {
+      transform: none;
+      transition-delay: 100ms;
+    }
+    [data-plan-texte] [data-monte] {
+      transform: translateY(var(--spacing-16));
+      transition: transform 800ms var(--ease-maison);
+    }
+    [data-etat='apres'] [data-monte] {
+      transform: translateY(calc(-1 * var(--spacing-16)));
+    }
+    [data-etat='actif'] [data-monte] {
+      transform: none;
+      transition-delay: calc(160ms + var(--ligne, 0) * 70ms);
+    }
+    [data-plan-besoin] {
+      color: var(--color-ivoire-80);
+    }
+    [data-compteur] {
+      color: var(--color-champagne);
+    }
+    [data-compteur] i {
+      background-color: var(--color-champagne);
+    }
+    [data-immersion-vignettes] {
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-24);
+      grid-area: 1 / 1 / 2 / 3;
+      place-self: center;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    [data-vignette] {
+      position: relative;
+      display: block;
+      width: var(--spacing-48);
+      aspect-ratio: 4 / 5;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--color-or);
+      background-color: var(--color-sapin);
+      cursor: pointer;
+      transition:
+        transform 500ms var(--ease-maison),
+        border-color var(--transition-duration-hover) var(--ease-standard);
+    }
+    [data-vignette] img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    [data-vignette]:hover {
+      transform: scale(1.12);
+    }
+    /* Service en vedette : vignette agrandie et bordée de champagne (pas seulement la couleur). */
+    [data-vignette][aria-current='true'] {
+      border-color: var(--color-champagne);
+      transform: scale(1.3);
+    }
+  }
+  @media (width >= 80rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    [data-plan-nom] {
+      font-size: var(--text-display-l);
+      font-weight: var(--text-display-l--font-weight);
+      line-height: var(--text-display-l--line-height);
+      letter-spacing: var(--text-display-l--letter-spacing);
+    }
+    [data-plan-texte] {
+      padding-inline: var(--spacing-128) var(--spacing-margin);
+    }
+  }
+
   /* <details> : pas de triangle par défaut, chaque usage dessine son propre signe. */
   summary {
     list-style: none;

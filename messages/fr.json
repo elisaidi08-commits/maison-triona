@@ -122,8 +122,8 @@
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
-      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
+      "need": "Une maison de famille qui attend le bon artisan, une résidence à préparer avant une arrivée, une personne de confiance pour un séjour ou un voyage : vous nous dites ce qui compte, nous trouvons la personne juste.",
+      "imageAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
       "link": "Découvrir la conciergerie de luxe",
       "situations": [
         "Trouver l’artisan juste pour une maison de famille.",
@@ -134,41 +134,33 @@
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
+      "need": "Une présence, une compagnie, un accompagnement au quotidien, pour un parent ou pour vous-même. Chez soi, on reste maître de ses habitudes, de son rythme et de son intimité : la personne que nous vous présentons s’y accorde.",
       "precision": "Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés.",
       "link": "Découvrir l’accompagnement du grand âge",
       "situations": [
         "Une présence régulière pour une promenade, un repas, une conversation.",
         "Un quotidien organisé pour un parent qui vit seul.",
         "Des sorties et des activités qui lui ressemblent."
-      ]
+      ],
+      "limit": "Elle n’accomplit aucun acte médical. Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés.",
+      "imageAlt": "Une main portant une alliance, posée sur un livre ouvert près d’une tasse de porcelaine, devant un mur clair éclairé par une fenêtre."
     },
     "children": {
       "name": "Garde d’enfants",
       "promise": "Une présence choisie, pour quelques heures ou pour une saison.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
+      "need": "Une personne de confiance pour veiller sur vos enfants : quelques heures, une présence régulière ou le temps d’une saison.",
       "link": "Découvrir la garde d’enfants",
       "situations": [
         "Quelques heures, un soir ou pendant un rendez-vous.",
         "Une présence régulière après l’école.",
         "Une saison, des vacances, une période particulière."
-      ]
+      ],
+      "imageAlt": "Une main d’enfant tient un brin de romarin au-dessus d’un verre que tient une main d’adulte, devant un mur clair éclairé par une fenêtre."
     },
     "title": "Nos services"
   },
   "ServicePage": {
-    "needLabel": "Le besoin",
-    "forWhomLabel": "Pour qui",
-    "forWhom": "Pour vous, ou pour l’un de vos proches.",
     "situationsLabel": "Quelques situations",
-    "steps": [
-      "Vous nous écrivez.",
-      "Nous vous répondons personnellement, le plus souvent par e-mail, sous 48 heures.",
-      "Nous vous présentons la bonne personne."
-    ],
-    "selectionLabel": "Notre sélection",
-    "discretionLabel": "En toute confidentialité",
-    "contactLabel": "Nous écrire",
     "othersLabel": "Les autres services"
   },
   "Video": {
@@ -229,5 +221,389 @@
   },
   "MobileBar": {
     "label": "Écrire en toute discrétion"
+  },
+  "ServicesIndex": {
+    "title": "Trois services, une seule interlocutrice.",
+    "intro": "Être entouré comme on l’a toujours été. Pour vous ou pour vos proches, la maison compose la présence qui convient.",
+    "thumbnails": "Aller à un service"
+  },
+  "HowItWorks": {
+    "steps": {
+      "title": "Comment ça se passe",
+      "items": [
+        {
+          "title": "Vous nous écrivez.",
+          "text": "Ou vous choisissez un moment pour un appel. Quelques lignes suffisent, pour vous ou pour un proche."
+        },
+        {
+          "title": "Nous vous répondons.",
+          "text": "Personnellement, sous 48 heures ouvrées."
+        },
+        {
+          "title": "Nous faisons connaissance.",
+          "text": "Un échange, par téléphone ou en rendez-vous, pour comprendre la situation, les habitudes et les attentes."
+        },
+        {
+          "title": "Nous vous présentons la bonne personne.",
+          "text": "Une ou plusieurs personnes, choisies pour vous. Vous décidez avec nous ; nous ne choisissons jamais à votre place."
+        },
+        {
+          "title": "Vous signez directement avec le professionnel choisi.",
+          "text": "Il organise avec vous les horaires et le suivi au quotidien."
+        },
+        {
+          "title": "Nous restons présents.",
+          "text": "Nous prenons des nouvelles. S’il faut ajuster ou remplacer quelqu’un, nous nous en chargeons."
+        }
+      ]
+    },
+    "model": {
+      "title": "La maison présente, le prestataire signe, la maison veille.",
+      "items": [
+        {
+          "title": "Présenter",
+          "text": "Nous rencontrons et vérifions chaque personne avant de vous la présenter. Vous choisissez avec nous."
+        },
+        {
+          "title": "Signer",
+          "text": "Le contrat se signe entre vous et le professionnel choisi, indépendant ou maison partenaire."
+        },
+        {
+          "title": "Veiller",
+          "text": "Nous prenons des nouvelles. Si quelque chose ne convient pas, dites-le-nous : nous ajustons, ou nous présentons une autre personne."
+        }
+      ]
+    },
+    "know": {
+      "title": "Ce qu’il faut savoir"
+    },
+    "selection": {
+      "title": "Notre sélection",
+      "paragraphs": [
+        "Nous travaillons avec des professionnels indépendants et des maisons partenaires.",
+        "Chaque personne présentée a été rencontrée et vérifiée. Nous la choisissons pour son savoir-faire et pour sa tenue. Nous ne recommandons personne que nous ne confierions à l’un des nôtres."
+      ]
+    },
+    "payment": {
+      "title": "Qui rémunère la maison",
+      "paragraphs": [
+        "Vous ne payez rien à la maison. Vous réglez directement le professionnel que vous avez choisi.",
+        "La maison est rémunérée par lui, et nous vous le disons dès le premier échange."
+      ]
+    },
+    "limits": {
+      "title": "Ce que la maison ne fait pas",
+      "items": [
+        "Elle n’emploie pas les personnes qu’elle vous présente.",
+        "Elle ne fixe pas leurs horaires : le professionnel les organise avec vous.",
+        "Elle ne gère pas votre argent."
+      ]
+    },
+    "confidentiality": {
+      "title": "En toute confidentialité",
+      "paragraphs": [
+        "Tout ce que vous nous confiez reste dans la maison ; nous ne transmettons au professionnel que vous choisissez que ce qui lui est utile, avec votre accord. Chaque demande est lue personnellement, conservée dans un coffre chiffré, dans l’Union européenne, puis effacée."
+      ],
+      "link": "Lire notre politique de confidentialité"
+    }
+  },
+  "LegalPage": {
+    "toc": "Sur cette page"
+  },
+  "Legal": {
+    "title": "Mentions légales",
+    "intro": "Qui publie ce site, qui l’héberge, et ce qu’il faut savoir avant d’en reproduire le contenu.",
+    "updated": "Dernière mise à jour : [À DÉFINIR à la mise en ligne]",
+    "sections": [
+      {
+        "id": "editeur",
+        "title": "L’éditeur du site",
+        "paragraphs": ["Le site est publié par Maison Triona, établie en Belgique, en Wallonie."],
+        "facts": [
+          {
+            "term": "Nom ou dénomination",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Nom commercial",
+            "value": "Maison Triona"
+          },
+          {
+            "term": "Forme juridique",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Siège ou établissement",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Numéro d’entreprise (BCE)",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Numéro de TVA",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Adresse e-mail",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          }
+        ]
+      },
+      {
+        "id": "activite",
+        "title": "L’activité de la maison",
+        "paragraphs": [
+          "Maison Triona présente à ses clients des professionnels indépendants et des maisons partenaires, choisis pour chaque situation : conciergerie de luxe, accompagnement du grand âge, garde d’enfants.",
+          "La maison n’emploie pas ces professionnels : le client signe directement avec celui qu’il a choisi."
+        ]
+      },
+      {
+        "id": "hebergement",
+        "title": "L’hébergement",
+        "paragraphs": [
+          "Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis."
+        ]
+      },
+      {
+        "id": "credits",
+        "title": "Crédits",
+        "paragraphs": [
+          "Les polices Cormorant Garamond et EB Garamond sont utilisées sous licence SIL Open Font License, version 1.1."
+        ]
+      },
+      {
+        "id": "images",
+        "title": "Images créées par intelligence artificielle",
+        "paragraphs": [
+          "Les images et les vidéos du site ont été créées avec des outils d’intelligence artificielle. Elles ne représentent aucune personne réelle, aucun client de la maison ni aucun lieu identifiable.",
+          "Une mention le rappelle au pied de chaque page."
+        ]
+      },
+      {
+        "id": "donnees",
+        "title": "Données personnelles et cookies",
+        "paragraphs": [
+          "Le site ne dépose aucun cookie et n’utilise aucun outil de suivi. La façon dont nous traitons les informations que vous nous confiez est décrite dans notre politique de confidentialité."
+        ],
+        "link": {
+          "label": "Lire la politique de confidentialité",
+          "path": "/confidentialite"
+        }
+      }
+    ]
+  },
+  "Privacy": {
+    "title": "Politique de confidentialité",
+    "intro": "La discrétion est la promesse de la maison. Nous recueillons le moins possible, nous chiffrons ce que nous gardons, nous ne gardons rien plus longtemps que nécessaire, et nous ne transmettons rien sans votre accord.",
+    "updated": "Dernière mise à jour : [À DÉFINIR à la mise en ligne]",
+    "sections": [
+      {
+        "id": "en-bref",
+        "title": "En bref",
+        "items": [
+          "Aucun cookie, aucun outil de suivi, aucun réseau social.",
+          "Aucune information médicale ne vous est demandée.",
+          "Le contenu de vos demandes est chiffré dès son arrivée et conservé dans un coffre hébergé dans l’Union européenne.",
+          "Nous ne vendons, ne louons ni ne cédons aucune information ; nous ne transmettons au professionnel choisi que ce qui lui est utile, avec votre accord.",
+          "Vous pouvez à tout moment consulter, corriger ou faire effacer ce que nous gardons."
+        ]
+      },
+      {
+        "id": "responsable",
+        "title": "Qui est responsable de vos données",
+        "paragraphs": [
+          "Le responsable du traitement est Maison Triona, établie en Belgique, en Wallonie."
+        ],
+        "facts": [
+          {
+            "term": "Nom ou dénomination",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Forme juridique",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Siège ou établissement",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Numéro d’entreprise (BCE)",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          },
+          {
+            "term": "Adresse e-mail pour vos données",
+            "value": "[CONTENU À FOURNIR PAR CAT]"
+          }
+        ]
+      },
+      {
+        "id": "demande",
+        "title": "Lorsque vous nous écrivez",
+        "paragraphs": ["Pour vous répondre, le formulaire vous demande :"],
+        "items": [
+          "Le service qui vous intéresse et, si vous le souhaitez, pour qui.",
+          "Le pays concerné.",
+          "Si la demande est urgente.",
+          "Votre nom, et une adresse e-mail ou un numéro de téléphone.",
+          "Le moment et la langue que vous préférez pour être recontacté.",
+          "Un message, si vous le souhaitez.",
+          "Comment vous avez connu la maison, si vous souhaitez le dire."
+        ],
+        "after": [
+          "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter la bonne personne. La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes.",
+          "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
+          "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix.",
+          "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation.",
+          "Si vous indiquez une adresse e-mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
+          "Aucune décision n’est prise de façon automatisée : chaque demande est lue par une personne."
+        ]
+      },
+      {
+        "id": "appel",
+        "title": "Lorsque vous convenez d’un appel",
+        "paragraphs": [
+          "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e-mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Nous gardons alors votre adresse e-mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
+          "Vous recevez une confirmation, puis un rappel la veille, par e-mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant.",
+          "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e-mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
+          "L’invitation ajoutée à l’agenda de la fondatrice (Google Agenda) ne contient ni votre nom ni vos coordonnées : seulement l’heure et un lien vers le coffre."
+        ]
+      },
+      {
+        "id": "protection",
+        "title": "Comment vos demandes sont protégées",
+        "items": [
+          "Le contenu de votre demande (votre nom, vos coordonnées, le créneau, « pour qui » et votre message) est chiffré dès son arrivée sur notre serveur, puis enregistré dans un coffre hébergé dans l’Union européenne.",
+          "Pour que nous puissions trier les demandes, quelques informations restent lisibles dans le coffre : le service, le pays, la langue, l’urgence, la provenance et les dates.",
+          "Seules deux personnes peuvent lire le contenu chiffré : la fondatrice de la maison et la personne chargée de la maintenance technique du site. Chaque connexion exige une double authentification ; chaque lecture, export ou suppression laisse une trace dans un journal.",
+          "Le message qui nous prévient d’une nouvelle demande ne contient rien de votre demande : seulement sa date et un lien vers le coffre.",
+          "Nos journaux techniques ne gardent rien de ce que vous écrivez : seulement un identifiant et le résultat de l’envoi. Comme pour tout site, notre hébergeur enregistre l’adresse des pages consultées, la date, votre adresse IP et votre navigateur, pendant un jour.",
+          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et une empreinte de l’adresse de confirmation."
+        ]
+      },
+      {
+        "id": "echanges",
+        "title": "Nos échanges, ensuite",
+        "paragraphs": [
+          "Une fois la relation engagée, nous vous répondons par e-mail ou par téléphone. Nos échanges par e-mail sont conservés dans la messagerie de la maison, hébergée par [À DÉFINIR], le temps de notre relation, puis [À DÉFINIR]."
+        ]
+      },
+      {
+        "id": "mesure",
+        "title": "Ce que nous mesurons",
+        "paragraphs": [
+          "Pour savoir si le site est utile, nous comptons les pages vues et quelques choix, comme le service consulté, toujours en totaux. L’outil retenu, Plausible, n’utilise aucun cookie. Pour compter les visiteurs sans les identifier, il calcule chaque jour une empreinte à partir de votre adresse IP et de votre navigateur, avec une clé effacée toutes les 24 heures ; votre adresse IP n’est pas conservée, seuls le pays, la région et la ville en sont déduits. Il est servi depuis notre propre domaine ; ses données sont hébergées en Allemagne."
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies et stockage dans votre navigateur",
+        "paragraphs": [
+          "Le site ne dépose aucun cookie. La langue est indiquée dans l’adresse de la page.",
+          "Pendant votre visite, et seulement le temps qu’elle dure, votre navigateur peut garder trois choses : le fait que vous ayez fermé la suggestion de langue, le fait que vous ayez mis les vidéos en pause, et les choix déjà faits pour votre demande (service, pays, langue, créneau), pour ne pas les perdre d’une page ou d’une étape à l’autre. Pour qui la demande est faite, votre nom, vos coordonnées, votre message et l’urgence n’y sont jamais gardés. Tout disparaît à la fermeture de l’onglet ; les choix de votre demande sont aussi effacés à l’envoi."
+        ]
+      },
+      {
+        "id": "prestataires",
+        "title": "Les prestataires techniques",
+        "paragraphs": [
+          "Quelques prestataires font fonctionner le site. Chacun est lié à la maison par un contrat de traitement des données et n’utilise vos informations que pour le service qu’il rend."
+        ],
+        "facts": [
+          {
+            "term": "Vercel Inc. (États-Unis)",
+            "value": "Hébergement du site. Les fonctions qui reçoivent votre demande s’exécutent à Paris."
+          },
+          {
+            "term": "Scaleway SAS (France)",
+            "value": "Coffre des demandes et envoi des e-mails, en France."
+          },
+          {
+            "term": "Upstash Inc. (États-Unis)",
+            "value": "Protection contre les envois abusifs, sur des serveurs situés dans l’Union européenne."
+          },
+          {
+            "term": "Plausible Insights OÜ (Estonie)",
+            "value": "Mesure d’audience en totaux, sans cookie ; données hébergées en Allemagne."
+          },
+          {
+            "term": "Fournisseur de SMS",
+            "value": "Confirmation et rappel des appels, seulement si vous le demandez, dans l’Union européenne. [À DÉFINIR]"
+          },
+          {
+            "term": "Google (États-Unis)",
+            "value": "Agenda de la fondatrice : l’heure de l’appel et un lien vers le coffre, sans nom ni coordonnées."
+          },
+          {
+            "term": "Messagerie de la maison",
+            "value": "[À DÉFINIR]"
+          }
+        ]
+      },
+      {
+        "id": "transferts",
+        "title": "Hors de l’Union européenne",
+        "paragraphs": [
+          "Vercel, Upstash et Google sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Google ne reçoit aucune donnée qui vous nomme."
+        ]
+      },
+      {
+        "id": "conservation",
+        "title": "Combien de temps nous gardons vos informations",
+        "items": [
+          "Votre demande : le temps de nos échanges, puis elle est effacée. Vous pouvez nous demander de l’effacer plus tôt.",
+          "Votre appel : la même durée qu’une demande. Votre adresse e-mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
+          "Les sauvegardes : une demande effacée peut y subsister 7 jours avant de disparaître ; son contenu y reste chiffré.",
+          "Les journaux de l’hébergeur : un jour.",
+          "La protection contre les envois abusifs : 24 heures au plus.",
+          "Les journaux d’envoi des e-mails : [À CONFIRMER selon le fournisseur]",
+          "Le journal des accès au coffre : [À DÉFINIR]",
+          "Nos échanges par e-mail : [À DÉFINIR]"
+        ]
+      },
+      {
+        "id": "droits",
+        "title": "Vos droits",
+        "paragraphs": [
+          "Vous pouvez à tout moment consulter les informations que nous gardons sur vous, les faire corriger ou effacer, vous opposer à leur traitement, en limiter l’usage, en recevoir une copie dans un format courant ou la faire transmettre à quelqu’un d’autre, et retirer votre consentement ; ce retrait ne remet pas en cause ce qui a été fait avant. Écrivez-nous à l’adresse [CONTENU À FOURNIR PAR CAT] ; nous vous répondons dans un délai d’un mois.",
+          "Vous pouvez aussi, à tout moment, adresser une réclamation à l’autorité de protection des données de votre pays. Notre autorité de contrôle est l’Autorité de protection des données, en Belgique."
+        ],
+        "items": [
+          "Belgique : Autorité de protection des données (APD).",
+          "France : Commission nationale de l’informatique et des libertés (CNIL).",
+          "Luxembourg : Commission nationale pour la protection des données (CNPD).",
+          "Monaco : Autorité de protection des données personnelles (APDP).",
+          "Suisse : Préposé fédéral à la protection des données et à la transparence (PFPDT)."
+        ]
+      },
+      {
+        "id": "limites",
+        "title": "Les limites que nous connaissons",
+        "paragraphs": [
+          "Aucun système n’est parfait. Voici les limites que nous connaissons, et que nous préférons vous dire :"
+        ],
+        "items": [
+          "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
+          "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
+          "Jusqu’à 24 heures après un appel, votre adresse e-mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
+          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures et ne sert plus une fois l’appel réservé.",
+          "Le message de confirmation part à l’adresse saisie dans le formulaire. S’il vous parvient sans que vous ayez écrit, ignorez-le : il ne contient rien d’autre qu’un accusé de réception."
+        ]
+      },
+      {
+        "id": "incident",
+        "title": "En cas d’incident",
+        "paragraphs": [
+          "Si un incident touchait vos informations, nous en informerions l’autorité de protection des données dans les 72 heures suivant sa découverte et, si le risque était élevé, les personnes concernées."
+        ]
+      },
+      {
+        "id": "modifications",
+        "title": "Si cette politique change",
+        "paragraphs": ["La nouvelle version est publiée sur cette page, avec sa date."]
+      }
+    ]
   }
 }
