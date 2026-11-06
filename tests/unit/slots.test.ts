@@ -231,15 +231,16 @@ describe('réglages limites', () => {
   test('refuse des réglages invalides', () => {
     const invalid = [
       { durationMinutes: 30.5 },
+      { bufferMinutes: -1 },
       { minNoticeMinutes: -1 },
-      { horizonDays: Number.POSITIVE_INFINITY },
+      { horizonDays: 1.5 },
       { dailyCap: -1 },
     ]
     for (const override of invalid) {
-      assert.throws(
-        () => compute({ settings: { ...DEFAULT_BOOKING_SETTINGS, ...override } }),
-        RangeError,
-      )
+      assert.throws(() => compute({ settings: { ...DEFAULT_BOOKING_SETTINGS, ...override } }), {
+        name: 'RangeError',
+        message: 'Réglages invalides',
+      })
     }
   })
 
