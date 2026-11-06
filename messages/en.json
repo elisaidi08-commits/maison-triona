@@ -302,5 +302,301 @@
       ],
       "link": "Read our privacy policy"
     }
+  },
+  "LegalPage": {
+    "toc": "On this page"
+  },
+  "Legal": {
+    "title": "Legal notice",
+    "intro": "Who publishes this site, who hosts it, and what to know before reproducing its content.",
+    "updated": "Last updated: [À DÉFINIR à la mise en ligne]",
+    "sections": [
+      {
+        "id": "publisher",
+        "title": "The publisher",
+        "paragraphs": [
+          "This site is published by Maison Triona, based in Wallonia, Belgium. [À CONFIRMER selon la forme juridique]"
+        ],
+        "facts": [
+          {
+            "term": "Name",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Trading name",
+            "value": "Maison Triona"
+          },
+          {
+            "term": "Legal form",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Registered office or place of business",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Enterprise number (CBE)",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "VAT number",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Email address",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Person responsible for publication",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          }
+        ]
+      },
+      {
+        "id": "activity",
+        "title": "What the house does",
+        "paragraphs": [
+          "Maison Triona introduces its clients to independent professionals and partner houses, chosen for each situation: luxury concierge, companionship in later life, childcare.",
+          "The house does not employ these professionals: the client signs directly with the one they have chosen. The house is paid by the professional, never by the client. [À VALIDER JURIDIQUEMENT]",
+          "Authorisations or registrations required in each country, and the competent supervisory authority: [À VALIDER JURIDIQUEMENT]"
+        ]
+      },
+      {
+        "id": "hosting",
+        "title": "Hosting",
+        "paragraphs": [
+          "This site is hosted by Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, United States. [À CONFIRMER à la mise en ligne]"
+        ]
+      },
+      {
+        "id": "reproduction",
+        "title": "Reproducing our content",
+        "paragraphs": [
+          "The texts, the seal and the design of this site may not be reproduced, even in part, without the written consent of the house. [À VALIDER JURIDIQUEMENT]",
+          "The Cormorant Garamond and EB Garamond typefaces are used under the SIL Open Font License, version 1.1."
+        ]
+      },
+      {
+        "id": "images",
+        "title": "Images created with artificial intelligence",
+        "paragraphs": [
+          "The images and videos on this site were created with artificial intelligence tools. They depict no real person, no client of the house and no identifiable place. [À VALIDER JURIDIQUEMENT]",
+          "A note at the foot of every page says so."
+        ]
+      },
+      {
+        "id": "personal-data",
+        "title": "Personal data and cookies",
+        "paragraphs": [
+          "This site sets no cookies and uses no tracking tools. How we handle the information you entrust to us is described in our privacy policy."
+        ],
+        "link": {
+          "label": "Read the privacy policy",
+          "path": "/confidentialite"
+        }
+      },
+      {
+        "id": "governing-law",
+        "title": "Governing law",
+        "paragraphs": [
+          "This site and this notice are governed by Belgian law. [À VALIDER JURIDIQUEMENT]"
+        ]
+      }
+    ]
+  },
+  "Privacy": {
+    "title": "Privacy policy",
+    "intro": "Discretion is the promise of the house. We collect as little as possible, we encrypt what we keep, we keep nothing longer than necessary, and we pass nothing on without your consent.",
+    "updated": "Last updated: [À DÉFINIR à la mise en ligne]",
+    "sections": [
+      {
+        "id": "in-brief",
+        "title": "In brief",
+        "items": [
+          "No cookies, no tracking tools, no social networks.",
+          "We never ask for medical information.",
+          "The content of your enquiries is encrypted as soon as it arrives and kept in a vault hosted in the European Union.",
+          "We do not sell, rent or pass on any information; we pass on to the professional you choose only what is useful to them, with your consent.",
+          "You may see, correct or have erased what we keep at any time."
+        ]
+      },
+      {
+        "id": "controller",
+        "title": "Who is responsible for your data",
+        "paragraphs": [
+          "The data controller is Maison Triona, based in Wallonia, Belgium. [À CONFIRMER selon la forme juridique]"
+        ],
+        "facts": [
+          {
+            "term": "Name",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Legal form",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Registered office or place of business",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Enterprise number (CBE)",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          },
+          {
+            "term": "Email address for data requests",
+            "value": "[CONTENT TO BE PROVIDED BY CAT]"
+          }
+        ]
+      },
+      {
+        "id": "enquiry",
+        "title": "When you write to us",
+        "paragraphs": ["To reply to you, the form asks for:"],
+        "items": [
+          "The service you are interested in and, if you wish, who it is for.",
+          "The country concerned.",
+          "Whether the enquiry is urgent.",
+          "Your name, and an email address or a telephone number.",
+          "When and in which language you would prefer us to contact you.",
+          "A message, if you wish.",
+          "How you heard of the house, if you would like to say."
+        ],
+        "after": [
+          "This information is used to reply to you and, if you wish, to introduce you to the right person. It is processed on the basis of the steps you take before any agreement (Article 6(1)(b) GDPR). How you heard of the house is used only to know where enquiries come from. [À VALIDER JURIDIQUEMENT]",
+          "The service, the country, the urgency, your name, an email address or a telephone number, the language and your consent are needed to reply to you; everything else is optional. [À CONFIRMER avec le formulaire]",
+          "There is no need to share any medical details; we will talk about it in person. If your message contains some all the same, ticking the box before sending gives your explicit consent to their processing, for this enquiry only (Article 9(2)(a) GDPR). [À VALIDER JURIDIQUEMENT]",
+          "If you choose to meet a professional, we pass on to them, with your consent, your name, your contact details and what is useful to them about your situation. [À VALIDER JURIDIQUEMENT]",
+          "If you ask us to call you back, we keep your name, your number, and the language and time you chose. We never leave a voicemail.",
+          "If you give an email address, you receive a short confirmation. It repeats nothing of your enquiry.",
+          "No decision is made by automated means: every enquiry is read by a person."
+        ]
+      },
+      {
+        "id": "protection",
+        "title": "How your enquiries are protected",
+        "items": [
+          "The content of your enquiry (your name, contact details, preferred time, who it is for and your message) is encrypted as soon as it reaches our server, then stored in a vault hosted in the European Union.",
+          "So that we can sort enquiries, a few details remain readable in the vault: the service, the country, the language, the urgency, the source and the dates.",
+          "Only two people can read the encrypted content: the founder of the house and the person in charge of the technical upkeep of the site. Every login requires two-factor authentication; every reading, export or deletion is recorded in a log.",
+          "The message that tells us a new enquiry has arrived contains nothing of your enquiry: only its date and a link to the vault.",
+          "Our technical logs keep nothing you write: only an identifier and the outcome of the submission. As for any website, our host records the address of the pages visited, the date, your IP address and your browser, for one day. [À CONFIRMER à la mise en ligne]",
+          "To block abusive submissions, we keep for 24 hours at most a fingerprint of your IP address, computed with a key changed every day, and a fingerprint of the confirmation address (legitimate interest, Article 6(1)(f) GDPR)."
+        ]
+      },
+      {
+        "id": "correspondence",
+        "title": "Our correspondence, afterwards",
+        "paragraphs": [
+          "Once we are in touch, we reply by email or by telephone. Our email correspondence is kept in the house mailbox, hosted by [À DÉFINIR], for as long as we work together, then [À DÉFINIR]."
+        ]
+      },
+      {
+        "id": "measurement",
+        "title": "What we measure",
+        "paragraphs": [
+          "To know whether the site is useful, we count page views and a few choices, such as the service viewed, always as totals. The tool we use, Plausible, sets no cookies. To count visitors without identifying them, it computes a daily fingerprint from your IP address and your browser, with a key erased every 24 hours; your IP address is not kept, only the country, region and city are derived from it. It is served from our own domain; its data is hosted in Germany.",
+          "This measurement rests on our legitimate interest in knowing whether the site serves its purpose (Article 6(1)(f) GDPR). [À VALIDER JURIDIQUEMENT]"
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies and storage in your browser",
+        "paragraphs": [
+          "This site sets no cookies. The language is shown in the address of the page.",
+          "During your visit, and only for as long as it lasts, your browser may keep three things: the fact that you closed the language suggestion, the fact that you paused the videos, and the choices already made for your enquiry (service, country, language, time), so that they are not lost from one page or step to the next. Who the enquiry is for, your name, contact details, message and urgency are never kept there. Everything disappears when you close the tab; the choices for your enquiry are also erased when you send it.",
+          "As there is nothing to accept, the site shows no cookie banner. [À VALIDER JURIDIQUEMENT]"
+        ]
+      },
+      {
+        "id": "providers",
+        "title": "Our technical providers",
+        "paragraphs": [
+          "A few providers keep the site running. Each is bound to the house by a data processing agreement and uses your information only for the service it provides. [À CONFIRMER à la signature des contrats]"
+        ],
+        "facts": [
+          {
+            "term": "Vercel Inc. (United States)",
+            "value": "Hosting of the site. The functions that receive your enquiry run in Paris. [À CONFIRMER à la mise en ligne]"
+          },
+          {
+            "term": "Scaleway SAS (France)",
+            "value": "Enquiry vault and sending of emails, in France."
+          },
+          {
+            "term": "Upstash Inc. (United States)",
+            "value": "Protection against abusive submissions, on servers located in the European Union."
+          },
+          {
+            "term": "Plausible Insights OÜ (Estonia)",
+            "value": "Audience measurement as totals, without cookies; data hosted in Germany."
+          },
+          {
+            "term": "House mailbox",
+            "value": "[À DÉFINIR]"
+          }
+        ]
+      },
+      {
+        "id": "transfers",
+        "title": "Outside the European Union",
+        "paragraphs": [
+          "Vercel and Upstash are American companies: even when processed on European servers, data may be accessible from the United States. These transfers rely on the data protection framework between the European Union and the United States, to which both companies have signed up, and on the safeguards set out in their contracts. [À VALIDER JURIDIQUEMENT]"
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "How long we keep your information",
+        "items": [
+          "Your enquiry: for as long as we are in touch, then no more than 12 months after our last exchange, whether or not it led anywhere. We may erase it sooner, and you may ask us to. [À VALIDER JURIDIQUEMENT]",
+          "Your call-back request: the same length of time.",
+          "Backups: an erased enquiry may remain there for 7 days before it disappears; its content stays encrypted.",
+          "Our host’s logs: one day. [À CONFIRMER à la mise en ligne]",
+          "Protection against abusive submissions: 24 hours at most.",
+          "Email sending logs: [À CONFIRMER selon le fournisseur]",
+          "The vault access log: [À DÉFINIR]",
+          "Our email correspondence: [À DÉFINIR]"
+        ]
+      },
+      {
+        "id": "rights",
+        "title": "Your rights",
+        "paragraphs": [
+          "At any time, you may see the information we hold about you, have it corrected or erased, object to its processing, restrict its use, receive a copy of it in a common format or have it passed to someone else, and withdraw your consent; withdrawing it does not affect what was done before. Write to us at [CONTENT TO BE PROVIDED BY CAT]; we will reply within one month. [À VALIDER JURIDIQUEMENT]",
+          "You may also, at any time, lodge a complaint with the data protection authority of your country. Our supervisory authority is the Data Protection Authority in Belgium. [À VALIDER JURIDIQUEMENT]"
+        ],
+        "items": [
+          "Belgium: Data Protection Authority (APD).",
+          "France: Commission nationale de l’informatique et des libertés (CNIL).",
+          "Luxembourg: National Commission for Data Protection (CNPD).",
+          "Monaco: Personal Data Protection Authority (APDP).",
+          "Switzerland: Federal Data Protection and Information Commissioner (FDPIC)."
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "The limits we know of",
+        "paragraphs": [
+          "No system is perfect. Here are the limits we know of, and would rather tell you about:"
+        ],
+        "items": [
+          "Our host, Vercel, is an American company. Your enquiry passes through its servers in readable form until it is encrypted; we do not store it there. Like any American company, Vercel may be required by American law to hand over data, even data processed in Europe.",
+          "An erased enquiry remains in the backups for up to 7 days; its content stays encrypted.",
+          "The confirmation is sent to the address typed into the form. If it reaches you although you did not write to us, please ignore it: it contains nothing but an acknowledgement of receipt."
+        ]
+      },
+      {
+        "id": "incident",
+        "title": "If an incident occurs",
+        "paragraphs": [
+          "If an incident affected your information, we would inform the data protection authority within 72 hours of becoming aware of it and, if the risk were high, the people concerned. [À VALIDER JURIDIQUEMENT]"
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "If this policy changes",
+        "paragraphs": ["The new version is published on this page, with its date."]
+      }
+    ]
   }
 }

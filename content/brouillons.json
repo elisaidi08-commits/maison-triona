@@ -18,7 +18,9 @@
     "House.sections (titres)",
     "Territories.countries",
     "ServicesIndex",
-    "HowItWorks"
+    "HowItWorks",
+    "Legal",
+    "Privacy"
   ],
   "en": [
     "Home.title",
@@ -39,6 +41,8 @@
     "House.sections (titres)",
     "Territories.countries",
     "ServicesIndex",
-    "HowItWorks"
+    "HowItWorks",
+    "Legal",
+    "Privacy"
   ]
 }
