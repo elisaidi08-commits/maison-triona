@@ -28,6 +28,7 @@ export default async function Page() {
   const pages = await getTranslations('Pages')
   const t = await getTranslations('Services')
   const index = await getTranslations('ServicesIndex')
+  const video = await getTranslations('Video')
 
   const plans: PlanService[] = SERVICES.flatMap((service) => {
     const media = SERVICE_MEDIA[service.id]
@@ -43,6 +44,7 @@ export default async function Page() {
         href: localizedPath(SERVICE_PATHS[service.id], locale),
         image: media.mobile,
         alt: t(`${service.key}.imageAlt`),
+        video: media.video,
       },
     ]
   })
@@ -58,7 +60,12 @@ export default async function Page() {
         <p className="max-w-measure text-body-l">{index('intro')}</p>
       </header>
 
-      <ServicesImmersion plans={plans} thumbnailsLabel={index('thumbnails')} />
+      <ServicesImmersion
+        plans={plans}
+        thumbnailsLabel={index('thumbnails')}
+        pause={{ visible: video('pauseShort'), full: video('pause') }}
+        play={{ visible: video('playShort'), full: video('play') }}
+      />
 
       <div className="conteneur">
         <Modele />

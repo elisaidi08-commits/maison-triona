@@ -108,12 +108,33 @@ test.describe('immersion des services', () => {
     await expect(page.getByRole('link', { name: 'Découvrir la garde d’enfants' })).toBeVisible()
   })
 
+  test('les gestes filmés jouent une fois, la pause les arrête (D58, WCAG 2.2.2)', async ({
+    page,
+  }) => {
+    await page.goto('/fr/services')
+    const films = page.locator('[data-plan-video]')
+    await expect(films).toHaveCount(3)
+    for (const loop of await films.evaluateAll((v) => v.map((el) => el.hasAttribute('loop')))) {
+      expect(loop).toBe(false)
+    }
+    await page.locator('[data-immersion-scene]').scrollIntoViewIfNeeded()
+    await expect(films.first()).toHaveAttribute('data-joue', '1', { timeout: 10000 })
+    await page.getByRole('button', { name: 'Mettre la vidéo en pause' }).click()
+    expect(await films.first().evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
+    await expect(page.getByRole('button', { name: 'Lire la vidéo' })).toBeVisible()
+  })
+
   test('mouvement réduit : services empilés, sans vignettes, tout est lisible', async ({
     page,
   }) => {
+    const videos: string[] = []
+    page.on('request', (request) => {
+      if (/\.(mp4|webm)$/.test(request.url())) videos.push(request.url())
+    })
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/fr/services')
+    await page.goto('/fr/services', { waitUntil: 'networkidle' })
     await expect(page.locator('[data-immersion-vignettes]')).toBeHidden()
+    expect(videos).toEqual([])
     for (const nom of ['Conciergerie de luxe', 'Accompagnement du grand âge', 'Garde d’enfants']) {
       await expect(page.getByRole('heading', { name: nom })).toBeVisible()
     }

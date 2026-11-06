@@ -4,6 +4,8 @@ import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { ChoiceList } from '@/components/ui/ChoiceList'
 import { Rule } from '@/components/ui/Rule'
 import { Stamp } from '@/components/ui/Stamp'
+import { localizedPath, type Locale } from '@/i18n/pathnames'
+import { SERVICE_PATHS } from '@/lib/services'
 import { AnchorFocus } from './AnchorFocus'
 import desktop from '../../../public/media/seuil/P01-fenetre-mer.jpg'
 import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
@@ -13,21 +15,25 @@ import mobile from '../../../public/media/seuil/P01-fenetre-mer-m.jpg'
 // centré, signé du « K. ». Seul texte posé sur l'image. Bande ivoire (D26) : l'accroche, une phrase
 // qui dit ce que fait la maison, puis l'entrée par besoin (les 3 services et « Évoquer une demande
 // particulière »), vrais liens. Un seul titre display à l'écran : l'accroche est en Manrope.
+// D58 (Sady, 06/11/2026) : chaque service mène directement à sa page, sans repasser par une ancre
+// de l'accueil ni par la page Services (un seul clic pour découvrir un service).
 // Le premier choix reste visible sans défiler sur 390 × 844.
 
 const CHOICES = [
-  { key: 'concierge', href: '#conciergerie', number: '01' },
-  { key: 'senior', href: '#grand-age', number: '02' },
-  { key: 'children', href: '#enfants', number: '03' },
-  { key: 'unsure', href: 'contact', number: undefined },
+  { key: 'concierge', service: 'conciergerie', number: '01' },
+  { key: 'senior', service: 'grand-age', number: '02' },
+  { key: 'children', service: 'enfants', number: '03' },
+  { key: 'unsure', service: undefined, number: undefined },
 ] as const
 
 export async function Seuil({ locale }: { locale: string }) {
   const t = await getTranslations('Home')
   const meta = await getTranslations('Meta')
   const video = await getTranslations('Video')
-  const choices = CHOICES.map(({ key, href, number }) => ({
-    href: href === 'contact' ? `/${locale}/contact` : href,
+  const choices = CHOICES.map(({ key, service, number }) => ({
+    href: service
+      ? localizedPath(SERVICE_PATHS[service], locale as Locale)
+      : localizedPath('/contact', locale as Locale),
     number,
     label: t(`choices.${key}.label`),
     category: key === 'unsure' ? undefined : t(`choices.${key}.category`),

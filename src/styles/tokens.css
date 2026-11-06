@@ -475,7 +475,8 @@
   }
 
   /* M23 (D56 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady, reprises
-     dans nos règles) : les services de la page Services (ServicesImmersion.tsx).
+     dans nos règles ; vidéos et amorti, D58) : les services de la page Services
+     (ServicesImmersion.tsx).
      Version empilée par défaut (mobile, tactile, mouvement réduit, sans JavaScript) : une rangée
      par service entre filets or, l'image en 4:5 puis le texte ; la rangée garde la marge de page. */
   [data-immersion] {
@@ -506,9 +507,18 @@
     overflow: hidden;
     background-color: var(--color-pierre);
   }
+  [data-plan-media] {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+  }
   [data-plan-image] img {
     object-fit: cover;
-    transform-origin: 50% 50%;
+  }
+  [data-plan-video],
+  [data-immersion-progression],
+  [data-immersion-pause] {
+    display: none;
   }
   [data-plan-texte] {
     display: flex;
@@ -603,9 +613,60 @@
       aspect-ratio: auto;
       background-color: var(--color-sapin);
     }
-    [data-plan-image] img {
+    [data-plan-image] {
+      contain: paint;
+    }
+    [data-plan-media] {
       transform: scale(1.12);
       will-change: transform;
+    }
+    /* La vidéo du geste apparaît en fondu sur l'image, puis s'arrête sur sa dernière image. */
+    [data-plan-video] {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 900ms var(--ease-standard);
+    }
+    [data-plan-video][data-joue] {
+      opacity: 1;
+    }
+    /* Filet champagne de progression, au pied du texte. */
+    [data-immersion-progression] {
+      z-index: 1;
+      display: block;
+      grid-area: texte;
+      align-self: end;
+      width: 100%;
+      height: 1px;
+      background-color: var(--color-champagne);
+      transform: scaleX(var(--avancee, 0));
+      transform-origin: left;
+    }
+    [data-immersion-pause] {
+      z-index: 2;
+      display: inline-flex;
+      grid-area: texte;
+      align-items: center;
+      align-self: end;
+      justify-self: end;
+      min-height: var(--spacing-touch);
+      margin: 0 var(--spacing-64) var(--spacing-16) 0;
+      padding: 0 var(--spacing-8);
+      border: 0;
+      background: none;
+      color: var(--color-ivoire-80);
+      font-size: var(--text-label);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color var(--transition-duration-micro) var(--ease-standard);
+    }
+    [data-immersion-pause]:hover {
+      color: var(--color-champagne);
     }
     [data-plan-texte] {
       grid-area: texte;

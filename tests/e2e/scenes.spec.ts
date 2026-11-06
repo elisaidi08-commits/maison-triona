@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Accueil (D26) : la promesse et les trois scènes de service ; pages de service (stories 2.2, 2.3).
 
-test('chaque choix d’entrée mène à une scène existante', async ({ page }) => {
+test('les trois scènes de service restent sur l’accueil', async ({ page }) => {
   await page.goto('/fr')
   for (const anchor of ['conciergerie', 'grand-age', 'enfants']) {
     await expect(page.locator(`#${anchor}`)).toHaveCount(1)
