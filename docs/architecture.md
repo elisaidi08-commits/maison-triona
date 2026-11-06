@@ -82,7 +82,9 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   │   ├── notre-independance/page.tsx
 │   │   │   ├── comment-nous-choisissons/page.tsx       ← phase 2 (E6-S2)
 │   │   │   ├── contact/page.tsx        ← formulaire en étapes
-│   │   │   ├── contact/rappel/page.tsx ← rappel à la demande
+│   │   │   ├── contact/appel/page.tsx  ← réservation d'appel : demande du lien (D57)
+│   │   │   ├── contact/appel/[token]/page.tsx        ← réservation (noindex, no-store)
+│   │   │   ├── contact/appel/gerer/[token]/page.tsx  ← déplacer, annuler (noindex, no-store)
 │   │   │   ├── contact/urgent/page.tsx ← conditionnel (E3-S7), seulement si Cat valide
 │   │   │   ├── contact/merci/page.tsx  ← confirmation (noindex)
 │   │   │   ├── mentions-legales/page.tsx
@@ -92,23 +94,25 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   │   └── not-found.tsx
 │   │   ├── coffre/                     ← espace d'administration (dynamique, noindex, A2F)
 │   │   │   ├── layout.tsx · connexion/page.tsx · page.tsx (liste) · [id]/page.tsx (lecture)
+│   │   │   ├── appels/page.tsx · disponibilites/page.tsx   ← agenda et réglages de Cat (D57)
 │   │   ├── api/
 │   │   │   ├── revalidate/route.ts     ← webhook CMS signé
 │   │   │   ├── auth/[...all]/route.ts  ← authentification du coffre
 │   │   │   ├── cron/outbox/route.ts    ← reprises d'envoi (appelée par Vercel Cron, secret)
 │   │   │   ├── cron/retention/route.ts ← suppression des demandes échues
+│   │   │   ├── cron/booking/route.ts   ← appels à qualifier, effacement des coordonnées, purge des jetons
 │   │   │   └── email-events/route.ts   ← rebonds et plaintes (webhook signé du fournisseur)
 │   │   ├── sitemap.ts · robots.ts · icon.svg
 │   ├── actions/
 │   │   ├── request.ts                  ← formulaire en étapes ('use server')
-│   │   └── callback.ts                 ← rappel ('use server')
+│   │   └── booking.ts                  ← lien, réservation, déplacement, annulation ('use server')
 │   ├── components/
 │   │   ├── layout/   Header, Footer, LanguageSwitcher, MobileMenu, SkipLink
 │   │   ├── ui/       Button, TextLink, Rule (filet), Stamp (« K. »), Label, Field, ChoiceRow, ErrorSummary, StepProgress, Disclosure (<details>)
 │   │   ├── sections/ Hero, ServicesList, Territories, ContactBlock, PartnersBand (vide tant qu'aucun partenaire validé), ShareLinks
 │   │   ├── media/    HeroMedia (poster + vidéo), ArchFrame, Picture
 │   │   ├── motion/   MotionProvider, Reveal, HeroParallax ('use client')
-│   │   └── forms/    RequestForm, CallbackForm ('use client', amélioration progressive)
+│   │   └── forms/    RequestForm, BookingForm ('use client', amélioration progressive)
 │   ├── i18n/         routing.ts, request.ts, navigation.ts
 │   ├── lib/
 │   │   ├── cms/        client, requêtes, types générés
@@ -117,13 +121,16 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   ├── auth/       configuration de l'authentification du coffre
 │   │   ├── outbox/     boîte d'envoi, reprises, alertes
 │   │   ├── email/      adaptateur unique (fournisseur interchangeable), gabarits FR/EN
+│   │   ├── sms/        adaptateur SMS (fournisseur interchangeable, D57)
+│   │   ├── booking/    slots (calcul des créneaux), tokens, ics, repository (D57)
 │   │   ├── security/   rate-limit, honeypot, time-trap, hash d'IP
-│   │   ├── validation/ schémas Zod (demande, rappel)
+│   │   ├── validation/ schémas Zod (demande, réservation)
 │   │   └── seo/        métadonnées, alternates, JSON-LD
 │   ├── styles/       tokens.css (unique source de vérité et point d'entrée CSS, importé par layout.tsx), fonts.ts, print.css
 │   └── proxy.ts      ← next-intl (ex-middleware) ; protection de la préproduction en repli
 ├── tests/
-│   ├── e2e/          request.spec.ts, callback.spec.ts, i18n.spec.ts, navigation.spec.ts, share.spec.ts
+│   ├── e2e/          request.spec.ts, booking.spec.ts, i18n.spec.ts, navigation.spec.ts, share.spec.ts
+│   ├── unit/         slots.test.ts (testeur intégré de Node, `node --test`)
 │   └── a11y/         pages.spec.ts (axe, WCAG 2.2 AA, FR et EN)
 ├── scripts/          check-content (placeholders), check-third-party (domaines interdits), check-i18n (parité des clés FR/EN), build-pdf, ingest-media.sh, lighthouse
 ├── media-incoming/   ← dépôt des sorties Higgsfield brutes (ignoré par Git ET par Vercel)
@@ -162,7 +169,9 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 | Notre indépendance | `/fr/notre-independance` | `/en/our-independence` |
 | Comment nous choisissons (phase 2) | `/fr/comment-nous-choisissons` | `/en/how-we-choose` |
 | Contact (`?service=…`, `?s=…`) | `/fr/contact` | `/en/contact` |
-| Rappel | `/fr/contact/rappel` | `/en/contact/call-back` |
+| Convenir d'un appel (D57, remplace le rappel) | `/fr/contact/appel` | `/en/contact/call` |
+| … réservation (lien personnel, noindex) | `/fr/contact/appel/[jeton]` | `/en/contact/call/[token]` |
+| … déplacer, annuler (noindex) | `/fr/contact/appel/gerer/[jeton]` | `/en/contact/call/manage/[token]` |
 | Situation urgente (conditionnel) | `/fr/contact/urgent` | `/en/contact/urgent` |
 | Confirmation | `/fr/contact/merci` | `/en/contact/thank-you` |
 | Mentions légales | `/fr/mentions-legales` | `/en/legal-notice` |
@@ -264,9 +273,9 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 | — | Honeypot | caché aux humains (hors écran, `tabindex=-1`, `autocomplete=off`, `aria-hidden`) | Rempli = rejet silencieux |
 | — | Horodatage signé | caché, HMAC | Envoi en moins de 3 s = rejet |
 
-### 6.3 Rappel à la demande
-- Page `/contact/rappel` : nom, numéro, langue, créneau (matin · après-midi · soir) et jours, case « Ne pas laisser de message vocal », consentement. Mêmes protections que le formulaire.
-- Alimente **le même coffre** (type `rappel`) et la même notification. Confirmation claire, sans écho du contenu.
+### 6.3 Réservation d'appel (D57, remplace le rappel à la demande)
+- Spec complète : **`docs/reservation-appel.md`**.
+- Lien personnel par e-mail (48 h, empreinte seule en base), réservation sur un écran, un créneau ne se prend qu'une fois (contrainte d'exclusion PostgreSQL), invitations .ics, rappels e-mail et SMS en option, agenda et réglages de Cat dans le coffre. Mêmes protections que le formulaire ; aucun cookie sur le site public.
 
 ### 6.4 Situation urgente (conditionnelle, E3-S7)
 - N'existe **que si Cat valide** qu'elle peut y répondre. Variante courte du formulaire (besoin, pays, contact, un mot libre), marquée « prioritaire » dans le coffre et dans l'objet de la notification.
@@ -287,6 +296,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 | Partenaires (phase 2) | Champs internes du §5.1 dans une table distincte, mêmes règles d'accès |
 | Connexion depuis Vercel | TLS + identifiants forts + utilisateur à droits minimaux (insertion seule pour le site public) ; IP fixes Vercel (100 $/mois) seulement si la base exige un filtrage par IP |
 | Limite à documenter | Vercel voit la demande **en clair** dans la fonction, le temps de la chiffrer ; aucune journalisation du corps de requête |
+| Exception à la sealed box (D57) | L'e-mail et le numéro nécessaires aux envois différés (rappels, reprises de la boîte d'envoi) sont **aussi** chiffrés en enveloppe avec une clé serveur (Scaleway Key Manager), puis **effacés** après le dernier message. Le nom et tout le reste restent en sealed box. Détail : `docs/reservation-appel.md` §4.1 |
 
 ### 6.6 E-mails et boîte d'envoi (Scaleway TEM, D07)
 - **Adaptateur unique** (`lib/email`) : fournisseur interchangeable. Reco : **Scaleway TEM** (option 1) ou **Lettermint** ; Mailjet possible ; Brevo (suivi non désactivable) et Resend (données de compte aux États-Unis) écartés (annexe D.3).
@@ -294,6 +304,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 - **Confirmation au visiteur** (si e-mail fourni) : texte **fixe** dans sa langue, aucun contenu saisi repris ; envoyée seulement après l'écriture dans le coffre ; limitation de débit par IP **et** par adresse.
 - **Alerte technique** à Sady : échec après reprises, rebond, plainte ; identifiant technique seulement.
 - **Boîte d'envoi** : table dans la base du coffre, écrite **dans la même transaction** que la demande ; premier envoi juste après la réponse au visiteur ; reprises par Vercel Cron (toutes les 5 à 10 minutes, délai croissant) ; alerte après la dernière tentative.
+- **Réservation d'appel** (D57) : la boîte d'envoi gagne `send_at` (messages programmés) et `channel` (`email` · `sms`) ; elle ne contient aucune coordonnée, lue au moment de l'envoi. Messages : lien d'accès, confirmation et invitation, rappel de la veille, SMS deux heures avant (option), déplacement, annulation, notification sans nom à Cat. **TEM interdit les envois marketing** : une lettre d'information exigera un second fournisseur. **Resend** reste écarté (données stockées aux États-Unis, revérifié le 06/11/2026).
 - Délivrabilité (sous-domaine d'envoi, SPF, DKIM, DMARC progressif, aucun pixel ni lien traqué, tests de réception) : `docs/email-deliverability.md`.
 
 ### 6.7 Sécurité des envois

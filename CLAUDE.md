@@ -40,6 +40,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 | `docs/trust-contact-launch.md` | FAQ, « Comment ça se passe », « Notre indépendance », formulaire en étapes, rappel, coffre, e-mails, partage, préproduction, lancement |
 | `docs/seo-strategy.md` | Mots-clés, concurrence, architecture SEO, SEO technique, moteurs IA |
 | `docs/partners-credibility.md` | Partenaires (phase 2) : niveaux d'affichage, consentement, formulation |
+| `docs/reservation-appel.md` | Réservation d'appel avec Cat (D57) : lien par e-mail, créneaux, rappels e-mail et SMS, agenda de Cat |
 | `docs/email-deliverability.md` · `docs/launch-checklist.md` · `docs/usability-protocol.md` | Délivrabilité, ouverture, tests utilisateurs |
 | `docs/art-direction.md` | Avant tout travail visuel (style bible : §6) |
 | `anti-patterns.md` (racine) | Avant chaque composant et chaque PR (à mettre à jour après arbitrages) |

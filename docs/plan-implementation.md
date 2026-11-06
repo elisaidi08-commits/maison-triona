@@ -45,7 +45,7 @@ Les **réponses de Cat** (FAQ, déroulé, indépendance, délais, conservation) 
 | 19 | **3.3 Envoi, e-mails, confirmation, échec** | **E3-S9** | 3.2 | ⛳ | 1½ j | Domaine, fournisseur e-mail, contenu de la notification |
 | 20 | **3.4 Formulaire prérempli** | **E3-S4** | — | ⛳ | ½ j | — |
 | 21 | 3.5 Anti-abus | — | 3.3 | — | ½ j | — |
-| 22 | **3.6 Rappel à la demande** | **E3-S6** | — | ⛳ | 1 j | Q téléphone et créneaux |
+| 22 | **3.8 à 3.13 Réservation d'appel** (D57, remplace 3.6) | **E3-S6** | — | ⛳ | 6½ j | Libellé du CTA, fournisseur SMS, heures exactes des plages |
 | 23 | **3.7 Situation urgente** *(conditionnelle)* | **E3-S7** | — | ⛳ | ½ j | D04 : sans doute close sans code `[À CONFIRMER]` |
 | 24 | **4.1 i18n FR/EN complète** | **E4-S4** | 4.1 | ⛳ | 1 j | Traduction relue |
 | 25 | 4.2 CMS | — | PRD §8 | — | 1½ j | Choix du CMS |
@@ -61,7 +61,7 @@ Les **réponses de Cat** (FAQ, déroulé, indépendance, délais, conservation) 
 | 35 | **5.5 Checklist de lancement et mise en production** | **E5-S9** | 5.4 | ⛳ | 1 j | Domaine, contenus et images validés, avis juridique |
 | 36 | **7.4 Audit `claude-seo`** | **E7-S4** | — | — | 1 j | **Après le lancement** (D13) ; accord de Sady, code du plugin relu |
 
-Total estimé : **~35 jours** de développement assisté (v2 : ~20), hors attentes de validation, hors production des assets, hors corrections issues des tests utilisateurs.
+Total estimé : **~40 jours** de développement assisté (v2 : ~20 ; D57 : +5½ jours pour la réservation d'appel), hors attentes de validation, hors production des assets, hors corrections issues des tests utilisateurs.
 
 **Phase 2** (après la mise en ligne) : epic 6, partenaires (§4), ~2½ jours, puis une page de fond par mois (briefs E7-S2).
 
@@ -81,7 +81,7 @@ L'ordre ci-dessous **prime sur le tableau du §2** pour les stories qu'il cite ;
 | 6 · Pages secondaires | 2.8 à 2.11, 4.4 | FAQ, Comment ça se passe, Notre indépendance, partage, pages légales | ③ Pages |
 | 7 · Harmonisation et QA | 5.3, 4.3 | Lighthouse, axe, VoiceOver et NVDA, FR et EN, SEO technique | Avant la mise en ligne |
 
-Le coffre et l'envoi réel (3.2, 3.3, 3.6) suivent le lot 4 dès que l'infrastructure (D07) et l'avis juridique sont là, avec le point de contrôle ④ complet.
+Le coffre et l'envoi réel (3.2, 3.3), puis la réservation d'appel (3.8 à 3.13, D57), suivent le lot 4 dès que l'infrastructure (D07) et l'avis juridique sont là, avec le point de contrôle ④ complet.
 
 **1.6 Composants de la refonte (lot 1)** — Dans `src/components/ui/` : `Button` (états désactivé et envoi en cours, variante discrète pour « Retour ») ; `TextField` (zone de texte, valeur initiale, longueur maximale) ; `ChoiceRow` (boutons radio ou cases en lignes de 56 px dans un `fieldset` et sa `legend`, filets or, catégorie en label, aide et erreur) ; `StepProgress` (titre d'étape en une ligne de label, « Étape 2 sur 4 · Votre situation », qui peut recevoir le focus ; filet or continu qui se remplit, annexe C) ; `ErrorSummary` (titre focalisable, liens vers chaque champ fautif, ligne terracotta). Dans `src/components/sections/` : `Chapter` et `ChapterIndex` (numéro, titre display Light, filet or 48 px, paragraphe, emplacement d'image ; sommaire en vrais liens avec `aria-current`). Tous présentés sur `/demo`, sans logique de formulaire (lot 4) ni d'image collante (lot 3).
 **CA** : axe 0 violation sur `/demo` en FR et EN ; chaque état atteignable et lisible au clavier ; cibles ≥ 48 px (56 px pour `ChoiceRow`) ; focus 3 px jamais masqué ; contrôles natifs, donc utilisables sans JavaScript ; l'erreur ne repose jamais sur la seule couleur ; aucune classe arbitraire ; tests E2E : choix au clavier (flèches et espace), lien du résumé d'erreurs qui place le focus sur le champ.
@@ -194,11 +194,33 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **3.5 Anti-abus** — Honeypot, horodatage signé, limitation de débit (IP hachée, adresse de confirmation), taille de requête limitée, sur le formulaire et le rappel.
 **CA** : robots bloqués (tests E2E) ; aucun captcha visible ; une même adresse ne reçoit pas plus de N confirmations par jour.
 
-**3.6 Rappel à la demande ⛳ (E3-S6)** — `/contact/rappel` : nom, numéro, langue, créneau et jours, « Ne pas laisser de message vocal », consentement ; même coffre (type `rappel`), même notification.
-**CA** : créneau, langue et « pas de message vocal » visibles dans le coffre ; confirmation claire ; sans JS ; mêmes protections que 3.5.
+**~~3.6 Rappel à la demande (E3-S6)~~** — **Remplacée par la réservation d'appel** (D57, stories 3.8 à 3.13).
 
 **3.7 Situation urgente ⛳ (E3-S7, conditionnelle)** — *Décision D04 : Cat répond sous 24 à 48 h dans tous les cas ; proposition : pas de lien d'en-tête, story close sans code `[À CONFIRMER]`.* Seulement si Cat valide qu'elle peut y répondre : lien discret (en-tête, contact) vers une variante courte, marquée « prioritaire » dans le coffre et l'objet de la notification ; mention des services d'urgence avec les numéros vérifiés (annexe D.5, revérifiés avant l'ouverture).
 **CA** : implémentée seulement si Cat valide ; mention des services d'urgence ; **aucune promesse de délai** ; si non validée, la story est close sans code.
+
+**Réservation d'appel (D57)** — Spec : `docs/reservation-appel.md`. Prérequis : 3.2, 3.3, 3.5. Point de contrôle ④.
+
+**3.8 Disponibilités** — Tables `booking_settings`, `availability_rules`, `availability_exceptions` ; page `/coffre/disponibilites` (semaine type, durée, pause, délai, horizon, plafond, absences, jours fériés belges) ; fonction pure `computeSlots` (spec §4.3).
+**CA** : réglages par défaut de la spec §3.1 (plafond 4 par jour) ; tests unitaires `node --test` verts (plages, pause, délai, horizon, absences, plafond, changements d'heure de mars et d'octobre) ; bloquer une journée garde et signale les appels existants.
+
+**3.9 Demande de lien** — Page `/[locale]/contact/appel` (CTA « Convenir d'un appel » `[À VALIDER]`) ; jetons (32 octets, empreinte seule en base, 48 h, un nouveau lien annule l'ancien) ; e-mail d'accès par la boîte d'envoi ; anti-abus de 3.5.
+**CA** : réponse identique quelle que soit l'adresse ; aucun cookie ; jeton jamais en clair en base ni dans les journaux applicatifs ; limites par IP et par adresse prouvées en E2E ; sans JS.
+
+**3.10 Réservation ⛳** — Page `/[locale]/contact/appel/[token]` sur un écran (trois prochains créneaux, jours groupés par semaine, nom, numéro, « pas de message vocal », origine, SMS en option, consentement) ; contrainte d'exclusion et verrous (spec §4.2) ; confirmation avec invitation .ics ; notification sans nom à Cat avec invitation.
+**CA** : course à deux sur un créneau → une seule réservation ; saisie conservée en cas de créneau pris ; une réservation à venir par adresse ; invitation reconnue par Google Agenda ; `GET` ne modifie rien ; sans JS ; axe WCAG 2.2 AA FR et EN ; Lighthouse ≥ 95.
+
+**3.11 Déplacer et annuler** — Page de gestion `/[locale]/contact/appel/gerer/[token]` ; déplacement et annulation par la personne et par Cat depuis le coffre ; invitations mises à jour (`SEQUENCE`) ou retirées (`METHOD:CANCEL`).
+**CA** : l'ancien créneau n'est libéré qu'une fois le nouveau pris ; aucune invitation en double dans Google Agenda, Apple Calendrier, Outlook ; message courtois avec lien quand Cat annule.
+
+**3.12 Rappels et SMS** — Adaptateur `lib/sms` et fournisseur SMS `[À TRANCHER]` après vérification (contrat, UE, expéditeur par pays, prix) ; messages programmés (`send_at`) : e-mail la veille, SMS deux heures avant ; coordonnées chiffrées avec la clé serveur (Scaleway Key Manager) puis effacées.
+**CA** : rappels envoyés à l'heure (± 5 min) ; `contact_kms` effacé après le dernier message ; SMS ≤ 160 caractères GSM-7, sans service nommé ; un SMS en échec n'empêche pas l'e-mail ; contrat de traitement du fournisseur SMS signé avant l'ouverture.
+
+**3.13 Agenda de Cat** — `/coffre/appels` : vues « Aujourd'hui » et « Cette semaine », lien `tel:`, statuts (« à qualifier », fait, pas de réponse, annulé), rattachement à une demande ; options : SMS à Cat, récapitulatif du matin.
+**CA** : chaque lecture et action au journal d'accès ; notifications sans nom (D06) ; revue `security-privacy-reviewer`.
+
+**3.14 Google Agenda, heures occupées (option, après l'ouverture)** — OAuth limité à la lecture des heures occupées (spec §4.7).
+**CA** : aucun contenu de rendez-vous lu ; aucune donnée de famille envoyée à Google ; application OAuth publiée (pas de jeton expirant à 7 jours) ; repli sans Google si l'API ne répond pas.
 
 ### Epic 4 · Langues, contenu, SEO technique, légal
 
@@ -294,7 +316,7 @@ Budget du compte : 278,88 crédits (offre starter) ; total estimé ~266 → **re
 | Spec entrée E4-S4 | 4.1 (et 1.4) |
 | Spec entrée E5-S5 · E5-S6 | 5.3 (et 2.5 pour la pause) · 5.2 |
 | Spec confiance E2-S3 · E2-S4 · E2-S5 · E2-S6 | 2.8 · 2.9 · 2.10 · 2.11 |
-| Spec confiance E3-S5 · E3-S6 · E3-S7 · E3-S8 · E3-S9 | 3.1 · 3.6 · 3.7 · 3.2 · 3.3 |
+| Spec confiance E3-S5 · E3-S6 · E3-S7 · E3-S8 · E3-S9 | 3.1 · 3.8 à 3.13 (D57, ex-3.6) · 3.7 · 3.2 · 3.3 |
 | Spec confiance E5-S7 · E5-S8 · E5-S9 | 1.5 · 5.4 · 5.5 |
 | Spec SEO E7-S1 · E7-S2 · E7-S3 · E7-S4 · E7-S5 · E7-S6 | 7.1 · 7.2 · 4.3 · 7.4 · 5.2 · 7.3 |
 | Spec partenaires E6-S1 · E6-S2 · E6-S3 | Epic 6 (phase 2) ; emplacement vide en 2.2 |
