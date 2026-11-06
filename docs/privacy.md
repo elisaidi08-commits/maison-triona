@@ -13,7 +13,8 @@
 | Traitement | Données | Finalité | Base légale (proposée) | Où ça va | Conservation |
 |---|---|---|---|---|---|
 | **Demande** (formulaire en étapes) | Besoin ; « pour qui » (facultatif) ; pays ; urgence ; nom ; e-mail **ou** téléphone ; créneau ; langue ; mot libre (facultatif) ; source anonyme | Répondre à la demande | Mesures précontractuelles (art. 6.1.b) ; **consentement explicite** (art. 9.2.a) pour le cas où le mot libre révèle malgré tout une information de santé `[À VALIDER JURIDIQUEMENT]` | **Coffre** chiffré (base UE, Scaleway) ; notification **sans contenu** à Cat | Au cas par cas, plafond proposé de 12 mois après le dernier échange (§5) + fenêtre de sauvegarde |
-| **Rappel à la demande** | Nom ; numéro ; langue ; créneau et jours ; « ne pas laisser de message vocal » | Rappeler la personne | Mesures précontractuelles | Coffre ; notification sans contenu | Idem |
+| **Réservation d'appel** (D57, remplace le rappel) | E-mail ; nom ; numéro ; langue ; créneau ; « ne pas laisser de message vocal » ; origine (facultatif) ; choix SMS | Convenir d'un appel avec Cat et le rappeler | Mesures précontractuelles `[À VALIDER JURIDIQUEMENT]` | Coffre (sealed box) ; e-mail et numéro **aussi** chiffrés avec une clé serveur (Scaleway Key Manager) jusqu'au dernier message ; notification et invitation **sans nom** à Cat | Comme les demandes ; coordonnées à clé serveur effacées 24 h après l'appel ; jetons supprimés 7 jours après expiration |
+| **Messages de l'appel** | E-mail ; numéro si SMS choisi | Lien d'accès, confirmation, rappels, déplacement, annulation | Mesures précontractuelles ; SMS seulement à la demande de la personne | Fournisseur d'e-mail ; fournisseur SMS `[À TRANCHER]` | Journaux d'envoi des fournisseurs `[À VÉRIFIER]` |
 | **Confirmation au visiteur** | Adresse e-mail saisie | Confirmer la réception et annoncer la suite | Mesures précontractuelles | Fournisseur d'e-mail (texte fixe, aucun contenu de la demande) | Journaux d'envoi du fournisseur `[À VÉRIFIER selon le fournisseur retenu]` |
 | **Brouillon du formulaire** | Besoin, pays, langue, créneau | Ne pas perdre sa saisie en changeant d'étape | Strictement nécessaire à une fonction demandée | **Navigateur uniquement** (`sessionStorage`, clés `mt-draft-*`) ; effacé à l'envoi et à la fermeture de l'onglet | Session |
 | **Journal d'accès au coffre** | Compte, date, action (connexion, lecture, export, suppression), identifiant de demande | Sécurité, traçabilité | Intérêt légitime (art. 6.1.f) | Base du coffre | `[À DÉFINIR]` (proposition : 12 mois) |
@@ -114,6 +115,8 @@ Chaque sous-traitant signe un **contrat de traitement (DPA)** avant la mise en l
 | Vercel | Hébergement, fonctions (région `cdg1`, Paris), tâches planifiées | Entreprise américaine ; fonctions en UE | DPA, clauses de transfert `[À VÉRIFIER]` | Proposé |
 | Base du coffre : **Scaleway** (reco), Clever Cloud ou Supabase | Stockage chiffré des demandes, journal d'accès, boîte d'envoi | UE (France) ; Supabase : société singapourienne, groupe américain, données à Paris | DPA publié ; ISO 27001 ; HDS sous contrat chez Clever Cloud (et Scaleway hors base gérée) | `[À TRANCHER]` |
 | Fournisseur d'e-mail : **Scaleway TEM** (reco) ou Lettermint | Notification à Cat, confirmation au visiteur, alertes | UE (France / Pays-Bas) | DPA ; suivi désactivé | `[À TRANCHER]` |
+| Fournisseur SMS (D57) : Sweego, seven ou GatewayAPI (pistes) | Confirmation et rappel des appels, seulement si la personne le demande | UE (à vérifier sur les sites officiels) | DPA, hébergement UE, expéditeur par pays `[À VÉRIFIER]` | `[À TRANCHER]` |
+| Google (agenda de Cat) | Reçoit les invitations des appels : titre neutre, heure, lien vers le coffre, **aucun nom ni coordonnée** ; option ultérieure : lecture des heures occupées de Cat, rien n'est envoyé | Entreprise américaine | Outil personnel de Cat ; contenu minimal | Proposé |
 | Upstash | Limitation de débit | Région UE | DPA | Proposé |
 | Plausible | Mesure d'audience | UE | DPA, sans cookie | Proposé |
 | CMS (Sanity, recommandé) | Textes publics uniquement, **aucune donnée personnelle**, aucun champ interne des partenaires | Backend UE (Belgique) | DPA | Proposé |
@@ -124,6 +127,8 @@ Chaque sous-traitant signe un **contrat de traitement (DPA)** avant la mise en l
 2. **Fenêtre de sauvegarde** de 7 jours après une suppression (§5).
 3. **Hébergement de données de santé (HDS, France)** : même sans champ santé, une demande « grand âge » peut en révéler. Question **pour le juriste** : l'hébergement HDS s'applique-t-il à une conciergerie ? Si oui, option Clever Cloud (HDS sous contrat).
 4. **Adresse de confirmation saisie par un inconnu** : risque d'envoi à un tiers. Mitigations : texte fixe sans contenu, limite par adresse et par IP, honeypot.
+5. **Clé serveur pour les envois différés** (D57) : pendant la fenêtre d'envoi, un serveur compromis permettrait de lire l'e-mail et le numéro des appels à venir. Mitigations : seulement ces deux champs, effacés 24 h après l'appel, clé dans Scaleway Key Manager.
+6. **Liens de réservation dans les journaux** : le chemin du lien (avec son jeton) apparaît dans les journaux de Vercel. Mitigations : validité de 48 h, révocation à la réservation, accès aux journaux restreint.
 
 ## 9. Points à valider avant la mise en ligne
 
