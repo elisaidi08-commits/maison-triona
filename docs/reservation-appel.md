@@ -26,7 +26,7 @@ Un « Calendly maison », plus léger et plus discret qu'un outil générique : 
 
 Le site garde **deux entrées** : écrire (formulaire en étapes, 3.1) ou convenir d'un appel.
 
-1. **CTA « Convenir d'un appel »** `[À VALIDER : absent de la liste des CTA approuvés]` vers `/[locale]/contact/appel`. La page ne demande que l'**adresse e-mail** ; la langue vient de l'URL. Réponse toujours identique : « Un lien vient de vous être envoyé. Il est valable 48 heures. »
+1. **CTA « Convenir d'un appel »** `[À VALIDER : absent de la liste des CTA approuvés]` vers `/fr/contact/appel` (`/en/contact/call` ; table des URL : `docs/architecture.md` §4). La page ne demande que l'**adresse e-mail** ; la langue vient de l'URL. Réponse toujours identique : « Un lien vient de vous être envoyé. Il est valable 48 heures. »
 2. **E-mail d'accès** : un lien personnel `/[locale]/contact/appel/[jeton]`, valable **48 heures**, réutilisable pendant ce délai. Un nouveau lien annule le précédent. Si l'adresse a déjà un appel à venir, le lien ouvre la page de gestion de cet appel.
 3. **Page de réservation, un seul écran** :
    - en tête, les **trois prochains créneaux** libres ;
@@ -49,12 +49,14 @@ Le site garde **deux entrées** : écrire (formulaire en étapes, 3.1) ou conven
 
 | Réglage | Valeur proposée | Statut |
 |---|---|---|
-| Semaine type (plages par jour) | Lundi à vendredi, 10 h 30-12 h 30 et 16 h-18 h (D41 : fin de matinée, fin d'après-midi) | `[À VALIDER avec Cat]` |
-| Durée d'un appel | 30 min | `[À VALIDER avec Cat]` |
-| Pause entre deux appels | 15 min | `[À VALIDER avec Cat]` |
-| Délai minimal avant un appel | 24 h | `[À VALIDER avec Cat]` |
-| Horizon de réservation | 3 semaines | `[À VALIDER avec Cat]` |
-| Plafond d'appels par jour | 4 | `[À VALIDER avec Cat]` |
+| Semaine type (plages par jour) | Lundi à vendredi, 10 h 30-12 h 30 et 16 h-18 h (D41 : fin de matinée, fin d'après-midi) | Validé par Sady (06/11) ; heures exactes à confirmer par Cat |
+| Durée d'un appel | 30 min | Validé par Sady (06/11) |
+| Pause entre deux appels | 15 min | Validé par Sady (06/11) |
+| Délai minimal avant un appel | 24 h | Validé par Sady (06/11) |
+| Horizon de réservation | 3 semaines | Validé par Sady (06/11) |
+| Plafond d'appels par jour | **4** | Validé par Sady (06/11 : « 4 appels par jour, c'est parfait ») |
+
+Toutes ces valeurs restent réglables par Cat dans le coffre.
 | Absences | Congés (plages de dates) ; jours fériés belges préremplis, décochables ; « bloquer cette journée » en un clic | — |
 
 Jours fériés belges préremplis : 1er janvier, lundi de Pâques, 1er mai, Ascension, lundi de Pentecôte, 21 juillet, 15 août, 1er novembre, 11 novembre, 25 décembre.
@@ -200,13 +202,13 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 ## 9. Questions ouvertes
 
 1. Libellé du CTA « Convenir d'un appel » et pages où il apparaît (contact, « Comment ça se passe », FAQ) : Cat.
-2. Plages, durée, pause, délai, horizon, plafond (§3.1) : Cat.
+2. ~~Plages, durée, pause, délai, horizon, plafond (§3.1)~~ : validés par Sady le 06/11 ; heures exactes des plages à confirmer par Cat.
 3. Fournisseur SMS et nom d'expéditeur : après vérification.
 4. Rencontre en personne hors de ce périmètre : à confirmer.
 5. Base légale, consentement et mention du SMS : juriste.
 6. Adresse qui reçoit les notifications de Cat tant que les boîtes du domaine ne sont pas choisies (D47).
 7. **Lettre d'information** : hors de cette spec. Scaleway TEM **interdit les envois marketing** ([FAQ](https://www.scaleway.com/en/docs/transactional-email/faq/), consultée le 06/11/2026) ; il faudra un second fournisseur européen sans suivi, une inscription confirmée en deux temps et une désinscription en un clic.
 
-## 10. Documents à mettre à jour après relecture
+## 10. Documents mis à jour (06/11/2026, après relecture de Sady)
 
 `docs/architecture.md` (§3 arborescence, §6.3 rappel remplacé, §6.6 boîte d'envoi étendue, §6.5 exception de chiffrement) · `docs/privacy.md` (§1, §7, §8) · `docs/plan-implementation.md` (epic 3) · `docs/email-deliverability.md` (§1 liste des messages) · `docs/trust-contact-launch.md` (§3.1 deux entrées) · `CLAUDE.md` (table des documents).
