@@ -1,6 +1,6 @@
 # Procédures RGPD
 
-> **Statut** : brouillon du 06/11/2026, à valider par Cat et son juriste. À tester une fois avant l'ouverture (demande fictive, violation à blanc).
+> **Statut** : brouillon du 06/11/2026, à valider par Cat. À tester une fois avant l'ouverture (demande fictive, violation à blanc).
 
 ## 1. Répondre à une personne qui exerce ses droits (articles 12 à 22)
 
@@ -14,7 +14,7 @@
 
 - Si la demande vient de l'adresse e-mail ou du numéro donnés dans la demande d'origine : c'est suffisant.
 - Sinon : demander une information que seule la personne connaît (date approximative de sa demande, service choisi). Une copie de pièce d'identité seulement en cas de doute sérieux, et l'effacer aussitôt après la vérification.
-- **Demande faite pour un proche** : le parent peut exercer ses droits sur les données qui le concernent ; le proche qui a écrit, sur les siennes. En cas de doute, demander l'avis du juriste (J2).
+- **Demande faite pour un proche** : le parent peut exercer ses droits sur les données qui le concernent ; le proche qui a écrit, sur les siennes.
 
 ### 1.3 Répondre dans le mois
 
@@ -69,7 +69,7 @@ Une violation, c'est tout incident qui entraîne la **destruction, la perte, la 
 | 1. Prévenir | **Dans l'heure** (D47) | Celui qui découvre | Prévenir Cat et Sady en même temps, par téléphone, puis par écrit. |
 | 2. Contenir | Aussitôt | Sady, avec Cat | Fermer les sessions, changer les mots de passe et les clés concernées, couper l'accès en cause, garder les traces (journal d'accès, journaux du prestataire). |
 | 3. Évaluer | Dans les 24 h | Cat et Sady | Quelles données, combien de personnes, quelles conséquences possibles (§2.1). Le contenu chiffré par la sealed box est-il resté illisible ? |
-| 4. Notifier l'APD | **Dans les 72 h** suivant la découverte, sauf si la violation ne présente **aucun risque** | Cat | Formulaire de notification de l'APD `[lien à vérifier sur le site de l'APD]` ; si tout n'est pas connu, notifier quand même et compléter ensuite. Au-delà de 72 h, dire pourquoi. `[À CONFIRMER avec le juriste]` (D47) |
+| 4. Notifier l'APD | **Dans les 72 h** suivant la découverte, sauf si la violation ne présente **aucun risque** | Cat | Formulaire de notification de l'APD `[lien à vérifier sur le site de l'APD]` ; si tout n'est pas connu, notifier quand même et compléter ensuite. Au-delà de 72 h, dire pourquoi. |
 | 5. Prévenir les personnes | Dans les meilleurs délais, si le **risque est élevé** | Cat | En langage clair : ce qui s'est passé, les conséquences possibles, ce que fait la maison, ce que la personne peut faire, un contact. Pas nécessaire si les données étaient chiffrées et que la clé n'est pas compromise (article 34.3.a). |
 | 6. Documenter | Toujours, même sans notification | Cat | Registre des violations (§3.2). |
 | 7. Tirer les leçons | Sous un mois | Cat et Sady | Corriger la cause, mettre à jour l'AIPD et ce dossier. |

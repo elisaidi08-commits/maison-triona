@@ -11,12 +11,12 @@
 | **Upstash Inc.** (États-Unis) | Limitation de débit des formulaires | Empreinte d'IP (clé changée chaque jour), empreinte de l'adresse de confirmation, compteurs (24 h au plus) | Région UE ; société américaine | Possible : cadre UE–États-Unis ou clauses types `[À VÉRIFIER à la signature]` | À signer | Proposé |
 | **Plausible Insights OÜ** (Estonie) | Mesure d'audience sans cookie | Empreinte quotidienne (IP et navigateur, clé effacée en 24 h), totaux | UE (données en Allemagne `[À VÉRIFIER à la signature]`) | Non | À signer | Retenu (D47) |
 | **Fournisseur de SMS** | Confirmation et rappel des appels, sur demande de la personne | Numéro, texte du message | UE exigée | Non attendu | À signer | `[À TRANCHER]` (pistes : Sweego, seven, GatewayAPI, D57) |
-| **Google** (agenda de Cat) | Reçoit les invitations des appels | Titre neutre, heure, lien vers le coffre ; **aucun nom ni coordonnée** | Société américaine | Oui | Seulement avec un **compte professionnel** (Google Workspace et son avenant de traitement) ; un compte personnel n'en offre pas `[À VALIDER JURIDIQUEMENT]` (J13) | Proposé (D57) |
+| **Google** (agenda de Cat) | Reçoit les invitations des appels | Titre neutre, heure, lien vers le coffre ; **aucun nom ni coordonnée** | Société américaine | Oui | Seulement avec un **compte professionnel** (Google Workspace et son avenant de traitement) ; un compte personnel n'en offre pas | Proposé (D57) |
 | **Messagerie de la maison** (`contact@`, `confidentialite@`) | Échanges avec les familles et les professionnels | Tout ce qui s'écrit par e-mail | `[À DÉFINIR]` (préférer un hébergeur européen) | Selon le choix | À signer | `[À TRANCHER]` |
 | **Comptable** | Tenue de la comptabilité | Factures de commissions, données des professionnels | Belgique `[À DÉFINIR]` | Non | Contrat de sous-traitance ou responsable distinct, selon sa mission `[À VALIDER avec le comptable]` | `[À DÉFINIR]` |
 | **CMS** (Sanity, après l'ouverture, D45) | Textes publics du site | **Aucune donnée personnelle** | Backend UE (Belgique) | À vérifier au branchement | À signer s'il y a des comptes d'édition | Plus tard |
 
-**Sady (maintenance technique)** : accès au coffre et à une copie de la clé. Contrat de sous-traitance (article 28) ou engagement de confidentialité d'une personne agissant sous l'autorité de la maison (article 29) : à trancher (J4).
+**Sady (maintenance technique)** : accès au coffre et à une copie de la clé ; engagement de confidentialité écrit.
 
 ## 2. Ce que chaque contrat de traitement doit contenir (article 28.3)
 
@@ -38,7 +38,6 @@
 |---|---|---|---|
 | États-Unis | Vercel, Upstash, Google | Cadre de protection des données UE–États-Unis pour les sociétés certifiées ; sinon clauses contractuelles types | Vérifier la certification de chaque société sur la liste officielle du cadre **le jour de la signature** ; noter la date |
 | Suisse | Professionnel établi en Suisse (T4) | Décision d'adéquation de l'UE pour la Suisse | — |
-| Monaco | Professionnel établi à Monaco (T4) | Pas de décision d'adéquation à notre connaissance | Base du transfert à faire trancher par le juriste (J8) |
 
 La politique de confidentialité le dit aux visiteurs (section « Hors de l'Union européenne »).
 
@@ -46,7 +45,7 @@ La politique de confidentialité le dit aux visiteurs (section « Hors de l'Unio
 
 | Destinataire | Rôle | Ce qu'il reçoit | Encadrement |
 |---|---|---|---|
-| **Professionnel choisi** (indépendant ou maison partenaire) | Responsable distinct de sa relation avec la famille | Ce qui est utile pour rencontrer la famille, avec son accord (T4) | Clause de confidentialité et de protection des données dans la convention `[À RÉDIGER avec le juriste]` (J5) |
+| **Professionnel choisi** (indépendant ou maison partenaire) | Responsable distinct de sa relation avec la famille | Ce qui est utile pour rencontrer la famille, avec son accord (T4) | Clause de confidentialité et de protection des données dans la convention `[À RÉDIGER]` |
 | **Administration fiscale** | Contrôle | Pièces comptables, sur demande | Obligation légale |
 | **Banque** | Paiements des commissions | Coordonnées bancaires des professionnels | Obligation contractuelle et légale |
 | **APD** | Autorité de contrôle | Notifications de violation, réponses aux demandes | Obligation légale |
