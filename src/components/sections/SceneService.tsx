@@ -154,6 +154,7 @@ export async function SceneService({
             webm={image.video.webm}
             pause={{ visible: video('pauseShort'), full: video('pause') }}
             play={{ visible: video('playShort'), full: video('play') }}
+            once
           />
         ) : null}
       </div>

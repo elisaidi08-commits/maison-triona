@@ -16,7 +16,11 @@
     "House.intro",
     "House.sections (titres)",
     "Territories.countries",
-    "Territories.places"
+    "Territories.places",
+    "ServicesIndex",
+    "HowItWorks",
+    "Legal",
+    "Privacy"
   ],
   "en": [
     "Home.title",
@@ -35,6 +39,10 @@
     "House.intro",
     "House.sections (titres)",
     "Territories.countries",
-    "Territories.places"
+    "Territories.places",
+    "ServicesIndex",
+    "HowItWorks",
+    "Legal",
+    "Privacy"
   ]
 }
