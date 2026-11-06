@@ -122,8 +122,8 @@
     "concierge": {
       "name": "Conciergerie de luxe",
       "promise": "Une seule interlocutrice pour tout organiser.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
-      "imageAlt": "Le pont verni d’un petit bateau à quai à l’aube, une toile crème pliée et un cordage.",
+      "need": "Une maison de famille qui attend le bon artisan, une résidence à préparer avant une arrivée, une personne de confiance pour un séjour ou un voyage : vous nous dites ce qui compte, nous trouvons la personne juste.",
+      "imageAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
       "link": "Découvrir la conciergerie de luxe",
       "situations": [
         "Trouver l’artisan juste pour une maison de famille.",
@@ -134,41 +134,33 @@
     "senior": {
       "name": "Accompagnement du grand âge",
       "promise": "Des journées qui gardent leur rythme et leurs plaisirs.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
+      "need": "Une présence, une compagnie, un accompagnement au quotidien, pour un parent ou pour vous-même. Chez soi, on reste maître de ses habitudes, de son rythme et de son intimité : la personne que nous vous présentons s’y accorde.",
       "precision": "Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés.",
       "link": "Découvrir l’accompagnement du grand âge",
       "situations": [
         "Une présence régulière pour une promenade, un repas, une conversation.",
         "Un quotidien organisé pour un parent qui vit seul.",
         "Des sorties et des activités qui lui ressemblent."
-      ]
+      ],
+      "limit": "Elle n’accomplit aucun acte médical. Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés.",
+      "imageAlt": "Une main portant une alliance, posée sur un livre ouvert près d’une tasse de porcelaine, devant un mur clair éclairé par une fenêtre."
     },
     "children": {
       "name": "Garde d’enfants",
       "promise": "Une présence choisie, pour quelques heures ou pour une saison.",
-      "need": "[CONTENU À FOURNIR PAR CAT]",
+      "need": "Une personne de confiance pour veiller sur vos enfants : quelques heures, une présence régulière ou le temps d’une saison.",
       "link": "Découvrir la garde d’enfants",
       "situations": [
         "Quelques heures, un soir ou pendant un rendez-vous.",
         "Une présence régulière après l’école.",
         "Une saison, des vacances, une période particulière."
-      ]
+      ],
+      "imageAlt": "Une main d’enfant tient un brin de romarin au-dessus d’un verre que tient une main d’adulte, devant un mur clair éclairé par une fenêtre."
     },
     "title": "Nos services"
   },
   "ServicePage": {
-    "needLabel": "Le besoin",
-    "forWhomLabel": "Pour qui",
-    "forWhom": "Pour vous, ou pour l’un de vos proches.",
     "situationsLabel": "Quelques situations",
-    "steps": [
-      "Vous nous écrivez.",
-      "Nous vous répondons personnellement, le plus souvent par e-mail, sous 48 heures.",
-      "Nous vous présentons la bonne personne."
-    ],
-    "selectionLabel": "Notre sélection",
-    "discretionLabel": "En toute confidentialité",
-    "contactLabel": "Nous écrire",
     "othersLabel": "Les autres services"
   },
   "Video": {
@@ -229,5 +221,90 @@
   },
   "MobileBar": {
     "label": "Écrire en toute discrétion"
+  },
+  "ServicesIndex": {
+    "title": "Trois services, une seule interlocutrice.",
+    "intro": "Être entouré comme on l’a toujours été. Pour vous ou pour vos proches, la maison compose la présence qui convient.",
+    "thumbnails": "Aller à un service"
+  },
+  "HowItWorks": {
+    "steps": {
+      "title": "Comment ça se passe",
+      "items": [
+        {
+          "title": "Vous nous écrivez.",
+          "text": "Ou vous nous demandez de vous rappeler. Quelques lignes suffisent, pour vous ou pour un proche."
+        },
+        {
+          "title": "Nous vous répondons.",
+          "text": "Personnellement, sous 48 heures ouvrées."
+        },
+        {
+          "title": "Nous faisons connaissance.",
+          "text": "Un échange, par téléphone ou en rendez-vous, pour comprendre la situation, les habitudes et les attentes."
+        },
+        {
+          "title": "Nous vous présentons la bonne personne.",
+          "text": "Une ou plusieurs personnes, choisies pour vous. Vous décidez avec nous ; nous ne choisissons jamais à votre place."
+        },
+        {
+          "title": "Vous signez directement avec le professionnel choisi.",
+          "text": "Il organise avec vous les horaires et le suivi au quotidien."
+        },
+        {
+          "title": "Nous restons présents.",
+          "text": "Nous prenons des nouvelles. S’il faut ajuster ou remplacer quelqu’un, nous nous en chargeons."
+        }
+      ]
+    },
+    "model": {
+      "title": "La maison présente, le prestataire signe, la maison veille.",
+      "items": [
+        {
+          "title": "Présenter",
+          "text": "Nous rencontrons et vérifions chaque personne avant de vous la présenter. Vous choisissez avec nous."
+        },
+        {
+          "title": "Signer",
+          "text": "Le contrat se signe entre vous et le professionnel choisi, indépendant ou maison partenaire."
+        },
+        {
+          "title": "Veiller",
+          "text": "Nous prenons des nouvelles. Si quelque chose ne convient pas, dites-le-nous : nous ajustons, ou nous présentons une autre personne."
+        }
+      ]
+    },
+    "know": {
+      "title": "Ce qu’il faut savoir"
+    },
+    "selection": {
+      "title": "Notre sélection",
+      "paragraphs": [
+        "Nous travaillons avec des professionnels indépendants et des maisons partenaires.",
+        "Chaque personne présentée a été rencontrée et vérifiée. Nous la choisissons pour son savoir-faire et pour sa tenue. Nous ne recommandons personne que nous ne confierions à l’un des nôtres."
+      ]
+    },
+    "payment": {
+      "title": "Qui rémunère la maison",
+      "paragraphs": [
+        "Vous ne payez rien à la maison. Vous réglez directement le professionnel que vous avez choisi.",
+        "La maison est rémunérée par lui, et nous vous le disons dès le premier échange."
+      ]
+    },
+    "limits": {
+      "title": "Ce que la maison ne fait pas",
+      "items": [
+        "Elle n’emploie pas les personnes qu’elle vous présente.",
+        "Elle ne fixe pas leurs horaires : le professionnel les organise avec vous.",
+        "Elle ne gère pas votre argent."
+      ]
+    },
+    "confidentiality": {
+      "title": "En toute confidentialité",
+      "paragraphs": [
+        "Tout ce que vous nous confiez reste dans la maison ; nous ne transmettons au professionnel que vous choisissez que ce qui lui est utile, avec votre accord. Chaque demande est lue personnellement, conservée dans un coffre chiffré, dans l’Union européenne, puis effacée."
+      ],
+      "link": "Lire notre politique de confidentialité"
+    }
   }
 }

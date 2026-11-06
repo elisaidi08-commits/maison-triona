@@ -118,8 +118,8 @@
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
-      "need": "[CONTENT TO BE PROVIDED BY CAT]",
-      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
+      "need": "A family house that needs the right craftsman, a residence to prepare before an arrival, a trusted person for a stay or a journey: you tell us what matters, and we find the right person.",
+      "imageAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
       "link": "Discover our luxury concierge",
       "situations": [
         "Finding the right craftsman for a family house.",
@@ -130,41 +130,33 @@
     "senior": {
       "name": "Companionship in later life",
       "promise": "Days that keep their rhythm and their pleasures.",
-      "need": "[CONTENT TO BE PROVIDED BY CAT]",
+      "need": "Presence and companionship, day after day, for a parent or for yourself. At home, everyone keeps their own habits, their own pace and their privacy: the person we introduce to you fits in with them.",
       "precision": "For any medical need, we will refer you to the appropriate health professionals.",
       "link": "Discover companionship in later life",
       "situations": [
         "A regular presence for a walk, a meal, a conversation.",
         "Everyday life organised for a parent who lives alone.",
         "Outings and activities that suit them."
-      ]
+      ],
+      "limit": "It performs no medical procedures. For any medical need, we will refer you to the appropriate health professionals.",
+      "imageAlt": "A hand wearing a wedding ring, resting on an open book beside a porcelain cup, against a pale wall lit by a window."
     },
     "children": {
       "name": "Childcare",
       "promise": "A trusted presence, for a few hours or a whole season.",
-      "need": "[CONTENT TO BE PROVIDED BY CAT]",
+      "need": "A trusted person to look after your children: a few hours, a regular presence or a whole season.",
       "link": "Discover childcare",
       "situations": [
         "A few hours, an evening or during an appointment.",
         "A regular presence after school.",
         "A season, a holiday, a particular time."
-      ]
+      ],
+      "imageAlt": "A child’s hand holds a sprig of rosemary above a glass held by an adult’s hand, against a pale wall lit by a window."
     },
     "title": "Our services"
   },
   "ServicePage": {
-    "needLabel": "The need",
-    "forWhomLabel": "Who it is for",
-    "forWhom": "For you, or for someone close to you.",
     "situationsLabel": "A few situations",
-    "steps": [
-      "You write to us.",
-      "We reply to you personally, usually by email, within 48 hours.",
-      "We introduce you to the right person."
-    ],
-    "selectionLabel": "How we choose",
-    "discretionLabel": "In complete confidence",
-    "contactLabel": "Write to us",
     "othersLabel": "Our other services"
   },
   "Video": {
@@ -225,5 +217,90 @@
   },
   "MobileBar": {
     "label": "Write to us in confidence"
+  },
+  "ServicesIndex": {
+    "title": "Three services, one person to speak to.",
+    "intro": "To be surrounded as you always have been. For you or for those close to you, the house arranges the presence that suits.",
+    "thumbnails": "Go to a service"
+  },
+  "HowItWorks": {
+    "steps": {
+      "title": "How it works",
+      "items": [
+        {
+          "title": "You write to us.",
+          "text": "Or you ask us to call you back. A few lines are enough, for yourself or for someone close to you."
+        },
+        {
+          "title": "We reply to you.",
+          "text": "Personally, within two working days."
+        },
+        {
+          "title": "We get to know you.",
+          "text": "A conversation, by telephone or in person, to understand the situation, the daily habits and what is expected."
+        },
+        {
+          "title": "We introduce you to the right person.",
+          "text": "One or more people, chosen for you. You decide with us; we never choose for you."
+        },
+        {
+          "title": "You sign directly with the professional you choose.",
+          "text": "They arrange the hours and the day-to-day follow-up with you."
+        },
+        {
+          "title": "We stay close.",
+          "text": "We keep in touch. If something needs adjusting, or someone needs replacing, we see to it."
+        }
+      ]
+    },
+    "model": {
+      "title": "The house introduces, the professional signs, the house keeps watch.",
+      "items": [
+        {
+          "title": "Introduce",
+          "text": "We meet and vet every person before introducing them to you. You choose with us."
+        },
+        {
+          "title": "Sign",
+          "text": "The contract is between you and the professional you choose, whether independent or a partner house."
+        },
+        {
+          "title": "Keep watch",
+          "text": "We keep in touch. If something is not right, tell us: we adjust, or we introduce someone else."
+        }
+      ]
+    },
+    "know": {
+      "title": "What to know"
+    },
+    "selection": {
+      "title": "How we choose",
+      "paragraphs": [
+        "We work with independent professionals and partner houses.",
+        "Every person we introduce has been met and vetted. We choose them for their skill and for their bearing. We recommend no one we would not trust with our own family."
+      ]
+    },
+    "payment": {
+      "title": "How the house is paid",
+      "paragraphs": [
+        "You pay nothing to the house. You pay the professional you have chosen directly.",
+        "The house is paid by them, and we tell you so from our very first conversation."
+      ]
+    },
+    "limits": {
+      "title": "What the house does not do",
+      "items": [
+        "It does not employ the people it introduces to you.",
+        "It does not set their hours: the professional arranges them with you.",
+        "It does not manage your money."
+      ]
+    },
+    "confidentiality": {
+      "title": "In complete confidence",
+      "paragraphs": [
+        "Everything you entrust to us stays within the house; we pass on to the professional you choose only what is useful to them, with your consent. Each enquiry is read in person, kept in an encrypted vault in the European Union, then erased."
+      ],
+      "link": "Read our privacy policy"
+    }
   }
 }

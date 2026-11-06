@@ -1,7 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { LoopVideo } from '@/components/media/LoopVideo'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
-import { Button } from '@/components/ui/Button'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
 import p02d from '../../../public/media/maison/P02-porte-ocre.jpg'
@@ -98,19 +97,5 @@ export async function SceneTerritoires({ locale }: { locale: string }) {
   )
 }
 
-export async function ContactBlock({ locale }: { locale: string }) {
-  const t = await getTranslations('Scenes.contact')
-  return (
-    <section aria-labelledby="contact-titre" data-surface="sapin" className="px-margin py-section">
-      <div className="mx-auto flex max-w-measure flex-col items-center gap-24 text-center">
-        <Rule short />
-        <p className="text-label text-champagne uppercase">{t('label')}</p>
-        <h2 id="contact-titre" className="font-display text-title-h2 text-ivoire">
-          {t('title')}
-        </h2>
-        <p className="text-ivoire-80">{t('reassurance')}</p>
-        <Button href={`/${locale}/contact`}>{t('button')}</Button>
-      </div>
-    </section>
-  )
-}
+// Le bloc Contact est partagé avec les pages de service : il vit dans son propre fichier.
+export { ContactBlock } from './ContactBlock'

@@ -1,9 +1,14 @@
 import type { StaticImageData } from 'next/image'
-import p03d from '../../public/media/conciergerie/P03-bateau-quai.jpg'
-import p03m from '../../public/media/conciergerie/P03-bateau-quai-m.jpg'
+import p13m from '../../public/media/accueil/P13-console-vase-m.jpg'
+import p15m from '../../public/media/accueil/P15-salon-m.jpg'
+import p16m from '../../public/media/accueil/P16-enfants-m.jpg'
 
 // Les 3 services (docs/ux-entry-i18n-a11y.md) : identifiant neutre (`?service=`), ancre sur
-// l'accueil, page dédiée, visuels. Les médias du grand âge et des enfants arrivent avec le lot 2.
+// l'accueil, page dédiée, visuels.
+// Story 2.14 : les trois services ont leur image, les 4:5 de l'accueil calme du prototype (D30,
+// D36 ; retenues par Sady, à valider par Cat une par une, D44) : la console aux clés et au bouquet
+// pour la conciergerie (choix de Cat, D44, à la place du bateau P03), le salon pour le grand âge,
+// le romarin pour les enfants. P03 et sa boucle V03 ne sont plus affichées ; les fichiers restent.
 
 export const SERVICES = [
   { id: 'conciergerie', key: 'concierge', anchor: 'conciergerie', number: '01' },
@@ -22,14 +27,9 @@ export type ServiceMedia = {
 }
 
 export const SERVICE_MEDIA: Partial<Record<ServiceId, ServiceMedia>> = {
-  conciergerie: {
-    desktop: p03d,
-    mobile: p03m,
-    video: {
-      mp4: '/media/conciergerie/V03-bateau-quai.mp4',
-      webm: '/media/conciergerie/V03-bateau-quai.webm',
-    },
-  },
+  conciergerie: { desktop: p13m, mobile: p13m },
+  'grand-age': { desktop: p15m, mobile: p15m },
+  enfants: { desktop: p16m, mobile: p16m },
 }
 
 export const SERVICE_PATHS = {
