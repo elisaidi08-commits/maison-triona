@@ -318,9 +318,7 @@
       {
         "id": "editeur",
         "title": "L’éditeur du site",
-        "paragraphs": [
-          "Le site est publié par Maison Triona, établie en Belgique, en Wallonie. [À CONFIRMER selon la forme juridique]"
-        ],
+        "paragraphs": ["Le site est publié par Maison Triona, établie en Belgique, en Wallonie."],
         "facts": [
           {
             "term": "Nom ou dénomination",
@@ -349,10 +347,6 @@
           {
             "term": "Adresse e-mail",
             "value": "[CONTENU À FOURNIR PAR CAT]"
-          },
-          {
-            "term": "Responsable de la publication",
-            "value": "[CONTENU À FOURNIR PAR CAT]"
           }
         ]
       },
@@ -361,22 +355,20 @@
         "title": "L’activité de la maison",
         "paragraphs": [
           "Maison Triona présente à ses clients des professionnels indépendants et des maisons partenaires, choisis pour chaque situation : conciergerie de luxe, accompagnement du grand âge, garde d’enfants.",
-          "La maison n’emploie pas ces professionnels : le client signe directement avec celui qu’il a choisi. La maison est rémunérée par le professionnel, jamais par le client. [À VALIDER JURIDIQUEMENT]",
-          "Autorisations ou enregistrements requis selon les pays, et autorité de surveillance compétente : [À VALIDER JURIDIQUEMENT]"
+          "La maison n’emploie pas ces professionnels : le client signe directement avec celui qu’il a choisi."
         ]
       },
       {
         "id": "hebergement",
         "title": "L’hébergement",
         "paragraphs": [
-          "Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis. [À CONFIRMER à la mise en ligne]"
+          "Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis."
         ]
       },
       {
-        "id": "reproduction",
-        "title": "Reproduction du contenu",
+        "id": "credits",
+        "title": "Crédits",
         "paragraphs": [
-          "Les textes, le sceau et la mise en forme du site ne peuvent être reproduits, même en partie, sans l’accord écrit de la maison. [À VALIDER JURIDIQUEMENT]",
           "Les polices Cormorant Garamond et EB Garamond sont utilisées sous licence SIL Open Font License, version 1.1."
         ]
       },
@@ -384,7 +376,7 @@
         "id": "images",
         "title": "Images créées par intelligence artificielle",
         "paragraphs": [
-          "Les images et les vidéos du site ont été créées avec des outils d’intelligence artificielle. Elles ne représentent aucune personne réelle, aucun client de la maison ni aucun lieu identifiable. [À VALIDER JURIDIQUEMENT]",
+          "Les images et les vidéos du site ont été créées avec des outils d’intelligence artificielle. Elles ne représentent aucune personne réelle, aucun client de la maison ni aucun lieu identifiable.",
           "Une mention le rappelle au pied de chaque page."
         ]
       },
@@ -398,13 +390,6 @@
           "label": "Lire la politique de confidentialité",
           "path": "/confidentialite"
         }
-      },
-      {
-        "id": "droit",
-        "title": "Droit applicable",
-        "paragraphs": [
-          "Le site et ces mentions sont régis par le droit belge. [À VALIDER JURIDIQUEMENT]"
-        ]
       }
     ]
   },
@@ -428,7 +413,7 @@
         "id": "responsable",
         "title": "Qui est responsable de vos données",
         "paragraphs": [
-          "Le responsable du traitement est Maison Triona, établie en Belgique, en Wallonie. [À CONFIRMER selon la forme juridique]"
+          "Le responsable du traitement est Maison Triona, établie en Belgique, en Wallonie."
         ],
         "facts": [
           {
@@ -467,10 +452,10 @@
           "Comment vous avez connu la maison, si vous souhaitez le dire."
         ],
         "after": [
-          "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter la bonne personne. Leur traitement repose sur les démarches que vous engagez avant un éventuel accord (article 6.1.b du RGPD). La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes. [À VALIDER JURIDIQUEMENT]",
-          "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif. [À CONFIRMER avec le formulaire]",
-          "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. Si votre message en contient malgré tout, la case cochée avant l’envoi vaut consentement explicite à leur traitement, pour cette seule demande (article 9.2.a du RGPD). [À VALIDER JURIDIQUEMENT]",
-          "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation. [À VALIDER JURIDIQUEMENT]",
+          "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter la bonne personne. La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes.",
+          "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
+          "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix.",
+          "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation.",
           "Si vous indiquez une adresse e-mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
           "Aucune décision n’est prise de façon automatisée : chaque demande est lue par une personne."
         ]
@@ -481,7 +466,7 @@
         "paragraphs": [
           "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e-mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
           "Nous gardons alors votre adresse e-mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
-          "Vous recevez une confirmation, puis un rappel la veille, par e-mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant. Ces messages reposent sur les démarches que vous engagez avant un éventuel accord (article 6.1.b du RGPD). [À VALIDER JURIDIQUEMENT]",
+          "Vous recevez une confirmation, puis un rappel la veille, par e-mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant.",
           "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e-mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
           "L’invitation ajoutée à l’agenda de la fondatrice (Google Agenda) ne contient ni votre nom ni vos coordonnées : seulement l’heure et un lien vers le coffre."
         ]
@@ -494,8 +479,8 @@
           "Pour que nous puissions trier les demandes, quelques informations restent lisibles dans le coffre : le service, le pays, la langue, l’urgence, la provenance et les dates.",
           "Seules deux personnes peuvent lire le contenu chiffré : la fondatrice de la maison et la personne chargée de la maintenance technique du site. Chaque connexion exige une double authentification ; chaque lecture, export ou suppression laisse une trace dans un journal.",
           "Le message qui nous prévient d’une nouvelle demande ne contient rien de votre demande : seulement sa date et un lien vers le coffre.",
-          "Nos journaux techniques ne gardent rien de ce que vous écrivez : seulement un identifiant et le résultat de l’envoi. Comme pour tout site, notre hébergeur enregistre l’adresse des pages consultées, la date, votre adresse IP et votre navigateur, pendant un jour. [À CONFIRMER à la mise en ligne]",
-          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et une empreinte de l’adresse de confirmation (intérêt légitime, article 6.1.f du RGPD)."
+          "Nos journaux techniques ne gardent rien de ce que vous écrivez : seulement un identifiant et le résultat de l’envoi. Comme pour tout site, notre hébergeur enregistre l’adresse des pages consultées, la date, votre adresse IP et votre navigateur, pendant un jour.",
+          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et une empreinte de l’adresse de confirmation."
         ]
       },
       {
@@ -509,8 +494,7 @@
         "id": "mesure",
         "title": "Ce que nous mesurons",
         "paragraphs": [
-          "Pour savoir si le site est utile, nous comptons les pages vues et quelques choix, comme le service consulté, toujours en totaux. L’outil retenu, Plausible, n’utilise aucun cookie. Pour compter les visiteurs sans les identifier, il calcule chaque jour une empreinte à partir de votre adresse IP et de votre navigateur, avec une clé effacée toutes les 24 heures ; votre adresse IP n’est pas conservée, seuls le pays, la région et la ville en sont déduits. Il est servi depuis notre propre domaine ; ses données sont hébergées en Allemagne.",
-          "Cette mesure repose sur notre intérêt légitime à savoir si le site remplit son rôle (article 6.1.f du RGPD). [À VALIDER JURIDIQUEMENT]"
+          "Pour savoir si le site est utile, nous comptons les pages vues et quelques choix, comme le service consulté, toujours en totaux. L’outil retenu, Plausible, n’utilise aucun cookie. Pour compter les visiteurs sans les identifier, il calcule chaque jour une empreinte à partir de votre adresse IP et de votre navigateur, avec une clé effacée toutes les 24 heures ; votre adresse IP n’est pas conservée, seuls le pays, la région et la ville en sont déduits. Il est servi depuis notre propre domaine ; ses données sont hébergées en Allemagne."
         ]
       },
       {
@@ -518,20 +502,19 @@
         "title": "Cookies et stockage dans votre navigateur",
         "paragraphs": [
           "Le site ne dépose aucun cookie. La langue est indiquée dans l’adresse de la page.",
-          "Pendant votre visite, et seulement le temps qu’elle dure, votre navigateur peut garder trois choses : le fait que vous ayez fermé la suggestion de langue, le fait que vous ayez mis les vidéos en pause, et les choix déjà faits pour votre demande (service, pays, langue, créneau), pour ne pas les perdre d’une page ou d’une étape à l’autre. Pour qui la demande est faite, votre nom, vos coordonnées, votre message et l’urgence n’y sont jamais gardés. Tout disparaît à la fermeture de l’onglet ; les choix de votre demande sont aussi effacés à l’envoi.",
-          "Comme il n’y a rien à accepter, le site n’affiche pas de bandeau de cookies. [À VALIDER JURIDIQUEMENT]"
+          "Pendant votre visite, et seulement le temps qu’elle dure, votre navigateur peut garder trois choses : le fait que vous ayez fermé la suggestion de langue, le fait que vous ayez mis les vidéos en pause, et les choix déjà faits pour votre demande (service, pays, langue, créneau), pour ne pas les perdre d’une page ou d’une étape à l’autre. Pour qui la demande est faite, votre nom, vos coordonnées, votre message et l’urgence n’y sont jamais gardés. Tout disparaît à la fermeture de l’onglet ; les choix de votre demande sont aussi effacés à l’envoi."
         ]
       },
       {
         "id": "prestataires",
         "title": "Les prestataires techniques",
         "paragraphs": [
-          "Quelques prestataires font fonctionner le site. Chacun est lié à la maison par un contrat de traitement des données et n’utilise vos informations que pour le service qu’il rend. [À CONFIRMER à la signature des contrats]"
+          "Quelques prestataires font fonctionner le site. Chacun est lié à la maison par un contrat de traitement des données et n’utilise vos informations que pour le service qu’il rend."
         ],
         "facts": [
           {
             "term": "Vercel Inc. (États-Unis)",
-            "value": "Hébergement du site. Les fonctions qui reçoivent votre demande s’exécutent à Paris. [À CONFIRMER à la mise en ligne]"
+            "value": "Hébergement du site. Les fonctions qui reçoivent votre demande s’exécutent à Paris."
           },
           {
             "term": "Scaleway SAS (France)",
@@ -563,17 +546,17 @@
         "id": "transferts",
         "title": "Hors de l’Union européenne",
         "paragraphs": [
-          "Vercel, Upstash et Google sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Google ne reçoit aucune donnée qui vous nomme. Ces transferts reposent sur le cadre de protection des données entre l’Union européenne et les États-Unis, auquel ces sociétés ont adhéré, et sur les garanties prévues dans leurs contrats. [À VALIDER JURIDIQUEMENT]"
+          "Vercel, Upstash et Google sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Google ne reçoit aucune donnée qui vous nomme."
         ]
       },
       {
         "id": "conservation",
         "title": "Combien de temps nous gardons vos informations",
         "items": [
-          "Votre demande : le temps de nos échanges, puis au plus 12 mois après le dernier, qu’elle ait abouti ou non. Nous pouvons l’effacer plus tôt, et vous pouvez nous le demander. [À VALIDER JURIDIQUEMENT]",
+          "Votre demande : le temps de nos échanges, puis elle est effacée. Vous pouvez nous demander de l’effacer plus tôt.",
           "Votre appel : la même durée qu’une demande. Votre adresse e-mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
           "Les sauvegardes : une demande effacée peut y subsister 7 jours avant de disparaître ; son contenu y reste chiffré.",
-          "Les journaux de l’hébergeur : un jour. [À CONFIRMER à la mise en ligne]",
+          "Les journaux de l’hébergeur : un jour.",
           "La protection contre les envois abusifs : 24 heures au plus.",
           "Les journaux d’envoi des e-mails : [À CONFIRMER selon le fournisseur]",
           "Le journal des accès au coffre : [À DÉFINIR]",
@@ -584,8 +567,8 @@
         "id": "droits",
         "title": "Vos droits",
         "paragraphs": [
-          "Vous pouvez à tout moment consulter les informations que nous gardons sur vous, les faire corriger ou effacer, vous opposer à leur traitement, en limiter l’usage, en recevoir une copie dans un format courant ou la faire transmettre à quelqu’un d’autre, et retirer votre consentement ; ce retrait ne remet pas en cause ce qui a été fait avant. Écrivez-nous à l’adresse [CONTENU À FOURNIR PAR CAT] ; nous vous répondons dans un délai d’un mois. [À VALIDER JURIDIQUEMENT]",
-          "Vous pouvez aussi, à tout moment, adresser une réclamation à l’autorité de protection des données de votre pays. Notre autorité de contrôle est l’Autorité de protection des données, en Belgique. [À VALIDER JURIDIQUEMENT]"
+          "Vous pouvez à tout moment consulter les informations que nous gardons sur vous, les faire corriger ou effacer, vous opposer à leur traitement, en limiter l’usage, en recevoir une copie dans un format courant ou la faire transmettre à quelqu’un d’autre, et retirer votre consentement ; ce retrait ne remet pas en cause ce qui a été fait avant. Écrivez-nous à l’adresse [CONTENU À FOURNIR PAR CAT] ; nous vous répondons dans un délai d’un mois.",
+          "Vous pouvez aussi, à tout moment, adresser une réclamation à l’autorité de protection des données de votre pays. Notre autorité de contrôle est l’Autorité de protection des données, en Belgique."
         ],
         "items": [
           "Belgique : Autorité de protection des données (APD).",
@@ -613,7 +596,7 @@
         "id": "incident",
         "title": "En cas d’incident",
         "paragraphs": [
-          "Si un incident touchait vos informations, nous en informerions l’autorité de protection des données dans les 72 heures suivant sa découverte et, si le risque était élevé, les personnes concernées. [À VALIDER JURIDIQUEMENT]"
+          "Si un incident touchait vos informations, nous en informerions l’autorité de protection des données dans les 72 heures suivant sa découverte et, si le risque était élevé, les personnes concernées."
         ]
       },
       {

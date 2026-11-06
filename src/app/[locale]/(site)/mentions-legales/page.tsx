@@ -4,10 +4,10 @@ import * as rootParams from 'next/root-params'
 import { LegalDocument } from '@/components/sections/LegalDocument'
 import type { Locale } from '@/i18n/pathnames'
 
-// Mentions légales (story 4.4) : éditeur, activité, hébergement, reproduction, images créées par
-// IA, droit applicable (D38).
-// Textes en brouillon (content/brouillons.json) jusqu'à l'inscription de la société et l'avis du
-// juriste.
+// Mentions légales (story 4.4) : éditeur, activité, hébergement, crédits, images créées par IA,
+// données et cookies (D38).
+// Textes en brouillon (content/brouillons.json) jusqu'à l'inscription de la société ; seulement ce
+// que la maison peut affirmer aujourd'hui (D61).
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('Legal')

@@ -6,8 +6,8 @@ import type { Locale } from '@/i18n/pathnames'
 
 // Politique de confidentialité (story 4.4) : ce que le site collecte, pourquoi, où, combien de
 // temps, les droits des personnes et les limites connues (docs/privacy.md).
-// Textes en brouillon (content/brouillons.json) jusqu'à l'inscription de la société et l'avis du
-// juriste.
+// Textes en brouillon (content/brouillons.json) jusqu'à l'inscription de la société ; seulement ce
+// que la maison peut affirmer aujourd'hui (D61).
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('Privacy')
