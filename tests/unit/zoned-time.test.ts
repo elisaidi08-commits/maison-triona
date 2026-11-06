@@ -41,6 +41,12 @@ describe('dates locales', () => {
   test('refuse une date mal formée', () => {
     assert.throws(() => addDays('18/01/2027', 1), RangeError)
   })
+
+  test('refuse une date impossible', () => {
+    assert.throws(() => addDays('2027-02-30', 0), RangeError)
+    assert.throws(() => addDays('2027-01-00', 1), RangeError)
+    assert.throws(() => isoWeekday('2027-13-01'), RangeError)
+  })
 })
 
 describe('fuseau de Bruxelles', () => {
@@ -64,6 +70,24 @@ describe('fuseau de Bruxelles', () => {
       zonedTimeToUtc('2027-10-31', '10:30', BRUSSELS).toISOString(),
       '2027-10-31T09:30:00.000Z',
     )
+  })
+
+  test('une heure qui n’existe pas (passage à l’heure d’été) est décalée d’une heure', () => {
+    assert.equal(
+      zonedTimeToUtc('2027-03-28', '02:30', BRUSSELS).toISOString(),
+      '2027-03-28T01:30:00.000Z',
+    )
+  })
+
+  test('une heure qui existe deux fois (retour à l’heure d’hiver) donne la seconde', () => {
+    assert.equal(
+      zonedTimeToUtc('2027-10-31', '02:30', BRUSSELS).toISOString(),
+      '2027-10-31T01:30:00.000Z',
+    )
+  })
+
+  test('refuse un fuseau inconnu', () => {
+    assert.throws(() => zonedTimeToUtc('2027-01-18', '10:30', 'Europe/Atlantide'), RangeError)
   })
 
   test('lit la date et l’heure locales, de part et d’autre du passage à l’heure d’été', () => {

@@ -74,8 +74,17 @@ const pad = (value: number): string => String(value).padStart(2, '0')
 
 function parseDate(date: string): [number, number, number] {
   const match = DATE_PATTERN.exec(date)
-  if (!match) throw new RangeError(`Date invalide : ${date}`)
-  return [Number(match[1]), Number(match[2]), Number(match[3])]
+  const [year, month, day] = [Number(match?.[1]), Number(match?.[2]), Number(match?.[3])]
+  const check = new Date(Date.UTC(year, month - 1, day))
+  if (
+    !match ||
+    check.getUTCFullYear() !== year ||
+    check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day
+  ) {
+    throw new RangeError(`Date invalide : ${date}`)
+  }
+  return [year, month, day]
 }
 
 /** « 10:30 » → 630. Refuse tout ce qui n'est pas « HH:MM » entre 00:00 et 23:59. */
