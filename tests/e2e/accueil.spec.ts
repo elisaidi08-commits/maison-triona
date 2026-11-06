@@ -36,7 +36,8 @@ test('une idée par section, dans l’ordre de la maquette', async ({ page }) =>
 test('les trois services mènent à leur page, en français comme en anglais', async ({ page }) => {
   const links = () =>
     page
-      .locator('section[aria-labelledby="services-titre"] ol a')
+      // Liens des services eux-mêmes : ni l'image (réservée à la souris) ni les copies de la file.
+      .locator('section[aria-labelledby="services-titre"] li:not([aria-hidden]) [data-etiquette] a')
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')))
   await page.goto('/fr')
   expect(await links()).toEqual([
@@ -82,22 +83,87 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
   )
 })
 
-test('desktop : l’image des services suit le service que l’on lit', async ({ page }) => {
+// M21 (D52) : file de cartes. Position de défilement d'une fraction de la piste, carte en vedette,
+// étiquettes visibles.
+const scrollTrack = (page: Page, fraction: number) =>
+  page.locator('[data-zoom]').evaluate((track, f) => {
+    const top = track.getBoundingClientRect().top + window.scrollY
+    const course = (track as HTMLElement).offsetHeight - window.innerHeight
+    window.scrollTo({ top: top + f * course, behavior: 'instant' })
+  }, fraction)
+const featured = (page: Page) =>
+  page.locator('[data-carte-rang][data-vedette]').evaluate((card) => card.id)
+const shownLabels = (page: Page) =>
+  page
+    .locator('[data-carte-rang]:not([aria-hidden]) [data-etiquette]')
+    .evaluateAll((labels) => labels.map((label) => getComputedStyle(label).opacity))
+const cardWidth = (page: Page, id: string) =>
+  page.locator(`#${id} [data-carte]`).evaluate((card) => card.getBoundingClientRect().width)
+
+test('desktop : les cartes avancent et grandissent avec le défilement, chaque service en vedette', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
-  const visible = () =>
-    page
-      .locator('[data-vitrine-images] > *')
-      .evaluateAll((layers) => layers.map((layer) => getComputedStyle(layer).opacity))
-  await page.evaluate(() => {
-    const block = document.getElementById('enfants')!
-    const top = block.getBoundingClientRect().top + window.scrollY
-    window.scrollTo({ top: top - window.innerHeight * 0.42, behavior: 'instant' })
+  await scrollTrack(page, 0)
+  await expect.poll(() => featured(page)).toBe('conciergerie')
+  await expect.poll(() => shownLabels(page)).toEqual(['1', '0', '0'])
+  const before = await cardWidth(page, 'grand-age')
+  await scrollTrack(page, 0.5)
+  await expect.poll(() => featured(page)).toBe('grand-age')
+  expect(await cardWidth(page, 'grand-age')).toBeGreaterThan(before)
+  await scrollTrack(page, 1)
+  await expect.poll(() => featured(page)).toBe('enfants')
+  await expect.poll(() => shownLabels(page)).toEqual(['0', '0', '1'])
+  // La scène reste collée en haut de l'écran (au pixel près : la fin de piste tombe entre deux
+  // pixels) ; rien ne déborde en largeur.
+  const sceneTop = await page
+    .locator('[data-scene]')
+    .evaluate((scene) => scene.getBoundingClientRect().top)
+  expect(Math.abs(sceneTop)).toBeLessThan(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
+})
+
+test('desktop : le survol d’une carte montre son service, le clavier amène le sien en vedette', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  await scrollTrack(page, 0)
+  await page.locator('#enfants [data-carte]').hover()
+  await expect.poll(() => shownLabels(page)).toEqual(['0', '0', '1'])
+  await page.mouse.move(700, 5)
+  await expect.poll(() => shownLabels(page)).toEqual(['1', '0', '0'])
+  // Une touche avant le focus : le navigateur le traite comme un focus clavier (:focus-visible).
+  await page.keyboard.press('Shift')
+  await page.locator('#grand-age [data-etiquette] a').focus()
+  await expect.poll(() => featured(page)).toBe('grand-age')
+  await expect(page.locator('#grand-age [data-etiquette] a')).toBeInViewport()
+})
+
+test.describe('sans JavaScript', () => {
+  test.use({ javaScriptEnabled: false })
+
+  test('desktop : les services restent empilés, chacun avec son texte et son lien', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/fr')
+    for (const id of ['conciergerie', 'grand-age', 'enfants']) {
+      await expect(page.locator(`#${id} [data-etiquette] a`)).toBeVisible()
+    }
+    await expect(page.locator('[data-carte-rang][aria-hidden]').first()).toBeHidden()
   })
-  await expect.poll(visible).toEqual(['0', '0', '1'])
-  // Au clavier : le focus sur un service montre son image.
-  await page.locator('#conciergerie a').focus()
-  await expect.poll(visible).toEqual(['1', '0', '0'])
+})
+
+test('mouvement réduit : les services restent empilés', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  expect(await page.locator('#enfants').evaluate((card) => getComputedStyle(card).position)).toBe(
+    'static',
+  )
+  await expect(page.locator('[data-carte-rang][aria-hidden]').first()).toBeHidden()
 })
 
 test('mobile et mouvement réduit : aucune vidéo, chaque service garde son image', async ({

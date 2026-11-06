@@ -29,6 +29,8 @@
   },
   "Footer": {
     "label": "Footer",
+    "navigation": "Navigation",
+    "top": "Back to the top of the page",
     "legal": "Legal notice",
     "privacy": "Privacy",
     "contact": "Contact",
@@ -51,6 +53,24 @@
   "Home": {
     "title": "A second life, like a holiday that never ends.",
     "intro": "Luxury concierge, companionship in later life and childcare: the house introduces you to trusted people, chosen one by one.",
+    "choices": {
+      "concierge": {
+        "label": "Arrange everyday life",
+        "category": "Luxury concierge"
+      },
+      "senior": {
+        "label": "Support a loved one, or yourself",
+        "category": "Companionship in later life"
+      },
+      "children": {
+        "label": "Look after the children",
+        "category": "Childcare"
+      },
+      "unsure": {
+        "label": "Discuss a particular request",
+        "note": "Let’s talk, in complete discretion."
+      }
+    },
     "imageAlt": "A dim entrance hall: two wooden doors ajar onto a garden, a shaft of light across the floor.",
     "services": {
       "label": "Services",
@@ -96,7 +116,8 @@
     "concierge": {
       "name": "Luxury concierge",
       "promise": "One person to arrange everything for you.",
-      "imageAlt": "The varnished deck of a small boat moored at dawn, a folded cream canvas and a coiled rope.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
+      "imageAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
       "link": "Discover our luxury concierge",
       "situations": [
         "Finding the right craftsman for a family house.",
@@ -107,6 +128,7 @@
     "senior": {
       "name": "Companionship in later life",
       "promise": "Days that keep their rhythm and their pleasures.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
       "precision": "For any medical need, we will refer you to the appropriate health professionals.",
       "link": "Discover companionship in later life",
       "situations": [
@@ -118,6 +140,7 @@
     "children": {
       "name": "Childcare",
       "promise": "A trusted presence, for a few hours or a whole season.",
+      "need": "[CONTENT TO BE PROVIDED BY CAT]",
       "link": "Discover childcare",
       "situations": [
         "A few hours, an evening or during an appointment.",
@@ -126,6 +149,21 @@
       ]
     },
     "title": "Our services"
+  },
+  "ServicePage": {
+    "needLabel": "The need",
+    "forWhomLabel": "Who it is for",
+    "forWhom": "For you, or for someone close to you.",
+    "situationsLabel": "A few situations",
+    "steps": [
+      "You write to us.",
+      "We reply to you personally, usually by email, within 48 hours.",
+      "We introduce you to the right person."
+    ],
+    "selectionLabel": "How we choose",
+    "discretionLabel": "In complete confidence",
+    "contactLabel": "Write to us",
+    "othersLabel": "Our other services"
   },
   "Video": {
     "pause": "Pause the video",
@@ -181,7 +219,14 @@
         "name": "Switzerland",
         "text": "From Geneva to Lausanne, for families settled on the shores of the lake and for those passing through."
       }
-    ]
+    ],
+    "places": {
+      "brussels": "Brussels",
+      "paris": "Paris",
+      "riviera": "Côte d’Azur",
+      "geneva": "Geneva",
+      "lausanne": "Lausanne"
+    }
   },
   "MobileBar": {
     "label": "Write to us in confidence"

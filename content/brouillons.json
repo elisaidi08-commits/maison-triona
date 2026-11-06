@@ -3,26 +3,38 @@
   "fr": [
     "Home.imageAlt",
     "Home.intro",
+    "Home.choices.concierge",
+    "Home.choices.senior",
+    "Home.choices.children",
+    "Home.choices.unsure",
     "Home.services",
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
     "Services",
+    "ServicePage",
     "House.intro",
     "House.sections (titres)",
-    "Territories.countries"
+    "Territories.countries",
+    "Territories.places"
   ],
   "en": [
     "Home.title",
     "Home.intro",
+    "Home.choices.concierge",
+    "Home.choices.senior",
+    "Home.choices.children",
+    "Home.choices.unsure",
     "Home.services",
     "Home.imageAlt",
     "LanguageSuggestion",
     "Footer.ai",
     "Scenes",
     "Services",
+    "ServicePage",
     "House.intro",
     "House.sections (titres)",
-    "Territories.countries"
+    "Territories.countries",
+    "Territories.places"
   ]
 }

@@ -11,7 +11,9 @@ export default async function NotFound() {
   return (
     <section className="conteneur flex flex-col gap-24 py-section">
       <Rule short />
-      <h1 className="font-display text-display-l text-sapin">{t('title')}</h1>
+      <h1 tabIndex={-1} className="font-display text-display-l text-sapin">
+        {t('title')}
+      </h1>
       <p>
         <TextLink href={`/${locale}`}>{t('back')}</TextLink>
       </p>

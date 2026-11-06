@@ -5,18 +5,30 @@ import type { ReactNode } from 'react'
 // sur la seule couleur, WCAG 1.4.1). Survol : le texte passe au cyprès (Figma 80:43).
 // Cible d'au moins 48 px de haut. Sur pierre (`onStone`) : texte et filet sapin (7,49:1), jamais
 // d'or sur pierre ; survol cyprès (4,67:1). Navigation interne de Next.js (`Link`) : la page suivante
-// est préchargée, le changement se fait sans rechargement (D37).
+// est préchargée, le changement se fait sans rechargement (D37). `transitionTypes` marque une
+// navigation pour `<ViewTransition>` (passage de pièce, prototype MT-03).
 
 type TextLinkProps = {
   href: string
   children: ReactNode
   onStone?: boolean
+  transitionTypes?: string[]
+  // -1 : lien d'une copie décorative (aria-hidden), hors de l'ordre de tabulation.
+  tabIndex?: number
 }
 
-export function TextLink({ href, children, onStone = false }: TextLinkProps) {
+export function TextLink({
+  href,
+  children,
+  onStone = false,
+  transitionTypes,
+  tabIndex,
+}: TextLinkProps) {
   return (
     <Link
       href={href}
+      transitionTypes={transitionTypes}
+      tabIndex={tabIndex}
       className={`inline-flex min-h-touch items-center underline decoration-1 underline-offset-8 transition-colors duration-micro ease-standard ${
         onStone
           ? 'text-sapin decoration-sapin hover:text-cypres'

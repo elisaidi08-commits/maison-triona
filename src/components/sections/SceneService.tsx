@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react'
 import { getTranslations } from 'next-intl/server'
+import { ViewTransition } from 'react'
 import { LoopVideo } from '@/components/media/LoopVideo'
 import { ResponsiveImage } from '@/components/media/ResponsiveImage'
 import { Rule } from '@/components/ui/Rule'
@@ -18,6 +20,8 @@ import { SERVICE_MEDIA, SERVICE_PATHS, type Service } from '@/lib/services'
 // pas sur l'image (parcours « choisir → service → contacter ») ; l'image suit son texte de près,
 // l'air de section la sépare de la scène suivante.
 // Aucun tarif, aucune liste de prestataires, aucune promesse médicale.
+// Prototype MT-03 (P02, passage de pièce) : sur la conciergerie, l'image porte le même nom que
+// l'image collante de l'accueil ; elle s'y déplace sur un lien « vers-piece », jamais au retour.
 
 type SceneServiceProps = {
   service: Service
@@ -26,6 +30,9 @@ type SceneServiceProps = {
   mediaRight?: boolean
   // Sur l'accueil : lien vers la page du service, sous le CTA.
   pageLink?: boolean
+  // Second temps de la scène ; par défaut, la version courte de l'accueil. Les pages de service y
+  // placent leurs réponses aux cinq questions (ServiceDetails).
+  children?: ReactNode
 }
 
 export async function SceneService({
@@ -34,6 +41,7 @@ export async function SceneService({
   heading = 'h2',
   mediaRight = false,
   pageLink = false,
+  children,
 }: SceneServiceProps) {
   const t = await getTranslations('Services')
   const video = await getTranslations('Video')
@@ -64,7 +72,7 @@ export async function SceneService({
 
   // Réassurance : pour le grand âge, la précision sur le médical (sans le mot « soins », D39) ; sinon le modèle
   // de la maison (des personnes qu'elle connaît personnellement).
-  const details = (
+  const details = children ?? (
     <>
       <div className="flex flex-col gap-16">
         <h3 className="text-label text-encre uppercase">{t('situationsLabel')}</h3>
@@ -117,12 +125,29 @@ export async function SceneService({
           mediaRight ? 'lg:order-last' : 'lg:order-first'
         }`}
       >
-        <ResponsiveImage
-          desktop={image.mobile}
-          mobile={image.mobile}
-          alt={t(`${service.key}.imageAlt`)}
-          sizes="(min-width: 64rem) 50vw, 100vw"
-        />
+        {service.id === 'conciergerie' ? (
+          <ViewTransition
+            name="piece-conciergerie"
+            share={{ 'vers-piece': 'piece', default: 'none' }}
+            default="none"
+          >
+            <div className="absolute inset-0">
+              <ResponsiveImage
+                desktop={image.mobile}
+                mobile={image.mobile}
+                alt={t(`${service.key}.imageAlt`)}
+                sizes="(min-width: 64rem) 50vw, 100vw"
+              />
+            </div>
+          </ViewTransition>
+        ) : (
+          <ResponsiveImage
+            desktop={image.mobile}
+            mobile={image.mobile}
+            alt={t(`${service.key}.imageAlt`)}
+            sizes="(min-width: 64rem) 50vw, 100vw"
+          />
+        )}
         {image.video ? (
           <LoopVideo
             mp4={image.video.mp4}
