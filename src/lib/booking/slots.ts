@@ -17,6 +17,13 @@ export interface TimeInterval {
   end: Date
 }
 
+/** Un appel confirmé, tel qu'enregistré en base (colonne `slot`). */
+export interface BookedCall {
+  start: Date
+  /** Borne haute de `slot` : fin de l'appel + pause en vigueur au moment de la réservation. */
+  occupiedUntil: Date
+}
+
 export interface Slot {
   start: Date
   end: Date
@@ -30,8 +37,8 @@ export interface SlotInput {
   settings: BookingSettings
   rules: AvailabilityRule[]
   exceptions: AvailabilityException[]
-  /** Appels confirmés : début et fin, sans la pause. */
-  bookings: TimeInterval[]
+  /** Appels confirmés, sans celui que la personne est en train de déplacer. */
+  bookings: BookedCall[]
   /** Heures occupées venues d'ailleurs (agenda Google, story 3.14). */
   busy: TimeInterval[]
   now: Date
@@ -48,24 +55,36 @@ function overlapsAny(start: number, end: number, ranges: Range[]): boolean {
   return ranges.some((range) => start < range.end && range.start < end)
 }
 
-function countByLocalDate(intervals: TimeInterval[], timeZone: string): Map<string, number> {
+function countByLocalDate(calls: BookedCall[], timeZone: string): Map<string, number> {
   const counts = new Map<string, number>()
-  for (const { start } of intervals) {
+  for (const { start } of calls) {
     const { date } = zonedParts(start, timeZone)
     counts.set(date, (counts.get(date) ?? 0) + 1)
   }
   return counts
 }
 
+/** Filet de sécurité : la validation Zod du coffre (story 3.8, partie B) reste le vrai garde. */
+function assertValidSettings(settings: BookingSettings): void {
+  const { durationMinutes, bufferMinutes, minNoticeMinutes, horizonDays, dailyCap } = settings
+  const isCount = (value: number): boolean => Number.isInteger(value) && value >= 0
+  if (
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0 ||
+    ![bufferMinutes, minNoticeMinutes, horizonDays, dailyCap].every(isCount)
+  ) {
+    throw new RangeError('Réglages invalides')
+  }
+}
+
 /**
  * Créneaux réservables, du plus proche au plus lointain. Un créneau occupe [début, fin + pause),
  * comme un appel confirmé : c'est la même règle que la contrainte d'exclusion en base (§4.2).
+ * Les appels confirmés gardent la plage enregistrée en base, même si Cat a changé la pause depuis.
  */
 export function computeSlots(input: SlotInput): Slot[] {
   const { settings, rules, exceptions, bookings, busy, now } = input
-  if (settings.durationMinutes <= 0 || settings.bufferMinutes < 0) {
-    throw new RangeError('Durée ou pause invalide')
-  }
+  assertValidSettings(settings)
 
   const bufferMs = settings.bufferMinutes * MINUTE_MS
   const durationMs = settings.durationMinutes * MINUTE_MS
@@ -73,9 +92,9 @@ export function computeSlots(input: SlotInput): Slot[] {
   const earliest = now.getTime() + settings.minNoticeMinutes * MINUTE_MS
   const today = zonedParts(now, settings.timeZone).date
   const bookingsPerDay = countByLocalDate(bookings, settings.timeZone)
-  const taken: Range[] = bookings.map((booking) => ({
-    start: booking.start.getTime(),
-    end: booking.end.getTime() + bufferMs,
+  const taken: Range[] = bookings.map((call) => ({
+    start: call.start.getTime(),
+    end: call.occupiedUntil.getTime(),
   }))
   const external: Range[] = busy.map((interval) => ({
     start: interval.start.getTime(),

@@ -29,10 +29,16 @@ function timesOn(slots: Slot[], date: string): string[] {
   return slots.filter((slot) => slot.localDate === date).map((slot) => slot.localTime)
 }
 
-/** Un appel confirmé de 30 minutes, donné en heure UTC. */
-function booking(startIso: string) {
+/** Un appel confirmé, tel qu'en base : 30 minutes et 15 minutes de pause, en heure UTC. */
+function booking(startIso: string, occupiedMinutes = 45) {
   const start = new Date(startIso)
-  return { start, end: new Date(start.getTime() + 30 * 60_000) }
+  return { start, occupiedUntil: new Date(start.getTime() + occupiedMinutes * 60_000) }
+}
+
+/** Une heure occupée ailleurs, donnée en heure UTC. */
+function busyFor(startIso: string, minutes = 30) {
+  const start = new Date(startIso)
+  return { start, end: new Date(start.getTime() + minutes * 60_000) }
 }
 
 describe('créneaux avec les réglages par défaut', () => {
@@ -44,8 +50,10 @@ describe('créneaux avec les réglages par défaut', () => {
     assert.equal(first?.end.toISOString(), '2027-01-18T10:00:00.000Z')
   })
 
-  test('triés du plus proche au plus lointain', () => {
-    const starts = compute().map((slot) => slot.start.getTime())
+  test('triés du plus proche au plus lointain, même si les plages arrivent dans le désordre', () => {
+    const starts = compute({ rules: [...DEFAULT_AVAILABILITY_RULES].reverse() }).map((slot) =>
+      slot.start.getTime(),
+    )
     assert.deepEqual(
       starts,
       [...starts].sort((x, y) => x - y),
@@ -65,6 +73,14 @@ describe('créneaux avec les réglages par défaut', () => {
 
     const exactlyOneDay = compute({ now: new Date('2027-01-18T09:30:00Z') })
     assert.equal(timesOn(exactlyOneDay, TUESDAY)[0], '10:30')
+  })
+
+  test('« aujourd’hui » se lit en heure locale', () => {
+    const slots = compute({
+      now: new Date('2027-01-17T23:30:00Z'), // lundi 0 h 30 à Bruxelles, encore dimanche en UTC
+      settings: { ...DEFAULT_BOOKING_SETTINGS, minNoticeMinutes: 0, horizonDays: 1 },
+    })
+    assert.deepEqual(timesOn(slots, MONDAY), FULL_DAY)
   })
 
   test('s’arrête à l’horizon de 21 jours, aujourd’hui compris', () => {
@@ -102,6 +118,19 @@ describe('appels déjà pris', () => {
     assert.deepEqual(timesOn(slots, MONDAY), ['10:30', '12:00', '16:00', '16:45', '17:30'])
   })
 
+  test('la pause enregistrée d’un appel masque aussi le créneau suivant', () => {
+    const slots = compute({ bookings: [booking('2027-01-18T09:40:00Z')] }) // 10 h 40 à Bruxelles
+    assert.deepEqual(timesOn(slots, MONDAY), ['12:00', '16:00', '16:45', '17:30'])
+  })
+
+  test('un appel garde la pause enregistrée, même si Cat l’a changée depuis', () => {
+    const slots = compute({
+      settings: { ...DEFAULT_BOOKING_SETTINGS, bufferMinutes: 5 },
+      bookings: [booking('2027-01-18T09:30:00Z')], // 10 h 30 à 11 h 15 en base
+    })
+    assert.deepEqual(timesOn(slots, MONDAY), ['11:40', '16:00', '16:35', '17:10'])
+  })
+
   test('un appel hors grille retire tous les créneaux qu’il chevauche', () => {
     const slots = compute({ bookings: [booking('2027-01-18T10:00:00Z')] }) // 11 h à Bruxelles
     assert.deepEqual(timesOn(slots, MONDAY), ['12:00', '16:00', '16:45', '17:30'])
@@ -129,6 +158,33 @@ describe('appels déjà pris', () => {
     })
     assert.deepEqual(timesOn(slots, MONDAY), [])
     assert.deepEqual(timesOn(slots, TUESDAY), FULL_DAY)
+  })
+
+  test('le plafond compte les appels par date locale', () => {
+    const slots = compute({
+      bookings: [
+        booking('2027-01-17T23:30:00Z'), // lundi 0 h 30 à Bruxelles, dimanche en UTC
+        booking('2027-01-18T09:30:00Z'),
+        booking('2027-01-18T10:15:00Z'),
+        booking('2027-01-18T11:00:00Z'),
+      ],
+    })
+    assert.deepEqual(timesOn(slots, MONDAY), [])
+  })
+
+  test('les heures occupées ailleurs ne comptent pas dans le plafond', () => {
+    const busy = [
+      '2027-01-18T09:30:00Z',
+      '2027-01-18T10:15:00Z',
+      '2027-01-18T11:00:00Z',
+      '2027-01-18T15:00:00Z',
+    ].map((iso) => busyFor(iso))
+    assert.deepEqual(timesOn(compute({ busy }), MONDAY), ['16:45', '17:30'])
+  })
+
+  test('la pause du créneau compte face à une heure occupée', () => {
+    const slots = compute({ busy: [busyFor('2027-01-18T15:35:00Z', 5)] }) // 16 h 35 à 16 h 40
+    assert.deepEqual(timesOn(slots, MONDAY), ['10:30', '11:15', '12:00', '16:45', '17:30'])
   })
 
   test('une heure occupée ailleurs retire le créneau qu’elle touche', () => {
@@ -170,6 +226,21 @@ describe('réglages limites', () => {
       ],
     })
     assert.deepEqual(timesOn(slots, MONDAY), ['10:30', '11:15', '12:00'])
+  })
+
+  test('refuse des réglages invalides', () => {
+    const invalid = [
+      { durationMinutes: 30.5 },
+      { minNoticeMinutes: -1 },
+      { horizonDays: Number.POSITIVE_INFINITY },
+      { dailyCap: -1 },
+    ]
+    for (const override of invalid) {
+      assert.throws(
+        () => compute({ settings: { ...DEFAULT_BOOKING_SETTINGS, ...override } }),
+        RangeError,
+      )
+    }
   })
 
   test('refuse une durée nulle', () => {
