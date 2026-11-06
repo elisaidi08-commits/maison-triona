@@ -198,9 +198,6 @@
   },
   "Territories": {
     "intro": "Belgium · France · Luxembourg · Monaco · Switzerland",
-    "globeHint": "Drag to turn the globe",
-    "globeLabel": "Show on the globe",
-    "globeAll": "Overview",
     "countries": [
       {
         "name": "Belgium",
@@ -222,7 +219,14 @@
         "name": "Switzerland",
         "text": "From Geneva to Lausanne, for families settled on the shores of the lake and for those passing through."
       }
-    ]
+    ],
+    "places": {
+      "brussels": "Brussels",
+      "paris": "Paris",
+      "riviera": "Côte d’Azur",
+      "geneva": "Geneva",
+      "lausanne": "Lausanne"
+    }
   },
   "MobileBar": {
     "label": "Write to us in confidence"

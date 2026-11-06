@@ -202,9 +202,6 @@
   },
   "Territories": {
     "intro": "Belgique · France · Luxembourg · Monaco · Suisse",
-    "globeHint": "Faites tourner le globe",
-    "globeLabel": "Voir sur le globe",
-    "globeAll": "Vue d’ensemble",
     "countries": [
       {
         "name": "Belgique",
@@ -226,7 +223,14 @@
         "name": "Suisse",
         "text": "De Genève à Lausanne, pour les familles installées sur les rives du lac comme pour celles de passage."
       }
-    ]
+    ],
+    "places": {
+      "brussels": "Bruxelles",
+      "paris": "Paris",
+      "riviera": "Côte d’Azur",
+      "geneva": "Genève",
+      "lausanne": "Lausanne"
+    }
   },
   "MobileBar": {
     "label": "Écrire en toute discrétion"

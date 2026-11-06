@@ -11,6 +11,8 @@ const PAGES = [
   '/fr/services',
   '/fr/services/grand-age',
   '/en/services/concierge',
+  '/fr/territoires',
+  '/en/where-we-work',
   '/fr/demo',
   '/en/demo',
   '/fr/adresse-inconnue',

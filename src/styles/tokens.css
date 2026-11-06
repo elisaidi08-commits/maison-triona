@@ -547,54 +547,108 @@
     transform: translateY(110%);
   }
 
-  /* M23 (D55 ; idée du « Wireframe Dotted Globe » collé par Sady, reprise dans nos règles) : globe
-     des Territoires (GlobeTerritoires.tsx) sur un aplat encre, carré en mobile, deux fois plus large
-     que haut dès 768 px. Le canvas couvre le cadre ; sans JavaScript, la sphère seule (sapin cerclé
-     de champagne) tient sa place. Au toucher, la page défile (`pan-y`) ; à la souris, on saisit. */
-  [data-globe-cadre] {
+  /* M24 (D56 ; « une carte européenne », Sady) : carte des Territoires (CarteTerritoires.tsx). La
+     carte reste à l'écran (collée en haut) pendant qu'on lit les cinq pays : carrée, 45 % de la
+     hauteur en mobile, la hauteur de l'écran en desktop. Les cinq pays teintés sapin 20 %, le pays lu
+     en sapin ; les voisins en filet sapin 20 %. Repères or, noms en capitales sur un aplat ivoire (le
+     pays lu : aplat sapin, texte ivoire) ; les lieux cités par le texte du pays lu apparaissent. */
+  [data-carte-cadre] {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    align-self: start;
+    padding-block: var(--spacing-16);
+    background-color: var(--color-ivoire);
+  }
+  [data-carte] {
     position: relative;
+    width: min(100%, 45svh);
     aspect-ratio: 1;
+    margin-inline: auto;
     overflow: hidden;
   }
-  @media (width >= 48rem) {
-    [data-globe-cadre] {
-      aspect-ratio: 2 / 1;
+  @media (width >= 64rem) {
+    [data-carte-cadre] {
+      top: var(--spacing-48);
+      padding-block: 0;
+    }
+    [data-carte] {
+      width: min(100%, calc(100svh - 2 * var(--spacing-48)));
     }
   }
-  [data-globe] {
-    position: absolute;
-    inset: 0;
+  [data-carte] svg {
+    display: block;
     width: 100%;
     height: 100%;
-    touch-action: pan-y;
   }
-  @media (hover: hover) and (pointer: fine) {
-    [data-globe] {
-      cursor: grab;
-    }
-    [data-globe]:active {
-      cursor: grabbing;
-    }
+  [data-carte] path[data-pays] {
+    cursor: pointer;
+    fill: var(--color-sapin-20);
+    stroke: var(--color-sapin);
+    transition: fill var(--transition-duration-hover) var(--ease-standard);
   }
-  [data-globe-repli] {
+  [data-carte] path[data-pays]:hover,
+  [data-carte] path[data-pays][data-actif] {
+    fill: var(--color-sapin);
+  }
+  [data-carte-noms] {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    height: calc(100% / 1.2);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    border: 1px solid var(--color-champagne);
+    inset: 0;
+    pointer-events: none;
+  }
+  [data-carte-noms] > * {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-8);
+    translate: calc(-1 * var(--spacing-4)) -50%;
+  }
+  [data-carte-noms] > [data-pays] {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  [data-carte-noms] [data-cote='gauche'] {
+    flex-direction: row-reverse;
+    translate: calc(-100% + var(--spacing-4)) -50%;
+  }
+  [data-repere] {
+    width: var(--spacing-8);
+    height: var(--spacing-8);
+    flex: none;
     border-radius: 50%;
+    background-color: var(--color-or);
+  }
+  [data-lieu-point] {
+    width: var(--spacing-8);
+    height: var(--spacing-8);
+    flex: none;
+    border: 1px solid var(--color-sapin);
+    border-radius: 50%;
+    background-color: var(--color-champagne);
+  }
+  [data-carte-noms] [data-nom] {
+    padding: var(--spacing-4) var(--spacing-8);
+    background-color: var(--color-ivoire);
+    color: var(--color-encre);
+    white-space: nowrap;
+    transition:
+      background-color var(--transition-duration-hover) var(--ease-standard),
+      color var(--transition-duration-hover) var(--ease-standard);
+  }
+  [data-carte-noms] [data-actif] [data-nom] {
     background-color: var(--color-sapin);
+    color: var(--color-ivoire);
   }
-  [data-globe-indication] {
-    position: absolute;
-    left: var(--spacing-24);
-    bottom: var(--spacing-16);
+  [data-lieu] {
+    opacity: 0;
+    transition: opacity var(--transition-duration-hover) var(--ease-standard);
   }
-  /* Boutons des pays : invisibles (place gardée) tant que le globe n'est pas prêt ; sans JavaScript,
-     ils ne commanderaient rien. */
-  [data-globe-commandes]:not([data-pret]) {
+  [data-lieu][data-visible] {
+    opacity: 1;
+  }
+  [data-carte-noms] [data-hors] {
     visibility: hidden;
   }
 
