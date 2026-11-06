@@ -17,6 +17,8 @@
     "test:e2e": "playwright test --project=e2e",
     "test:a11y": "playwright test --project=a11y",
     "test:unit": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON 'tests/unit/*.test.ts'",
+    "test:integration": "node --test --test-concurrency=1 --disable-warning=MODULE_TYPELESS_PACKAGE_JSON 'tests/integration/*.test.ts'",
+    "db:migrate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-migrate.mjs",
     "lighthouse": "node scripts/lighthouse.mjs",
     "check:content": "node scripts/check-content.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
@@ -25,6 +27,7 @@
   "dependencies": {
     "next": "16.4.1",
     "next-intl": "4.14.9",
+    "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -33,6 +36,7 @@
     "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
