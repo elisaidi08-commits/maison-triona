@@ -13,14 +13,14 @@ Ce dossier rassemble ce que la maison doit pouvoir montrer à l'Autorité de pro
 |---|---|---|
 | **Responsable du traitement** | Maison Triona `[CONTENU À FOURNIR PAR CAT]` : forme juridique, siège ou établissement, numéro BCE | — |
 | **Personne de contact pour les données** | Cat, à une adresse dédiée sur le domaine (`confidentialite@…`, D47) | `[À DÉFINIR]` : adresse créée après la réservation du domaine. |
-| **Délégué à la protection des données (DPO)** | Aucun | Non obligatoire (article 37) : la maison n'est pas une autorité publique, et son activité de base ne consiste pas à traiter à grande échelle des données sensibles ni à suivre des personnes de façon régulière et systématique. À revoir si l'activité grandit. |
+| **Délégué à la protection des données (DPO)** | Aucun | Non obligatoire (article 37.1) : la maison n'est pas une autorité publique, et son activité de base ne consiste ni en un suivi régulier et systématique à grande échelle des personnes, ni en un traitement à grande échelle de données de santé ou relatives aux condamnations pénales. À revoir si l'activité grandit. |
 | **Maintenance technique** | Sady | Accès au coffre (compte nominatif, double authentification) ; engagement de confidentialité écrit. |
-| **Autorité de contrôle chef de file** | Autorité de protection des données (APD), Belgique | Établissement unique en Belgique (Wallonie). Les clients des autres pays peuvent aussi saisir leur propre autorité (CNIL, CNPD, APDP, PFPDT). |
+| **Autorité de contrôle chef de file** | Autorité de protection des données (APD), Belgique | Établissement unique en Belgique (Wallonie) ; autorité chef de file aussi pour les traitements qui concernent la France et le Luxembourg (article 56). Une personne peut aussi saisir l'autorité de son lieu de résidence dans l'UE, comme la CNIL ou la CNPD (article 77). Les autorités de Monaco (APDP) et de Suisse (PFPDT) relèvent de leur propre loi. |
 
 ## 2. Textes applicables
 
 - **RGPD** (règlement (UE) 2016/679).
-- **Loi belge du 30 juillet 2018** relative à la protection des personnes physiques à l'égard des traitements de données à caractère personnel.
+- **Loi belge du 30 juillet 2018** relative à la protection des personnes physiques à l'égard des traitements de données à caractère personnel ; son article 9 demande, pour les données de santé, une liste des personnes qui y ont accès, tenue à la disposition de l'APD, et un engagement de confidentialité (registre, en tête).
 - **Règles « cookies » (ePrivacy)** pour tout stockage sur l'appareil du visiteur : le site public ne pose aucun cookie et n'utilise que le stockage de session pour des fonctions demandées (`docs/privacy.md` §1).
 
 ## 3. Contenu du dossier
