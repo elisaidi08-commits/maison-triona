@@ -12,6 +12,22 @@ jobs:
   qualite:
     name: Lint, types, format, build, contrôles, tests
     runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/maison_triona_test
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: maison_triona_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -22,6 +38,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
+      - run: npm run test:integration
       - run: npm run format:check
       - run: npm run build
       - run: npm run check:third-party
