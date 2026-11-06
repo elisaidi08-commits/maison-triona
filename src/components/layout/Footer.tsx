@@ -7,13 +7,13 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
 
 // Pied de page (D54 ; idée du « Kiln Wordmark Footer » collé par Sady, reprise dans nos règles,
-// validé par Cat) : panneau encre, disque et dalle sapin derrière (PiedFond), couleurs du kit
-// seulement ; la phrase de l'accueil en deux lignes et la touche « revenir en haut » ; trois colonnes
+// validé par Cat) : mêmes couleurs que l'en-tête et les pages (Sady, 06/11/2026) : fond ivoire, filet
+// or en tête, phrase et nom en sapin, intitulés en encre ; derrière, le disque et la dalle en filet or
+// (PiedFond). La phrase de l'accueil en deux lignes et la touche « revenir en haut » ; trois colonnes
 // (la maison et ses pays, la navigation, le contact) ; le nom en très grand (PiedMot) ; une barre
-// filetée : copyright, mention des images générées par IA (privacy.md §4), liens légaux, FR · EN.
+// filetée d'or : copyright, mention des images générées par IA (privacy.md §4), liens légaux, FR · EN.
 // Liens internes par Next.js (`Link`, D37). Aucun réseau social (CLAUDE.md, discrétion), aucun texte
-// nouveau : tout vient des messages existants. Texte ivoire partout (13,1:1 sur encre, 10,7:1 sur
-// sapin), focus champagne (6,8:1 et 5,5:1).
+// nouveau : tout vient des messages existants.
 
 export async function Footer({ locale }: { locale: Locale }) {
   const t = await getTranslations('Footer')
@@ -39,17 +39,11 @@ export async function Footer({ locale }: { locale: Locale }) {
   ] as const
 
   return (
-    <footer
-      id="pied-de-page"
-      aria-label={t('label')}
-      data-surface="sapin"
-      data-pied
-      className="bg-encre"
-    >
+    <footer id="pied-de-page" aria-label={t('label')} data-pied className="border-t border-or">
       <PiedFond />
       <div className="px-margin pt-48 pb-24 lg:pt-64">
         <div data-pied-haut className="flex items-start justify-between gap-24">
-          <p className="font-display text-display-l">
+          <p className="font-display text-display-l text-sapin">
             {lignes.map((ligne) => (
               <span key={ligne} className="block">
                 {ligne}
@@ -66,8 +60,8 @@ export async function Footer({ locale }: { locale: Locale }) {
 
         <div className="mt-48 grid gap-x-24 gap-y-48 md:grid-cols-2 lg:grid-cols-12">
           <div className="flex flex-col gap-16 lg:col-span-3">
-            <h2 className="text-label font-medium uppercase">{meta('siteName')}</h2>
-            <ul className="text-label-l uppercase">
+            <h2 className="text-label font-medium text-encre uppercase">{meta('siteName')}</h2>
+            <ul className="text-label-l text-encre uppercase">
               {scenes('territories.countries')
                 .split(/\s*·\s*/)
                 .map((pays) => (
@@ -79,7 +73,7 @@ export async function Footer({ locale }: { locale: Locale }) {
             aria-label={t('navigation')}
             className="flex flex-col gap-16 md:col-span-2 lg:col-span-6"
           >
-            <h2 className="text-label font-medium uppercase">{t('navigation')}</h2>
+            <h2 className="text-label font-medium text-encre uppercase">{t('navigation')}</h2>
             <div className="flex flex-wrap gap-x-48">
               <ul>
                 {pages.map(({ href, label }) => (
@@ -102,7 +96,9 @@ export async function Footer({ locale }: { locale: Locale }) {
             </div>
           </nav>
           <div className="flex flex-col gap-16 md:col-start-2 md:row-start-1 lg:col-span-3 lg:col-start-10">
-            <h2 className="text-label font-medium uppercase">{scenes('contact.label')}</h2>
+            <h2 className="text-label font-medium text-encre uppercase">
+              {scenes('contact.label')}
+            </h2>
             <p className="text-body-s">{scenes('contact.reassurance')}</p>
             <p>
               <Link data-lien href={localizedPath('/contact', locale)}>
@@ -114,7 +110,7 @@ export async function Footer({ locale }: { locale: Locale }) {
 
         <PiedMot mot={meta('siteName').toLowerCase()} />
 
-        <div className="mt-16 flex flex-wrap items-center gap-x-32 gap-y-8 border border-ivoire px-24 py-8">
+        <div className="mt-16 flex flex-wrap items-center gap-x-32 gap-y-8 border border-or px-24 py-8">
           <p className="text-body-l">{t('copyright')}</p>
           <p className="min-w-0 flex-1 text-body-s">{t('ai')}</p>
           <ul className="flex flex-wrap gap-x-24">
@@ -129,7 +125,7 @@ export async function Footer({ locale }: { locale: Locale }) {
               </Link>
             </li>
           </ul>
-          <LanguageSwitcher label={lang('label')} active={locale} names={names} onDark />
+          <LanguageSwitcher label={lang('label')} active={locale} names={names} />
         </div>
       </div>
     </footer>

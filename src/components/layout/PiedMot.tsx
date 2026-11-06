@@ -62,7 +62,7 @@ export function PiedMot({ mot }: { mot: string }) {
   }, [])
 
   return (
-    <p ref={ligne} data-mot aria-hidden="true" className="font-display font-light">
+    <p ref={ligne} data-mot aria-hidden="true" className="font-display font-light text-sapin">
       {Array.from(mot).map((caractere, rang) =>
         caractere === ' ' ? (
           <span key={rang} data-espace />
