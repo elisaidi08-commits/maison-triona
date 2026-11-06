@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "test:e2e": "playwright test --project=e2e",
     "test:a11y": "playwright test --project=a11y",
+    "test:unit": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON 'tests/unit/*.test.ts'",
     "lighthouse": "node scripts/lighthouse.mjs",
     "check:content": "node scripts/check-content.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
