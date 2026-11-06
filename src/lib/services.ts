@@ -9,7 +9,7 @@ import p16m from '../../public/media/accueil/P16-enfants-m.jpg'
 // D36 ; retenues par Sady, à valider par Cat une par une, D44) : la console aux clés et au bouquet
 // pour la conciergerie (choix de Cat, D44, à la place du bateau P03), le salon pour le grand âge,
 // le romarin pour les enfants. P03 et sa boucle V03 ne sont plus affichées ; les fichiers restent.
-// Vidéos (D58) : le geste de chaque service, recadré en 4:5 sur son image (864 × 1080, 24 i/s, 8 s,
+// Vidéos (D59) : le geste de chaque service, recadré en 4:5 sur son image (864 × 1080, 24 i/s, 8 s,
 // deux passes, sans son) : V12 la main qui pose les fleurs sur la console, G3 la page qui tourne
 // au salon, G4 le romarin posé dans le verre. Desktop seulement, jouées une fois.
 

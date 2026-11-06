@@ -474,8 +474,8 @@
     transform: translateY(110%);
   }
 
-  /* M23 (D56 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady, reprises
-     dans nos règles ; vidéos et amorti, D58) : les services de la page Services
+  /* M25 (D57 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady, reprises
+     dans nos règles ; vidéos et amorti, D59) : les services de la page Services
      (ServicesImmersion.tsx).
      Version empilée par défaut (mobile, tactile, mouvement réduit, sans JavaScript) : une rangée
      par service entre filets or, l'image en 4:5 puis le texte ; la rangée garde la marge de page. */

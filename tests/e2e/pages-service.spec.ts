@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Stories 2.13 et 2.14 : les services, cœur du site. Chaque page de service se lit seule (scène,
 // fiche en trois chapitres, bloc Contact) ; la page Services est la vue d'ensemble, en une scène
-// immersive (M23, D56) en desktop avec souris. Intertitres et liens comptés dans le contenu
+// immersive (M25, D57) en desktop avec souris. Intertitres et liens comptés dans le contenu
 // (`main`) : le pied de page (D54) a ses propres intertitres et liens vers les services.
 
 const BLOCS_FR = [
@@ -81,7 +81,7 @@ test('/services présente les trois services, le modèle et la confidentialité'
   await expect(main.locator('a[href="/fr/contact"]')).toHaveCount(1)
 })
 
-// M23 : desktop avec souris (Desktop Chrome), mouvement autorisé.
+// M25 : desktop avec souris (Desktop Chrome), mouvement autorisé.
 test.describe('immersion des services', () => {
   test.use({ viewport: { width: 1440, height: 900 } })
 
@@ -108,7 +108,7 @@ test.describe('immersion des services', () => {
     await expect(page.getByRole('link', { name: 'Découvrir la garde d’enfants' })).toBeVisible()
   })
 
-  test('les gestes filmés jouent une fois, la pause les arrête (D58, WCAG 2.2.2)', async ({
+  test('les gestes filmés jouent une fois, la pause les arrête (D59, WCAG 2.2.2)', async ({
     page,
   }) => {
     await page.goto('/fr/services')

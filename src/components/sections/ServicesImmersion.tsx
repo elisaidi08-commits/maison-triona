@@ -7,7 +7,7 @@ import { afterLoad, videoAllowed } from '@/components/media/videoConditions'
 import { setVideosPaused, useVideosPaused } from '@/components/media/videoPause'
 import { Button } from '@/components/ui/Button'
 
-// M23 (D56, D58 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady,
+// M25 (D57, D59 ; idées de « Scroll Gallery » et de « Split Photo Slider » collées par Sady,
 // reprises dans nos règles) : les trois services de la page Services en une scène plein écran,
 // collante, que le défilement de la page (natif, jamais capturé) fait avancer.
 // - À gauche, l'image du service, puis sa vidéo : le geste (la main qui pose les fleurs, la page
@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/Button'
 // Fluidité : la scène ne suit pas le défilement au cran près, elle le rattrape en douceur
 // (rapprochement exponentiel, environ une demi-seconde), comme un « scrub » amorti.
 // Ce composant ne fait que lire le défilement et poser l'état de chaque service ; le reste est en
-// CSS (tokens.css, bloc M23 ; transform, opacity et masque seulement).
+// CSS (tokens.css, bloc M25 ; transform, opacity et masque seulement).
 // Hors desktop avec souris, sans JavaScript ou en mouvement réduit : services empilés (image, puis
 // texte), sans vignettes ni vidéo ; le contenu est le même.
 
@@ -46,7 +46,7 @@ type ServicesImmersionProps = {
   play: PauseLabel
 }
 
-// Même requête que le bloc M23 de tokens.css (sans `scripting`, toujours vrai ici).
+// Même requête que le bloc M25 de tokens.css (sans `scripting`, toujours vrai ici).
 const IMMERSION =
   '(width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
 // Parts de la hauteur d'écran, comme --immersion-pas et --immersion-attente (tokens.css).
