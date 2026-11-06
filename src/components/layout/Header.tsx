@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
+import { Seal } from '@/components/brand/Seal'
 import { Wordmark } from '@/components/brand/Wordmark'
-import { Stamp } from '@/components/ui/Stamp'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
 import { NavLink } from './NavLink'
@@ -52,7 +52,7 @@ export async function Header({ locale }: { locale: Locale }) {
           </ul>
         </nav>
         <div className="flex items-end justify-between">
-          <Stamp size="sm" />
+          <Seal />
           <LanguageSwitcher label={lang('label')} active={locale} names={names} />
         </div>
       </MobileMenu>

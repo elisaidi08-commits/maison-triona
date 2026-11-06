@@ -45,11 +45,7 @@ const PAGES = [
     'grand-age',
     'Des journées qui gardent leur rythme et leurs plaisirs.',
   ],
-  [
-    '/en/services/senior-companionship',
-    'grand-age',
-    'Days that keep their rhythm and their pleasures.',
-  ],
+  ['/en/services/later-life', 'grand-age', 'Days that keep their rhythm and their pleasures.'],
   [
     '/fr/services/enfants',
     'enfants',

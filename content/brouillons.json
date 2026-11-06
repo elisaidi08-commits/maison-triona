@@ -15,7 +15,8 @@
     "Services",
     "ServicePage",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Territories.countries"
   ],
   "en": [
     "Home.title",
@@ -33,6 +34,7 @@
     "Services",
     "ServicePage",
     "House.intro",
-    "House.sections (titres)"
+    "House.sections (titres)",
+    "Territories.countries"
   ]
 }

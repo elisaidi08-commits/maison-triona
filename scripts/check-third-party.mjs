@@ -45,8 +45,8 @@ function scan(file, urlPattern) {
 
 // 1. Sources publiées
 const ABSOLUTE_URL = /(?:https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}[^\s'"`)<>]*/gi
-// Les licences de polices (OFL.txt) citent l'URL de leur auteur : ce n'est pas une ressource chargée.
-const isLicence = (file) => /(^|\/)OFL\.txt$/.test(file)
+// Les licences de polices (OFL.txt, OFL-<police>.txt) citent l'URL de leur auteur : ce n'est pas une ressource chargée.
+const isLicence = (file) => /(^|\/)OFL(-[a-z-]+)?\.txt$/.test(file)
 const sources = [
   ...listTextFiles('src'),
   ...listTextFiles('public'),

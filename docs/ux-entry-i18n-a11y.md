@@ -35,9 +35,9 @@ On demande plutôt **de quoi la personne a besoin**, avec des mots simples, qui 
 |---|---|---|
 | Accroche (déjà validée) | Une seconde vie, comme des vacances qui ne s'arrêtent pas. | A second life, like a holiday that never ends. |
 | Question | Que pouvons-nous faire pour vous, ou pour l'un de vos proches ? | What can we do for you, or for someone close to you? |
-| Choix 1 | **Organiser le quotidien** · Conciergerie de luxe | **Take care of everyday life** · Luxury concierge |
-| Choix 2 | **Accompagner un proche, ou vous-même** · Accompagnement du grand âge | **Support a loved one, or yourself** · Senior companionship |
-| Choix 3 | **Prendre soin des enfants** · Garde d'enfants | **Look after the children** · Childcare |
+| Choix 1 | **Organiser le quotidien** · Conciergerie de luxe | **Arrange everyday life** · Luxury concierge |
+| Choix 2 | **Accompagner un proche, ou vous-même** · Accompagnement du grand âge | **Support a loved one, or yourself** · Companionship in later life |
+| Choix 3 | **Veiller sur les enfants** · Garde d'enfants | **Look after the children** · Childcare |
 | Choix 4 | **Je ne sais pas encore** · Parlons-en, en toute discrétion | **I'm not sure yet** · Let's talk, in complete discretion |
 
 - Le choix 4 mène **directement au formulaire** (`/contact`).
@@ -90,7 +90,7 @@ Structure identique pour les 3 services, courte et rassurante :
 | FR | EN |
 |---|---|
 | Conciergerie de luxe | Luxury concierge |
-| Accompagnement du grand âge | Senior companionship |
+| Accompagnement du grand âge | Companionship in later life |
 | Garde d'enfants | Childcare |
 | Parlons-en, en toute discrétion | Let's talk, in complete discretion |
 | Demande confidentielle | Confidential enquiry |
@@ -183,7 +183,7 @@ Axe (CI), Lighthouse ≥ 95, **test manuel clavier**, **lecteur d'écran** (Voic
 
 | Sujet | Proposition | Raison |
 |---|---|---|
-| Ancre **et** page dédiée (§2.3) | **Les deux.** Les choix de l'accueil pointent vers l'ancre (`/fr#grand-age`) ; `/fr/services/grand-age` existe pour le partage et le SEO (EN : `/en/services/senior-companionship`) | Arrivée immédiate sur l'accueil, URL partageable et indexable ailleurs |
+| Ancre **et** page dédiée (§2.3) | **Les deux.** Les choix de l'accueil pointent vers l'ancre (`/fr#grand-age`) ; `/fr/services/grand-age` existe pour le partage et le SEO (EN : `/en/services/later-life`) | Arrivée immédiate sur l'accueil, URL partageable et indexable ailleurs |
 | Défilement et focus | `scroll-behavior: smooth` seulement sous `prefers-reduced-motion: no-preference` ; `h2` de la scène en `tabindex="-1"`, focus déplacé après l'arrivée ; `scroll-margin-top` égal à la hauteur de l'en-tête | Le titre ciblé ne doit pas finir sous l'en-tête (WCAG 2.2, critère 2.4.11 « focus non masqué ») |
 | Texte sur la vidéo (§2.4) | Calcul fait (`docs/design-tokens.md` §2.4) : pour garantir AA sur **n'importe quelle** image, un voile sapin sous un texte ivoire doit être opaque à **73 %** (87 % pour AAA). **Proposition** : la question et les 4 choix sont posés sur un **aplat ivoire** (colonne de gauche, 5 colonnes sur 12) ; seul le titre peut déborder sur la vidéo, avec un voile sapin ≥ 58 % (grand texte, 3:1). Variante mesurée possible à l'ingestion (pire pixel réel du poster) | La vidéo reste visible sur plus de la moitié de l'écran, la lecture est garantie |
 | Mini-menu (§2.3) | Desktop : rangée « Conciergerie · Grand âge · Enfants · Contact » qui devient collante **sous** l'en-tête une fois le hero passé. Mobile : pas de mini-menu (le menu de l'en-tête et la barre du bas suffisent) | Deux barres collantes en mobile masqueraient trop d'écran |
@@ -242,7 +242,7 @@ DESKTOP 1440 ──────────────────────�
 │     vous-même                    │                                             │
 │     ACCOMPAGNEMENT DU GRAND ÂGE  │                                             │
 │ ──────────────────────── (or)    │                                             │
-│ 03  Prendre soin des enfants     │                                             │
+│ 03  Veiller sur les enfants      │                                             │
 │     GARDE D'ENFANTS              │                                             │
 │ ──────────────────────── (or)    │                                             │
 │     Je ne sais pas encore.       │                                             │
@@ -286,11 +286,11 @@ Statut de tous les textes ci-dessous : **brouillon**, `[À VALIDER PAR CAT]` sau
 |---|---|---|
 | H1 (accroche, **validée**) | Une seconde vie, comme des vacances qui ne s'arrêtent pas. | A second life, like a holiday that never ends. |
 | Question (h2) | Que pouvons-nous faire pour vous, ou pour l'un de vos proches ? | What can we do for you, or for someone close to you? |
-| Choix 1 | Organiser le quotidien · CONCIERGERIE DE LUXE | Take care of everyday life · LUXURY CONCIERGE |
+| Choix 1 | Organiser le quotidien · CONCIERGERIE DE LUXE | Arrange everyday life · LUXURY CONCIERGE |
 | Choix 2 | Accompagner un proche, ou vous-même · ACCOMPAGNEMENT DU GRAND ÂGE | Support a loved one, or yourself · SENIOR COMPANIONSHIP |
-| Choix 3 | Prendre soin des enfants · GARDE D'ENFANTS | Look after the children · CHILDCARE |
+| Choix 3 | Veiller sur les enfants · GARDE D'ENFANTS | Look after the children · CHILDCARE |
 | Choix 4 | Je ne sais pas encore. Parlons-en, en toute discrétion. | I'm not sure yet. Let's talk, in complete discretion. |
-| Mini-menu | Conciergerie · Grand âge · Enfants · Contact | Concierge · Senior companionship · Childcare · Contact |
+| Mini-menu | Conciergerie · Grand âge · Enfants · Contact | Concierge · Companionship in later life · Childcare · Contact |
 | Barre mobile | Écrire en toute discrétion | Write to us in confidence |
 | Bouton vidéo | Mettre la vidéo en pause / Lire la vidéo | Pause the video / Play the video |
 | Suggestion de langue | Ce site existe aussi en français. · Passer en français · Fermer | This site is also available in English. · Switch to English · Close |
@@ -300,7 +300,7 @@ Statut de tous les textes ci-dessous : **brouillon**, `[À VALIDER PAR CAT]` sau
 | Élément | Conciergerie de luxe | Accompagnement du grand âge | Garde d'enfants |
 |---|---|---|---|
 | Titre (h2) FR | Conciergerie de luxe | Accompagnement du grand âge | Garde d'enfants |
-| Titre EN | Luxury concierge | Senior companionship | Childcare |
+| Titre EN | Luxury concierge | Companionship in later life | Childcare |
 | Promesse FR | Une seule interlocutrice pour tout organiser. | Des journées qui gardent leur rythme et leurs plaisirs. | Une présence choisie, pour quelques heures ou pour une saison. |
 | Promesse EN | One person to arrange everything for you. | Days that keep their rhythm and their pleasures. | A trusted presence, for a few hours or a whole season. |
 | Réassurance FR | `[CONTENU À FOURNIR PAR CAT]` (pistes de la spec : une interlocutrice unique · des personnes choisies une à une · une discrétion absolue) | idem | idem |
@@ -309,8 +309,8 @@ Statut de tous les textes ci-dessous : **brouillon**, `[À VALIDER PAR CAT]` sau
 | Étapes EN | 1. You write to us. 2. Cat replies to you personally. 3. She introduces you to the right person. | idem | idem |
 | Le modèle (mise en relation) FR | Chaque personne que la maison vous présente, Cat la connaît personnellement. | idem | idem |
 | Le modèle EN | Every person we introduce to you is someone Cat knows personally. | idem | idem |
-| Précision FR | — | `[À CONFIRMER]` Une présence, pas des soins : pour tout besoin médical, nous vous orientons vers les professionnels adaptés. | — |
-| Précision EN | — | `[TO BE CONFIRMED]` Companionship, not medical care: for any medical need, we will point you to the right professionals. | — |
+| Précision FR | — | `[À CONFIRMER]` Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés. (phrase de Cat, D39) | — |
+| Précision EN | — | `[TO BE CONFIRMED]` For any medical need, we will refer you to the appropriate health professionals. | — |
 | CTA FR | Parlez-nous de votre situation | idem | idem |
 | CTA EN | Tell us about your situation | idem | idem |
 | Lien | `/fr/contact?service=conciergerie` | `/fr/contact?service=grand-age` | `/fr/contact?service=enfants` |
@@ -322,7 +322,7 @@ Statut de tous les textes ci-dessous : **brouillon**, `[À VALIDER PAR CAT]` sau
 |---|---|---|
 | Champ facultatif « pour qui » | Pour qui ? (facultatif) · Pour moi · Pour un proche · Je préfère ne pas le dire | Who is it for? (optional) · For myself · For someone close to me · I'd rather not say |
 | Aide sous le message | Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. | There's no need to share any medical details; we'll talk about it in person. |
-| Nature de la demande (présélectionnée par `?service=`) | Conciergerie de luxe · Accompagnement du grand âge · Garde d'enfants · Je ne sais pas encore | Luxury concierge · Senior companionship · Childcare · I'm not sure yet |
+| Nature de la demande (présélectionnée par `?service=`) | Conciergerie de luxe · Accompagnement du grand âge · Garde d'enfants · Je ne sais pas encore | Luxury concierge · Companionship in later life · Childcare · I'm not sure yet |
 
 ## Annexe D · Documents mis à jour en conséquence
 

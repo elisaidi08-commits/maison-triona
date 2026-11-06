@@ -10,14 +10,14 @@ Source complète : `docs/design-tokens.md` et `docs/art-direction.md`. En cas d'
 ## Couleurs (`src/styles/tokens.css`)
 | Classe | Hex | Rôle |
 |---|---|---|
-| `ivoire` | `#F4EDE0` | Fond (~80 %) |
-| `sapin` | `#1C3B2A` | Signature : titres, wordmark, bloc Contact, focus |
+| `ivoire` | `#F3EDE1` | Fond (~80 %) |
+| `sapin` | `#26382F` | Signature : titres, nom du logo, bloc Contact, focus |
 | `cypres` | `#3F5A3C` | Second rôle : numéros, survols |
 | `pierre` | `#D8C8AE` | Surface rare |
 | `sauge` | `#9AAE8F` | Filets sur sombre, désactivé |
-| `or` | `#B8944D` | Filets, point du « K. », bordure de bouton sur sapin |
-| `champagne` | `#D2B98A` | Seul or **en texte**, sur sapin uniquement |
-| `encre` / `encre-68` | `#1F1E1A` / 68 % | Texte / texte secondaire |
+| `or` | `#B58E4C` | Filets, T du logo sur ivoire, point du « K. », bordure de bouton sur sapin |
+| `champagne` | `#C6A96B` | Seul or **en texte**, sur sapin uniquement |
+| `encre` / `encre-68` | `#2A241F` / 68 % | Texte / texte secondaire |
 | `ivoire-80` | ivoire 80 % | Texte secondaire sur sapin (AAA) |
 | `terracotta` | `#A66A4E` | Ligne de champ en erreur |
 
@@ -26,14 +26,14 @@ Source complète : `docs/design-tokens.md` et `docs/art-direction.md`. En cas d'
 ## Typographie
 | Classe | Usage | Famille |
 |---|---|---|
-| `text-display-xl` | Titre du hero (72 px desktop → 44 px mobile) | Display Light |
-| `text-display-l` | Titre de page | Display Light |
-| `text-title-h2` | Titre de section | Display Regular |
-| `text-title-h3` | Titre de ligne (services) | Manrope Medium |
-| `text-body-l` / `text-body` / `text-body-s` | Textes | Manrope Regular |
-| `text-label` | Label capitales, +0,12 em, 13 px | Manrope Medium |
+| `text-display-xl` | Titre du hero (72 px desktop → 44 px mobile) | Cormorant Garamond Light |
+| `text-display-l` | Titre de page | Cormorant Garamond Light |
+| `text-title-h2` | Titre de section | Cormorant Garamond Regular |
+| `text-title-h3` | Titre de ligne (services) | EB Garamond Medium |
+| `text-body-l` / `text-body` / `text-body-s` | Textes | EB Garamond Regular (corps 20 px) |
+| `text-label` | Label capitales, +0,12 em, 14 px | EB Garamond Medium |
 
-Règles : display jamais en Bold, jamais sous ~32 px ; un seul titre display par écran ; pas d'italique (sauf arbitrage Q4) ; **corps 18 px minimum** ; colonne de lecture `max-w-measure` (640 px).
+Règles : display jamais en Bold, jamais sous ~32 px ; un seul titre display par écran ; pas d'italique (sauf arbitrage Q4) ; **corps 20 px (EB Garamond, D50), jamais sous 18 px minimum** ; colonne de lecture `max-w-measure` (640 px).
 
 Texte sur image : seul le titre display du hero, sur voile sapin ≥ 58 % (`--veil-hero`) ; tout texte courant sur aplat (`docs/design-tokens.md` §2.4).
 

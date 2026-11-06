@@ -15,6 +15,8 @@
 /LOGO*
 /TYPO*
 /maison-triona-prd.pdf
+# Kit du logo (sources et fichiers livrés) : le site n'utilise que src/components/brand/logo-paths.ts
+/brand
 /bascule-satoshi.js
 
 # Tests et rapports

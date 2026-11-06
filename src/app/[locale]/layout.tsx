@@ -9,7 +9,7 @@ import { MobileBar } from '@/components/layout/MobileBar'
 import { SkipLink } from '@/components/layout/SkipLink'
 import { localizedPath } from '@/i18n/pathnames'
 import { routing, type Locale } from '@/i18n/routing'
-import { manrope, newsreader } from '@/styles/fonts'
+import { cormorant, ebGaramond } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // Layout racine par langue (/fr, /en). La langue vient du segment [locale] via next/root-params.
@@ -45,7 +45,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
   const suggestion = await getTranslations({ locale: other, namespace: 'LanguageSuggestion' })
 
   return (
-    <html lang={locale} className={`${manrope.variable} ${newsreader.variable}`}>
+    <html lang={locale} className={`${cormorant.variable} ${ebGaramond.variable}`}>
       <body>
         <SkipLink label={t('label')} />
         <Header locale={locale} />

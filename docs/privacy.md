@@ -82,7 +82,7 @@ Plausible n'utilise pas de cookie et compte les visiteurs avec une empreinte quo
 **Ce que cela implique pour le site** `[À CONFIRMER avec Cat, À VALIDER JURIDIQUEMENT]`
 - Nos images sont photoréalistes et montrent des lieux, des objets et des mains qui ressemblent à des choses existantes : la qualification de « deep fake » est **plausible**, surtout pour un site commercial où un visiteur pourrait croire voir de vrais lieux ou de vrais clients.
 - Une mention **seulement** dans les mentions légales ne satisfait probablement pas l'exigence d'information « au plus tard lors de la première exposition ».
-- **Option recommandée** : une ligne discrète et permanente en pied de page, sur chaque page (« Images créées avec l'aide de l'intelligence artificielle. » / « Images created with the help of artificial intelligence. »), détaillée dans les mentions légales. Coût visuel faible, conformité défendable.
+- **Option recommandée** : une ligne discrète et permanente en pied de page, sur chaque page (« Images créées par intelligence artificielle. » / « Images created with artificial intelligence. »), détaillée dans les mentions légales. Coût visuel faible, conformité défendable.
 - Le réencodage web (ffmpeg) **supprime** les métadonnées C2PA : conserver les originaux marqués, et faire trancher par le conseil si cela pose problème.
 - Hors UE : la Suisse et Monaco ne sont pas soumis au règlement IA, mais le droit de la concurrence déloyale (publicité trompeuse) s'applique partout. La mention en pied de page couvre aussi ce risque.
 
