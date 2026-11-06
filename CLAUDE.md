@@ -66,6 +66,7 @@ Next.js 16 (App Router, `proxy.ts`, Turbopack) · React 19 · TypeScript strict 
 npm run dev | build | start | lint | typecheck | format | format:check
 npm run test:e2e           # Playwright (formulaire, entrée par besoin, i18n)
 npm run test:a11y          # axe, WCAG 2.2 AA, FR et EN
+npm run test:unit          # tests unitaires (node --test) : calcul des créneaux
 npm run lighthouse         # Lighthouse 13 mobile + desktop (serveur lancé sur le port 3100)
 npm run check:content      # échoue s'il reste un placeholder ou un brouillon
 npm run check:i18n         # échoue si une clé existe dans une langue et pas l'autre
