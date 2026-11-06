@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ViewTransition } from 'react'
 import { LoopVideo } from '@/components/media/LoopVideo'
@@ -29,6 +30,9 @@ type SceneServiceProps = {
   mediaRight?: boolean
   // Sur l'accueil : lien vers la page du service, sous le CTA.
   pageLink?: boolean
+  // Second temps de la scène ; par défaut, la version courte de l'accueil. Les pages de service y
+  // placent leurs réponses aux cinq questions (ServiceDetails).
+  children?: ReactNode
 }
 
 export async function SceneService({
@@ -37,6 +41,7 @@ export async function SceneService({
   heading = 'h2',
   mediaRight = false,
   pageLink = false,
+  children,
 }: SceneServiceProps) {
   const t = await getTranslations('Services')
   const video = await getTranslations('Video')
@@ -67,7 +72,7 @@ export async function SceneService({
 
   // Réassurance : pour le grand âge, la précision sur le médical (sans le mot « soins », D39) ; sinon le modèle
   // de la maison (des personnes qu'elle connaît personnellement).
-  const details = (
+  const details = children ?? (
     <>
       <div className="flex flex-col gap-16">
         <h3 className="text-label text-encre uppercase">{t('situationsLabel')}</h3>
