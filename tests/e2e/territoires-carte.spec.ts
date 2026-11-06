@@ -62,6 +62,42 @@ test('un clic sur un pays de la carte amène à son texte', async ({ page }) => 
   await expect.poll(() => active(page)).toEqual(['CH'])
 })
 
+test('sur téléphone, le pays s’allume quand son titre est sous la carte, pas caché par elle', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr/territoires')
+  // Défile par petits pas, comme un lecteur, jusqu'à ce que la France soit lue.
+  await page.evaluate(async () => {
+    for (let i = 0; i < 300; i++) {
+      if (document.querySelector('[data-carte] path[data-actif][data-pays="FR"]')) return
+      window.scrollBy({ top: 20, behavior: 'instant' })
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  })
+  expect(await active(page)).toEqual(['FR'])
+  const carte = await page.locator('[data-carte-cadre]').boundingBox()
+  const titre = await page.locator('#territoire-fr h2').boundingBox()
+  expect(titre!.y).toBeGreaterThanOrEqual(carte!.y + carte!.height)
+  // Une fois le zoom fini, aucun nom de la carte ne déborde du cadre.
+  const debords = () =>
+    page.locator('[data-carte]').evaluate((element) => {
+      const cadre = element.getBoundingClientRect()
+      return Array.from(element.querySelectorAll<HTMLElement>('[data-carte-noms] > *'))
+        .filter((etiquette) => {
+          const style = getComputedStyle(etiquette)
+          return style.visibility !== 'hidden' && style.opacity !== '0'
+        })
+        .map((etiquette) => ({
+          cle: etiquette.dataset.cle,
+          r: etiquette.querySelector('[data-nom]')!.getBoundingClientRect(),
+        }))
+        .filter(({ r }) => r.left < cadre.left - 1 || r.right > cadre.right + 1)
+        .map(({ cle }) => cle)
+    })
+  await expect.poll(debords).toEqual([])
+})
+
 test('après les pays, ce que la maison fait : les trois services et le contact', async ({
   page,
 }) => {

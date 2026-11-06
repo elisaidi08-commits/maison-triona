@@ -61,7 +61,7 @@ export default async function TerritoriesPage() {
                 id={`territoire-${code.toLowerCase()}`}
                 data-territoire={code}
                 aria-labelledby={`territoire-${code.toLowerCase()}-titre`}
-                className="flex flex-col justify-center gap-16 border-t border-or py-48 lg:min-h-scene-intro"
+                className="flex flex-col justify-center gap-16 border-t border-or py-48"
               >
                 <p aria-hidden="true" className="text-label text-encre">
                   {`0${index + 1}`}

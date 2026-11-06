@@ -567,10 +567,38 @@
     margin-inline: auto;
     overflow: hidden;
   }
-  @media (width >= 64rem) {
+  /* En portrait sous 1 024 px (téléphone, tablette) : une colonne, la carte collée en haut, le texte
+     défile dessous. À l'horizontale (téléphone ou tablette) et dès 1 024 px : deux colonnes, la
+     carte collée au milieu de la hauteur visible (au-dessus de la barre mobile), chaque pays un
+     temps de lecture (hauteur de min-h-scene-intro). */
+  @media (orientation: landscape), (width >= 64rem) {
+    [data-carte-recit] {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--spacing-gutter);
+    }
     [data-carte-cadre] {
-      top: var(--spacing-48);
+      display: flex;
+      align-items: center;
+      height: calc(100svh - var(--barre-mobile-height));
       padding-block: 0;
+    }
+    [data-carte] {
+      width: min(100%, calc(100svh - var(--barre-mobile-height) - 2 * var(--spacing-16)));
+    }
+    [data-territoire] {
+      min-height: calc((100svh - var(--mini-menu-height)) / 2 + 96px);
+    }
+  }
+  @media (width >= 64rem) {
+    [data-carte-recit] {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    [data-carte-cadre] {
+      grid-column: span 7;
+    }
+    [data-carte-textes] {
+      grid-column: 9 / span 4;
     }
     [data-carte] {
       width: min(100%, calc(100svh - 2 * var(--spacing-48)));
@@ -628,7 +656,10 @@
     border-radius: 50%;
     background-color: var(--color-champagne);
   }
+  /* --dy : nom remonté ou descendu d'une demi-hauteur quand il en recouvrirait un autre ; le repère
+     reste sur son point (CarteTerritoires.tsx, placer). */
   [data-carte-noms] [data-nom] {
+    translate: 0 var(--dy, 0);
     padding: var(--spacing-4) var(--spacing-8);
     background-color: var(--color-ivoire);
     color: var(--color-encre);
