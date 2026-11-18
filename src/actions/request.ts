@@ -2,9 +2,13 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { localizedPath } from '@/i18n/pathnames'
 import { getPool } from '@/lib/db/pool'
 import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
+import { emailConfigFromEnv, type EmailConfig } from '@/lib/email/config'
+import { createOutboxDeps } from '@/lib/outbox/deps'
+import { sendNow } from '@/lib/outbox/process'
 import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
 import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
@@ -18,9 +22,10 @@ import { secretFormulaire } from '@/lib/security/secret'
 import { lireValeurs, validerDemande } from '@/lib/validation/demande'
 import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 import { VaultKeyError } from '@/lib/vault/seal'
-import { storeRequest } from '@/lib/vault/store'
+import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 
-// Envoi du formulaire de contact (stories 3.1, 3.5 et 3.2 B, docs/architecture.md §6.1 et §6.7).
+// Envoi du formulaire de contact (stories 3.1, 3.5, 3.2 B et 3.3, docs/architecture.md §6.1, §6.6
+// et §6.7).
 // Une Server Action est un point d'entrée POST public : tout est revérifié ici, dans cet ordre :
 // 1. piège à robots (champ caché rempli) : seul rejet silencieux, la réponse ressemble à un envoi
 //    abouti (coffre ouvert : la page de remerciement ; fermé : « ouvrira bientôt ») ;
@@ -36,11 +41,19 @@ import { storeRequest } from '@/lib/vault/store'
 // 7. coffre : sans `DATABASE_URL` ou sans `VAULT_PUBLIC_KEY`, envoi fermé ; rien n'est enregistré,
 //    envoyé ni journalisé, et le formulaire affiche « L'envoi des demandes ouvrira bientôt ».
 //    Configuré : la demande est scellée avec la clé publique puis écrite dans le coffre avec la
-//    version de la politique de confidentialité acceptée (`stored`), et le visiteur part vers
-//    /contact/merci (303 sans JavaScript). Échec d'écriture
+//    version de la politique de confidentialité acceptée (`stored`) et, e-mails configurés, avec
+//    la notification à Cat dans la boîte d'envoi, dans la même transaction (`queued`) ; le
+//    visiteur part vers /contact/merci (303 sans JavaScript). Échec d'écriture
 //    (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a pas
-//    abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé).
-//    Les e-mails (boîte d'envoi, même transaction) viendront avec la story 3.3.
+//    abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé) ; ni
+//    la demande ni la notification ne sont écrites.
+// E-mails (story 3.3) : la configuration est lue juste avant l'écriture. Vide, l'envoi est coupé
+// (`mail:disabled`) ; à moitié posée, `failed:config`, une fois par instance l'un et l'autre :
+// la demande s'enregistre quand même, sans notification. Le premier essai d'envoi part avec
+// `after()`, après la réponse (redirection comprise) ; tout étant déjà en base, la tâche Vercel
+// Cron `/api/cron/envoi` reprend le message si cet essai n'aboutit pas. La notification ne porte
+// que la date et le lien vers le coffre, « Prioritaire » au sujet si l'urgence est « urgent » :
+// rien de la demande (D06).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
 // Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.
@@ -62,17 +75,49 @@ type Statut =
   | 'failed:config'
   | 'failed:vault'
   | 'stored'
+  | 'queued'
+  | 'mail:disabled'
 
 function journaliser(statut: Statut) {
   console.info(`[demande] ${statut}`)
 }
 
-// Configuration manquante (secret, variables d'Upstash) : signalée une fois par instance.
+// Configuration manquante (secret, variables d'Upstash, e-mails, compte de l'envoi) : signalée une
+// fois par instance, `failed:config` sauf mention contraire (`mail:disabled`, e-mails coupés).
 const signalees = new Set<string>()
-function configurationManquante(element: string) {
+function configurationManquante(
+  element: string,
+  statut: 'failed:config' | 'mail:disabled' = 'failed:config',
+) {
   if (signalees.has(element)) return
   signalees.add(element)
-  journaliser('failed:config')
+  journaliser(statut)
+}
+
+// Configuration des e-mails, ou `null` si l'envoi est coupé. Jamais l'erreur elle-même (elle
+// nomme des variables) : un statut seulement.
+function configurationEmails(): EmailConfig | null {
+  try {
+    const config = emailConfigFromEnv(process.env)
+    if (config === null) configurationManquante('e-mails', 'mail:disabled')
+    return config
+  } catch {
+    configurationManquante('e-mails')
+    return null
+  }
+}
+
+// Premier essai d'envoi, après la réponse. Rien ne sort du rappel : `sendNow` ne lève jamais, et
+// `createOutboxDeps` ne lève que sur un compte de l'envoi absent ou refusé (ENVOI_DATABASE_URL).
+// Le message reste alors en base : la tâche planifiée le reprend.
+function premierEssai(config: EmailConfig, id: string) {
+  after(async () => {
+    try {
+      await sendNow(createOutboxDeps(config), id)
+    } catch {
+      configurationManquante('envoi')
+    }
+  })
 }
 
 async function adresseIp(): Promise<string> {
@@ -206,11 +251,15 @@ export async function envoyerDemande(
   // Coffre non configuré : rien n'est enregistré, envoyé ni journalisé.
   if (!clePublique) return fermee
 
+  // E-mails coupés ou mal configurés : la demande s'enregistre quand même, sans notification.
+  const emails = configurationEmails()
+  let enregistree: StoredRequest
   try {
-    await storeRequest(getPool(), resultat.demande, {
+    enregistree = await storeRequest(getPool(), resultat.demande, {
       publicKey: clePublique,
       privacyVersion: PRIVACY_POLICY_VERSION,
       now: new Date(maintenant),
+      notify: emails !== null,
     })
   } catch (error) {
     // Jamais l'erreur elle-même : un statut seulement.
@@ -218,6 +267,11 @@ export async function envoyerDemande(
     return { statut: 'echec', valeurs, jeton: signerHorodatage(Date.now(), secret) }
   }
   journaliser('stored')
-  // Hors du try : `redirect` lève une exception de contrôle (doc Next.js).
+  if (emails && enregistree.outbox.length > 0) {
+    journaliser('queued')
+    for (const id of enregistree.outbox) premierEssai(emails, id)
+  }
+  // En dernier, hors du try : `redirect` lève une exception de contrôle (doc Next.js) ; les
+  // rappels `after()` déjà posés s'exécutent quand même.
   redirect(merci)
 }

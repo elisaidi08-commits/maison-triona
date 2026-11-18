@@ -21,15 +21,24 @@ import { retentionDeadline } from '../../src/lib/vault/retention.ts'
 import { VaultKeyError } from '../../src/lib/vault/seal.ts'
 import { splitRequest, storeRequest } from '../../src/lib/vault/store.ts'
 import type { StoreOptions } from '../../src/lib/vault/store.ts'
+import { URGENCES } from '../../src/lib/demande/champs.ts'
 import { PRIVACY_POLICY_VERSION } from '../../src/lib/privacy.ts'
-import { resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import { applyRoles, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
 
-// Enregistrement chiffré d'une demande (story 3.2, partie B) et fuite simulée : la base entière,
-// relue en texte, ne contient aucun nom, aucune coordonnée ni aucun mot libre. Données factices.
+// Enregistrement chiffré d'une demande (story 3.2, partie B) et de sa notification dans la boîte
+// d'envoi, dans la même transaction (story 3.3). Fuite simulée : la base entière, boîte d'envoi
+// comprise, relue en texte, ne contient aucun nom, aucune coordonnée ni aucun mot libre.
+// Données factices.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const PHRASE = 'phrase de passe factice des tests d’intégration'
 const pool = testPool()
+// Connexion qui prend le rôle du site public dès l'ouverture, comme la Server Action.
+const sitePublic = new pg.Pool({
+  connectionString: TEST_DATABASE_URL,
+  options: '-c role=site_public',
+  max: 2,
+})
 
 const DEMANDE: Demande = {
   besoin: 'grand-age',
@@ -73,6 +82,7 @@ async function toutLeTexte(): Promise<string> {
      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
   )
   assert.ok(tables.some((table) => table.table_name === 'vault_requests'))
+  assert.ok(tables.some((table) => table.table_name === 'outbox'))
   const morceaux: string[] = []
   for (const { table_name } of tables) {
     const nom = `"${table_name.replaceAll('"', '""')}"`
@@ -142,8 +152,25 @@ function enregistrer(demande: Demande, options: Partial<StoreOptions> = {}, base
     publicKey: clePublique,
     privacyVersion: PRIVACY_POLICY_VERSION,
     now: new Date(),
+    notify: true,
     ...options,
   })
+}
+
+interface LigneEnvoi {
+  id: string
+  template: string
+  request_id: string | null
+  priority: boolean
+  status: string
+  created_at: Date
+}
+
+async function boiteEnvoi(): Promise<LigneEnvoi[]> {
+  const { rows } = await pool.query<LigneEnvoi>(
+    'SELECT id, template, request_id, priority, status, created_at FROM outbox ORDER BY created_at',
+  )
+  return rows
 }
 
 describe('enregistrement chiffré dans le coffre', () => {
@@ -153,21 +180,29 @@ describe('enregistrement chiffré dans le coffre', () => {
     const cree = await createKeyPacket(PHRASE)
     clePublique = cree.publicKey
     cles = await unlockPrivateKey(cree.packet, PHRASE)
+    await applyRoles(pool)
   })
-  beforeEach(() => pool.query('TRUNCATE vault_requests, vault_access_log RESTART IDENTITY'))
-  after(() => pool.end())
+  beforeEach(() => pool.query('TRUNCATE vault_requests, vault_access_log, outbox RESTART IDENTITY'))
+  after(async () => {
+    await sitePublic.end()
+    await pool.end()
+  })
 
   it('fuite simulée : aucune donnée personnelle lisible dans toute la base', async () => {
     await enregistrer(DEMANDE)
-    await enregistrer({ ...DEMANDE, locale: 'en', langue: 'en' })
+    await enregistrer({ ...DEMANDE, locale: 'en', langue: 'en', urgence: 'urgent' })
+    assert.equal((await boiteEnvoi()).length, 2)
     const texte = await toutLeTexte()
     assert.match(texte, /grand-age/)
+    // La boîte d'envoi est bien relue : ses lignes figurent dans le texte contrôlé.
+    assert.match(texte, /request_notification/)
     assert.deepEqual(fuites(texte), [])
   })
 
   it('fuite simulée : aucun texte en clair dans les paramètres envoyés à la base', async () => {
     const envoye = await espionner(() => enregistrer(DEMANDE))
     assert.match(envoye, /INSERT INTO vault_requests/)
+    assert.match(envoye, /INSERT INTO outbox/)
     assert.match(envoye, /grand-age/)
     // Les octets scellés sont bien passés en paramètre (16 432 octets, en hexadécimal).
     assert.match(envoye, /[0-9a-f]{32864}/)
@@ -199,7 +234,7 @@ describe('enregistrement chiffré dans le coffre', () => {
 
   it('range les colonnes de tri en clair, avec l’échéance de conservation', async () => {
     const maintenant = new Date('2027-03-15T10:00:00Z')
-    const id = await enregistrer(DEMANDE, { now: maintenant })
+    const { id } = await enregistrer(DEMANDE, { now: maintenant })
     const [ligne] = await listRequests(pool)
     assert.ok(ligne)
     assert.equal(ligne.id, id)
@@ -234,7 +269,7 @@ describe('enregistrement chiffré dans le coffre', () => {
   })
 
   it('rouvre la demande avec la clé privée', async () => {
-    const id = await enregistrer(DEMANDE)
+    const { id } = await enregistrer(DEMANDE)
     const octets = await readSealed(pool, id, 'compte-factice')
     assert.ok(octets)
     assert.deepEqual(await openSealed(octets, cles), splitRequest(DEMANDE).sealed)
@@ -247,6 +282,7 @@ describe('enregistrement chiffré dans le coffre', () => {
       return true
     })
     assert.deepEqual(await listRequests(pool), [])
+    assert.deepEqual(await boiteEnvoi(), [])
   })
 
   it('échec d’écriture (base injoignable) : une erreur réduite à son code', async () => {
@@ -264,5 +300,94 @@ describe('enregistrement chiffré dans le coffre', () => {
       await absente.end()
     }
     assert.deepEqual(await listRequests(pool), [])
+  })
+
+  it('écrit la notification dans la même transaction que la demande', async () => {
+    const resultat = await enregistrer(DEMANDE)
+    const [demande] = await listRequests(pool)
+    const lignes = await boiteEnvoi()
+    assert.ok(demande)
+    assert.equal(lignes.length, 1)
+    const [ligne] = lignes
+    assert.ok(ligne)
+    assert.deepEqual(resultat, { id: demande.id, outbox: [ligne.id] })
+    assert.deepEqual(
+      {
+        template: ligne.template,
+        request_id: ligne.request_id,
+        priority: ligne.priority,
+        status: ligne.status,
+      },
+      {
+        template: 'request_notification',
+        request_id: demande.id,
+        priority: false,
+        status: 'pending',
+      },
+    )
+    // `now()` de PostgreSQL est l'heure de début de la transaction : même instant, à la
+    // microseconde, pour les deux lignes.
+    const { rows } = await pool.query<{ meme: boolean }>(
+      `SELECT r.created_at = o.created_at AS meme
+         FROM vault_requests r JOIN outbox o ON o.request_id = r.id`,
+    )
+    assert.deepEqual(rows, [{ meme: true }])
+  })
+
+  it('ne marque prioritaire que l’urgence « urgent »', async () => {
+    for (const urgence of URGENCES) {
+      const { id } = await enregistrer({ ...DEMANDE, urgence })
+      const { rows } = await pool.query<{ priority: boolean }>(
+        'SELECT priority FROM outbox WHERE request_id = $1',
+        [id],
+      )
+      assert.deepEqual(rows, [{ priority: urgence === 'urgent' }], urgence)
+    }
+  })
+
+  it('sans notification demandée, n’écrit rien dans la boîte d’envoi', async () => {
+    const resultat = await enregistrer(DEMANDE, { notify: false })
+    const [demande] = await listRequests(pool)
+    assert.ok(demande)
+    assert.deepEqual(resultat, { id: demande.id, outbox: [] })
+    assert.deepEqual(await boiteEnvoi(), [])
+  })
+
+  it('si la notification ne s’écrit pas, la demande ne s’écrit pas non plus', async () => {
+    await pool.query(`
+      CREATE FUNCTION refuser_envoi() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN
+        RAISE EXCEPTION 'boîte d''envoi refusée par le test';
+      END
+      $$;
+      CREATE TRIGGER refuser_envoi BEFORE INSERT ON outbox
+        FOR EACH ROW EXECUTE FUNCTION refuser_envoi();
+    `)
+    try {
+      await assert.rejects(enregistrer(DEMANDE), (error: unknown) => {
+        assert.ok(error instanceof VaultError)
+        assert.equal(error.code, 'P0001')
+        assert.ok(!error.message.includes('refusée par le test'))
+        return true
+      })
+    } finally {
+      await pool.query('DROP TRIGGER refuser_envoi ON outbox; DROP FUNCTION refuser_envoi()')
+    }
+    assert.deepEqual(await listRequests(pool), [])
+    assert.deepEqual(await boiteEnvoi(), [])
+  })
+
+  it('suffit au rôle site_public : demande et notification, sans relecture', async () => {
+    const { rows } = await sitePublic.query<{ role: string }>('SELECT current_user AS role')
+    assert.equal(rows[0]?.role, 'site_public')
+    const { id, outbox } = await enregistrer({ ...DEMANDE, urgence: 'urgent' }, {}, sitePublic)
+    assert.deepEqual(
+      (await listRequests(pool)).map((ligne) => ligne.id),
+      [id],
+    )
+    assert.deepEqual(
+      (await boiteEnvoi()).map((ligne) => [ligne.id, ligne.request_id, ligne.priority]),
+      [[outbox[0], id, true]],
+    )
   })
 })
