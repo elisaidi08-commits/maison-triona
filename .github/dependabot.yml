@@ -10,6 +10,10 @@ updates:
       day: monday
       timezone: Europe/Brussels
     open-pull-requests-limit: 5
+    # Les types de Node suivent la version du moteur (package.json : node 24.x), pas la dernière.
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       correctifs:
         update-types: [minor, patch]
