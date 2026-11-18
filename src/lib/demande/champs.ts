@@ -67,9 +67,10 @@ export const CODES_ERREUR = [
 export type CodeErreur = (typeof CODES_ERREUR)[number]
 export type Erreurs = Partial<Record<Champ, CodeErreur>>
 
-// Réponse de la Server Action. `ferme` : tout est valide, mais l'envoi n'est pas encore ouvert
-// (le coffre arrive au lot E) ; rien n'est enregistré ni envoyé. `trop-tot`, `limite`, `echec` :
-// rien n'est parti, la saisie reste dans le formulaire.
+// Réponse de la Server Action. `ferme` : tout est valide, mais l'envoi n'est pas ouvert (coffre
+// non configuré) ; rien n'est enregistré ni envoyé. `trop-tot`, `limite`, `echec` : rien n'est
+// parti, la saisie reste dans le formulaire. Un envoi abouti ne renvoie pas d'état : la Server
+// Action redirige vers /contact/merci.
 export type StatutDemande = 'initial' | 'erreurs' | 'trop-tot' | 'limite' | 'echec' | 'ferme'
 
 export type EtatDemande = {

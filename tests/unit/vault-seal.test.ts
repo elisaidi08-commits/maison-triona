@@ -199,7 +199,7 @@ describe('modules d’ouverture, prêts pour le navigateur', () => {
         new URL(`../../src/lib/vault/${fichier}`, import.meta.url),
         'utf8',
       )
-      const imports = [...source.matchAll(/from '([^']+)'/g)].map((match) => match[1])
+      const imports = [...source.matchAll(/(?:from |import\()'([^']+)'/g)].map((match) => match[1])
       for (const specifier of imports) {
         assert.ok(
           specifier === 'libsodium-wrappers-sumo' || specifier?.startsWith('./'),

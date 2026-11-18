@@ -964,5 +964,11 @@
         "failed": "Your message could not be sent. It is still in the form."
       }
     }
+  },
+  "ContactThanks": {
+    "metaTitle": "Thank you",
+    "title": "Thank you, your request has arrived safely.",
+    "body": "We reply within 48 working hours, Monday to Friday.",
+    "back": "Back to the home page"
   }
 }

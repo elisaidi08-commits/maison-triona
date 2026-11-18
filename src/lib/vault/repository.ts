@@ -1,4 +1,4 @@
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 
 import { withTransaction } from '../db/transaction.ts'
 
@@ -139,11 +139,15 @@ function toSummary(row: SummaryRow): VaultRequestSummary {
   }
 }
 
-// Enregistre une demande déjà chiffrée et renvoie son identifiant.
-export async function insertRequest(pool: Pool, input: NewVaultRequest): Promise<string> {
+// Enregistre une demande déjà chiffrée et renvoie son identifiant. Accepte le client d'une
+// transaction (`withTransaction`) : la boîte d'envoi (story 3.3) s'écrira avec la demande.
+export async function insertRequest(
+  db: Pool | PoolClient,
+  input: NewVaultRequest,
+): Promise<string> {
   assertValidDate(input.retentionUntil, 'Échéance de conservation')
   return guard('insertRequest', async () => {
-    const { rows } = await pool.query<{ id: string }>(
+    const { rows } = await db.query<{ id: string }>(
       `INSERT INTO vault_requests
          (kind, service, country, locale, urgency, source, sealed, retention_until)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

@@ -28,7 +28,8 @@
     "Share",
     "Accessibility",
     "Meta.ogAlt",
-    "Contact"
+    "Contact",
+    "ContactThanks"
   ],
   "en": [
     "Home.title",
@@ -59,6 +60,7 @@
     "Share",
     "Accessibility",
     "Meta.ogAlt",
-    "Contact"
+    "Contact",
+    "ContactThanks"
   ]
 }
