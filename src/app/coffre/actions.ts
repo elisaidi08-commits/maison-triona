@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
+import { qrCodeSvg } from '@/lib/auth/qr-code'
 import { getAuth } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
 
@@ -31,6 +32,9 @@ export type EtatEnrolement =
       // URI otpauth (elle contient le secret) et codes de secours : affichés une fois, au retour
       // de l'activation ; sans JavaScript, ils ne survivent pas à une erreur de saisie du code.
       uri: string | null
+      // QR code de l'URI, en SVG produit ici, sur le serveur (D68) ; null s'il n'a pas pu l'être :
+      // le secret en texte suffit alors.
+      qr: string | null
       codesSecours: string[]
       erreur: 'saisie' | 'code' | 'trop-de-tentatives' | 'indisponible' | null
     }
@@ -116,7 +120,8 @@ export async function enrolerTotp(
   const reponse = await appeler('/two-factor/enable', { password: motDePasse })
   if (reponse.statut === 200) {
     const { totpURI, backupCodes } = reponse.donnees as { totpURI: string; backupCodes: string[] }
-    return { etape: 'code', uri: totpURI, codesSecours: backupCodes, erreur: null }
+    const qr = await qrCodeSvg(totpURI).catch(() => null)
+    return { etape: 'code', uri: totpURI, qr, codesSecours: backupCodes, erreur: null }
   }
   if (reponse.code === 'TOTP_ALREADY_ENABLED') redirect('/coffre')
   if (reponse.statut === 401) redirect('/coffre/connexion')
@@ -138,7 +143,9 @@ async function confirmerEnrolement(
   donnees: FormData,
 ): Promise<EtatEnrolement> {
   const suite =
-    avant.etape === 'code' ? avant : { etape: 'code' as const, uri: null, codesSecours: [] }
+    avant.etape === 'code'
+      ? avant
+      : { etape: 'code' as const, uri: null, qr: null, codesSecours: [] }
   const code = champ(donnees, 'code').replace(/\s+/g, '')
   if (!code) return { ...suite, erreur: 'saisie' }
 

@@ -13,6 +13,7 @@ import type { AuthCoffre } from '../../src/lib/auth/auth.ts'
 import { creerCompte } from '../../src/lib/auth/comptes.ts'
 import { servirAuth } from '../../src/lib/auth/enveloppe.ts'
 import { purgerAuth } from '../../src/lib/auth/purge.ts'
+import { qrCodeSvg } from '../../src/lib/auth/qr-code.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { insertRequest } from '../../src/lib/vault/repository.ts'
 import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
@@ -333,6 +334,17 @@ describe('authentification du coffre', () => {
     const { rows } = await pool.query('SELECT count(*)::int AS n FROM "rateLimit"')
     assert.equal(rows[0].n, 0)
     assert.deepEqual(await journal(), [])
+  })
+
+  it('produit le QR code d’enrôlement à partir de l’URI de Better Auth (D68)', async () => {
+    await compteSansTotp('qr@exemple.test')
+    const navigateur = new Navigateur()
+    assert.equal((await navigateur.connexion('qr@exemple.test')).statut, 200)
+    const enrolement = await navigateur.appeler('/two-factor/enable', { password: MOT_DE_PASSE })
+    const { totpURI } = enrolement.donnees as { totpURI: string }
+    const svg = await qrCodeSvg(totpURI)
+    assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="240" height="240" /)
+    assert.ok(!svg.includes(secretDeLUri(totpURI)))
   })
 
   it('journalise l’enrôlement, le mot de passe juste et le code de secours à part', async () => {
