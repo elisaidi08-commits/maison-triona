@@ -50,6 +50,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 | `docs/media-pipeline.md` | Encodage, ingestion, intégration des médias |
 | `docs/architecture.md` | Avant d'installer ou de configurer quoi que ce soit |
 | `docs/privacy.md` | Formulaire, mesure, journaux, mention IA |
+| `docs/rgpd/` | Dossier RGPD (registre des traitements, analyse d'impact, procédures, sous-traitants) : à mettre à jour avant tout nouveau traitement, outil ou prestataire |
 | `docs/plan-implementation.md` | Quelle story faire, ses critères |
 | `docs/a11y-report.md` | Résultats des tests d'accessibilité (à remplir) |
 | `docs/audit-v1.md` · `docs/moodboard/README.md` | État de la maquette Figma ; index du moodboard |
