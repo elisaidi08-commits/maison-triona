@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Barre mobile « Écrire en toute discrétion » (docs/art-direction.md §7.10).
 
-test('mobile : la barre mène au contact sans masquer le premier choix', async ({ page }) => {
+test('mobile : la barre mène au contact sans masquer ce que fait la maison', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/fr')
   const bar = page.locator('[data-barre-mobile]')
@@ -12,8 +12,8 @@ test('mobile : la barre mène au contact sans masquer le premier choix', async (
     '/fr/contact',
   )
   const barBox = await bar.boundingBox()
-  const choice = await page.getByRole('link', { name: /Organiser le quotidien/ }).boundingBox()
-  expect((choice?.y ?? 0) + (choice?.height ?? 0)).toBeLessThanOrEqual(barBox?.y ?? 0)
+  const intro = await page.getByText(/^Conciergerie de luxe, accompagnement/).boundingBox()
+  expect((intro?.y ?? 0) + (intro?.height ?? 0)).toBeLessThanOrEqual(barBox?.y ?? 0)
 })
 
 test('mobile : la page réserve la hauteur de la barre, le pied de page reste visible', async ({
