@@ -21,7 +21,7 @@ test('choix en lignes : les flèches cochent l’option suivante, l’espace coc
 })
 
 test('choix en lignes : toute la ligne est cliquable et fait au moins 56 px', async ({ page }) => {
-  await page.locator('#demo-besoin').getByText('Prendre soin des enfants', { exact: true }).click()
+  await page.locator('#demo-besoin').getByText('Veiller sur les enfants', { exact: true }).click()
   await expect(page.locator('#demo-besoin-enfants')).toBeChecked()
   for (const label of await page.locator('#demo-besoin label').all()) {
     const box = await label.boundingBox()

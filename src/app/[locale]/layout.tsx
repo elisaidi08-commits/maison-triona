@@ -9,7 +9,7 @@ import { MobileBar } from '@/components/layout/MobileBar'
 import { SkipLink } from '@/components/layout/SkipLink'
 import { localizedPath } from '@/i18n/pathnames'
 import { routing, type Locale } from '@/i18n/routing'
-import { manrope, newsreader } from '@/styles/fonts'
+import { cormorant, ebGaramond } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // Layout racine par langue (/fr, /en). La langue vient du segment [locale] via next/root-params.
@@ -44,8 +44,15 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
   // La suggestion s'écrit dans la langue proposée, pas dans celle de la page.
   const suggestion = await getTranslations({ locale: other, namespace: 'LanguageSuggestion' })
 
+  // `data-scroll-behavior` : Next.js coupe le défilement doux (M12) le temps de remonter en haut
+  // d'une nouvelle page. Sans lui, la remontée s'animait et s'arrêtait à 80 px, en-tête caché
+  // (Next.js 16, guide de migration, « scroll-behavior »).
   return (
-    <html lang={locale} className={`${manrope.variable} ${newsreader.variable}`}>
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      className={`${cormorant.variable} ${ebGaramond.variable}`}
+    >
       <body>
         <SkipLink label={t('label')} />
         <Header locale={locale} />

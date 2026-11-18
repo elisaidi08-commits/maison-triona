@@ -1,22 +1,26 @@
-import { Manrope } from 'next/font/google'
 import localFont from 'next/font/local'
 
-// Polices du site, auto-hébergées par next/font (aucune requête du navigateur vers Google).
+// Polices du kit de Cat (D43, D50), auto-hébergées par next/font (aucune requête du navigateur vers
+// un tiers). Polices variables réduites à leur plage de graisses et au latin du français par
+// scripts/polices-kit.py : 24 ko + 32 ko préchargés, pour un budget de 80 ko. Licences OFL dans
+// src/fonts/. Repli Times New Roman ajusté pour limiter le décalage au chargement.
 
-export const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  display: 'swap',
-  variable: '--font-manrope',
-})
-
-// Serif display PROVISOIRE (D22) : Newsreader instanciée en local, tailles optiques 32 à 72,
-// Light et Regular (60 ko ; licence OFL dans src/fonts/OFL.txt). Recommandée par le directeur
-// artistique ; 84 ko préchargés avec Manrope, pour un budget de 80 ko : à trancher par Sady.
-export const newsreader = localFont({
-  src: '../fonts/newsreader-display.woff2',
+// Titres et nom : Cormorant Garamond, Light et Regular.
+export const cormorant = localFont({
+  src: '../fonts/cormorant-garamond.woff2',
   weight: '300 400',
   style: 'normal',
   display: 'swap',
-  variable: '--font-newsreader',
+  adjustFontFallback: 'Times New Roman',
+  variable: '--font-cormorant',
+})
+
+// Texte : EB Garamond, Regular et Medium.
+export const ebGaramond = localFont({
+  src: '../fonts/eb-garamond.woff2',
+  weight: '400 500',
+  style: 'normal',
+  display: 'swap',
+  adjustFontFallback: 'Times New Roman',
+  variable: '--font-eb-garamond',
 })

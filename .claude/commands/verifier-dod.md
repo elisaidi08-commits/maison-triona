@@ -7,7 +7,7 @@ Vérifie la Definition of Done de la story **$ARGUMENTS**.
 
 1. Lis la story dans `docs/plan-implementation.md` (objectif, critères d'acceptation, point de contrôle ⛳ ou non) et la DoD commune (§3).
 2. Charge la skill `maison-triona-qa` et parcours sa checklist.
-3. Exécute ce qui peut l'être et **garde la sortie comme preuve** : `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, `npm run test:a11y`, `npm run check:content`, `npm run check:third-party`. Si un script n'existe pas encore, dis-le (ne le simule pas).
+3. Exécute ce qui peut l'être et **garde la sortie comme preuve** : `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`, `npm run test:e2e`, `npm run test:a11y`, `npm run check:content`, `npm run check:third-party`. Si un script n'existe pas encore, dis-le (ne le simule pas).
 4. Délègue :
    - à **`qa-a11y-perf`** pour Lighthouse, axe, clavier, budgets ;
    - à **`security-privacy-reviewer`** si la story touche le formulaire, les en-têtes, le légal, l'analytics ou une dépendance ;

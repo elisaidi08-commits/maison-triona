@@ -22,6 +22,9 @@ type LoopVideoProps = {
   // Même recadrage que le poster, pour que le fondu de l'un à l'autre ne se voie pas.
   anchor?: 'center' | 'seuil'
   controls?: 'overlay' | 'below' | 'none'
+  // Geste joué une seule fois, arrêté sur sa dernière image (V12, G3, G4 : un mouvement de caméra
+  // ou un geste qui ne boucle pas sans saut) ; il rejoue quand l'image revient à l'écran.
+  once?: boolean
 }
 
 export function LoopVideo({
@@ -31,6 +34,7 @@ export function LoopVideo({
   play,
   anchor = 'center',
   controls = 'overlay',
+  once = false,
 }: LoopVideoProps) {
   const video = useRef<HTMLVideoElement>(null)
   const [enabled, setEnabled] = useState(false)
@@ -68,7 +72,7 @@ export function LoopVideo({
         ref={video}
         aria-hidden="true"
         muted
-        loop
+        loop={!once}
         playsInline
         preload="none"
         onCanPlay={() => setReady(true)}

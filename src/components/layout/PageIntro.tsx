@@ -7,7 +7,9 @@ export function PageIntro({ title }: { title: string }) {
   return (
     <section className="conteneur flex flex-col gap-24 py-section">
       <Rule short />
-      <h1 className="font-display text-display-l text-sapin">{title}</h1>
+      <h1 tabIndex={-1} className="font-display text-display-l text-sapin">
+        {title}
+      </h1>
     </section>
   )
 }

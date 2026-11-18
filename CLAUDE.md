@@ -40,6 +40,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 | `docs/trust-contact-launch.md` | FAQ, « Comment ça se passe », « Notre indépendance », formulaire en étapes, rappel, coffre, e-mails, partage, préproduction, lancement |
 | `docs/seo-strategy.md` | Mots-clés, concurrence, architecture SEO, SEO technique, moteurs IA |
 | `docs/partners-credibility.md` | Partenaires (phase 2) : niveaux d'affichage, consentement, formulation |
+| `docs/reservation-appel.md` | Réservation d'appel avec Cat (D57) : lien par e-mail, créneaux, rappels e-mail et SMS, agenda de Cat |
 | `docs/email-deliverability.md` · `docs/launch-checklist.md` · `docs/usability-protocol.md` | Délivrabilité, ouverture, tests utilisateurs |
 | `docs/art-direction.md` | Avant tout travail visuel (style bible : §6) |
 | `anti-patterns.md` (racine) | Avant chaque composant et chaque PR (à mettre à jour après arbitrages) |
@@ -65,6 +66,7 @@ Next.js 16 (App Router, `proxy.ts`, Turbopack) · React 19 · TypeScript strict 
 npm run dev | build | start | lint | typecheck | format | format:check
 npm run test:e2e           # Playwright (formulaire, entrée par besoin, i18n)
 npm run test:a11y          # axe, WCAG 2.2 AA, FR et EN
+npm run test:unit          # tests unitaires (node --test) : calcul des créneaux
 npm run lighthouse         # Lighthouse 13 mobile + desktop (serveur lancé sur le port 3100)
 npm run check:content      # échoue s'il reste un placeholder ou un brouillon
 npm run check:i18n         # échoue si une clé existe dans une langue et pas l'autre
@@ -78,8 +80,9 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **Server Components par défaut.** `'use client'` seulement sur des feuilles minimales (formulaire, menu mobile, mouvement, vidéo).
 - **Tokens uniquement** : aucune classe Tailwind arbitraire, aucune couleur ni espacement hors `src/styles/tokens.css`.
 - **Rayon 0** (rayon 2 px pour l'anneau de focus seulement). Aucune ombre, aucun dégradé décoratif, aucun `backdrop-blur`.
-- **Or** : filets, point du « K. », bordure de bouton sur sapin. **Jamais en texte sur fond clair.** Texte or = champagne `#D2B98A` sur sapin uniquement.
-- **Typo** : serif display Light/Regular ≥ 40 px desktop (≥ 32 px mobile) ; Manrope ailleurs ; **corps 18 px minimum** ; labels capitales +0,12 em, 13 px.
+- **Couleurs du kit de Cat** (D43, D50) : sapin `#26382F`, champagne `#C6A96B`, or profond `#B58E4C`, ivoire `#F3EDE1`, encre `#2A241F`.
+- **Or** : filets, T du logo, point du « K. », bordure de bouton sur sapin. **Jamais en texte sur fond clair.** Texte or = champagne `#C6A96B` sur sapin uniquement.
+- **Typo** (D50) : **Cormorant Garamond** Light/Regular pour les titres, ≥ 40 px desktop (≥ 32 px mobile) ; **EB Garamond** ailleurs ; **corps 20 px** (jamais sous 18 px) ; labels capitales +0,12 em, 14 px. Polices produites par `scripts/polices-kit.py`.
 - **Accessibilité** : WCAG **2.2 AA**, texte courant **AAA** quand possible ; focus **3 px** jamais masqué ; cibles **≥ 48 px** (56 px pour les choix d'entrée) ; vrais liens ; tout fonctionne sans JavaScript ; `prefers-reduced-motion` = version statique complète ; **bouton pause** sur toute vidéo.
 - **Texte sur image** : seul le titre display du hero, sur voile sapin ≥ 58 % ; tout texte courant sur aplat (`docs/design-tokens.md` §2.4).
 - **Aucune icône pictographique** ; séparateurs = filets 1 px ou glyphes.
@@ -112,7 +115,8 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **Grain incrusté = vidéo incompressible** : grain très léger à la génération, encodage en **deux passes** à débit cible (`docs/media-pipeline.md` §5).
 - Kling et Seedance génèrent du **son par défaut** ; Soul « 2k » = 1080p réel ; aucun modèle vidéo ne sort en 4:5.
 - `bytedance_video_upscale` 1080p : `generate cost` annonce 1 crédit, **1,61 débité** pour un clip de 8 s (essai V01, D26) ; chiffrer un lot d'agrandissements vidéo au coût réel.
-- Le logo « le sillage » **n'existe pas encore** ; tous les textes de la maquette sont **fictifs**.
+- Le logo est le **sceau L1-D** (D53, remplace la piste A de D49) : T en sillage dans un anneau, **seul** dans l'en-tête (48 px), au pied de page, dans le menu, en favicon et en image de partage. Généré par `scripts/kit-sceau.mjs` depuis `brand/sources/L1-D-trace.svg` (jamais à la main), composant `Seal` ; kit de la piste A gardé en archive. À valider par Cat. Ses couleurs et sa typo (Cormorant Garamond, EB Garamond) **font foi** et sont posées dans `tokens.css` (D50) ; tous les textes de la maquette sont **fictifs**.
+- **Réponses de Cat du 26/10** (`docs/reponses-cat-2026-10-26.md`, D38 à D47) : ouverture **pas avant janvier 2027** ; mots bannis « aide », « soins » (même en négation), « bénéficiaire », « dépendance », « personnes âgées », « seniors » ; CMS après l'ouverture.
 - `anti-patterns.md` n° 21 (logos), 22 (chiffres), 23 (FAQ en accordéon) et 24 (CTA) sont **assouplis** par les specs récentes : appliquer la version des specs en attendant la mise à jour du fichier par Sady.
 - **Concurrence** : ne rien affirmer sur un concurrent sans URL et date (`docs/seo-strategy.md` §B).
 - Le dossier du projet garde ses **espaces finaux** (`MAMAN `, `MAISON TRIONA `, D17), comme les **dossiers de travail** (`ASSETS PHOTO MAQUETTE `, `LOGO `, `MOODBOARD LOGO `, `MOODBOARD PHOTO `, `TYPO `) : toujours citer les chemins entre guillemets. Dans `.gitignore` et `.vercelignore`, un espace final est **ignoré** sauf s'il est échappé (`\ `) : utiliser des motifs (`/LOGO*/`).

@@ -60,7 +60,8 @@ Principes transversaux : sobre, luxueux, convivial ; langage clair ; **FR + EN**
 
 ### 3.1 Deux entrées, un même coffre
 - **A. Formulaire en étapes** (principal).
-- **B. Rappel à la demande** : « Être rappelé(e) » avec nom, numéro, **langue**, **créneau** (matin / après-midi / soir, jours), option « **Ne pas laisser de message vocal** ».
+- **B. Convenir d'un appel** (D57, remplace le rappel à la demande) : lien personnel par e-mail valable 48 h, puis choix d'un créneau précis ouvert par Cat, nom, numéro, option « **Ne pas laisser de message vocal** », SMS en option. Spec : `docs/reservation-appel.md`.
+- ~~B. Rappel à la demande~~ : remplacé par la réservation d'appel (D57).
 - Les deux alimentent le **même coffre** (§4) et le même suivi.
 
 ### 3.2 Formulaire en étapes (4 écrans courts, barre de progression, retour possible)
@@ -154,7 +155,7 @@ Cat veut-elle un numéro de téléphone public (et dans quels pays) ? Peut-elle 
 | E2-S4 | Comment ça se passe + version simple + PDF | 4 à 5 étapes ; version simple ; PDF FR/EN avec texte réel ; aucun délai non validé |
 | E2-S5 | Notre indépendance | Seulement des affirmations validées par Cat ; relu juridiquement ; FR/EN |
 | E3-S5 | Formulaire en étapes | 4 écrans ; brouillon non sensible en `sessionStorage` ; champ libre jamais sauvegardé ; consentement RGPD ; confirmation sans écho du contenu |
-| E3-S6 | Rappel à la demande | Créneau, langue, « pas de message vocal » ; alimente le coffre ; confirmation claire |
+| E3-S6 | ~~Rappel à la demande~~ → **réservation d'appel** (D57, `docs/reservation-appel.md`) | Créneau précis, langue, « pas de message vocal » ; alimente le coffre ; confirmation et invitation d'agenda |
 | E3-S7 | Situation urgente *(conditionnel)* | Implémentée seulement si Cat valide ; mention des services d'urgence ; aucune promesse de délai |
 | E3-S8 | Coffre sécurisé | Chiffré, hébergé UE ; A2F ; journal d'accès ; durée de conservation et suppression ; aucune donnée dans les logs |
 | E3-S9 | Délivrabilité e-mail | SPF/DKIM/DMARC ; tests de réception documentés ; file d'attente avec reprise ; aucun pixel de suivi |

@@ -6,13 +6,20 @@
 
 ---
 
-## 1. Les trois e-mails du site
+## 1. Les e-mails (et SMS) du site
 
 | E-mail | Destinataire | Contenu | Données sensibles |
 |---|---|---|---|
 | Notification de demande | Cat | Service, pays, langue, urgence, source anonyme + lien vers la demande dans le coffre | **Aucune** (ni nom, ni contact, ni message) |
 | Confirmation | Visiteur | Texte fixe : « votre demande est bien arrivée », la suite, aucun écho du contenu | Aucune |
 | Alerte technique | Sady | Échec d'envoi après reprises, rebond, plainte | Identifiant technique de la demande seulement |
+| Lien d'accès (D57) | Personne qui veut convenir d'un appel | Lien personnel valable 48 h | Aucune |
+| Confirmation d'appel, déplacement, annulation (D57) | Personne | Jour, heure, lien de gestion, invitation .ics | Aucune (aucun service nommé) |
+| Rappel de la veille (D57) | Personne | Jour, heure, lien de gestion | Aucune |
+| Nouvel appel (D57) | Cat | Jour, heure, lien vers l'appel dans le coffre, invitation .ics « Appel · Maison Triona » | **Aucune** (ni nom, ni numéro) |
+| SMS de confirmation et de rappel (D57, option) | Personne | ≤ 160 caractères GSM-7, jour, heure, lien | Aucune ; visible sur l'écran verrouillé, donc aucun service nommé |
+
+Messages de la réservation d'appel : `docs/reservation-appel.md` §2 et §3.3. Les invitations .ics sont à tester dans Google Agenda, Apple Calendrier et Outlook ; les SMS dans chacun des cinq pays.
 
 Tous en **FR et EN** (langue du visiteur pour la confirmation), texte simple et HTML sobre, **sans image distante, sans pixel de suivi, sans lien traqué**.
 
