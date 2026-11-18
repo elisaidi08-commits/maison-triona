@@ -13,7 +13,7 @@
 
 | Traitement | Données | Finalité | Base légale (proposée) | Où ça va | Conservation |
 |---|---|---|---|---|---|
-| **Demande** (formulaire en étapes) | Besoin ; « pour qui » (facultatif) ; pays ; urgence ; nom ; e-mail **ou** téléphone ; créneau ; langue ; mot libre (facultatif) ; source anonyme | Répondre à la demande | Mesures précontractuelles (art. 6.1.b) ; **consentement explicite** (art. 9.2.a) pour le cas où le mot libre révèle malgré tout une information de santé `[À VALIDER JURIDIQUEMENT]` | **Coffre** chiffré (base UE, Scaleway) ; notification **sans contenu** à Cat | Au cas par cas, plafond proposé de 12 mois après le dernier échange (§5) + fenêtre de sauvegarde |
+| **Demande** (formulaire en étapes) | Besoin ; « pour qui » (facultatif) ; pays ; urgence ; nom ; e-mail **ou** téléphone ; créneau ; langue ; mot libre (facultatif) ; origine (« Comment avez-vous connu la maison ? », liste fermée, facultative) | Répondre à la demande | Mesures précontractuelles (art. 6.1.b) ; **consentement explicite** (art. 9.2.a) pour le cas où le mot libre révèle malgré tout une information de santé `[À VALIDER JURIDIQUEMENT]` | **Coffre** chiffré (base UE, Scaleway) ; notification **sans contenu** à Cat | Au cas par cas, plafond proposé de 12 mois après le dernier échange (§5) + fenêtre de sauvegarde |
 | **Réservation d'appel** (D57, remplace le rappel) | E-mail ; nom ; numéro ; langue ; créneau ; « ne pas laisser de message vocal » ; origine (facultatif) ; choix SMS | Convenir d'un appel avec Cat et le rappeler | Mesures précontractuelles `[À VALIDER JURIDIQUEMENT]` | Coffre (sealed box) ; e-mail et numéro **aussi** chiffrés avec une clé serveur (Scaleway Key Manager) jusqu'au dernier message ; notification et invitation **sans nom** à Cat | Comme les demandes ; coordonnées à clé serveur effacées 24 h après l'appel ; jetons supprimés 7 jours après expiration |
 | **Messages de l'appel** | E-mail ; numéro si SMS choisi | Lien d'accès, confirmation, rappels, déplacement, annulation | Mesures précontractuelles ; SMS seulement à la demande de la personne | Fournisseur d'e-mail ; fournisseur SMS `[À TRANCHER]` | Journaux d'envoi des fournisseurs `[À VÉRIFIER]` |
 | **Confirmation au visiteur** | Adresse e-mail saisie | Confirmer la réception et annoncer la suite | Mesures précontractuelles | Fournisseur d'e-mail (texte fixe, aucun contenu de la demande) | Journaux d'envoi du fournisseur `[À VÉRIFIER selon le fournisseur retenu]` |
@@ -43,17 +43,17 @@ Choisir « Accompagner un proche » peut révéler une situation de santé ou de
 | Règle | Mise en œuvre |
 |---|---|
 | Pas de champ santé | Aucun champ médical. Sous le mot libre : « Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. » |
-| Chiffrement dès réception | Le serveur chiffre la demande avec la **clé publique** du coffre (sealed box) avant de l'écrire ; seul le navigateur d'une administratrice ou d'un administrateur authentifié peut la déchiffrer. Restent en clair, pour le tri : service, pays, langue, urgence, source, dates, statut |
+| Chiffrement dès réception | Le serveur chiffre la demande avec la **clé publique** du coffre (sealed box) avant de l'écrire ; seul le navigateur d'une administratrice ou d'un administrateur authentifié peut la déchiffrer. Restent en clair, pour le tri : service, pays, langue, urgence, origine, dates, statut |
 | Rien n'est journalisé | Les fonctions ne journalisent qu'un identifiant d'événement et un statut (`stored`, `rejected:honeypot`, `rejected:rate`, `failed:vault`, `queued`, `sent`, `failed:provider`). Jamais le nom, le contact, le service, le message ni l'IP |
-| Notification minimale | L'e-mail à Cat ne contient **ni nom, ni contact, ni message** : service, pays, langue, urgence, source et un lien vers le coffre `[À TRANCHER avec Cat]` |
+| Notification minimale | L'e-mail à Cat ne contient **ni nom, ni contact, ni message** : service, pays, langue, urgence, origine et un lien vers le coffre `[À TRANCHER avec Cat]` |
 | Confirmation neutre | L'e-mail au visiteur est un texte fixe ; il ne répète **rien** de la demande |
-| Brouillon prudent | « Pour qui », l'urgence, le nom, le contact et le mot libre ne sont **jamais** gardés en brouillon, ni dans le navigateur ni sur le serveur |
+| Brouillon prudent | Seuls le besoin, le pays, la langue et le créneau sont gardés en brouillon, dans le stockage de session du navigateur (clés `mt-draft-*`), effacés quand la demande est traitée. « Pour qui », l'urgence, le nom, le contact, l'origine et le mot libre ne sont **jamais** gardés en brouillon, ni dans le navigateur ni sur le serveur |
 | Le choix n'est jamais lié à une personne | La mesure du choix d'entrée est un **compteur agrégé** (§3). Il n'est ni stocké avec une IP, ni associé à la demande envoyée |
 | Fournisseur d'e-mail | **Européen**, suivi des ouvertures et des clics désactivé. Écartés : Brevo (suivi non désactivable), Resend (données de compte aux États-Unis) |
 
-**Point résiduel (paramètres `?service=` et `?s=`)** : le choix est transmis au formulaire par l'URL (`/fr/contact?service=grand-age`), ce qui fonctionne sans JavaScript. En contrepartie, le chemin complet peut apparaître dans les journaux de l'hébergeur, associé à une IP, pendant leur durée de rétention. Mitigations : rétention minimale, aucun export de logs, aucune mesure d'audience sur la chaîne de requête (Plausible doit enregistrer `/contact` sans paramètres : **à vérifier en story 5.2**). Alternative plus stricte : passer le choix par `sessionStorage` (mais la présélection ne marcherait plus sans JavaScript). `[À TRANCHER par Sady]`
+**Présélection du besoin (tranché, D26 ; story 3.4)** : rien dans l'URL. Le besoin choisi sur l'accueil ou sur une page de service est retenu dans le stockage de session du navigateur (`mt-draft-besoin`, attribut `data-besoin` des liens) et coché par le formulaire à son affichage ; il ne part au serveur qu'avec la demande. Les journaux de l'hébergeur ne voient que `/contact`, sans paramètre. Sans JavaScript, aucune présélection : le visiteur choisit son besoin à la première étape (accepté).
 
-**Source anonyme `?s=`** : liste fermée de codes (carte, salon, recommandation…), toute autre valeur ignorée ; stockée avec la demande pour savoir d'où viennent les contacts, **jamais** envoyée à l'outil de mesure avec la demande ni associée à un identifiant.
+**Origine (D41, remplace la source `?s=`, D26)** : champ facultatif du formulaire, « Comment avez-vous connu la maison ? », en liste fermée sans texte libre (carte de visite, prospectus, boîte aux lettres, recommandation d'un professionnel sans nom de clinique, bouche-à-oreille, salon) ; toute autre valeur est refusée. Stockée avec la demande pour savoir d'où viennent les contacts, **jamais** envoyée à l'outil de mesure ni associée à un identifiant ; jamais gardée en brouillon.
 
 ---
 
@@ -63,7 +63,7 @@ Choisir « Accompagner un proche » peut révéler une situation de santé ou de
 |---|---|---|---|
 | Pages vues | automatique (Plausible) | chemin **sans** paramètres de requête | durée de session individuelle, parcours individuel, empreinte d'appareil |
 | Choix d'entrée | `Entrée` | `choix` ∈ `conciergerie`, `grand-age`, `enfants`, `indecis` | qui a cliqué, depuis quelle IP |
-| Demande envoyée | page `/contact/merci` vue | aucune | le service demandé, le pays, la langue, l'urgence, la source |
+| Demande envoyée | page `/contact/merci` vue | aucune | le service demandé, le pays, la langue, l'urgence, l'origine |
 | Rappel demandé | page de confirmation du rappel vue | aucune | idem |
 | Bascule de langue | `Langue` | `vers` ∈ `fr`, `en` | — |
 | Partage | `Partage` | `moyen` ∈ `email`, `lien` | la page partagée avec le service, le destinataire |
@@ -138,7 +138,7 @@ Chaque sous-traitant signe un **contrat de traitement (DPA)** avant la mise en l
 2. Plafond de conservation des demandes (« au cas par cas » dans un plafond écrit) et durée du journal d'accès.
 3. ~~Contenu de la notification à Cat~~ : tranché, très minimaliste (D06).
 4. Absence de bandeau cookies avec la mesure retenue.
-5. Paramètres `?service=` et `?s=` dans les journaux de l'hébergeur (§2).
+5. ~~Paramètres `?service=` et `?s=` dans les journaux de l'hébergeur~~ : sans objet, rien ne passe plus par l'URL (D26, §2).
 6. Question HDS (§8).
 7. Mention IA : formulation et emplacement (§4).
 8. Garde-malade et promesses médicales : aucune tant que le périmètre n'est pas confirmé (`docs/ux-entry-i18n-a11y.md` §2.6) ; vocabulaire réglementé (`docs/seo-strategy.md` §K).

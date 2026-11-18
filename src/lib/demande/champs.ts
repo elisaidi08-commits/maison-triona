@@ -77,7 +77,8 @@ export type EtatDemande = {
   erreurs?: Erreurs
   // Saisie renvoyée telle quelle : la page se réaffiche sans rien perdre (WCAG 3.3.7).
   valeurs?: Valeurs
-  // Horodatage signé délivré par le serveur quand l'envoi n'en portait pas (sans JavaScript).
+  // Horodatage signé à renvoyer avec l'envoi suivant : neuf si l'envoi n'en portait pas (sans
+  // JavaScript) ou s'il était périmé, sinon celui reçu.
   jeton?: string
 }
 

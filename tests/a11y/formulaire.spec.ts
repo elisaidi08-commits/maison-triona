@@ -52,7 +52,12 @@ for (const [locale, envoyer] of [
     await sansScript.locator('#contact-nom').fill('C')
     await sansScript.locator('#contact-email').fill('pas-une-adresse')
     await sansScript.locator('#contact-urgence-urgent').check()
-    await sansScript.getByRole('button', { name: envoyer, exact: true }).click()
+    // Premier envoi : « trop tôt » (page statique, sans horodatage) ; le second est vérifié.
+    const bouton = sansScript.getByRole('button', { name: envoyer, exact: true })
+    await bouton.click()
+    await expect(sansScript.locator('#contact-statut')).toBeVisible()
+    await sansScript.waitForTimeout(3200)
+    await bouton.click()
     await expect(sansScript.locator('#contact-erreurs li')).toHaveCount(5)
     const html = (await sansScript.content()).replace(/<script\b[\s\S]*?<\/script>/g, '')
     await contexte.close()

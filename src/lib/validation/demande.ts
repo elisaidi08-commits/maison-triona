@@ -23,10 +23,16 @@ import {
   type Valeurs,
 } from '../demande/champs.ts'
 
+// Sans compilation à la volée : Zod 4 sonde `new Function` pour accélérer ses objets, ce que la CSP
+// du site refuse (`script-src` sans `'unsafe-eval'`) ; la sonde laissait une violation dans la
+// console de /contact. Le mode sans compilation suffit largement à une demande de quinze champs.
+z.config({ jitless: true })
+
 // Téléphone international : chiffres, espaces, points, tirets, parenthèses, un « + » en tête ;
-// de 6 chiffres (numéros fixes du Luxembourg) à 15 (plafond E.164). Le format exact de chaque pays
-// viendra avec la réservation d'appel (libphonenumber-js, D57).
-const CARACTERES_TELEPHONE = /^\+?[\d\s().-]+$/
+// de 6 chiffres (numéros fixes du Luxembourg) à 15 (plafond E.164). Espace littérale seulement :
+// ni retour à la ligne ni tabulation. Le format exact de chaque pays viendra avec la réservation
+// d'appel (libphonenumber-js, D57).
+const CARACTERES_TELEPHONE = /^\+?[\d ().-]+$/
 
 export function telephoneValide(valeur: string): boolean {
   if (!CARACTERES_TELEPHONE.test(valeur)) return false

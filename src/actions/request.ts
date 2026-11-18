@@ -2,40 +2,60 @@
 
 import { headers } from 'next/headers'
 import type { EtatDemande } from '@/lib/demande/champs'
-import { limiterDebit } from '@/lib/rate-limit'
-import { empreinte, jourUtc } from '@/lib/security/empreinte'
-import { DELAI_MINIMUM_MS, signerHorodatage, verifierHorodatage } from '@/lib/security/horodatage'
+import { limiterDebit, usageUnique } from '@/lib/rate-limit'
+import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
+import {
+  DELAI_MINIMUM_MS,
+  DUREE_MAXIMUM_MS,
+  signerHorodatage,
+  verifierHorodatage,
+} from '@/lib/security/horodatage'
 import { secretFormulaire } from '@/lib/security/secret'
 import { lireValeurs, validerDemande } from '@/lib/validation/demande'
 
 // Envoi du formulaire de contact (stories 3.1 et 3.5, docs/architecture.md §6.1 et §6.7).
 // Une Server Action est un point d'entrée POST public : tout est revérifié ici, dans cet ordre :
 // 1. piège à robots (champ caché rempli) : rejet silencieux, la réponse ressemble à un envoi ;
-// 2. horodatage signé : falsifié, rejet silencieux ; moins de 3 secondes, « trop tôt ». Sans
-//    JavaScript, la page statique n'en porte pas : le contrôle ne s'applique qu'à partir du second
-//    envoi (l'horodatage est alors délivré avec la page d'erreurs) ;
-// 3. validation Zod de toute la demande ;
-// 4. limitation de débit (empreintes d'IP et d'adresse, sel du jour), sur les envois valides ;
-// 5. envoi fermé : le coffre n'existe pas encore (lot E). Rien n'est enregistré, envoyé ni
+// 2. secret absent sur un déploiement Vercel : formulaire fermé, aucun repli (aperçu public D62) ;
+// 3. horodatage signé : falsifié, rejet silencieux ; absent (page statique, sans JavaScript) ou de
+//    plus de 2 heures, « trop tôt » avec un horodatage neuf ; moins de 3 secondes, « trop tôt ».
+//    La saisie revient toujours, avec l'horodatage à renvoyer ;
+// 4. validation Zod de toute la demande ;
+// 5. limitation de débit des envois valides (empreintes d'IP, préfixe /64 en IPv6, et d'adresse ;
+//    sel du jour) ; le plafond global du jour alerte sans bloquer ;
+// 6. usage unique de l'horodatage, quand Upstash est configuré : rejoué, rejet silencieux ;
+// 7. envoi fermé : le coffre n'existe pas encore (lot E). Rien n'est enregistré, envoyé ni
 //    journalisé ; le formulaire affiche l'état « L'envoi des demandes ouvrira bientôt ».
-// Journaux : un statut de rejet ou de panne seulement, jamais une valeur du formulaire ni une
-// adresse.
+// Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
+// `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
+// Journaux : un statut seulement, jamais une valeur du formulaire ni une adresse.
 
 const LIMITE_IP = { maximum: 3, fenetreSecondes: 10 * 60 }
 const LIMITE_ADRESSE = { maximum: 3, fenetreSecondes: 24 * 60 * 60 }
-const PLAFOND_JOUR = { maximum: 100, fenetreSecondes: 24 * 60 * 60 }
+const PLAFOND_JOUR = { maximum: 100, fenetreSecondes: 24 * 60 * 60, alerte: true }
 
 type Statut =
   | 'rejected:honeypot'
   | 'rejected:token'
+  | 'rejected:replay'
   | 'rejected:time'
   | 'rejected:invalid'
   | 'rejected:rate'
+  | 'alert:global-cap'
   | 'rate:unavailable'
+  | 'failed:rate'
   | 'failed:config'
 
 function journaliser(statut: Statut) {
   console.info(`[demande] ${statut}`)
+}
+
+// Configuration manquante (secret, variables d'Upstash) : signalée une fois par instance.
+const signalees = new Set<string>()
+function configurationManquante(element: string) {
+  if (signalees.has(element)) return
+  signalees.add(element)
+  journaliser('failed:config')
 }
 
 async function adresseIp(): Promise<string> {
@@ -49,12 +69,12 @@ async function adresseIp(): Promise<string> {
 
 /** Horodatage signé, demandé par le formulaire quand il s'affiche (avec JavaScript). */
 export async function obtenirJeton(): Promise<string | null> {
-  try {
-    return signerHorodatage(Date.now(), secretFormulaire())
-  } catch {
-    journaliser('failed:config')
+  const secret = secretFormulaire()
+  if (!secret) {
+    configurationManquante('secret')
     return null
   }
+  return signerHorodatage(Date.now(), secret)
 }
 
 export async function envoyerDemande(
@@ -71,42 +91,40 @@ export async function envoyerDemande(
     return silence
   }
 
-  let secret: string
-  try {
-    secret = secretFormulaire()
-  } catch {
-    journaliser('failed:config')
-    return { statut: 'echec', valeurs }
+  const secret = secretFormulaire()
+  if (!secret) {
+    configurationManquante('secret')
+    return silence
   }
 
   const maintenant = Date.now()
-  const jeton = donnees.get('jeton')
-  const horodatage = verifierHorodatage(
-    typeof jeton === 'string' ? jeton : null,
-    secret,
-    maintenant,
-  )
+  const recu = donnees.get('jeton')
+  const horodatage = verifierHorodatage(typeof recu === 'string' ? recu : null, secret, maintenant)
   if (horodatage.statut === 'invalide') {
     journaliser('rejected:token')
     return silence
   }
-  if (horodatage.statut === 'valide' && horodatage.ageMs < DELAI_MINIMUM_MS) {
+  if (horodatage.statut !== 'valide') {
+    // Absent (premier envoi sans JavaScript) ou périmé : un horodatage neuf, à renvoyer.
     journaliser('rejected:time')
-    return { statut: 'trop-tot', valeurs }
+    return { statut: 'trop-tot', valeurs, jeton: signerHorodatage(maintenant, secret) }
   }
-  // Sans JavaScript : l'horodatage part avec la réponse, le prochain envoi sera contrôlé.
-  const nouveauJeton =
-    horodatage.statut === 'absent' ? signerHorodatage(maintenant, secret) : undefined
+  // L'horodatage reçu accompagne chaque réponse : sans JavaScript, la page le renvoie tel quel.
+  const jeton = recu as string
+  if (horodatage.ageMs < DELAI_MINIMUM_MS) {
+    journaliser('rejected:time')
+    return { statut: 'trop-tot', valeurs, jeton }
+  }
 
   const resultat = validerDemande(valeurs)
   if (!resultat.succes) {
     journaliser('rejected:invalid')
-    return { statut: 'erreurs', erreurs: resultat.erreurs, valeurs, jeton: nouveauJeton }
+    return { statut: 'erreurs', erreurs: resultat.erreurs, valeurs, jeton }
   }
 
   const aujourdhui = new Date(maintenant)
   const limites = [
-    { cle: `ip:${empreinte(await adresseIp(), secret, aujourdhui)}`, ...LIMITE_IP },
+    { cle: `ip:${empreinte(reseauIp(await adresseIp()), secret, aujourdhui)}`, ...LIMITE_IP },
     { cle: `jour:${jourUtc(aujourdhui)}`, ...PLAFOND_JOUR },
   ]
   if (resultat.demande.email) {
@@ -116,11 +134,49 @@ export async function envoyerDemande(
     })
   }
   const debit = await limiterDebit(limites)
-  if (!debit.autorise) {
-    journaliser('rejected:rate')
-    return { statut: 'limite', valeurs, jeton: nouveauJeton }
+  switch (debit.statut) {
+    case 'refuse':
+      journaliser('rejected:rate')
+      return { statut: 'limite', valeurs, jeton }
+    case 'reponse':
+      journaliser('failed:rate')
+      return { statut: 'echec', valeurs, jeton }
+    case 'reseau':
+      journaliser('rate:unavailable')
+      break
+    case 'config':
+      journaliser('failed:config')
+      break
+    case 'inactif':
+      if (debit.configManquante) configurationManquante('upstash')
+      break
+    case 'autorise':
+      if (debit.alertes.length > 0) journaliser('alert:global-cap')
+      break
   }
-  if (debit.indisponible) journaliser('rate:unavailable')
+
+  // Usage unique, après la limitation : un envoi refusé pour débit garde son horodatage.
+  const unique = await usageUnique(
+    `jeton:${horodatage.identifiant}`,
+    Math.ceil(DUREE_MAXIMUM_MS / 1000),
+  )
+  switch (unique.statut) {
+    case 'deja-vu':
+      journaliser('rejected:replay')
+      return silence
+    case 'reponse':
+      journaliser('failed:rate')
+      return { statut: 'echec', valeurs, jeton }
+    case 'reseau':
+      journaliser('rate:unavailable')
+      break
+    case 'config':
+      journaliser('failed:config')
+      break
+    case 'inactif':
+    case 'nouveau':
+      break
+  }
 
   // Le coffre (lot E) écrira ici la demande chiffrée. D'ici là : rien n'est enregistré, envoyé ni
   // journalisé.

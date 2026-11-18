@@ -165,6 +165,13 @@ describe('telephoneValide', () => {
     }
   })
 
+  test('espace littérale seulement : ni retour à la ligne ni tabulation', () => {
+    for (const numero of ['+32\n470 12 34 56', '+32\t470 12 34 56', '+32\r\n470123456']) {
+      assert.equal(telephoneValide(numero), false, JSON.stringify(numero))
+    }
+    assert.equal(telephoneValide('+32 470 12 34 56'), true)
+  })
+
   test('refuse lettres, trop peu ou trop de chiffres', () => {
     for (const numero of ['appelez-moi', '12345', '+1234567890123456', '06 12 AB 56 78']) {
       assert.equal(telephoneValide(numero), false, numero)

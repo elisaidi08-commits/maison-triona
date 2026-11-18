@@ -1,12 +1,14 @@
 /**
  * Horodatage signé du formulaire (story 3.5, docs/architecture.md §6.2) : le serveur délivre
  * « instant.signature » (HMAC-SHA256) quand le formulaire s'affiche ; un envoi moins de 3 secondes
- * après est refusé. La signature empêche un robot d'inventer un instant plus ancien.
+ * après est refusé, un jeton de plus de 2 heures aussi (il est alors renouvelé). La signature
+ * empêche un robot d'inventer un instant plus ancien.
  * Fonctions pures : le secret et l'heure arrivent en paramètre. Testé par node --test.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 export const DELAI_MINIMUM_MS = 3000
+export const DUREE_MAXIMUM_MS = 2 * 60 * 60 * 1000
 // Un instant venu du futur au-delà de cette marge est une falsification, pas un décalage d'horloge.
 const TOLERANCE_FUTUR_MS = 5000
 
@@ -20,7 +22,10 @@ export function signerHorodatage(instant: number, secret: string): string {
 }
 
 export type VerificationHorodatage =
-  { statut: 'absent' } | { statut: 'invalide' } | { statut: 'valide'; ageMs: number }
+  | { statut: 'absent' }
+  | { statut: 'invalide' }
+  | { statut: 'expire' }
+  | { statut: 'valide'; ageMs: number; identifiant: string }
 
 export function verifierHorodatage(
   jeton: string | undefined | null,
@@ -39,5 +44,7 @@ export function verifierHorodatage(
   }
   const ageMs = maintenant - Number(instant)
   if (ageMs < -TOLERANCE_FUTUR_MS) return { statut: 'invalide' }
-  return { statut: 'valide', ageMs }
+  if (ageMs > DUREE_MAXIMUM_MS) return { statut: 'expire' }
+  // La signature identifie le jeton (usage unique, quand Upstash est configuré).
+  return { statut: 'valide', ageMs, identifiant: signature }
 }
