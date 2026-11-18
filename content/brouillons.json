@@ -25,7 +25,9 @@
     "Faq",
     "HowItWorksPage",
     "Independence",
-    "Share"
+    "Share",
+    "Accessibility",
+    "Meta.ogAlt"
   ],
   "en": [
     "Home.title",
@@ -53,6 +55,8 @@
     "Faq",
     "HowItWorksPage",
     "Independence",
-    "Share"
+    "Share",
+    "Accessibility",
+    "Meta.ogAlt"
   ]
 }

@@ -23,6 +23,7 @@ export const PATHNAMES = {
   '/contact': '/contact',
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
+  '/accessibilite': { fr: '/accessibilite', en: '/accessibility' },
   '/demo': '/demo',
 } as const
 

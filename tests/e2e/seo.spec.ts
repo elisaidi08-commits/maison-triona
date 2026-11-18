@@ -22,6 +22,7 @@ const PAGES: InternalPath[] = [
   '/contact',
   '/mentions-legales',
   '/confidentialite',
+  '/accessibilite',
 ]
 
 test('chaque page a son titre, sa description, son canonical et ses alternances', async ({
