@@ -32,6 +32,7 @@ cp .env.example .env.local        # puis ajuster si besoin ; jamais de vraie val
 | `npm run test:unit` | Tests unitaires (testeur intégré de Node) : calcul des créneaux de la réservation d'appel, configuration de la base, échéance de conservation |
 | `npm run test:integration` | Tests contre PostgreSQL (base jetable `maison_triona_test`, vidée à chaque fichier ; `TEST_DATABASE_URL` pour une autre adresse, dont le nom doit finir par `_test`) |
 | `npm run db:migrate` | Applique les migrations de `db/migrations/` à la base de `DATABASE_URL` ; à lancer à la main, jamais pendant le build |
+| `npm run vault:keys -- <chemin>` | Génère la paire de clés du coffre, hors ligne : paquet de la clé privée écrit hors du dépôt, clé publique affichée pour `VAULT_PUBLIC_KEY` (procédure : `docs/coffre-cles.md`) |
 | `npm run lighthouse` | Lighthouse 13, mobile et desktop, seuils ≥ 95 ; exige `npm run start -- --port 3100` dans un autre terminal |
 | `npm run check:content` | Échoue s'il reste un contenu provisoire (`[CONTENU À FOURNIR PAR CAT]`, `[À VALIDER…]`…) |
 | `npm run check:i18n` | Échoue si une clé existe en FR et pas en EN (ou l'inverse) |

@@ -100,7 +100,7 @@ Plausible n'utilise pas de cookie et compte les visiteurs avec une empreinte quo
 | Suppression à la demande | Depuis le coffre, par une personne authentifiée, journalisée ; réponse à la personne sous un mois (délai légal RGPD) |
 | Sauvegardes | Aucun fournisseur ne documente la purge d'une ligne dans ses sauvegardes. Une demande supprimée **subsiste jusqu'à la fin de la fenêtre de sauvegarde** : **7 jours** pour les options proposées (Scaleway, Clever Cloud, Supabase Pro). La politique de confidentialité le dit en clair. Les sauvegardes contiennent des données **déjà chiffrées** (sealed box) |
 | Restauration | Après une restauration, les suppressions intervenues depuis la sauvegarde sont **rejouées** à partir du journal (procédure écrite en E3-S8) |
-| Perte de la clé privée | Les demandes deviennent illisibles. Copie de secours hors ligne chez Cat et Sady ; procédure écrite |
+| Perte de la clé privée | Les demandes deviennent illisibles. Copie de secours hors ligne chez Cat et Sady ; procédure écrite : `docs/coffre-cles.md` (génération, copies, perte, rotation) |
 
 ---
 
