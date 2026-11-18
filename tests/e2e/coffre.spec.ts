@@ -116,3 +116,21 @@ test.describe('sans JavaScript', () => {
     expect(await page.locator('main').innerText()).toContain('Le coffre demande JavaScript.')
   })
 })
+
+// Conservation planifiée (story 3.2, partie D) : sans le secret de Vercel Cron, rien ne s'exécute.
+// Le serveur de test n'a pas de CRON_SECRET : tout appel est refusé, sans base.
+test('la tâche de conservation refuse tout appel sans le secret', async ({ request }) => {
+  const essais: Record<string, string>[] = [
+    {},
+    { authorization: 'Bearer ' },
+    { authorization: 'Bearer secret-factice-de-la-tache-0123456789abcdef' },
+  ]
+  for (const headers of essais) {
+    const response = await request.get('/api/cron/retention', { headers })
+    expect(response.status(), JSON.stringify(headers)).toBe(401)
+    expect(response.headers()['cache-control']).toContain('no-store')
+    expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
+    expect(await response.text()).toBe('Unauthorized')
+  }
+  expect((await request.post('/api/cron/retention')).status()).toBe(405)
+})
