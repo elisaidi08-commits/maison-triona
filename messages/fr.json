@@ -231,27 +231,33 @@
     "playShort": "Lire"
   },
   "House": {
-    "intro": "La maison en quelques mots.",
+    "intro": "Une grande maison qui ne coud pas de vêtements : elle compose des présences. Elle choisit, elle présente, puis elle veille.",
+    "contents": "Sommaire",
     "sections": [
       {
+        "id": "histoire",
         "title": "L’histoire",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Maison Triona est née d’une vie entière auprès des familles. Après des années à organiser des présences pour d’autres, Catriona ouvre sa propre maison, à son nom et selon ses exigences."
       },
       {
+        "id": "exigence",
         "title": "L’exigence",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Nous choisissons chaque personne une à une, pour son savoir-faire et pour sa tenue. Nous ne présentons que des personnes à qui nous confierions les nôtres."
       },
       {
+        "id": "discretion",
         "title": "La discrétion",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Aucun réseau social : la maison vit de recommandations. Rien de ce qu’une famille nous confie ne sort de la maison sans son accord."
       },
       {
+        "id": "nom",
         "title": "Le sens du nom",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Triona vient du prénom de la fondatrice, un prénom qui signifie « pure ». Son nom de famille veut dire « le navigateur sur une pirogue » : le sceau de la maison dessine un T qui s’ouvre comme un sillage sur l’eau. On ne voit pas le navigateur, seulement la trace de son passage. C’est notre façon de travailler. Le K. est sa signature, toujours petite et en retrait : un cachet, pas un second nom."
       },
       {
+        "id": "experience",
         "title": "L’expérience",
-        "text": "[CONTENU À FOURNIR PAR CAT]"
+        "text": "Trente ans à orchestrer, en silence. Trente ans de coordination dans l’accompagnement à domicile, avant d’ouvrir cette maison."
       }
     ]
   },

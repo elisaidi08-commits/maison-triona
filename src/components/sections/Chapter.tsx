@@ -12,7 +12,8 @@ import { Rule } from '@/components/ui/Rule'
 type ChapterProps = {
   id: string
   number: string
-  name: string
+  // Facultatif : sans nom, le repère ne porte que le numéro (La Maison, quand le titre suffit).
+  name?: string
   title: string
   children: ReactNode
   media?: ReactNode
@@ -27,7 +28,10 @@ export function Chapter({ id, number, name, title, children, media }: ChapterPro
     >
       <div className="flex max-w-measure flex-col gap-24 lg:col-span-5">
         <p className="text-label text-encre uppercase">
-          <span aria-hidden="true">{number} · </span>
+          <span aria-hidden="true">
+            {number}
+            {name ? ' · ' : ''}
+          </span>
           {name}
         </p>
         <h2

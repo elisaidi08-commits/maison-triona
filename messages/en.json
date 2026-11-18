@@ -227,27 +227,33 @@
     "playShort": "Play"
   },
   "House": {
-    "intro": "The house in a few words.",
+    "intro": "A great house that makes no garments: what it composes is presence. It chooses, it introduces, then it keeps watch.",
+    "contents": "Contents",
     "sections": [
       {
+        "id": "histoire",
         "title": "Our story",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Maison Triona was born of a lifetime spent alongside families. After many years of arranging companionship on behalf of others, Catriona is opening a house of her own, under her name and to her standards."
       },
       {
+        "id": "exigence",
         "title": "Our standards",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "We choose each person one by one, for their skill and for their bearing. We introduce only people we would trust with our own family."
       },
       {
+        "id": "discretion",
         "title": "Discretion",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "No social media: the house lives by recommendation. Nothing a family entrusts to us leaves the house without their agreement."
       },
       {
+        "id": "nom",
         "title": "The meaning of the name",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Triona comes from the founder’s first name, a name that means “pure”. Her family name means “the navigator in a dugout canoe”: the house’s seal draws a T that opens out like a wake on the water. You never see the navigator, only the trace they leave behind. That is how we work. The K. is her signature, always small and set back: a mark, not a second name."
       },
       {
+        "id": "experience",
         "title": "Experience",
-        "text": "[CONTENT TO BE PROVIDED BY CAT]"
+        "text": "Thirty years of orchestrating, in silence. Thirty years of coordinating companionship at home, before opening this house."
       }
     ]
   },
