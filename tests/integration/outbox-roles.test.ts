@@ -44,15 +44,31 @@ describe('boîte d’envoi : rôles', () => {
     }
   })
 
-  it('envoi gère la boîte d’envoi, sans accès aux demandes ni au journal', async () => {
+  it('envoi gère la boîte d’envoi, sans accès aux demandes ni à l’authentification', async () => {
+    await pool.query(
+      "INSERT INTO outbox (id, template, request_id) VALUES ($1, 'request_notification', $2)",
+      [randomUUID(), randomUUID()],
+    )
     const client = await pool.connect()
     try {
       await client.query('SET ROLE envoi')
       const { rowCount } = await client.query('SELECT id FROM outbox')
-      assert.equal(rowCount, 1)
+      assert.ok(rowCount !== null && rowCount >= 1)
+      await client.query(
+        `INSERT INTO outbox (id, template, alert_event, alert_subject)
+         VALUES ($1, 'technical_alert', 'send_failed', $2)`,
+        [randomUUID(), randomUUID()],
+      )
       await client.query("UPDATE outbox SET status = 'failed'")
       await client.query('DELETE FROM outbox')
-      for (const sql of ['SELECT id FROM vault_requests', 'SELECT * FROM vault_access_log']) {
+      for (const sql of [
+        'SELECT id FROM vault_requests',
+        "UPDATE vault_requests SET status = 'closed'",
+        'DELETE FROM vault_requests',
+        "INSERT INTO vault_requests (id) VALUES ('00000000-0000-0000-0000-000000000000')",
+        'SELECT * FROM vault_access_log',
+        'SELECT id FROM "user"',
+      ]) {
         await assert.rejects(client.query(sql), REFUS, sql)
       }
     } finally {
