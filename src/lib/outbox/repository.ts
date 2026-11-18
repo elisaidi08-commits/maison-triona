@@ -47,13 +47,17 @@ const ITEM_COLUMNS =
 // Réservation sans course : une passe de la tâche et le premier essai peuvent tomber ensemble, et
 // Vercel peut lancer la tâche deux fois. `SKIP LOCKED` écarte les lignes qu'une autre passe est en
 // train de réserver ; le bail de 2 minutes écarte celles qu'elle a déjà réservées.
+// `attempts < 10` : la table plafonne `attempts` à 10. Un message à bout de tentatives (envois
+// interrompus à répétition) n'est plus réservé, sinon l'incrément violerait la contrainte et ferait
+// échouer toute la passe.
 function claimQuery(extraFilter: string): string {
   return `UPDATE outbox
    SET lease_until = $1::timestamptz + interval '2 minutes', attempts = attempts + 1
  WHERE id IN (
    SELECT id FROM outbox
     WHERE status = 'pending' AND next_attempt_at <= $1
-      AND (lease_until IS NULL OR lease_until <= $1)${extraFilter}
+      AND (lease_until IS NULL OR lease_until <= $1)
+      AND attempts < 10${extraFilter}
     ORDER BY next_attempt_at
     LIMIT $2
     FOR UPDATE SKIP LOCKED)

@@ -296,6 +296,20 @@ describe('boîte d’envoi : réservation', () => {
     assert.equal((await row(locked))?.attempts, 0)
   })
 
+  it('ne réserve plus un message à bout de tentatives, sans bloquer les autres', async () => {
+    const stuck = await insertPending({ nextAt: at(-1) })
+    await pool.query('UPDATE outbox SET attempts = 10 WHERE id = $1', [stuck])
+    const free = await insertPending()
+    assert.deepEqual(
+      (await claimDue(pool, T0, 10)).map((item) => item.id),
+      [free],
+    )
+    assert.equal(await claimOne(pool, stuck, at(5)), null)
+    const written = await row(stuck)
+    assert.equal(written?.attempts, 10)
+    assert.equal(written?.lease_until, null)
+  })
+
   it('ne rend que des messages en attente, dans la limite demandée', async () => {
     await insertWithStatus('failed')
     await insertAccepted(T0)
