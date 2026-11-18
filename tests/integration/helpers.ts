@@ -34,7 +34,7 @@ export async function resetDatabase(pool: Pool): Promise<void> {
 
 // Rôles de connexion (db/roles/*.sql, partie B et partie C), créés dans le serveur de test (les
 // rôles PostgreSQL sont communs à toutes les bases) et appliqués après les migrations.
-const ROLES = ['site_public', 'coffre'] as const
+const ROLES = ['site_public', 'coffre', 'envoi'] as const
 
 export async function applyRoles(pool: Pool): Promise<void> {
   for (const role of ROLES) {
