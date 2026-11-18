@@ -19,6 +19,7 @@ export const PATHNAMES = {
     fr: '/comment-ca-se-passe/langage-simple',
     en: '/how-it-works/easy-read',
   },
+  '/notre-independance': { fr: '/notre-independance', en: '/our-independence' },
   '/contact': '/contact',
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },

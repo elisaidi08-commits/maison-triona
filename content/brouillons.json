@@ -23,7 +23,8 @@
     "Privacy",
     "Meta.pages",
     "Faq",
-    "HowItWorksPage"
+    "HowItWorksPage",
+    "Independence"
   ],
   "en": [
     "Home.title",
@@ -49,6 +50,7 @@
     "Privacy",
     "Meta.pages",
     "Faq",
-    "HowItWorksPage"
+    "HowItWorksPage",
+    "Independence"
   ]
 }

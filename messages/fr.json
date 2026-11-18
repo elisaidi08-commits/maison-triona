@@ -53,6 +53,10 @@
       "easyRead": {
         "title": "Comment ça se passe, en langage simple",
         "description": "Les étapes d’une demande à la maison, en phrases courtes : vous écrivez, nous répondons, nous parlons ensemble, vous choisissez avec nous."
+      },
+      "independence": {
+        "title": "Notre indépendance",
+        "description": "Comment la maison est rémunérée, ce que vous signez et avec qui : la maison présente, le professionnel signe avec vous, et vous ne payez rien à la maison."
       }
     }
   },
@@ -102,7 +106,8 @@
     "privacy": "Confidentialité",
     "faq": "Questions fréquentes",
     "howItWorks": "Comment ça se passe",
-    "easyRead": "Comment ça se passe, en langage simple"
+    "easyRead": "Comment ça se passe, en langage simple",
+    "independence": "Notre indépendance"
   },
   "NotFound": {
     "title": "Cette page n’existe pas.",
@@ -735,6 +740,28 @@
         "Vous signez avec le professionnel choisi.",
         "Ensuite, nous prenons de vos nouvelles."
       ]
-    }
+    },
+    "independenceLink": "Notre indépendance, en détail"
+  },
+  "Independence": {
+    "title": "Notre indépendance",
+    "intro": "Il est normal de se demander comment la maison est rémunérée. La réponse est simple : par le professionnel que vous choisissez, jamais par vous.",
+    "blocks": [
+      {
+        "id": "qui-paie",
+        "title": "Qui rémunère la maison",
+        "text": "La maison est rémunérée par le professionnel que vous avez choisi, sous forme d’une commission sur ses prestations mensuelles, une fois la collaboration engagée. Vous réglez directement ce professionnel, et rien à la maison."
+      },
+      {
+        "id": "contrat-direct",
+        "title": "Ce que vous signez",
+        "text": "Vous signez directement avec le professionnel choisi, indépendant ou maison partenaire. Il organise avec vous les horaires et le suivi au quotidien. La maison n’emploie jamais les personnes qu’elle vous présente."
+      },
+      {
+        "id": "interlocutrice",
+        "title": "Une seule interlocutrice",
+        "text": "Du premier échange au suivi, vous parlez toujours à la même personne. S’il faut ajuster ou remplacer quelqu’un, nous nous en chargeons."
+      }
+    ]
   }
 }
