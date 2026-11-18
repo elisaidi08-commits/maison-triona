@@ -111,7 +111,7 @@ Trois niveaux de protection : **en clair** (rien de personnel), **sealed box** (
 
 ### 4.3 Calcul des créneaux
 
-Fonction pure `computeSlots(settings, rules, exceptions, bookings, busy, now)` dans `src/lib/booking/slots.ts` : semaine type, moins les absences, moins les réservations confirmées, moins les heures occupées (option Google), dans le délai minimal et l'horizon, sous le plafond quotidien. Fuseau `Europe/Brussels`, passages à l'heure d'été et d'hiver couverts par les tests. Gestion des fuseaux : `Temporal` natif s'il est disponible dans Node 24 au moment de la story, sinon une petite bibliothèque, justifiée par écrit.
+Fonction pure `computeSlots({ settings, rules, exceptions, bookings, busy, now })` dans `src/lib/booking/slots.ts` : semaine type, moins les absences, moins les réservations confirmées, moins les heures occupées (option Google), dans le délai minimal et l'horizon, sous le plafond quotidien. Fuseau `Europe/Brussels`, passages à l'heure d'été et d'hiver couverts par les tests. Gestion des fuseaux : API `Intl`, sans dépendance (`src/lib/booking/zoned-time.ts`) ; Node 24 n'a pas `Temporal` (vérifié le 06/11/2026). Les appels confirmés gardent la plage enregistrée en base (`slot` : début, fin + pause du moment de la réservation), même si Cat change la pause ensuite : le calcul ne propose jamais un créneau que la contrainte d'exclusion refuserait.
 
 ### 4.4 Liens et sécurité
 

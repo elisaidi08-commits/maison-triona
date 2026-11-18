@@ -8,7 +8,7 @@ description: Checklist de sortie de story et de lancement Maison Triona - build,
 Une case non cochée = story **non terminée**. Seuils : `docs/architecture.md` §8 et §9. Lancement : §7 ci-dessous et `docs/launch-checklist.md`.
 
 ## 1. Code
-- [ ] `npm run lint` · `npm run typecheck` · `npm run build` : OK.
+- [ ] `npm run lint` · `npm run typecheck` · `npm run test:unit` · `npm run build` : OK.
 - [ ] Aucune classe Tailwind arbitraire : `grep -rnE "\[[0-9#]" src/` sans nouveau résultat.
 - [ ] Aucune couleur, taille ou durée hors `src/styles/tokens.css`.
 - [ ] Aucune nouvelle dépendance non justifiée (poids, licence, alternative).
