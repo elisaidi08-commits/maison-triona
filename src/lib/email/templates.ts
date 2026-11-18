@@ -43,7 +43,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-BE', {
   hourCycle: 'h23',
 })
 
-// « mardi 18 novembre 2026 à 22 h 14 » (heure de Bruxelles, minutes sur 2 chiffres).
+// « mercredi 18 novembre 2026 à 22 h 14 » (heure de Bruxelles, minutes sur 2 chiffres).
 function formatDate(date: Date): string {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
     throw new RangeError('Date invalide.')
