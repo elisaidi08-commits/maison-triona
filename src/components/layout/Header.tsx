@@ -23,7 +23,7 @@ export async function Header({ locale }: { locale: Locale }) {
   const names = { fr: lang('fr'), en: lang('en') }
 
   return (
-    <header className="flex items-center justify-between gap-24 px-margin py-16">
+    <header className="flex items-center justify-between gap-24 px-margin py-16 print:hidden">
       <Wordmark href={`/${locale}`} label={t('home')} />
 
       <div className="hidden items-center gap-48 lg:flex">

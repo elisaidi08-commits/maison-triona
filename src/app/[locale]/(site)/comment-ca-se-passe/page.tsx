@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ContactBlock } from '@/components/sections/ContactBlock'
+import { ShareLinks } from '@/components/share/ShareLinks'
 import { CommentCaSePasse, Modele } from '@/components/sections/Fonctionnement'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
@@ -44,6 +45,7 @@ export default async function HowItWorksPage() {
           <Modele />
         </div>
       </article>
+      <ShareLinks page="/comment-ca-se-passe" locale={locale} />
       <ContactBlock locale={locale} />
     </>
   )

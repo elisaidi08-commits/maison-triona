@@ -757,5 +757,13 @@
         "text": "From the first conversation to the follow-up, you always speak to the same person. If something needs adjusting, or someone needs replacing, we see to it."
       }
     ]
+  },
+  "Share": {
+    "title": "Share this page",
+    "email": "Send to someone close",
+    "copy": "Copy the link",
+    "copied": "Link copied.",
+    "subject": "{title} · Maison Triona",
+    "body": "This page from Maison Triona may interest you: {url}"
   }
 }

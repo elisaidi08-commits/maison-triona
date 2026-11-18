@@ -763,5 +763,13 @@
         "text": "Du premier échange au suivi, vous parlez toujours à la même personne. S’il faut ajuster ou remplacer quelqu’un, nous nous en chargeons."
       }
     ]
+  },
+  "Share": {
+    "title": "Partager cette page",
+    "email": "Envoyer à un proche",
+    "copy": "Copier le lien",
+    "copied": "Lien copié.",
+    "subject": "{title} · Maison Triona",
+    "body": "Cette page de Maison Triona peut vous intéresser : {url}"
   }
 }
