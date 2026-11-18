@@ -250,6 +250,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 1. Page `/contact` : **un seul formulaire HTML en 4 `fieldset`** (Besoin · Pour qui, où, quand · Comment vous joindre · Un mot libre). Rendu côté serveur, **fonctionnel sans JavaScript** : les 4 parties s'affichent à la suite et l'envoi (POST natif vers la Server Action) fonctionne.
 2. Avec JavaScript : une partie à la fois, titre « Étape 2 sur 4 · … » qui reçoit le focus à chaque changement, filet de progression, bouton Retour. Validation locale de l'étape avant de continuer. **Rien n'est envoyé au serveur avant l'envoi final.**
 3. Brouillon : `sessionStorage`, clés `mt-draft-*`, **seulement** besoin, pays, langue, créneau ; effacé à l'envoi. Jamais le nom, le contact, « pour qui », l'urgence, l'origine ni le message.
+3 bis. **Présélection du besoin (D26)** : rien dans l'URL. Les liens vers le contact des pages de service, du bloc Contact de ces pages et des choix de l'accueil portent `data-besoin` ; un écouteur client global (`PreselectionBesoin`, monté dans le layout de langue) écrit `mt-draft-besoin` au clic, et le formulaire coche ce besoin à son affichage (valeur inconnue ignorée). Sans JavaScript, pas de présélection (accepté). La FAQ et « Comment ça se passe » n'ont pas de besoin propre : leurs liens ne posent rien, le besoin déjà choisi reste.
 4. Validation serveur Zod. En cas d'erreur : la page se réaffiche **avec les valeurs conservées**, à l'étape fautive, résumé d'erreurs en tête qui reçoit le focus (maquette `110:7`).
 5. Succès : écriture dans le coffre, puis redirection vers `/contact/merci` (`noindex`) ; e-mails par la boîte d'envoi (§6.6).
 6. Échec d'écriture dans le coffre : état « L'envoi n'a pas abouti » (maquette `111:107`) **sans perte de la saisie** ; aucun e-mail ne part.
@@ -258,7 +259,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 
 | Étape | Champ | Règle | Remarque |
 |---|---|---|---|
-| 1 | Nature de la demande | requis, liste fermée : `conciergerie`, `grand-age`, `enfants`, `indecis` | **Présélectionnée** par `?service=`, modifiable |
+| 1 | Nature de la demande | requis, liste fermée : `conciergerie`, `grand-age`, `enfants`, `indecis` | **Présélectionnée** par le stockage de session (D26), modifiable |
 | 2 | Pour qui ? | facultatif : pour moi · pour un proche · je préfère ne pas le dire (spec d'entrée, annexe C.3, prioritaire sur l'annexe B.4) | Hors brouillon |
 | 2 | Pays | requis : `BE · FR · LU · MC · CH · ailleurs · non-dit` (D41 : « Ailleurs », « Je préfère ne pas le dire ») | — |
 | 2 | Urgence | requis : aucune · dans les semaines à venir · urgent | « Urgent » affiche la mention des services d'urgence (annexe D.5) ; hors brouillon |
@@ -271,7 +272,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 | 4 | Origine | facultatif, liste fermée sans texte libre : `carte · prospectus · boite-aux-lettres · recommandation · bouche-a-oreille · salon` (D41) | « Comment avez-vous connu la maison ? » ; la recommandation ne nomme aucune clinique |
 | 4 | Consentement | case requise, non cochée par défaut | Lien vers la politique de confidentialité (nouvel onglet, la saisie reste ouverte), sans base légale écrite (D61) |
 | — | `locale` | caché, `fr` ou `en` | Langue de l'interface |
-| — | `source` | caché, code de la liste fermée `?s=` ou vide | Jamais lié à un identifiant de mesure |
+| — | ~~`source`~~ | ~~caché, `?s=`~~ | Retiré (D26 : rien dans l'URL) ; remplacé par le champ « Origine » |
 | — | Honeypot | caché aux humains (hors écran, `tabindex=-1`, `autocomplete=off`, `aria-hidden`) | Rempli = rejet silencieux |
 | — | Horodatage signé | caché, HMAC | Envoi en moins de 3 s = rejet |
 

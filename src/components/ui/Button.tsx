@@ -11,7 +11,8 @@ import type { ReactNode } from 'react'
 // inactif n'a pas de seuil de contraste, WCAG 1.4.3) et `pending` (envoi
 // en cours : même aplat, seul le libellé change, en ivoire 80 % ; rien qui inquiète au moment
 // d'envoyer). L'annonce de l'envoi aux lecteurs d'écran revient au formulaire (`aria-live`).
-// `onClick` (bouton seulement) : « Retour » du formulaire en étapes.
+// `besoin` (lien seulement) : pose `data-besoin`, lu par l'écouteur de présélection du formulaire
+// (D26, story 3.4). `onClick` (bouton seulement) : « Retour » du formulaire en étapes.
 
 const BASE =
   'group inline-flex min-h-button items-center justify-center text-body transition-colors duration-micro ease-standard'
@@ -34,6 +35,7 @@ type CommonProps = {
 type ButtonProps =
   | (CommonProps & {
       href: string
+      besoin?: string
       type?: never
       disabled?: never
       pending?: never
@@ -41,6 +43,7 @@ type ButtonProps =
     })
   | (CommonProps & {
       href?: never
+      besoin?: never
       type?: 'button' | 'submit'
       disabled?: boolean
       // Libellé affiché pendant l'envoi (« Envoi en cours »), fourni par messages/*.json.
@@ -65,11 +68,12 @@ export function Button({
   variant = 'plein',
   disabled = false,
   pending,
+  besoin,
   onClick,
 }: ButtonProps) {
   if (href) {
     return (
-      <Link href={href} className={`${BASE} ${VARIANTS[variant]}`}>
+      <Link href={href} data-besoin={besoin} className={`${BASE} ${VARIANTS[variant]}`}>
         <Label variant={variant}>{children}</Label>
       </Link>
     )

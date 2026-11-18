@@ -30,18 +30,20 @@ export async function HeroAccueil({ locale }: { locale: Locale }) {
   const home = await getTranslations('Home')
   // Les trois services mènent directement à leur page (Sady, 06/11/2026 : un clic au lieu de
   // deux, sans repasser par la file de cartes) ; la demande particulière, au contact. Brouillons de
-  // D26, en attente de Cat.
+  // D26, en attente de Cat. Chaque choix retient son besoin pour le formulaire (`data-besoin`, D26).
   const choices = [
     ...SERVICES.map((service) => ({
       href: localizedPath(SERVICE_PATHS[service.id], locale),
       number: service.number,
       label: home(`choices.${service.key}.label`),
       category: home(`choices.${service.key}.category`),
+      besoin: service.id,
     })),
     {
       href: localizedPath('/contact', locale),
       label: home('choices.unsure.label'),
       note: home('choices.unsure.note'),
+      besoin: 'indecis',
     },
   ]
   return (
