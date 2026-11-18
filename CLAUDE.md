@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). Une story à la fois, dans l'ordre de `docs/plan-implementation.md` (piste A dev, piste B assets IA en parallèle). Stories 1.1 et 1.2 fusionnées, lot 0 validé (D20). Groupe ① validé (D23). **En cours : refonte V3 (D26)**, lots et points de contrôle au §2 bis du plan : lot 1 design system (stories 1.6 et 1.7), puis lot 2 accueil et services (2.12 refondue, 2.13), arrêt au point de contrôle ②. Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lot A (remise à plat) fait le 18/11/2026, puis lot 0 (correctifs sans dépendance), B (SEO technique et sécurité), C (pages vitrine, ③), D (formulaire, ④), E (coffre, envoi, appels), F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 
@@ -59,7 +59,7 @@ Figma : fichier `fAbQP3eV9zM6R3Bq75ehFN` (nodes dans `docs/audit-v1.md` §1). Ch
 
 ## Stack (figée en story 1.1, versions dans `docs/architecture.md` §1)
 
-Next.js 16 (App Router, `proxy.ts`, Turbopack) · React 19 · TypeScript strict · Tailwind CSS 4 (`@theme`) · Motion (`motion`, `LazyMotion` + `m`) · next-intl 4 (`/fr`, `/en` toujours préfixés) · CMS headless (reco Sanity) · Zod 4 · **coffre UE** (base chiffrée + A2F) · e-mail transactionnel UE avec boîte d'envoi et reprises · Upstash (UE) · Plausible · Vercel Pro (`cdg1`) · Playwright + axe · Lighthouse 13. Détail : `docs/architecture.md`.
+Next.js 16 (App Router, `proxy.ts`, Turbopack) · React 19 · TypeScript strict · Tailwind CSS 4 (`@theme`) · Motion (`motion`, `LazyMotion` + `m`, *pas encore installé : le mouvement actuel est en CSS*) · next-intl 4 (`/fr`, `/en` toujours préfixés) · CMS headless (reco Sanity, **après l'ouverture**, D45) · Zod 4 · **coffre UE** (base chiffrée + A2F) · e-mail transactionnel UE avec boîte d'envoi et reprises · Upstash (UE) · Plausible · Vercel Pro (`cdg1`) · Playwright + axe · Lighthouse 13. Détail : `docs/architecture.md`. Motion, Zod et Upstash s'installent avec la story qui en a besoin (3.1, 3.5), pas avant.
 
 ## Commandes (story 1.1, détail dans `README.md`)
 
@@ -90,7 +90,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **CTA** : « Nous écrire », « Prendre contact », « Parlez-nous de votre situation », « Écrire en toute discrétion ». Pas de tiret cadratin dans les titres, la navigation ni les CTA.
 - **Images** : `next/image` (AVIF puis WebP), `aspect-ratio` réservé ; le poster est l'élément LCP. Aucune vidéo en mobile.
 - **Formulaire** : validation serveur Zod, `?service=` présélectionne la demande, langue passée explicitement, aucun champ santé.
-- **Contenu** : textes éditoriaux via `lib/cms` ; libellés d'interface dans `messages/{fr,en}.json` ; jamais de traduction automatique publiée sans relecture.
+- **Contenu** : textes éditoriaux dans `messages/{fr,en}.json` et `content/` jusqu'au CMS (après l'ouverture, D45), puis via `lib/cms` ; libellés d'interface dans `messages/{fr,en}.json` ; jamais de traduction automatique publiée sans relecture.
 - **Dépendances** : aucune nouvelle dépendance sans justification écrite. **Commits** : français, impératif, une story par branche.
 
 ## Assets IA (règles courtes, détail dans `docs/assets-manifest.md`)

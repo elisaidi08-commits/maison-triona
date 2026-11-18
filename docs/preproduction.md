@@ -1,6 +1,6 @@
 # Préproduction protégée — mode d'emploi (story 1.5)
 
-> **Statut** (15/10/2026) : la partie **code** est faite (en-tête `X-Robots-Tag: noindex, nofollow` sur tout ce qui n'est pas la production Vercel, testé). La partie **Vercel** demande le compte de Sady : le dépôt n'est pas encore relié à Vercel.
+> **Statut** (15/10/2026) : la partie **code** est faite (en-tête `X-Robots-Tag: noindex, nofollow` sur tout ce qui n'est pas la production Vercel, testé). La partie **Vercel** : projet `maison-triona` créé sur le compte Hobby de Sady (D35, Pro requis avant le lancement), lien GitHub **coupé** le 23/10/2026, déploiements à la main seulement (`vercel deploy`) ; lien ouvert non indexé `maison-triona.vercel.app` depuis le 06/11/2026 (D62). Mis à jour le 18/11/2026.
 > Référence : `docs/trust-contact-launch.md` annexe D.6 (option recommandée : protection standard + liens partageables, inclus dans Vercel Pro).
 
 ## 1. Relier le dépôt à Vercel (Sady, une fois)
