@@ -7,6 +7,8 @@ import { ServicesImmersion, type PlanService } from '@/components/sections/Servi
 import { Rule } from '@/components/ui/Rule'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICES, SERVICE_MEDIA, SERVICE_PATHS } from '@/lib/services'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { pageMetadata } from '@/lib/seo'
 
 // Page Services (stories 2.13 puis 2.14, docs/art-direction.md §7.3) : la vue d'ensemble, qui
 // donne envie d'entrer dans chaque service ; le détail (situations, déroulé, ce qu'il faut savoir)
@@ -18,9 +20,8 @@ import { SERVICES, SERVICE_MEDIA, SERVICE_PATHS } from '@/lib/services'
 // 4. le bloc Contact.
 // Aucun tarif, aucune carte, aucune icône.
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('Pages')
-  return { title: t('services') }
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata('/services')
 }
 
 export default async function Page() {
@@ -51,30 +52,33 @@ export default async function Page() {
 
   return (
     <>
-      <header className="conteneur flex flex-col gap-24 pt-section">
-        <Rule short />
-        <p className="text-label text-encre uppercase">{pages('services')}</p>
-        <h1 className="max-w-titre font-display text-display-l text-balance text-sapin">
-          {index('title')}
-        </h1>
-        <p className="max-w-measure text-body-l">{index('intro')}</p>
-      </header>
+      <JsonLd page="/services" />
+      <>
+        <header className="conteneur flex flex-col gap-24 pt-section">
+          <Rule short />
+          <p className="text-label text-encre uppercase">{pages('services')}</p>
+          <h1 className="max-w-titre font-display text-display-l text-balance text-sapin">
+            {index('title')}
+          </h1>
+          <p className="max-w-measure text-body-l">{index('intro')}</p>
+        </header>
 
-      <ServicesImmersion
-        plans={plans}
-        thumbnailsLabel={index('thumbnails')}
-        pause={{ visible: video('pauseShort'), full: video('pause') }}
-        play={{ visible: video('playShort'), full: video('play') }}
-      />
+        <ServicesImmersion
+          plans={plans}
+          thumbnailsLabel={index('thumbnails')}
+          pause={{ visible: video('pauseShort'), full: video('pause') }}
+          play={{ visible: video('playShort'), full: video('play') }}
+        />
 
-      <div className="conteneur">
-        <Modele />
-        <div className="pb-section">
-          <RangeeConfidentialite locale={locale} />
+        <div className="conteneur">
+          <Modele />
+          <div className="pb-section">
+            <RangeeConfidentialite locale={locale} />
+          </div>
         </div>
-      </div>
 
-      <ContactBlock locale={locale} />
+        <ContactBlock locale={locale} />
+      </>
     </>
   )
 }

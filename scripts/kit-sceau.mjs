@@ -2,7 +2,8 @@
 // génération Recraft (brand/sources/L1-D-trace.svg). Produit, sans retoucher le dessin :
 // - src/components/brand/sceau-paths.ts : géométrie pour les composants du site (couleur par jetons) ;
 // - brand/kit/sceau-d-*.svg et brand/kit/png/sceau-d-*.png (2 048 px, sur fond et transparents) ;
-// - src/app/icon.svg, src/app/apple-icon.png (180 px) et public/brand/og.png (1 200 × 630).
+// - src/app/icon.svg, src/app/apple-icon.png (180 px), public/brand/og.png (1 200 × 630) et
+//   public/brand/sceau.png (512 px, logo des données structurées).
 // Rendu et mesure du dessin par Chromium (Playwright, déjà en dépendance de développement).
 // Usage : node scripts/kit-sceau.mjs
 
@@ -102,6 +103,11 @@ writeFileSync(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img"><title>Maison Triona</title><rect width="64" height="64" fill="${COULEURS.sapin}"/><svg x="5" y="5" width="54" height="54" viewBox="${viewBox}">${dessin(COULEURS.champagne)}</svg></svg>\n`,
 )
 await png('src/app/apple-icon.png', 180, 180, carre(180, COULEURS.champagne, COULEURS.sapin, 0.72))
+// Logo des données structurées (story 4.3) : 512 px, comme brand/kit/png/sceau-d-or-fond.png.
+await png('public/brand/sceau.png', 512, 512, carre(512, COULEURS.champagne, COULEURS.sapin, 0.7))
+// src/app/favicon.ico (48, 32 et 16 px) se tire de icon.svg, hors de ce script :
+//   magick -background none -density 600 src/app/icon.svg -resize 48x48 favicon-48.png
+//   magick favicon-48.png \( -clone 0 -resize 32x32 \) \( -clone 0 -resize 16x16 \) src/app/favicon.ico
 await png(
   'public/brand/og.png',
   1200,

@@ -8,6 +8,8 @@ import { LanguageSuggestion } from '@/components/layout/LanguageSuggestion'
 import { MobileBar } from '@/components/layout/MobileBar'
 import { SkipLink } from '@/components/layout/SkipLink'
 import { localizedPath } from '@/i18n/pathnames'
+import { openGraphBase } from '@/lib/seo'
+import { indexable, siteUrl } from '@/lib/site'
 import { routing, type Locale } from '@/i18n/routing'
 import { cormorant, ebGaramond } from '@/styles/fonts'
 import '@/styles/tokens.css'
@@ -18,21 +20,16 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-// Le site reste en noindex tant que SITE_INDEXABLE ne vaut pas « true » (ouverture, story 5.5).
-const indexable = process.env.SITE_INDEXABLE === 'true'
-
+// Valeurs communes ; chaque page publique ajoute titre, description, canonical et alternances
+// (src/lib/seo.ts, story 4.3). Noindex tant que SITE_INDEXABLE ne vaut pas « true » (story 5.5).
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await rootParams.locale()) as Locale
   return {
-    metadataBase: new URL(process.env.SITE_URL ?? 'http://localhost:3000'),
+    metadataBase: new URL(siteUrl()),
     title: { default: 'Maison Triona', template: '%s · Maison Triona' },
     robots: { index: indexable, follow: indexable },
-    // Image de partage typographique (story 1.3) ; à recomposer sur P01-d quand elle sera validée.
-    openGraph: {
-      siteName: 'Maison Triona',
-      locale: locale === 'fr' ? 'fr_FR' : 'en_GB',
-      images: [{ url: '/brand/og.png', width: 1200, height: 630, alt: 'Maison Triona' }],
-    },
+    // Image de partage typographique (story 1.3) ; une image par langue au lot C.
+    openGraph: openGraphBase(locale),
   }
 }
 

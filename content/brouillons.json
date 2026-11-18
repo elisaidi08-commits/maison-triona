@@ -20,7 +20,8 @@
     "ServicesIndex",
     "HowItWorks",
     "Legal",
-    "Privacy"
+    "Privacy",
+    "Meta.pages"
   ],
   "en": [
     "Home.title",
@@ -43,6 +44,7 @@
     "ServicesIndex",
     "HowItWorks",
     "Legal",
-    "Privacy"
+    "Privacy",
+    "Meta.pages"
   ]
 }

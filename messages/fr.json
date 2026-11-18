@@ -1,6 +1,48 @@
 {
   "Meta": {
-    "siteName": "Maison Triona"
+    "siteName": "Maison Triona",
+    "pages": {
+      "home": {
+        "title": "Conciergerie, grand âge et garde d’enfants",
+        "description": "La maison vous présente des personnes choisies une à une, en Belgique, France, Luxembourg, Monaco et Suisse. Réponse sous 48 heures ouvrées."
+      },
+      "services": {
+        "title": "Trois services, une seule interlocutrice",
+        "description": "Conciergerie de luxe, accompagnement du grand âge et garde d’enfants : la maison présente, le prestataire signe, la maison veille. Aucun tarif publié."
+      },
+      "concierge": {
+        "title": "Conciergerie de luxe pour les familles",
+        "description": "Une résidence à préparer, un artisan à trouver, une présence pendant un séjour : une seule interlocutrice pour chaque demande, en toute discrétion."
+      },
+      "senior": {
+        "title": "Accompagnement du grand âge à domicile",
+        "description": "Une présence choisie pour un parent : compagnie, sorties, un quotidien qui garde son rythme. Une seule interlocutrice, une réponse sous 48 heures ouvrées."
+      },
+      "children": {
+        "title": "Garde d’enfants : une présence choisie",
+        "description": "Quelques heures, une présence régulière après l’école ou une saison entière : la maison vous présente une personne rencontrée et vérifiée avant vous."
+      },
+      "house": {
+        "title": "Notre histoire et nos cinq principes",
+        "description": "Une maison née d’une vie entière auprès des familles, qui vit de recommandations. Ses cinq principes : discrétion, sélection, loyauté, respect, mesure."
+      },
+      "territories": {
+        "title": "Belgique, France, Luxembourg, Monaco, Suisse",
+        "description": "De Bruxelles à Monaco, de Paris à Lausanne et Genève, en passant par Luxembourg : la maison répond aux familles en français comme en anglais."
+      },
+      "contact": {
+        "title": "Contact : parlons-en, en toute discrétion",
+        "description": "Quelques lignes suffisent, pour vous ou pour un proche. Chaque demande est lue personnellement et reste confidentielle. Réponse sous 48 heures ouvrées."
+      },
+      "legal": {
+        "title": "Mentions légales",
+        "description": "Éditeur du site, hébergement, propriété intellectuelle et mention des images créées par intelligence artificielle : les informations légales de Maison Triona."
+      },
+      "privacy": {
+        "title": "Confidentialité : vos demandes protégées",
+        "description": "Aucun cookie, aucun traceur tiers. Vos demandes sont conservées chiffrées, en Europe, puis effacées. Ce que nous gardons, et pour combien de temps."
+      }
+    }
   },
   "SkipLink": {
     "label": "Aller au contenu"
