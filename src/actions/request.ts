@@ -1,7 +1,11 @@
 'use server'
 
 import { headers } from 'next/headers'
-import type { EtatDemande } from '@/lib/demande/champs'
+import { redirect } from 'next/navigation'
+import { localizedPath } from '@/i18n/pathnames'
+import { getPool } from '@/lib/db/pool'
+import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
+import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
 import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
 import {
@@ -12,23 +16,34 @@ import {
 } from '@/lib/security/horodatage'
 import { secretFormulaire } from '@/lib/security/secret'
 import { lireValeurs, validerDemande } from '@/lib/validation/demande'
+import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
+import { VaultKeyError } from '@/lib/vault/seal'
+import { storeRequest } from '@/lib/vault/store'
 
-// Envoi du formulaire de contact (stories 3.1 et 3.5, docs/architecture.md §6.1 et §6.7).
+// Envoi du formulaire de contact (stories 3.1, 3.5 et 3.2 B, docs/architecture.md §6.1 et §6.7).
 // Une Server Action est un point d'entrée POST public : tout est revérifié ici, dans cet ordre :
-// 1. piège à robots (champ caché rempli) : rejet silencieux, la réponse ressemble à un envoi ;
+// 1. piège à robots (champ caché rempli) : seul rejet silencieux, la réponse ressemble à un envoi
+//    abouti (coffre ouvert : la page de remerciement ; fermé : « ouvrira bientôt ») ;
 // 2. secret absent sur un déploiement Vercel : formulaire fermé, aucun repli (aperçu public D62) ;
-// 3. horodatage signé : falsifié, rejet silencieux ; absent (page statique, sans JavaScript) ou de
-//    plus de 2 heures, « trop tôt » avec un horodatage neuf ; moins de 3 secondes, « trop tôt ».
-//    La saisie revient toujours, avec l'horodatage à renvoyer ;
+// 3. horodatage signé : falsifié, absent (page statique, sans JavaScript) ou de plus de 2 heures,
+//    « trop tôt » avec un horodatage neuf ; moins de 3 secondes, « trop tôt ». La saisie revient
+//    toujours, avec l'horodatage à renvoyer : une vraie demande n'est jamais perdue en silence ;
 // 4. validation Zod de toute la demande ;
 // 5. limitation de débit des envois valides (empreintes d'IP, préfixe /64 en IPv6, et d'adresse ;
 //    sel du jour) ; le plafond global du jour alerte sans bloquer ;
-// 6. usage unique de l'horodatage, quand Upstash est configuré : rejoué, rejet silencieux ;
-// 7. envoi fermé : le coffre n'existe pas encore (lot E). Rien n'est enregistré, envoyé ni
-//    journalisé ; le formulaire affiche l'état « L'envoi des demandes ouvrira bientôt ».
+// 6. usage unique de l'horodatage, quand Upstash est configuré : rejoué (double envoi, retour
+//    arrière), « trop tôt » avec un horodatage neuf et la saisie ;
+// 7. coffre : sans `DATABASE_URL` ou sans `VAULT_PUBLIC_KEY`, envoi fermé ; rien n'est enregistré,
+//    envoyé ni journalisé, et le formulaire affiche « L'envoi des demandes ouvrira bientôt ».
+//    Configuré : la demande est scellée avec la clé publique puis écrite dans le coffre avec la
+//    version de la politique de confidentialité acceptée (`stored`), et le visiteur part vers
+//    /contact/merci (303 sans JavaScript). Échec d'écriture
+//    (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a pas
+//    abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé).
+//    Les e-mails (boîte d'envoi, même transaction) viendront avec la story 3.3.
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
-// Journaux : un statut seulement, jamais une valeur du formulaire ni une adresse.
+// Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.
 
 const LIMITE_IP = { maximum: 3, fenetreSecondes: 10 * 60 }
 const LIMITE_ADRESSE = { maximum: 3, fenetreSecondes: 24 * 60 * 60 }
@@ -45,6 +60,8 @@ type Statut =
   | 'rate:unavailable'
   | 'failed:rate'
   | 'failed:config'
+  | 'failed:vault'
+  | 'stored'
 
 function journaliser(statut: Statut) {
   console.info(`[demande] ${statut}`)
@@ -82,27 +99,34 @@ export async function envoyerDemande(
   donnees: FormData,
 ): Promise<EtatDemande> {
   const valeurs = lireValeurs(donnees)
-  // Même réponse qu'un envoi abouti : rien ne signale au robot qu'il a été repéré.
-  const silence: EtatDemande = { statut: 'ferme', valeurs }
+  // Coffre configuré (base et clé publique) : l'envoi est ouvert.
+  const clePublique = vaultPublicKeyFromEnv(process.env)
+  const fermee: EtatDemande = { statut: 'ferme', valeurs }
+  // Page de remerciement, dans la langue de l'interface (champ caché, français par défaut).
+  const merci = localizedPath('/contact/merci', valeurs.locale === 'en' ? 'en' : 'fr')
 
-  const piege = donnees.get('site')
+  // Piège rempli : même réponse qu'un envoi abouti, rien ne signale au robot qu'il a été repéré.
+  const piege = donnees.get(CHAMP_PIEGE)
   if (typeof piege === 'string' && piege.trim() !== '') {
     journaliser('rejected:honeypot')
-    return silence
+    if (clePublique) redirect(merci)
+    return fermee
   }
 
+  // Sans secret, le formulaire est fermé, même si le coffre est prêt : jamais de faux remerciement.
   const secret = secretFormulaire()
   if (!secret) {
     configurationManquante('secret')
-    return silence
+    return fermee
   }
 
   const maintenant = Date.now()
   const recu = donnees.get('jeton')
   const horodatage = verifierHorodatage(typeof recu === 'string' ? recu : null, secret, maintenant)
   if (horodatage.statut === 'invalide') {
+    // Falsifié, ou signé avec un ancien secret : la saisie revient, avec un horodatage neuf.
     journaliser('rejected:token')
-    return silence
+    return { statut: 'trop-tot', valeurs, jeton: signerHorodatage(maintenant, secret) }
   }
   if (horodatage.statut !== 'valide') {
     // Absent (premier envoi sans JavaScript) ou périmé : un horodatage neuf, à renvoyer.
@@ -162,8 +186,9 @@ export async function envoyerDemande(
   )
   switch (unique.statut) {
     case 'deja-vu':
+      // Déjà servi (double clic, retour arrière) : la saisie revient, avec un horodatage neuf.
       journaliser('rejected:replay')
-      return silence
+      return { statut: 'trop-tot', valeurs, jeton: signerHorodatage(Date.now(), secret) }
     case 'reponse':
       journaliser('failed:rate')
       return { statut: 'echec', valeurs, jeton }
@@ -178,7 +203,21 @@ export async function envoyerDemande(
       break
   }
 
-  // Le coffre (lot E) écrira ici la demande chiffrée. D'ici là : rien n'est enregistré, envoyé ni
-  // journalisé.
-  return { statut: 'ferme', valeurs }
+  // Coffre non configuré : rien n'est enregistré, envoyé ni journalisé.
+  if (!clePublique) return fermee
+
+  try {
+    await storeRequest(getPool(), resultat.demande, {
+      publicKey: clePublique,
+      privacyVersion: PRIVACY_POLICY_VERSION,
+      now: new Date(maintenant),
+    })
+  } catch (error) {
+    // Jamais l'erreur elle-même : un statut seulement.
+    journaliser(error instanceof VaultKeyError ? 'failed:config' : 'failed:vault')
+    return { statut: 'echec', valeurs, jeton: signerHorodatage(Date.now(), secret) }
+  }
+  journaliser('stored')
+  // Hors du try : `redirect` lève une exception de contrôle (doc Next.js).
+  redirect(merci)
 }

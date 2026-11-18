@@ -19,6 +19,9 @@ describe('poolConfigFromEnv', () => {
     assert.equal(config.connectionString, URL_WITH_SECRET)
     assert.equal(config.max, 5)
     assert.equal(config.idleTimeoutMillis, 10_000)
+    // Une base qui ne répond pas ne bloque pas l'envoi : échec en 5 s, saisie rendue au visiteur.
+    assert.equal(config.connectionTimeoutMillis, 5_000)
+    assert.equal(config.statement_timeout, 5_000)
     assert.equal(config.application_name, 'maison-triona')
   })
 
@@ -27,15 +30,18 @@ describe('poolConfigFromEnv', () => {
     assert.deepEqual(config.ssl, { ca: 'CERT', rejectUnauthorized: true })
   })
 
-  it('exige le certificat en production, sans révéler l’URL', () => {
-    assert.throws(
-      () => poolConfigFromEnv({ DATABASE_URL: URL_WITH_SECRET, VERCEL_ENV: 'production' }),
-      (error: Error) => {
-        assert.equal(error.message, 'TLS obligatoire en production : DATABASE_CA_CERT manquant')
-        assert.ok(!error.message.includes('motdepasse-factice'))
-        return true
-      },
-    )
+  it('exige le certificat sur tout déploiement Vercel, sans révéler l’URL', () => {
+    for (const VERCEL_ENV of ['production', 'preview', 'development']) {
+      assert.throws(
+        () => poolConfigFromEnv({ DATABASE_URL: URL_WITH_SECRET, VERCEL_ENV }),
+        (error: Error) => {
+          assert.equal(error.message, 'TLS obligatoire sur Vercel : DATABASE_CA_CERT manquant')
+          assert.ok(!error.message.includes('motdepasse-factice'))
+          return true
+        },
+        VERCEL_ENV,
+      )
+    }
   })
 
   it('accepte la production avec certificat', () => {

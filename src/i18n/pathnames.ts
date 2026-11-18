@@ -21,6 +21,8 @@ export const PATHNAMES = {
   },
   '/notre-independance': { fr: '/notre-independance', en: '/our-independence' },
   '/contact': '/contact',
+  // Remerciement après un envoi (story 3.2 B) : noindex, hors du sitemap.
+  '/contact/merci': '/contact/merci',
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
   '/accessibilite': { fr: '/accessibilite', en: '/accessibility' },

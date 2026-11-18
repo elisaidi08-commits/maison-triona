@@ -931,8 +931,8 @@
           "label": "J’accepte que Maison Triona utilise ces informations pour répondre à ma demande, comme décrit dans la politique de confidentialité.",
           "link": "Lire la politique de confidentialité (nouvel onglet)"
         },
-        "site": {
-          "label": "Site internet"
+        "piege": {
+          "label": "Référence interne"
         }
       },
       "buttons": {
@@ -970,5 +970,11 @@
         "failed": "L’envoi n’a pas abouti. Votre message est resté dans le formulaire."
       }
     }
+  },
+  "ContactThanks": {
+    "metaTitle": "Merci",
+    "title": "Merci, votre demande est bien arrivée.",
+    "body": "Nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
+    "back": "Revenir à l’accueil"
   }
 }

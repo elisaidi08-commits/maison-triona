@@ -70,6 +70,7 @@ npm run test:a11y          # axe, WCAG 2.2 AA, FR et EN
 npm run test:unit          # tests unitaires (node --test) : créneaux, configuration de la base, conservation
 npm run test:integration   # tests contre PostgreSQL 17 (base maison_triona_test)
 npm run db:migrate         # migrations du coffre (db/migrations/), à la main, jamais au build
+npm run vault:keys -- <chemin>  # clés du coffre, hors ligne, hors du dépôt (docs/coffre-cles.md)
 npm run lighthouse         # Lighthouse 13 mobile + desktop (serveur lancé sur le port 3100)
 npm run check:content      # échoue s'il reste un placeholder ou un brouillon
 npm run check:i18n         # échoue si une clé existe dans une langue et pas l'autre

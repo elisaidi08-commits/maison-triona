@@ -1,10 +1,14 @@
-import type { Pool } from 'pg'
+import { randomUUID } from 'node:crypto'
+
+import type { Pool, PoolClient } from 'pg'
 
 import { withTransaction } from '../db/transaction.ts'
 
-// Accès aux données du coffre (story 3.2, partie A). Le contenu arrive déjà chiffré (`sealed`,
+// Accès aux données du coffre (story 3.2, parties A et B). Le contenu arrive déjà chiffré (`sealed`,
 // octets de la sealed box) : ce module ne voit jamais de nom, de coordonnée ni de message.
 // Requêtes paramétrées uniquement ; aucune erreur levée ne cite un argument ni des octets.
+// `insertRequest` est la seule fonction du site public : elle passe avec le rôle `site_public`
+// (db/roles/site_public.sql), qui n'a que le droit d'insérer. Les autres servent au coffre.
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
@@ -19,6 +23,8 @@ export interface NewVaultRequest {
   source: string | null
   sealed: Uint8Array
   retentionUntil: Date
+  // Version de la politique de confidentialité acceptée (preuve du consentement, migration 0002).
+  privacyVersion: string
 }
 
 export interface VaultRequestSummary {
@@ -33,6 +39,8 @@ export interface VaultRequestSummary {
   status: RequestStatus
   frozen: boolean
   retentionUntil: Date
+  // Nulle pour une ligne antérieure à la migration 0002.
+  privacyVersion: string | null
 }
 
 export interface AccessLogEntry {
@@ -54,7 +62,8 @@ const IDENTIFIER = /^[A-Za-z0-9_]{1,63}$/
 const INSERT_LOG = 'INSERT INTO vault_access_log (actor, action, request_id) VALUES ($1, $2, $3)'
 
 const SUMMARY_COLUMNS =
-  'id, kind, created_at, service, country, locale, urgency, source, status, frozen, retention_until'
+  'id, kind, created_at, service, country, locale, urgency, source, status, frozen, ' +
+  'retention_until, privacy_version'
 
 interface SummaryRow {
   id: string
@@ -68,6 +77,7 @@ interface SummaryRow {
   status: RequestStatus
   frozen: boolean
   retention_until: Date
+  privacy_version: string | null
 }
 
 interface LogRow {
@@ -136,19 +146,28 @@ function toSummary(row: SummaryRow): VaultRequestSummary {
     status: row.status,
     frozen: row.frozen,
     retentionUntil: row.retention_until,
+    privacyVersion: row.privacy_version,
   }
 }
 
-// Enregistre une demande déjà chiffrée et renvoie son identifiant.
-export async function insertRequest(pool: Pool, input: NewVaultRequest): Promise<string> {
+// Enregistre une demande déjà chiffrée et renvoie son identifiant. L'identifiant est tiré ici
+// (UUID v4) et l'insertion se fait sans RETURNING : le rôle du site public n'a aucun droit de
+// lecture. Accepte le client d'une transaction (`withTransaction`) : la boîte d'envoi (story 3.3)
+// s'écrira avec la demande.
+export async function insertRequest(
+  db: Pool | PoolClient,
+  input: NewVaultRequest,
+): Promise<string> {
   assertValidDate(input.retentionUntil, 'Échéance de conservation')
-  return guard('insertRequest', async () => {
-    const { rows } = await pool.query<{ id: string }>(
+  const id = randomUUID()
+  await guard('insertRequest', () =>
+    db.query(
       `INSERT INTO vault_requests
-         (kind, service, country, locale, urgency, source, sealed, retention_until)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id`,
+         (id, kind, service, country, locale, urgency, source, sealed, retention_until,
+          privacy_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
+        id,
         input.kind,
         input.service,
         input.country,
@@ -157,12 +176,11 @@ export async function insertRequest(pool: Pool, input: NewVaultRequest): Promise
         input.source,
         input.sealed,
         input.retentionUntil,
+        input.privacyVersion,
       ],
-    )
-    const id = rows[0]?.id
-    if (!id) throw new Error('Insertion sans identifiant')
-    return id
-  })
+    ),
+  )
+  return id
 }
 
 // Colonnes en clair seulement (jamais `sealed`), de la plus récente à la plus ancienne.
