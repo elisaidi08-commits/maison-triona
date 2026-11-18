@@ -1,44 +1,44 @@
-import type { ReactNode } from 'react'
 import { getTranslations } from 'next-intl/server'
+import { ContactBlock } from '@/components/sections/ContactBlock'
+import { ASavoir, Deroule, Devise, FicheRow } from '@/components/sections/Fonctionnement'
+import { SceneService } from '@/components/sections/SceneService'
 import { TextLink } from '@/components/ui/TextLink'
-import { localizedPath } from '@/i18n/pathnames'
-import type { Locale } from '@/i18n/routing'
+import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICES, SERVICE_PATHS, type Service } from '@/lib/services'
 
-// Page de service (story 2.13, D26) : le second temps de la scène répond aux cinq questions de V3
-// dans l'ordre où un visiteur se les pose (le besoin, pour qui, les situations, comment la maison
-// procède, comment entrer en contact), avec la sélection et la confidentialité en appui, puis les
-// deux autres services. Un intitulé court en label par bloc (h2), une idée par bloc ; trois
-// situations, pas un catalogue. Aucun tarif, aucune promesse médicale ni de disponibilité.
+// Page de service (story 2.13, refondue en 2.14 : les services deviennent le cœur du site). Trois
+// temps, structure identique × 3 :
+// 1. la scène (SceneService) : label, promesse en h1, image collante ; à côté, ce que la maison
+//    fait pour ce service et le lien vers le formulaire ;
+// 2. la fiche, en pleine largeur et en trois chapitres : quelques situations, le déroulé en six
+//    étapes, puis, après la phrase du modèle posée seule, ce qu'il faut savoir (sélection,
+//    rémunération, ce que la maison ne fait pas, confidentialité) ; les autres services en pied ;
+// 3. le bloc Contact sapin.
+// Faits : réponses de Cat du 26/10/2026 (D40, D42). Aucun tarif, aucune promesse médicale, aucun
+// âge ni langue pour la garde d'enfants tant que Cat ne les a pas donnés. Le formulaire est
+// atteint sans `?service=` : la présélection passera par le stockage de session (D26, story 3.4).
 
-function Bloc({ label, children }: { label: string; children: ReactNode }) {
+async function ServiceLead({ service, locale }: { service: Service; locale: Locale }) {
+  const t = await getTranslations('Services')
   return (
-    <div className="flex flex-col gap-16">
-      <h2 className="text-label text-encre uppercase">{label}</h2>
-      {children}
+    <div className="flex flex-col gap-24">
+      <p className="text-body-l">{t(`${service.key}.need`)}</p>
+      <p>
+        <TextLink href={localizedPath('/contact', locale)}>{t('cta')}</TextLink>
+      </p>
     </div>
   )
 }
 
-export async function ServiceDetails({ service, locale }: { service: Service; locale: Locale }) {
+async function ServiceDetails({ service, locale }: { service: Service; locale: Locale }) {
   const t = await getTranslations('Services')
   const page = await getTranslations('ServicePage')
-  const contact = await getTranslations('Scenes.contact')
   const situations = t.raw(`${service.key}.situations`) as string[]
-  const steps = page.raw('steps') as string[]
   const others = SERVICES.filter((other) => other.id !== service.id)
 
   return (
-    <>
-      <Bloc label={page('needLabel')}>
-        <p>{t(`${service.key}.need`)}</p>
-      </Bloc>
-
-      <Bloc label={page('forWhomLabel')}>
-        <p>{page('forWhom')}</p>
-      </Bloc>
-
-      <Bloc label={page('situationsLabel')}>
+    <div className="conteneur">
+      <FicheRow id="situations" title={page('situationsLabel')}>
         <ul className="flex flex-col">
           {situations.map((situation) => (
             <li key={situation} className="border-b border-sapin-20 py-12 first:border-t">
@@ -46,41 +46,23 @@ export async function ServiceDetails({ service, locale }: { service: Service; lo
             </li>
           ))}
         </ul>
-      </Bloc>
+      </FicheRow>
 
-      <Bloc label={t('howItWorks')}>
-        <ol className="flex flex-col gap-12">
-          {steps.map((step, index) => (
-            <li key={step} className="flex items-baseline gap-16">
-              <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </Bloc>
+      <Deroule />
+      <Devise />
+      <ASavoir
+        locale={locale}
+        extraLimit={service.key === 'senior' ? t('senior.limit') : undefined}
+      />
 
-      <Bloc label={page('selectionLabel')}>
-        <p>{t('model')}</p>
-      </Bloc>
-
-      <Bloc label={page('discretionLabel')}>
-        <p>{contact('reassurance')}</p>
-        {service.key === 'senior' ? <p>{t('senior.precision')}</p> : null}
-      </Bloc>
-
-      <Bloc label={page('contactLabel')}>
-        <p>
-          <TextLink href={`/${locale}/contact?service=${service.id}`}>{t('cta')}</TextLink>
-        </p>
-      </Bloc>
-
-      <nav aria-labelledby={`${service.anchor}-autres`} className="flex flex-col gap-16">
-        <h2 id={`${service.anchor}-autres`} className="text-label text-encre uppercase">
+      <nav
+        aria-labelledby="autres-services-titre"
+        className="flex flex-col gap-16 border-t border-sapin-20 py-48 lg:flex-row lg:items-center lg:gap-48"
+      >
+        <h2 id="autres-services-titre" className="text-label text-encre uppercase">
           {page('othersLabel')}
         </h2>
-        <ul className="flex flex-col items-start gap-8">
+        <ul className="flex flex-col items-start gap-8 lg:flex-row lg:gap-32">
           {others.map((other) => (
             <li key={other.id}>
               <TextLink href={localizedPath(SERVICE_PATHS[other.id], locale)}>
@@ -90,6 +72,18 @@ export async function ServiceDetails({ service, locale }: { service: Service; lo
           ))}
         </ul>
       </nav>
+    </div>
+  )
+}
+
+export async function PageService({ service, locale }: { service: Service; locale: Locale }) {
+  return (
+    <>
+      <SceneService service={service} locale={locale} heading="h1">
+        <ServiceLead service={service} locale={locale} />
+      </SceneService>
+      <ServiceDetails service={service} locale={locale} />
+      <ContactBlock locale={locale} />
     </>
   )
 }
