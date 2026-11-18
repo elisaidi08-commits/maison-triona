@@ -1,9 +1,8 @@
-// Filet 1 px : or (ivoire et sapin), sauge (sapin), discret (sapin à 20 % sur ivoire).
+// Filet 1 px : or (ivoire et sapin), discret (sapin à 20 % sur ivoire). Sauge, hors kit, retirée (D64).
 // `short` = filet de 48 px, toujours décoratif (avant un label ou le « K. »).
 
 const TONES = {
   or: 'border-or',
-  sauge: 'border-sauge',
   discret: 'border-sapin-20',
 } as const
 

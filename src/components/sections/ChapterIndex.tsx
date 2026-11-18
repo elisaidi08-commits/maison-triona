@@ -30,7 +30,7 @@ export function ChapterIndex({ label, chapters, currentHref }: ChapterIndexProps
                 aria-current={current ? 'location' : undefined}
                 className="group flex min-h-touch items-baseline gap-24 py-12 text-encre"
               >
-                <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
+                <span aria-hidden="true" className="w-32 shrink-0 text-label text-sapin">
                   {chapter.number}
                 </span>
                 <span className={`filet-survol text-nav ${current ? 'text-sapin' : ''}`}>

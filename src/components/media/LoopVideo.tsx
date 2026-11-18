@@ -90,7 +90,7 @@ export function LoopVideo({
           aria-label={paused ? play.full : pause.full}
           className={`absolute right-margin z-10 inline-flex min-h-touch cursor-pointer items-center text-label uppercase ${
             controls === 'below'
-              ? 'top-full text-encre transition-colors duration-micro ease-standard hover:text-cypres'
+              ? 'top-full text-encre decoration-or decoration-1 underline-offset-8 transition-colors duration-micro ease-standard hover:text-sapin hover:underline'
               : 'focus-sur-image bottom-24 bg-sapin px-16 text-ivoire'
           }`}
         >

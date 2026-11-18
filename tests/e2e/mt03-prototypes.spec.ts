@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
 
+// Scènes des services de l'accueil (D64 (3)). Les pages déjà visitées restent dans le document,
+// masquées (Next.js) : la page de la conciergerie a aussi son `#conciergerie`, on vise l'accueil.
+const CONCIERGE_SCENE = 'section[aria-labelledby="services-titre"] #conciergerie'
+const CONCIERGE_LINK = `${CONCIERGE_SCENE} a`
+
 // Prototypes MT-03 : P01, le seuil V4 (les quatre entrées par besoin sous la phrase, D36 gardé) ;
 // P02, le passage de pièce M20 (l'image de la conciergerie va de l'accueil au haut de sa page,
 // React <ViewTransition>, desktop). Le changement de page simple reste le repli partout.
@@ -43,13 +48,13 @@ const counts = (page: Page) =>
     return { vt: w.vt ?? 0, groups: w.groups ?? [] }
   })
 
-// File de cartes (M21) : au haut de sa piste, la conciergerie est en vedette et son lien visible.
+// Scène de la conciergerie (D64 (3)) : son lien, amené à l'écran.
 const goToConciergeLink = async (page: Page) => {
-  await page.locator('[data-zoom]').evaluate((track) => {
-    const top = track.getBoundingClientRect().top + window.scrollY
+  await page.locator(CONCIERGE_SCENE).evaluate((scene) => {
+    const top = scene.getBoundingClientRect().top + window.scrollY - 120
     window.scrollTo({ top, behavior: 'instant' })
   })
-  return page.locator('#conciergerie [data-etiquette] a')
+  return page.locator(CONCIERGE_LINK)
 }
 
 test.describe('P01 · le seuil V4', () => {
@@ -271,7 +276,7 @@ test.describe('P02 · passage de pièce', () => {
     await watchTransitions(page)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/fr')
-    await page.locator('#conciergerie [data-etiquette] a').click()
+    await page.locator(CONCIERGE_LINK).click()
     await expect(page).toHaveURL(/\/fr\/services\/conciergerie$/)
     await page.waitForTimeout(600)
     const { groups } = await counts(page)

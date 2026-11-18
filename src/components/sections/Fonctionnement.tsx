@@ -10,6 +10,9 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 // par la page Services et les trois pages de service.
 // Mise en page « fiche » : peu de chapitres en serif à gauche, le texte en colonne de lecture à
 // droite, des sous-titres en EB Garamond dans le chapitre. Aucun tarif, aucune promesse médicale.
+// Pages de service (audit du 06/11/2026 §4, D64) : un seul chapitre, « Comment ça se passe », qui
+// réunit le déroulé, la phrase du modèle et ce qu'il faut savoir, au lieu de trois chapitres à la
+// suite (CommentCaSePasse).
 
 type Item = { title: string; text: string }
 type Block = { title: string; paragraphs: string[] }
@@ -30,7 +33,12 @@ export function FicheRow({
       aria-labelledby={titleId}
       className="grid gap-24 border-t border-sapin-20 py-48 lg:grid-cols-12 lg:gap-gutter lg:py-64"
     >
-      <h2 id={titleId} className="font-display text-title-h2 text-balance text-sapin lg:col-span-5">
+      {/* En desktop, l'intitulé reste en vue à gauche pendant qu'on lit un long chapitre
+          (« Comment ça se passe ») : on sait toujours dans quel temps de la page on se trouve. */}
+      <h2
+        id={titleId}
+        className="font-display text-title-h2 text-balance text-sapin lg:sticky lg:top-32 lg:col-span-5 lg:self-start"
+      >
         {title}
       </h2>
       <div className="flex max-w-measure flex-col gap-16 lg:col-span-6 lg:col-start-7">
@@ -40,20 +48,34 @@ export function FicheRow({
   )
 }
 
-// Les six étapes de Cat (Confirmé), numérotées 01 à 06 ; la liste ordonnée porte l'ordre, les
-// numéros sont décoratifs.
-export async function Deroule() {
-  const t = await getTranslations('HowItWorks.steps')
-  const steps = t.raw('items') as Item[]
+// Pages de service, deuxième temps : les six étapes de Cat (Confirmé), numérotées 01 à 06 (la liste
+// ordonnée porte l'ordre, les numéros sont décoratifs) ; la phrase du modèle, posée seule entre deux
+// filets courts ; puis ce qu'il faut savoir en quatre sous-titres (`#a-savoir`), sans intitulé de
+// plus. `extraLimit` : une ligne propre au service dans « Ce que la maison ne fait pas » (pour le
+// grand âge, aucun acte médical et l'orientation vers les professionnels de santé, sans le mot
+// « soins », D39).
+export async function CommentCaSePasse({
+  locale,
+  extraLimit,
+}: {
+  locale: Locale
+  extraLimit?: string
+}) {
+  const t = await getTranslations('HowItWorks')
+  const steps = t.raw('steps.items') as Item[]
+  const selection = t.raw('selection') as Block
+  const payment = t.raw('payment') as Block
+  const confidentiality = t.raw('confidentiality') as Block
+  const limits = [...(t.raw('limits.items') as string[]), ...(extraLimit ? [extraLimit] : [])]
   return (
-    <FicheRow id="deroule" title={t('title')}>
+    <FicheRow id="deroule" title={t('steps.title')}>
       <ol className="flex flex-col">
         {steps.map((step, index) => (
           <li
             key={step.title}
             className="flex items-baseline gap-16 border-b border-sapin-20 py-24 first:pt-0 last:border-b-0 last:pb-0"
           >
-            <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
+            <span aria-hidden="true" className="w-32 shrink-0 text-label text-sapin">
               {String(index + 1).padStart(2, '0')}
             </span>
             <div className="flex flex-col gap-8">
@@ -63,35 +85,13 @@ export async function Deroule() {
           </li>
         ))}
       </ol>
-    </FicheRow>
-  )
-}
 
-function SousBloc({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-12 border-b border-sapin-20 pb-32 last:border-b-0 last:pb-0">
-      <h3 className="text-title-h3 text-sapin">{title}</h3>
-      {children}
-    </div>
-  )
-}
+      <div className="my-48 flex flex-col gap-24 lg:my-64">
+        <Rule short />
+        <p className="font-display text-title-h2 text-balance text-sapin">{t('model.title')}</p>
+      </div>
 
-function Paragraphs({ paragraphs }: { paragraphs: string[] }) {
-  return paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)
-}
-
-// Ce qu'il faut savoir : un seul chapitre, quatre sous-titres. `extraLimit` : une ligne propre au
-// service dans « Ce que la maison ne fait pas » (pour le grand âge, aucun acte médical et
-// l'orientation vers les professionnels de santé, sans le mot « soins », D39).
-export async function ASavoir({ locale, extraLimit }: { locale: Locale; extraLimit?: string }) {
-  const t = await getTranslations('HowItWorks')
-  const selection = t.raw('selection') as Block
-  const payment = t.raw('payment') as Block
-  const confidentiality = t.raw('confidentiality') as Block
-  const limits = [...(t.raw('limits.items') as string[]), ...(extraLimit ? [extraLimit] : [])]
-  return (
-    <FicheRow id="a-savoir" title={t('know.title')}>
-      <div className="flex flex-col gap-32">
+      <div id="a-savoir" className="flex flex-col gap-32 border-t border-sapin-20 pt-32">
         <SousBloc title={selection.title}>
           <Paragraphs paragraphs={selection.paragraphs} />
         </SousBloc>
@@ -120,6 +120,19 @@ export async function ASavoir({ locale, extraLimit }: { locale: Locale; extraLim
   )
 }
 
+function SousBloc({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-12 border-b border-sapin-20 pb-32 last:border-b-0 last:pb-0">
+      <h3 className="text-title-h3 text-sapin">{title}</h3>
+      {children}
+    </div>
+  )
+}
+
+function Paragraphs({ paragraphs }: { paragraphs: string[] }) {
+  return paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)
+}
+
 // Page Services : la confidentialité seule, en une rangée.
 export async function RangeeConfidentialite({ locale }: { locale: Locale }) {
   const t = await getTranslations('HowItWorks.confidentiality')
@@ -130,18 +143,6 @@ export async function RangeeConfidentialite({ locale }: { locale: Locale }) {
         <TextLink href={localizedPath('/confidentialite', locale)}>{t('link')}</TextLink>
       </p>
     </FicheRow>
-  )
-}
-
-// Pages de service : la phrase du modèle, seule, comme une respiration entre le déroulé et ce
-// qu'il faut savoir.
-export async function Devise() {
-  const t = await getTranslations('HowItWorks.model')
-  return (
-    <div className="flex flex-col gap-24 border-t border-sapin-20 py-section">
-      <Rule short />
-      <p className="max-w-titre font-display text-title-h2 text-balance text-sapin">{t('title')}</p>
-    </div>
   )
 }
 
@@ -161,7 +162,7 @@ export async function Modele() {
       <ol className="grid max-w-measure gap-32 lg:max-w-none lg:grid-cols-3 lg:gap-gutter">
         {items.map((item, index) => (
           <li key={item.title} className="flex flex-col gap-12 border-t border-or pt-24">
-            <span aria-hidden="true" className="text-label text-cypres">
+            <span aria-hidden="true" className="text-label text-sapin">
               {String(index + 1).padStart(2, '0')}
             </span>
             <h3 className="text-title-h3 text-sapin">{item.title}</h3>

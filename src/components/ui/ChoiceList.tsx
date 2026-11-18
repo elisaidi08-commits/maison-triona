@@ -63,7 +63,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
             }`}
           >
             {/* Sans numéro, la ligne garde sa place : les libellés partagent la même ligne de base. */}
-            <span aria-hidden="true" className="w-32 shrink-0 text-label text-cypres">
+            <span aria-hidden="true" className="w-32 shrink-0 text-label text-sapin">
               {choice.number ?? ' '}
             </span>
             <span className="flex flex-col gap-4">

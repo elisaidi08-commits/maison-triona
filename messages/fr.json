@@ -392,7 +392,7 @@
             "value": "[CONTENU À FOURNIR PAR CAT]"
           },
           {
-            "term": "Adresse e-mail",
+            "term": "Adresse e‑mail",
             "value": "[CONTENU À FOURNIR PAR CAT]"
           }
         ]
@@ -480,7 +480,7 @@
             "value": "[CONTENU À FOURNIR PAR CAT]"
           },
           {
-            "term": "Adresse e-mail pour vos données",
+            "term": "Adresse e‑mail pour vos données",
             "value": "[CONTENU À FOURNIR PAR CAT]"
           }
         ]
@@ -493,17 +493,17 @@
           "Le service qui vous intéresse et, si vous le souhaitez, pour qui.",
           "Le pays concerné.",
           "Si la demande est urgente.",
-          "Votre nom, et une adresse e-mail ou un numéro de téléphone.",
+          "Votre nom, et une adresse e‑mail ou un numéro de téléphone.",
           "Le moment et la langue que vous préférez pour être recontacté.",
           "Un message, si vous le souhaitez.",
           "Comment vous avez connu la maison, si vous souhaitez le dire."
         ],
         "after": [
           "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter une ou plusieurs personnes. La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes.",
-          "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
+          "Le service, le pays, l’urgence, votre nom, une adresse e‑mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
           "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix.",
           "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation.",
-          "Si vous indiquez une adresse e-mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
+          "Si vous indiquez une adresse e‑mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
           "Aucune décision n’est prise de façon automatisée : chaque demande est lue par une personne."
         ]
       },
@@ -511,10 +511,10 @@
         "id": "appel",
         "title": "Lorsque vous convenez d’un appel",
         "paragraphs": [
-          "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e-mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
-          "Nous gardons alors votre adresse e-mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
-          "Vous recevez une confirmation, puis un rappel la veille, par e-mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant.",
-          "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e-mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
+          "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e‑mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Nous gardons alors votre adresse e‑mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
+          "Vous recevez une confirmation, puis un rappel la veille, par e‑mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant.",
+          "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e‑mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
           "L’invitation ajoutée à l’agenda de la fondatrice (Google Agenda) ne contient ni votre nom ni vos coordonnées : seulement l’heure et un lien vers le coffre."
         ]
       },
@@ -534,7 +534,7 @@
         "id": "echanges",
         "title": "Nos échanges, ensuite",
         "paragraphs": [
-          "Une fois la relation engagée, nous vous répondons par e-mail ou par téléphone. Nos échanges par e-mail sont conservés dans la messagerie de la maison, hébergée par [À DÉFINIR], le temps de notre relation, puis [À DÉFINIR]."
+          "Une fois la relation engagée, nous vous répondons par e‑mail ou par téléphone. Nos échanges par e‑mail sont conservés dans la messagerie de la maison, hébergée par [À DÉFINIR], le temps de notre relation, puis [À DÉFINIR]."
         ]
       },
       {
@@ -565,7 +565,7 @@
           },
           {
             "term": "Scaleway SAS (France)",
-            "value": "Coffre des demandes et envoi des e-mails, en France."
+            "value": "Coffre des demandes et envoi des e‑mails, en France."
           },
           {
             "term": "Upstash Inc. (États-Unis)",
@@ -601,13 +601,13 @@
         "title": "Combien de temps nous gardons vos informations",
         "items": [
           "Votre demande : le temps de nos échanges, puis elle est effacée. Vous pouvez nous demander de l’effacer plus tôt.",
-          "Votre appel : la même durée qu’une demande. Votre adresse e-mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
+          "Votre appel : la même durée qu’une demande. Votre adresse e‑mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
           "Les sauvegardes : une demande effacée peut y subsister 7 jours avant de disparaître ; son contenu y reste chiffré.",
           "Les journaux de l’hébergeur : un jour.",
           "La protection contre les envois abusifs : 24 heures au plus.",
-          "Les journaux d’envoi des e-mails : [À CONFIRMER selon le fournisseur]",
+          "Les journaux d’envoi des e‑mails : [À CONFIRMER selon le fournisseur]",
           "Le journal des accès au coffre : [À DÉFINIR]",
-          "Nos échanges par e-mail : [À DÉFINIR]"
+          "Nos échanges par e‑mail : [À DÉFINIR]"
         ]
       },
       {
@@ -634,7 +634,7 @@
         "items": [
           "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
           "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
-          "Jusqu’à 24 heures après un appel, votre adresse e-mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
+          "Jusqu’à 24 heures après un appel, votre adresse e‑mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
           "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures et ne sert plus une fois l’appel réservé.",
           "Le message de confirmation part à l’adresse saisie dans le formulaire. S’il vous parvient sans que vous ayez écrit, ignorez-le : il ne contient rien d’autre qu’un accusé de réception."
         ]

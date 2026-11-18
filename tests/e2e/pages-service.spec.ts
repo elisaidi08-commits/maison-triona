@@ -1,17 +1,18 @@
 import { expect, test } from '@playwright/test'
 
-// Stories 2.13 et 2.14 : les services, cœur du site. Chaque page de service se lit seule (scène,
-// fiche en trois chapitres, bloc Contact) ; la page Services est la vue d'ensemble, en une scène
-// immersive (M25, D58) en desktop avec souris. Intertitres et liens comptés dans le contenu
-// (`main`) : le pied de page (D54) a ses propres intertitres et liens vers les services.
+// Stories 2.13 et 2.14 : les services, cœur du site. Chaque page de service se lit seule : la scène
+// (nom et promesse en h1, D64 n° 6), puis trois temps (situations, comment ça se passe, nous écrire ;
+// audit du 06/11/2026 §4) ; la page Services est la vue d'ensemble, en une scène immersive (M25,
+// D58) en desktop avec souris. Intertitres et liens comptés dans le contenu (`main`) : le pied de
+// page (D54) a ses propres intertitres et liens vers les services.
 
-const BLOCS_FR = [
-  'Quelques situations',
-  'Comment ça se passe',
-  'Ce qu’il faut savoir',
-  'Les autres services',
-  'Parlons-en, en toute discrétion.',
-]
+const BLOCS_FR = ['Quelques situations', 'Comment ça se passe', 'Parlons-en, en toute discrétion.']
+
+const NOMS_FR = {
+  conciergerie: 'Conciergerie de luxe',
+  'grand-age': 'Accompagnement du grand âge',
+  enfants: 'Garde d’enfants',
+} as const
 
 for (const [path, autres] of [
   ['/fr/services/conciergerie', ['/fr/services/grand-age', '/fr/services/enfants']],
@@ -22,7 +23,19 @@ for (const [path, autres] of [
     await page.goto(path)
     const main = page.locator('main')
     await expect(main.getByRole('heading', { level: 1 })).toHaveCount(1)
+    // Le nom du service, puis sa promesse, dans le même titre.
+    const nom = NOMS_FR[path.split('/').pop() as keyof typeof NOMS_FR]
+    await expect(main.getByRole('heading', { level: 1 })).toHaveAccessibleName(
+      new RegExp(`^${nom} \\S`),
+    )
     await expect(main.getByRole('heading', { level: 2 })).toHaveText(BLOCS_FR)
+    // Trois temps : le déroulé, la phrase du modèle et ce qu'il faut savoir dans le même chapitre.
+    await expect(main.locator('#deroule #a-savoir')).toHaveCount(1)
+    await expect(main.getByRole('navigation', { name: 'Les autres services' })).toHaveCount(1)
+    // « Services » marqué comme rubrique courante dans la navigation principale.
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: 'Services', exact: true }).first(),
+    ).toHaveAttribute('aria-current', 'true')
     // Le texte du service est écrit (plus de « [CONTENU À FOURNIR PAR CAT] » à sa place).
     await expect(main).not.toContainText('CONTENU À FOURNIR')
     await expect(main.locator('img').first()).toBeVisible()

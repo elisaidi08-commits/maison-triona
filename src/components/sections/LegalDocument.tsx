@@ -56,7 +56,7 @@ export async function LegalDocument({
                 <li key={section.id} className="border-b border-sapin-20">
                   <a
                     href={`#${section.id}`}
-                    className="flex min-h-touch items-center py-8 text-body-s text-sapin transition-colors duration-micro ease-standard hover:text-cypres"
+                    className="flex min-h-touch items-center py-8 text-body-s text-sapin decoration-or decoration-1 underline-offset-8 hover:underline"
                   >
                     {section.title}
                   </a>

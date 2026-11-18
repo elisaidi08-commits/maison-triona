@@ -19,12 +19,13 @@ from fontTools.varLib.instancer import instantiateVariableFont
 
 SRC, OUT = Path(sys.argv[1]), Path(sys.argv[2])
 
-# Latin de base et Latin-1, Œ œ Ÿ, ponctuation française (espaces fines insécables, guillemets,
-# apostrophe typographique, tirets, points de suspension, puce, point médian) et l'euro.
+# Latin de base et Latin-1, Œ œ Ÿ, ponctuation française (espaces fines insécables, trait d'union
+# insécable de « vous‑même », guillemets, apostrophe typographique, tirets, points de suspension,
+# puce, point médian) et l'euro.
 UNICODES = [
     *range(0x20, 0x7F), *range(0xA0, 0x100),
     0x131, 0x152, 0x153, 0x178, 0x2C6, 0x2DC,
-    0x2009, 0x200A, 0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E,
+    0x2009, 0x200A, 0x2011, 0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E,
     0x2022, 0x2026, 0x202F, 0x2039, 0x203A, 0x20AC, 0x2122, 0x2212,
 ]
 

@@ -25,7 +25,7 @@ export function PauseVideosButton({ pause, play }: { pause: PauseLabel; play: Pa
       type="button"
       onClick={() => setVideosPaused(!paused)}
       aria-label={paused ? play.full : pause.full}
-      className="inline-flex min-h-touch cursor-pointer items-center text-label text-encre uppercase transition-colors duration-micro ease-standard hover:text-cypres"
+      className="inline-flex min-h-touch cursor-pointer items-center text-label text-encre uppercase decoration-or decoration-1 underline-offset-8 transition-colors duration-micro ease-standard hover:text-sapin hover:underline"
     >
       {paused ? play.visible : pause.visible}
     </button>

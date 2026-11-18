@@ -1,5 +1,7 @@
-// Champ souligné (docs/art-direction.md §7.7) : label au-dessus, ligne encre 68 %,
-// erreur = ligne terracotta 2 px + message en encre (la couleur n'est jamais le seul signal).
+// Champ souligné (docs/art-direction.md §7.7) : label au-dessus, ligne encre 68 % de 1 px (5,3:1) ;
+// erreur = ligne encre pleine de 2 px (13,14:1, deux fois plus épaisse) + message « Erreur : … » en
+// encre au-dessus du champ : l'erreur ne repose jamais sur la seule couleur (WCAG 1.4.1, 1.4.11).
+// Terracotta, hors kit, retiré par D64.
 // `multiline` : zone de texte (« Un mot libre »), encadrée d'un filet pour qu'on voie où écrire,
 // redimensionnable en hauteur seulement. `defaultValue` : valeur conservée après une erreur
 // serveur (WCAG 3.3.7, aucune ressaisie). `maxLength` : limite native, annoncée dans l'aide.
@@ -67,12 +69,12 @@ export function TextField({
         </p>
       ) : null}
       {multiline ? (
-        // En erreur, le cadre reste ; seul le bord bas devient la ligne terracotta des champs.
+        // En erreur, le cadre reste ; seul le bord bas devient la ligne d'erreur des champs.
         <textarea
           {...common}
           rows={rows}
           className={`w-full resize-y rounded-none border border-encre-68 bg-transparent p-16 text-body text-encre ${
-            error ? 'border-b-2 border-b-terracotta' : ''
+            error ? 'border-b-2 border-b-encre' : ''
           }`}
         />
       ) : (
@@ -80,7 +82,7 @@ export function TextField({
           {...common}
           type={type}
           className={`min-h-touch w-full rounded-none border-0 bg-transparent px-0 py-8 text-body text-encre ${
-            error ? 'border-b-2 border-terracotta' : 'border-b border-encre-68'
+            error ? 'border-b-2 border-encre' : 'border-b border-encre-68'
           }`}
         />
       )}

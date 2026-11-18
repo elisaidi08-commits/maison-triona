@@ -7,9 +7,9 @@ import {
 } from '@/lib/carte-territoires'
 
 // Carte au trait des Territoires (story 1.7, D26 ; docs/art-direction.md §7.4) : fond ivoire,
-// pays voisins en filet sauge, les pays de la maison en filet sapin, un point or par pays (le seul
-// or de la carte), Monaco en point seul. SVG en ligne rendu côté serveur, sans bibliothèque ni
-// script. Décorative (`aria-hidden`) : les noms des pays sont du texte réel à côté (liste du lot 5).
+// pays voisins en filet sapin 20 % (sauge retirée, D64), les pays de la maison en filet sapin, un
+// point or par pays (le seul or de la carte), Monaco en point seul. SVG en ligne rendu côté
+// serveur, sans bibliothèque ni script. Décorative (`aria-hidden`) : les noms des pays sont du texte réel à côté (liste du lot 5).
 // `highlighted` : pays choisi, teinté sapin 20 % (choix d'un pays au lot 5). Traits de largeur fixe
 // à toutes les tailles (`vector-effect`).
 
@@ -30,7 +30,7 @@ export function TerritoriesMap({ highlighted }: TerritoriesMapProps) {
           <path
             key={code}
             d={d}
-            className="stroke-sauge"
+            className="stroke-sapin-20"
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
           />

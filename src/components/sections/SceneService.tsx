@@ -50,22 +50,23 @@ export async function SceneService({
   const Heading = heading
   const titleId = `${service.anchor}-titre`
 
+  // Le titre porte le nom du service puis sa promesse, sur deux lignes (D64 n° 6) : le nom en label
+  // capitales (numéro décoratif), la promesse en display, comme avant le changement. L'espace entre
+  // les deux lignes sépare les mots dans le nom accessible du titre.
   const intro = (
     <div className="flex flex-col gap-16">
       <Rule short />
-      <p className="text-label text-encre uppercase">
-        <span aria-hidden="true" className="text-cypres">
-          {service.number}
+      <Heading id={titleId} tabIndex={-1} className="flex flex-col gap-16">
+        <span className="text-label text-encre uppercase">
+          <span aria-hidden="true" className="text-sapin">
+            {service.number}
+          </span>
+          <span aria-hidden="true"> · </span>
+          {t(`${service.key}.name`)}
+        </span>{' '}
+        <span className="font-display text-display-l text-balance text-sapin">
+          {t(`${service.key}.promise`)}
         </span>
-        <span aria-hidden="true"> · </span>
-        {t(`${service.key}.name`)}
-      </p>
-      <Heading
-        id={titleId}
-        tabIndex={-1}
-        className="font-display text-display-l text-balance text-sapin"
-      >
-        {t(`${service.key}.promise`)}
       </Heading>
     </div>
   )
