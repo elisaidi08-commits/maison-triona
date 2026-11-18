@@ -55,10 +55,20 @@ const goToConciergeLink = async (page: Page) => {
 test.describe('P01 · le seuil V4', () => {
   test('quatre vraies entrées sous la phrase, en français et en anglais', async ({ page }) => {
     await page.goto('/fr')
-    expect(await entries(page)).toEqual(['#conciergerie', '#grand-age', '#enfants', '/fr/contact'])
+    expect(await entries(page)).toEqual([
+      '/fr/services/conciergerie',
+      '/fr/services/grand-age',
+      '/fr/services/enfants',
+      '/fr/contact',
+    ])
     await expect(page.getByRole('link', { name: /Organiser le quotidien/ })).toHaveCount(1)
     await page.goto('/en')
-    expect(await entries(page)).toEqual(['#conciergerie', '#grand-age', '#enfants', '/en/contact'])
+    expect(await entries(page)).toEqual([
+      '/en/services/concierge',
+      '/en/services/later-life',
+      '/en/services/childcare',
+      '/en/contact',
+    ])
     await expect(page.getByRole('link', { name: /Discuss a particular request/ })).toHaveCount(1)
   })
 
@@ -83,13 +93,12 @@ test.describe('P01 · le seuil V4', () => {
     })
   }
 
-  test('une entrée mène à sa pièce et place le focus sur son titre', async ({ page }) => {
+  test('une entrée mène directement à la page de son service (un clic)', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/fr')
     await page.getByRole('link', { name: /Accompagner un proche/ }).click()
-    await expect(page).toHaveURL(/#grand-age$/)
-    await expect(page.locator('#grand-age-titre')).toBeFocused()
-    await expect(page.locator('#grand-age-titre')).toBeInViewport()
+    await expect(page).toHaveURL(/\/fr\/services\/grand-age$/)
+    await expect(page.getByRole('heading', { level: 1 })).toBeInViewport()
   })
 
   test('au clavier, les quatre entrées se suivent avec un focus visible', async ({
@@ -147,7 +156,12 @@ test.describe('P01 · sans JavaScript', () => {
 
   test('les quatre entrées et le contact fonctionnent', async ({ page }) => {
     await page.goto('/fr')
-    expect(await entries(page)).toEqual(['#conciergerie', '#grand-age', '#enfants', '/fr/contact'])
+    expect(await entries(page)).toEqual([
+      '/fr/services/conciergerie',
+      '/fr/services/grand-age',
+      '/fr/services/enfants',
+      '/fr/contact',
+    ])
     await page.getByRole('link', { name: /Évoquer une demande particulière/ }).click()
     await expect(page).toHaveURL(/\/fr\/contact$/)
   })
