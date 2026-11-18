@@ -53,6 +53,10 @@
       "easyRead": {
         "title": "How it works, in plain language",
         "description": "The steps of a request to the house, in short sentences: you write, we reply, we talk together, and you choose with us."
+      },
+      "independence": {
+        "title": "Our independence",
+        "description": "How the house is paid, what you sign and with whom: the house introduces, the professional signs with you, and you pay nothing to the house."
       }
     }
   },
@@ -102,7 +106,8 @@
     "privacy": "Privacy",
     "faq": "Common questions",
     "howItWorks": "How it works",
-    "easyRead": "How it works, in plain English"
+    "easyRead": "How it works, in plain English",
+    "independence": "Our independence"
   },
   "NotFound": {
     "title": "This page does not exist.",
@@ -729,6 +734,28 @@
         "You sign with your chosen professional.",
         "Then we keep in touch."
       ]
-    }
+    },
+    "independenceLink": "Our independence, in detail"
+  },
+  "Independence": {
+    "title": "Our independence",
+    "intro": "It is natural to wonder how the house is paid. The answer is simple: by the professional you choose, never by you.",
+    "blocks": [
+      {
+        "id": "who-pays",
+        "title": "How the house is paid",
+        "text": "The house is paid by the professional you have chosen, through a commission on the services they provide each month, once the collaboration has begun. You pay that professional directly, and nothing to the house."
+      },
+      {
+        "id": "direct-contract",
+        "title": "What you sign",
+        "text": "You sign directly with the professional you choose, whether independent or a partner house. They arrange the hours and the day-to-day follow-up with you. The house never employs the people it introduces to you."
+      },
+      {
+        "id": "single-contact",
+        "title": "A single point of contact",
+        "text": "From the first conversation to the follow-up, you always speak to the same person. If something needs adjusting, or someone needs replacing, we see to it."
+      }
+    ]
   }
 }

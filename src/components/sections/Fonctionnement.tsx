@@ -111,6 +111,11 @@ export async function CommentCaSePasse({
         </SousBloc>
         <SousBloc title={payment.title}>
           <Paragraphs paragraphs={payment.paragraphs} />
+          <p>
+            <TextLink href={localizedPath('/notre-independance', locale)}>
+              {page('independenceLink')}
+            </TextLink>
+          </p>
         </SousBloc>
         <SousBloc title={t('limits.title')}>
           <ul id="limites" className="flex flex-col">
