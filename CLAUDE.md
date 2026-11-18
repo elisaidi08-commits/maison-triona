@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lots A, 0, B, C et D faits le 18/11/2026 (point ③ validé, D66 ; **point ④ validé, D68**), coffre commencé (3.2 A, B, C ; Better Auth, D67) ; **en cours : 3.2 D** (lecture déchiffrée, export, suppression, gel, conservation planifiée, QR code) ; ensuite la suite du lot E (e-mails, réservation d'appel, qui demandent les comptes Scaleway et le DNS), puis F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lots A, 0, B, C et D faits le 18/11/2026 (point ③ validé, D66 ; **point ④ validé, D68**), coffre : 3.2 A, B, C (Better Auth, D67) et D (lecture déchiffrée dans le navigateur, export, gel, effacement, conservation planifiée par Vercel Cron, QR code) ; ensuite la suite du lot E (e-mails, réservation d'appel, qui demandent les comptes Scaleway et le DNS), puis F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 

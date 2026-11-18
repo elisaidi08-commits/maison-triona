@@ -1,6 +1,6 @@
 # Clés du coffre des demandes · procédure
 
-> **Story 3.2, partie B** (18/11/2026, relecture sécurité comprise). À lire avant de générer, copier, remplacer ou détruire une clé du coffre, et avant de brancher le site sur la base. Cadre : D07 (sealed box libsodium), D05 (conservation), `docs/architecture.md` §6.5, `docs/privacy.md` §5.
+> **Story 3.2, partie B** (18/11/2026, relecture sécurité comprise) ; lecture, export, rotation dans le coffre et conservation planifiée : **partie D** (§8 et §9). À lire avant de générer, copier, remplacer ou détruire une clé du coffre, et avant de brancher le site sur la base. Cadre : D07 (sealed box libsodium), D05 (conservation), `docs/architecture.md` §6.5, `docs/privacy.md` §5.
 > **La règle à retenir** : si **tous** les paquets sont perdus, ou toutes les phrases oubliées, la lecture des demandes est perdue pour toujours. Personne ne peut les rouvrir : ni Vercel, ni Scaleway, ni Sady, ni Claude.
 
 ---
@@ -10,7 +10,7 @@
 | Élément | Où il vit | Secret ? |
 |---|---|---|
 | **Clé publique** (32 octets, 44 caractères en base64) | Variable `VAULT_PUBLIC_KEY` du projet Vercel ; champ `publicKey` de chaque paquet | Non. Elle permet seulement de **sceller** |
-| **Clé privée** | Uniquement **chiffrée**, dans les paquets ; en clair, seulement dans la mémoire du navigateur de l'administratrice ou de l'administrateur, le temps d'une session du coffre (partie C) | Oui |
+| **Clé privée** | Uniquement **chiffrée**, dans les paquets ; en clair, seulement dans la mémoire du navigateur de l'administratrice ou de l'administrateur, le temps de la page de lecture d'une demande (§8) | Oui |
 | **Paquets** (`*.json`) | **Un par personne** : celui de Cat, celui de Sady. Même paire de clés, chacun chiffré par la phrase de son détenteur. Chacun garde le sien hors ligne, et peut en garder une seconde copie | Protégé par la phrase |
 | **Phrases de passe** | Une par personne, connue d'elle seule ; une trace écrite sur papier, rangée **ailleurs** que le paquet | Oui |
 
@@ -40,7 +40,7 @@ Une **paire par environnement** : la production a la sienne ; une préproduction
    La clé publique affichée doit être **la même** qu'à l'étape 3.
 5. Chacun peut copier **son** paquet sur un second support à lui ; comparer les copies : `shasum -a 256 <copie 1> <copie 2>` doit donner deux empreintes identiques.
 6. Ne laisser aucune copie intermédiaire (Téléchargements, Bureau, Corbeille). Ranger les supports de Cat et de Sady dans des lieux différents ; la trace écrite de chaque phrase, ailleurs encore.
-7. Dès que `/coffre` existe (partie C) : chacun ouvre le coffre **avec son paquet**, une fois, pour vérifier paquet et phrase.
+7. Dès que `/coffre` est en service : chacun ouvre une demande de test **avec son paquet** (§8), une fois, pour vérifier paquet et phrase.
 
 ## 3. Brancher le site sur le coffre
 
@@ -54,7 +54,7 @@ Le site public écrit des demandes, il n'a jamais besoin d'en lire une. Son comp
 
 ### 3.2 Un second rôle pour l'espace du coffre : `coffre` (partie C)
 
-L'espace `/coffre` et le script des comptes (`npm run coffre:compte`) se connectent avec **un autre compte**, qui a le rôle **`coffre`** (`db/roles/coffre.sql`) : `USAGE` sur le schéma ; lecture, écriture et effacement sur les six tables de Better Auth (`"user"`, `"session"`, `"account"`, `"verification"`, `"twoFactor"`, `"rateLimit"`) ; **lecture seule** de `vault_requests` ; **`INSERT` et `SELECT` seulement** sur `vault_access_log` (le journal ne se modifie ni ne s'efface). Ni la table des migrations, ni la création d'objet. Le gel et l'effacement des demandes viendront en partie D, qui étendra ce fichier. Prouvé par `tests/integration/coffre-roles.test.ts`, qui vérifie aussi que `site_public` ne lit, n'écrit ni n'efface **aucune** table de Better Auth ; toute l'authentification y est testée sous ce rôle.
+L'espace `/coffre`, la tâche de conservation (§9) et le script des comptes (`npm run coffre:compte`) se connectent avec **un autre compte**, qui a le rôle **`coffre`** (`db/roles/coffre.sql`) : `USAGE` sur le schéma ; lecture, écriture et effacement sur les six tables de Better Auth (`"user"`, `"session"`, `"account"`, `"verification"`, `"twoFactor"`, `"rateLimit"`) ; sur `vault_requests`, **lecture, effacement et modification de la seule colonne `frozen`** (gel ; partie D) : ni insertion, ni modification du contenu scellé, de l'échéance ou du statut ; **`INSERT` et `SELECT` seulement** sur `vault_access_log` (le journal ne se modifie ni ne s'efface). Ni la table des migrations, ni la création d'objet. Prouvé par `tests/integration/coffre-roles.test.ts`, qui vérifie aussi que `site_public` ne lit, n'écrit ni n'efface **aucune** table de Better Auth ; toute l'authentification y est testée sous ce rôle.
 
 1. Avec le compte administrateur, **après** `npm run db:migrate` : `psql "<URL administrateur>" -f db/roles/site_public.sql -f db/roles/coffre.sql`. Les deux fichiers sont rejouables ; les rejouer après chaque migration qui ajoute une table.
 2. Créer le compte de connexion du coffre, distinct de celui du site, et lui donner le rôle : `GRANT coffre TO <compte du coffre>;`. Mot de passe long et aléatoire, jamais dans le dépôt.
@@ -65,7 +65,7 @@ L'espace `/coffre` et le script des comptes (`npm run coffre:compte`) se connect
 | Variable | Compte | Utilisé par | Droits |
 |---|---|---|---|
 | `DATABASE_URL` | compte du site (`site_public`) | Server Action du formulaire | Insertion seule |
-| `COFFRE_DATABASE_URL` | compte du coffre (`coffre`) | Espace `/coffre` (connexion, sessions, liste) et `npm run coffre:compte` | Tables de Better Auth ; lecture des demandes ; journal en insertion et lecture |
+| `COFFRE_DATABASE_URL` | compte du coffre (`coffre`) | Espace `/coffre` (connexion, sessions, liste, lecture, gel, effacement), tâche de conservation et `npm run coffre:compte` | Tables de Better Auth ; lecture, gel et effacement des demandes ; journal en insertion et lecture |
 | URL administrateur | propriétaire du schéma | `npm run db:migrate` et `db/roles/*.sql`, à la main | Tous ; **jamais** dans une variable de Vercel |
 
 Deux pools distincts dans le code (`getPool`, `getCoffrePool`, `src/lib/db/pool.ts`) : le site public ne peut pas emprunter le compte du coffre. Sur un déploiement, une `COFFRE_DATABASE_URL` identique à `DATABASE_URL` est refusée au démarrage du coffre.
@@ -85,14 +85,14 @@ TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches)
 |---|---|---|
 | **Un paquet est perdu ou une phrase oubliée**, l'autre paquet et sa phrase sont intacts | Rien n'est perdu : l'autre paquet ouvre le coffre | Refaire le paquet de la personne avec `--ajouter`, à partir du paquet restant (§2.4), avec une phrase neuve. Si le support a pu être **volé** plutôt qu'égaré, traiter comme une compromission (ligne suivante, par prudence) |
 | **Un paquet et sa phrase ont pu tomber entre d'autres mains** (vol, phrase vue ou tapée dans un outil en ligne) | Quiconque a les deux **et** un accès à la base ou à une sauvegarde peut lire les demandes | Changer de paire **sans attendre** (§5). C'est une violation de données au sens du RGPD : en parler aussitôt à Sady ; la notification à l'autorité de contrôle se fait sous 72 heures, sauf si la violation est peu susceptible d'engendrer un risque (RGPD, art. 33) |
-| **Tous les paquets sont perdus, ou toutes les phrases oubliées** | Les demandes scellées avec cette paire sont **définitivement illisibles** ; seules les colonnes en clair restent (date, service, pays…) | 1. Générer une nouvelle paire (§2), poser la nouvelle `VAULT_PUBLIC_KEY`, redéployer : les demandes suivantes sont lisibles. 2. Les anciennes ne peuvent plus servir : les effacer depuis le coffre (effacement journalisé, partie D). Aucune récupération n'existe, inutile de la chercher |
+| **Tous les paquets sont perdus, ou toutes les phrases oubliées** | Les demandes scellées avec cette paire sont **définitivement illisibles** ; seules les colonnes en clair restent (date, service, pays…) | 1. Générer une nouvelle paire (§2), poser la nouvelle `VAULT_PUBLIC_KEY`, redéployer : les demandes suivantes sont lisibles. 2. Les anciennes ne peuvent plus servir : les effacer depuis le coffre (page de la demande, « Effacer la demande », journalisé). Aucune récupération n'existe, inutile de la chercher |
 | **Un détenteur s'en va** (fin de collaboration) | Il a son paquet et sa phrase | Changer de paire (§5) ; récupérer ou faire détruire son paquet |
 
 ## 5. Changer de paire (rotation)
 
 1. Générer une nouvelle paire et ses deux paquets (§2), sous de nouveaux noms datés. **Ne jamais écraser un ancien paquet.**
 2. Remplacer `VAULT_PUBLIC_KEY` sur Vercel, redéployer. Les demandes suivantes sont scellées avec la nouvelle clé.
-3. **Garder les anciens paquets** tant qu'une demande scellée avec eux existe : jusqu'au plafond de conservation (D05, 12 mois proposés), plus la fenêtre des sauvegardes (7 jours, `docs/privacy.md` §5). Le coffre (partie C) déverrouille chaque paquet gardé et essaie chaque clé : une clé qui ne convient pas échoue aussitôt.
+3. **Garder les anciens paquets** tant qu'une demande scellée avec eux existe : jusqu'au plafond de conservation (D05, 12 mois proposés), plus la fenêtre des sauvegardes (7 jours, `docs/privacy.md` §5). Pour lire une demande, **déposer l'ancien et le nouveau paquet ensemble** (même phrase) ou l'un après l'autre (phrases différentes) : le coffre déverrouille chaque paquet et essaie chaque clé sur la demande ; une clé qui ne convient pas échoue aussitôt (§8).
 4. Quand la dernière de ces demandes est effacée et la fenêtre de sauvegarde passée : détruire les anciens paquets et leurs copies (formatage du support) et noter la date.
 5. Après une compromission, la rotation protège les demandes **à venir**, pas celles déjà scellées avec l'ancienne paire. Pour celles-là : les effacer dès qu'elles ne servent plus ; re-sceller les demandes encore utiles avec la nouvelle clé, dans le navigateur, est une fonction à prévoir avec le coffre (parties C et D), pas encore écrite.
 
@@ -101,7 +101,8 @@ TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches)
 - **Vercel voit la demande en clair** dans la fonction, le temps de la sceller (`docs/architecture.md` §6.5, `docs/privacy.md` §8). Le corps de la requête n'est jamais journalisé.
 - Toutes les demandes scellées ont la **même taille** (16 Kio de texte complété, 16 432 octets) : la taille ne dit rien du message. Une demande plus longue est refusée ; la validation du formulaire l'empêche (la plus longue tient en moins de 14 Kio).
 - Une phrase saisie reste quelque temps dans la mémoire du programme (JavaScript ne permet pas de l'effacer) : générer les clés sur un poste de confiance, fermer le terminal ensuite.
-- Le déchiffrement dans le navigateur (partie C) exige `'wasm-unsafe-eval'` dans la CSP de `/coffre` : libsodium s'y exécute en WebAssembly (`docs/architecture.md` §9.1).
+- Le déchiffrement dans le navigateur (partie D) exige `'wasm-unsafe-eval'` dans la CSP de `/coffre`, posé en partie D : libsodium s'y exécute en WebAssembly (`docs/architecture.md` §9.1).
+- Pendant la lecture, la phrase, la clé privée et le texte déchiffré sont dans la mémoire du navigateur ; la clé est effacée en quittant la page, le texte seulement oublié (JavaScript ne permet pas d'effacer une chaîne). Lire sur un poste de confiance, fermer l'onglet après.
 
 ## 7. Comptes du coffre : création et réenrôlement (partie C)
 
@@ -111,8 +112,8 @@ Deux comptes nominatifs au plus (Cat, Sady), créés à la main avec `COFFRE_DAT
 
 1. `npm run coffre:compte -- --nom "Prénom Nom" --email adresse@exemple.be`.
 2. Le script **génère** le mot de passe (35 caractères, environ 148 bits) et l'affiche **une seule fois** : la personne l'enregistre aussitôt dans son gestionnaire de mots de passe, puis on ferme le terminal. Pour en choisir un soi-même : `--saisir` (saisie masquée et confirmée ; refusé sous 24 caractères). Jamais en argument.
-3. **Dans les 24 heures** : se connecter sur `/coffre/connexion`, enrôler le TOTP (application d'authentification sur un appareil personnel), noter les 10 codes de secours hors ligne, à part du mot de passe. Au-delà de 24 heures, l'activation du TOTP est refusée et il faut réenrôler (ci-dessous). Tant que le TOTP n'est pas enrôlé, la session ne donne accès qu'à l'enrôlement.
-4. L'enrôlement est inscrit au journal d'accès (`totp_enrolled`) ; sa lecture dans le coffre viendra en partie D.
+3. **Dans les 24 heures** : se connecter sur `/coffre/connexion`, enrôler le TOTP (application d'authentification sur un appareil personnel : scanner le QR code, ou saisir le secret affiché à côté), noter les 10 codes de secours hors ligne, à part du mot de passe. Au-delà de 24 heures, l'activation du TOTP est refusée et il faut réenrôler (ci-dessous). Tant que le TOTP n'est pas enrôlé, la session ne donne accès qu'à l'enrôlement.
+4. L'enrôlement est inscrit au journal d'accès (`totp_enrolled`) ; une page de consultation du journal dans le coffre reste à écrire (lecture par l'administrateur de la base d'ici là).
 
 **Réenrôler** (téléphone perdu ou remplacé sans les codes de secours, délai de 24 heures dépassé, doute sur un mot de passe) :
 
@@ -122,3 +123,18 @@ Deux comptes nominatifs au plus (Cat, Sady), créés à la main avec `COFFRE_DAT
 4. Les demandes ne sont pas touchées : elles appartiennent au coffre, pas au compte. Le paquet de clé et la phrase de passe (§2) ne changent pas.
 
 Le journal d'accès garde l'adresse du compte comme acteur : il reste lisible après un réenrôlement.
+
+## 8. Lire et exporter une demande (partie D)
+
+1. Se connecter au coffre (mot de passe et code TOTP), sur un poste de confiance. Dans la liste, la date d'une demande mène à sa page, `/coffre/demandes/<identifiant>` (le lien de la notification e-mail mènera au même endroit).
+2. La page montre les colonnes de tri. Pour le contenu : **déposer son paquet** (fichier `.json`, depuis son support hors ligne) et **taper sa phrase**, puis « Déverrouiller et lire ». Après une rotation (§5), déposer aussi l'ancien paquet : chaque paquet est essayé, puis chaque clé obtenue. Le déverrouillage prend une à deux secondes (Argon2id), la page reste immobile pendant ce temps.
+3. Ce qui se passe : la clé privée est déchiffrée **dans le navigateur** ; le serveur ne remet que les octets scellés de la demande et inscrit `read` au journal (identifiant de la demande, jamais le contenu) ; la demande s'ouvre dans le navigateur. Ni la phrase, ni la clé privée, ni le texte ne partent au serveur, ni dans le stockage du navigateur. Les champs du formulaire sont vidés aussitôt.
+4. La clé reste en mémoire **le temps de la page** : « Verrouiller », quitter la page ou la recharger l'efface. Une autre demande redemande le paquet et la phrase.
+5. **Exporter** (« Exporter en fichier texte ») : `export` est inscrit au journal, puis le navigateur compose et télécharge `demande-<identifiant>.txt` (colonnes de tri et contenu déchiffré, texte brut), sans le faire passer par le serveur ; si l'inscription au journal échoue, aucun fichier n'est créé. Sert à répondre à une demande d'accès ou de portabilité (`docs/rgpd/procedures.md`). Ce fichier est **en clair** : le transmettre par un canal sûr, ne pas le laisser dans Téléchargements, le supprimer (Corbeille vidée) dès qu'il a servi.
+6. **Geler** (limitation) : une demande gelée n'est jamais effacée par la conservation automatique, même échue ; « Dégeler » la rend à la règle commune. **Effacer** : case de confirmation, puis « Effacer la demande » ; définitif, journalisé (`delete`), la demande subsiste 7 jours dans les sauvegardes, chiffrée. Le gel ou l'effacement recharge la page : la clé est à redéposer.
+
+## 9. Conservation planifiée (partie D)
+
+- Chaque jour à 03:00 UTC, Vercel Cron appelle `/api/cron/retention` (`vercel.json`), sur le déploiement de **production** seulement. La tâche, avec le compte du coffre : efface les demandes échues non gelées (une ligne `purge` chacune), purge les sessions échues ou inactives, les compteurs de limitation de débit de plus de 15 minutes et les défis du second facteur expirés, puis inscrit un résumé `retention` au journal, **en nombres seulement**.
+- **`CRON_SECRET`** (à poser sur Vercel, environnement **Production**, puis redéployer) : 32 caractères au moins, lettres et chiffres (`openssl rand -hex 32`), jamais dans le dépôt. Sans lui, ou s'il est mal formé, chaque appel répond 401 et **rien n'est effacé** : le plafond de conservation n'est plus appliqué. Rotation : changer la variable, redéployer, vérifier dans Vercel (*Settings*, *Schedules*, *Cron Jobs*, *View Logs*) que le passage suivant répond 200.
+- Vérification : après le premier passage, une ligne `retention` (acteur `system`) au journal. Un passage peut manquer (Vercel ne réessaie pas) : le suivant rattrape tout ce qui est échu.
