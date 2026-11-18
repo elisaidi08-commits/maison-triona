@@ -54,6 +54,9 @@ const PAGES: Record<PublicPage, { meta: string; crumb: string; parent?: PublicPa
   '/confidentialite': { meta: 'privacy', crumb: 'Pages.privacy', parent: '/' },
 }
 
+/** Clé des textes d'une page dans `Meta.pages` (titre et description). */
+export const pageMetaKey = (page: PublicPage): string => PAGES[page].meta
+
 /** Alternances : la page elle-même, son équivalent dans l'autre langue, `x-default` vers le français. */
 export function languageAlternates(page: InternalPath) {
   return {

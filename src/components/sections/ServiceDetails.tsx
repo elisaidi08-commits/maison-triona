@@ -1,6 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import { ContactBlock } from '@/components/sections/ContactBlock'
 import { CommentCaSePasse, FicheRow } from '@/components/sections/Fonctionnement'
+import { ShareLinks } from '@/components/share/ShareLinks'
+import type { PublicPage } from '@/lib/seo'
 import { SceneService } from '@/components/sections/SceneService'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
@@ -82,6 +84,7 @@ export async function PageService({ service, locale }: { service: Service; local
         <ServiceLead service={service} locale={locale} />
       </SceneService>
       <ServiceDetails service={service} locale={locale} />
+      <ShareLinks page={SERVICE_PATHS[service.id] as PublicPage} locale={locale} />
       <ContactBlock locale={locale} />
     </>
   )

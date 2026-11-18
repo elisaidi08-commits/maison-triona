@@ -9,7 +9,11 @@ import { Rule } from '@/components/ui/Rule'
 export async function ContactBlock({ locale }: { locale: string }) {
   const t = await getTranslations('Scenes.contact')
   return (
-    <section aria-labelledby="contact-titre" data-surface="sapin" className="px-margin py-section">
+    <section
+      aria-labelledby="contact-titre"
+      data-surface="sapin"
+      className="px-margin py-section print:hidden"
+    >
       <div className="mx-auto flex max-w-measure flex-col items-center gap-24 text-center">
         <Rule short />
         <p className="text-label text-champagne uppercase">{t('label')}</p>

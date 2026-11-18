@@ -38,7 +38,7 @@ export function MobileBar({ href, label }: { href: string; label: string }) {
     <div
       data-barre-mobile
       data-surface="sapin"
-      className={`fixed inset-x-0 bottom-0 h-touch-lg border-t border-or lg:hidden ${typing ? 'hidden' : ''}`}
+      className={`fixed inset-x-0 bottom-0 h-touch-lg border-t border-or lg:hidden print:hidden ${typing ? 'hidden' : ''}`}
     >
       <Link
         href={href}

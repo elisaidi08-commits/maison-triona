@@ -24,7 +24,8 @@
     "Meta.pages",
     "Faq",
     "HowItWorksPage",
-    "Independence"
+    "Independence",
+    "Share"
   ],
   "en": [
     "Home.title",
@@ -51,6 +52,7 @@
     "Meta.pages",
     "Faq",
     "HowItWorksPage",
-    "Independence"
+    "Independence",
+    "Share"
   ]
 }

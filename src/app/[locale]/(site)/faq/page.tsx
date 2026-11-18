@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ContactBlock } from '@/components/sections/ContactBlock'
+import { ShareLinks } from '@/components/share/ShareLinks'
 import { FaqAnchorOpener } from '@/components/sections/FaqAnchorOpener'
 import { Rule } from '@/components/ui/Rule'
 import type { Locale } from '@/i18n/pathnames'
@@ -45,6 +46,7 @@ export default async function FaqPage() {
         </div>
         <FaqAnchorOpener />
       </article>
+      <ShareLinks page="/faq" locale={locale} />
       <ContactBlock locale={locale} />
     </>
   )

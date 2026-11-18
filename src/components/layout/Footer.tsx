@@ -43,7 +43,7 @@ export async function Footer({ locale }: { locale: Locale }) {
   ] as const
 
   return (
-    <footer id="pied-de-page" aria-label={t('label')} className="border-t border-or">
+    <footer id="pied-de-page" aria-label={t('label')} className="border-t border-or print:hidden">
       <div className="conteneur pt-48 pb-24 lg:pt-64">
         <div className="flex items-start justify-between gap-24">
           <p className="font-display text-title-h2 text-balance text-sapin">
