@@ -1,5 +1,17 @@
-import { decodeKeyPacket, deriveKey } from './key-packet.ts'
-import { SEALED_KEYS, SEALED_VERSION, PAD_BLOCK, type SealedFields } from './seal.ts'
+import {
+  assertPassphrase,
+  decodeKeyPacket,
+  deriveKey,
+  lockPrivateKey,
+  type KeyPacket,
+} from './key-packet.ts'
+import {
+  SEALED_BYTES,
+  SEALED_KEYS,
+  SEALED_PLAINTEXT_BYTES,
+  SEALED_VERSION,
+  type SealedFields,
+} from './seal.ts'
 import { loadSodium } from './sodium.ts'
 
 // Ouverture des demandes (story 3.2, partie B). Écrit pour le navigateur de l'administratrice ou
@@ -47,6 +59,29 @@ export async function unlockPrivateKey(paquet: unknown, phraseDePasse: string): 
   return { publicKey: decoded.publicKey, privateKey }
 }
 
+/**
+ * Paquet d'une seconde personne pour la même paire de clés (docs/coffre-cles.md) : le paquet
+ * existant est ouvert avec sa phrase, puis la clé privée est chiffrée avec la nouvelle phrase
+ * (nouveau sel, nouveau nonce). Chacun garde son paquet et sa phrase ; aucune n'est partagée.
+ */
+export async function addPassphrase(
+  paquet: unknown,
+  phraseActuelle: string,
+  nouvellePhrase: string,
+): Promise<KeyPacket> {
+  assertPassphrase(nouvellePhrase)
+  if (nouvellePhrase.normalize('NFC') === phraseActuelle.normalize('NFC')) {
+    throw new RangeError('La nouvelle phrase de passe doit différer de la phrase actuelle')
+  }
+  const lib = await loadSodium()
+  const cles = await unlockPrivateKey(paquet, phraseActuelle)
+  try {
+    return lockPrivateKey(lib, cles.publicKey, cles.privateKey, nouvellePhrase)
+  } finally {
+    lib.memzero(cles.privateKey)
+  }
+}
+
 function isSealedFields(value: unknown): value is SealedFields & { v: number } {
   if (typeof value !== 'object' || value === null) return false
   const record = value as Record<string, unknown>
@@ -57,6 +92,8 @@ function isSealedFields(value: unknown): value is SealedFields & { v: number } {
 /** Rouvre les octets scellés d'une demande. Échoue sur une autre clé ou des octets altérés. */
 export async function openSealed(octets: Uint8Array, cles: VaultKeys): Promise<SealedFields> {
   const lib = await loadSodium()
+  if (octets.length !== SEALED_BYTES)
+    throw new VaultOpenError('Demande illisible : taille inconnue')
   let clair: Uint8Array
   try {
     clair = lib.crypto_box_seal_open(octets, cles.publicKey, cles.privateKey)
@@ -66,7 +103,7 @@ export async function openSealed(octets: Uint8Array, cles: VaultKeys): Promise<S
 
   let payload: unknown
   try {
-    payload = JSON.parse(lib.to_string(lib.unpad(clair, PAD_BLOCK)))
+    payload = JSON.parse(lib.to_string(lib.unpad(clair, SEALED_PLAINTEXT_BYTES)))
   } catch {
     payload = null
   } finally {

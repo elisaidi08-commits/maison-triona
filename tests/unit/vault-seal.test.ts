@@ -6,10 +6,22 @@ import sodium from 'libsodium-wrappers-sumo'
 
 import { createKeyPacket } from '../../src/lib/vault/key-packet.ts'
 import type { KeyPacket } from '../../src/lib/vault/key-packet.ts'
-import { openSealed, unlockPrivateKey, VaultOpenError } from '../../src/lib/vault/open.ts'
+import {
+  addPassphrase,
+  openSealed,
+  unlockPrivateKey,
+  VaultOpenError,
+} from '../../src/lib/vault/open.ts'
 import type { VaultKeys } from '../../src/lib/vault/open.ts'
-import { sealRequest, VaultKeyError } from '../../src/lib/vault/seal.ts'
+import { validerDemande } from '../../src/lib/validation/demande.ts'
+import {
+  SEALED_BYTES,
+  SEALED_PLAINTEXT_BYTES,
+  sealRequest,
+  VaultKeyError,
+} from '../../src/lib/vault/seal.ts'
 import type { SealedFields } from '../../src/lib/vault/seal.ts'
+import { splitRequest } from '../../src/lib/vault/store.ts'
 
 // Sealed box (story 3.2, partie B) : aller-retour, mauvaise clé, octets altérés, phrase de passe,
 // paramètres Argon2id. Données factices uniquement.
@@ -73,10 +85,46 @@ describe('sealed box du coffre', () => {
     assert.notDeepEqual(encore, octets)
   })
 
-  it('masque la longueur exacte du texte (remplissage par blocs)', async () => {
-    const court = await sealRequest({ ...CHAMPS, message: 'a' }, clePublique)
-    const moinsCourt = await sealRequest({ ...CHAMPS, message: 'abcdefghij' }, clePublique)
-    assert.equal(court.length, moinsCourt.length)
+  it('donne toujours la même taille, 16 Kio de texte complété, quelle que soit la demande', async () => {
+    assert.equal(SEALED_PLAINTEXT_BYTES, 16 * 1024)
+    assert.equal(SEALED_BYTES, 16 * 1024 + sodium.crypto_box_SEALBYTES)
+    const courte = await sealRequest({ ...CHAMPS, email: null, message: null }, clePublique)
+    assert.equal(courte.length, SEALED_BYTES)
+    assert.equal((await sealRequest(CHAMPS, clePublique)).length, SEALED_BYTES)
+  })
+
+  it('fait tenir la plus longue demande acceptée par la validation', async () => {
+    // Pire cas : chaque caractère libre devient \u0001 en JSON (6 octets).
+    const resultat = validerDemande({
+      besoin: 'indecis',
+      pourQui: 'non-dit',
+      pays: 'ailleurs',
+      urgence: 'semaines',
+      nom: '\u0001'.repeat(120),
+      email: `${'a'.repeat(248)}@ex.be`,
+      telephone: '+1 2 3 4 5 6 7 8 9 0 1 2 3 4 5',
+      creneau: 'apres-midi',
+      langue: 'fr',
+      message: '\u0001'.repeat(2000),
+      origine: 'bouche-a-oreille',
+      consentement: 'oui',
+    })
+    assert.ok(resultat.succes, 'demande maximale refusée par la validation')
+    const { sealed } = splitRequest(resultat.demande)
+    assert.equal(sealed.email?.length, 254)
+    assert.equal(sealed.telephone?.length, 30)
+    const octets = await sealRequest(sealed, clePublique)
+    assert.equal(octets.length, SEALED_BYTES)
+    assert.deepEqual(await openSealed(octets, cles), sealed)
+  })
+
+  it('refuse un texte qui dépasse 16 Kio, sans le citer', async () => {
+    const trop = { ...CHAMPS, message: `${'\u0001'.repeat(2800)}témoin` }
+    await assert.rejects(sealRequest(trop, clePublique), (error: unknown) => {
+      assert.ok(error instanceof RangeError)
+      assert.ok(!error.message.includes('témoin') && !error.message.includes(CHAMPS.nom))
+      return true
+    })
   })
 
   it('échoue avec une autre clé', async () => {
@@ -184,6 +232,30 @@ describe('clé privée protégée par phrase de passe', () => {
     for (const mauvais of [null, 'texte', {}, { ...paquet, version: 2 }, { ...paquet, nonce: 1 }]) {
       await assert.rejects(unlockPrivateKey(mauvais, PHRASE), VaultOpenError)
     }
+  })
+
+  it('donne à chaque personne son paquet : même paire de clés, autre phrase', async () => {
+    const autrePhrase = 'la phrase de la seconde personne, factice'
+    const second = await addPassphrase(paquet, PHRASE, autrePhrase)
+    assert.equal(second.publicKey, paquet.publicKey)
+    assert.notEqual(second.kdf.salt, paquet.kdf.salt)
+    assert.notEqual(second.ciphertext, paquet.ciphertext)
+    const siennes = await unlockPrivateKey(second, autrePhrase)
+    const premieres = await unlockPrivateKey(paquet, PHRASE)
+    assert.deepEqual(siennes.privateKey, premieres.privateKey)
+    await assert.rejects(unlockPrivateKey(second, PHRASE), VaultOpenError)
+    // Une demande scellée pour la clé publique se rouvre avec l'un ou l'autre paquet.
+    const octets = await sealRequest(CHAMPS, clePublique)
+    assert.deepEqual(await openSealed(octets, siennes), CHAMPS)
+  })
+
+  it('refuse d’ajouter une phrase avec la mauvaise phrase actuelle, la même, ou trop courte', async () => {
+    await assert.rejects(
+      addPassphrase(paquet, 'pas la bonne phrase du tout', 'x'.repeat(20)),
+      VaultOpenError,
+    )
+    await assert.rejects(addPassphrase(paquet, PHRASE, PHRASE), RangeError)
+    await assert.rejects(addPassphrase(paquet, PHRASE, 'courte'), RangeError)
   })
 
   it('refuse une phrase de passe trop courte à la création', async () => {

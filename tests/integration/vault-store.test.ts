@@ -20,6 +20,8 @@ import {
 import { retentionDeadline } from '../../src/lib/vault/retention.ts'
 import { VaultKeyError } from '../../src/lib/vault/seal.ts'
 import { splitRequest, storeRequest } from '../../src/lib/vault/store.ts'
+import type { StoreOptions } from '../../src/lib/vault/store.ts'
+import { PRIVACY_POLICY_VERSION } from '../../src/lib/privacy.ts'
 import { resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
 
 // Enregistrement chiffré d'une demande (story 3.2, partie B) et fuite simulée : la base entière,
@@ -99,8 +101,50 @@ function fuites(texte: string): string[] {
   )
 }
 
+// Espion sur tous les clients PostgreSQL : texte SQL et paramètres de chaque `query`, octets en
+// hexadécimal. Ce que la fonction envoie à la base, pas seulement ce que la base garde.
+async function espionner(action: () => Promise<unknown>): Promise<string> {
+  const prototype = pg.Client.prototype as unknown as { query: (...args: unknown[]) => unknown }
+  const original = prototype.query
+  const appels: string[] = []
+  const enTexte = (valeur: unknown): string =>
+    valeur instanceof Uint8Array
+      ? Buffer.from(valeur).toString('hex')
+      : valeur instanceof Date
+        ? valeur.toISOString()
+        : Array.isArray(valeur)
+          ? valeur.map(enTexte).join(' | ')
+          : typeof valeur === 'object' && valeur !== null
+            ? JSON.stringify(valeur)
+            : String(valeur)
+  prototype.query = function (this: unknown, ...args: unknown[]) {
+    appels.push(
+      args
+        .filter((arg) => typeof arg !== 'function')
+        .map(enTexte)
+        .join(' | '),
+    )
+    return original.apply(this, args)
+  }
+  try {
+    await action()
+  } finally {
+    prototype.query = original
+  }
+  return appels.join('\n')
+}
+
 let clePublique: string
 let cles: VaultKeys
+
+function enregistrer(demande: Demande, options: Partial<StoreOptions> = {}, base = pool) {
+  return storeRequest(base, demande, {
+    publicKey: clePublique,
+    privacyVersion: PRIVACY_POLICY_VERSION,
+    now: new Date(),
+    ...options,
+  })
+}
 
 describe('enregistrement chiffré dans le coffre', () => {
   before(async () => {
@@ -114,11 +158,32 @@ describe('enregistrement chiffré dans le coffre', () => {
   after(() => pool.end())
 
   it('fuite simulée : aucune donnée personnelle lisible dans toute la base', async () => {
-    await storeRequest(pool, DEMANDE, clePublique, new Date())
-    await storeRequest(pool, { ...DEMANDE, locale: 'en', langue: 'en' }, clePublique, new Date())
+    await enregistrer(DEMANDE)
+    await enregistrer({ ...DEMANDE, locale: 'en', langue: 'en' })
     const texte = await toutLeTexte()
     assert.match(texte, /grand-age/)
     assert.deepEqual(fuites(texte), [])
+  })
+
+  it('fuite simulée : aucun texte en clair dans les paramètres envoyés à la base', async () => {
+    const envoye = await espionner(() => enregistrer(DEMANDE))
+    assert.match(envoye, /INSERT INTO vault_requests/)
+    assert.match(envoye, /grand-age/)
+    // Les octets scellés sont bien passés en paramètre (16 432 octets, en hexadécimal).
+    assert.match(envoye, /[0-9a-f]{32864}/)
+    assert.deepEqual(fuites(envoye), [])
+
+    // Témoin : une insertion sans chiffrement est repérée par l'espion.
+    const enClair = sodium.from_string(JSON.stringify(splitRequest(DEMANDE).sealed))
+    const temoin = await espionner(() =>
+      insertRequest(pool, {
+        ...splitRequest(DEMANDE).clear,
+        sealed: enClair,
+        retentionUntil: new Date('2028-01-01T00:00:00Z'),
+        privacyVersion: PRIVACY_POLICY_VERSION,
+      }),
+    )
+    assert.ok(fuites(temoin).length >= 8)
   })
 
   it('témoin : le contrôle repère une demande écrite sans chiffrement', async () => {
@@ -127,13 +192,14 @@ describe('enregistrement chiffré dans le coffre', () => {
       ...splitRequest(DEMANDE).clear,
       sealed: enClair,
       retentionUntil: new Date('2028-01-01T00:00:00Z'),
+      privacyVersion: PRIVACY_POLICY_VERSION,
     })
     assert.ok(fuites(await toutLeTexte()).length >= 8)
   })
 
   it('range les colonnes de tri en clair, avec l’échéance de conservation', async () => {
     const maintenant = new Date('2027-03-15T10:00:00Z')
-    const id = await storeRequest(pool, DEMANDE, clePublique, maintenant)
+    const id = await enregistrer(DEMANDE, { now: maintenant })
     const [ligne] = await listRequests(pool)
     assert.ok(ligne)
     assert.equal(ligne.id, id)
@@ -147,6 +213,7 @@ describe('enregistrement chiffré dans le coffre', () => {
         source: ligne.source,
         status: ligne.status,
         frozen: ligne.frozen,
+        privacyVersion: ligne.privacyVersion,
       },
       {
         kind: 'request',
@@ -157,6 +224,7 @@ describe('enregistrement chiffré dans le coffre', () => {
         source: 'salon',
         status: 'new',
         frozen: false,
+        privacyVersion: '2026-11-18',
       },
     )
     assert.equal(
@@ -166,21 +234,18 @@ describe('enregistrement chiffré dans le coffre', () => {
   })
 
   it('rouvre la demande avec la clé privée', async () => {
-    const id = await storeRequest(pool, DEMANDE, clePublique, new Date())
+    const id = await enregistrer(DEMANDE)
     const octets = await readSealed(pool, id, 'compte-factice')
     assert.ok(octets)
     assert.deepEqual(await openSealed(octets, cles), splitRequest(DEMANDE).sealed)
   })
 
   it('n’écrit rien si la clé publique est invalide, sans citer la demande', async () => {
-    await assert.rejects(
-      storeRequest(pool, DEMANDE, 'clé invalide', new Date()),
-      (error: unknown) => {
-        assert.ok(error instanceof VaultKeyError)
-        assert.ok(!error.message.includes('Hortense'))
-        return true
-      },
-    )
+    await assert.rejects(enregistrer(DEMANDE, { publicKey: 'clé invalide' }), (error: unknown) => {
+      assert.ok(error instanceof VaultKeyError)
+      assert.ok(!error.message.includes('Hortense'))
+      return true
+    })
     assert.deepEqual(await listRequests(pool), [])
   })
 
@@ -189,15 +254,12 @@ describe('enregistrement chiffré dans le coffre', () => {
     adresse.pathname = '/maison_triona_absente_test'
     const absente = new pg.Pool({ connectionString: adresse.toString(), max: 1 })
     try {
-      await assert.rejects(
-        storeRequest(absente, DEMANDE, clePublique, new Date()),
-        (error: unknown) => {
-          assert.ok(error instanceof VaultError)
-          assert.equal(error.message, 'Coffre : storeRequest a échoué (3D000)')
-          assert.equal(error.cause, undefined)
-          return true
-        },
-      )
+      await assert.rejects(enregistrer(DEMANDE, {}, absente), (error: unknown) => {
+        assert.ok(error instanceof VaultError)
+        assert.equal(error.message, 'Coffre : storeRequest a échoué (3D000)')
+        assert.equal(error.cause, undefined)
+        return true
+      })
     } finally {
       await absente.end()
     }

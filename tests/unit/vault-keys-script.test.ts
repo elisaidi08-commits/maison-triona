@@ -134,4 +134,42 @@ describe('script vault-keys', () => {
     assert.equal(encore.status, 1)
     assert.equal(readFileSync(sortie, 'utf8'), texte)
   })
+
+  it('ajoute le paquet d’une seconde personne : même clé publique, sa propre phrase', async () => {
+    const premier = join(dehors, 'paquet-sady.json')
+    const second = join(dehors, 'paquet-cat.json')
+    const AUTRE = 'la phrase de la seconde personne, factice'
+    assert.equal(lancer([premier], `${PHRASE}\n${PHRASE}\n`).status, 0)
+
+    const resultat = lancer(['--ajouter', premier, second], `${PHRASE}\n${AUTRE}\n${AUTRE}\n`)
+    assert.equal(resultat.status, 0, resultat.stderr)
+    const paquet = JSON.parse(readFileSync(premier, 'utf8')) as { publicKey: string }
+    assert.equal(resultat.stdout, `${paquet.publicKey}\n`)
+    for (const flux of [resultat.stdout, resultat.stderr]) {
+      assert.ok(!flux.includes(PHRASE) && !flux.includes(AUTRE))
+    }
+    assert.equal(statSync(second).mode & 0o777, 0o600)
+    const sien = JSON.parse(readFileSync(second, 'utf8')) as unknown
+    await assert.rejects(unlockPrivateKey(sien, PHRASE))
+    const cles = await unlockPrivateKey(sien, AUTRE)
+    assert.equal(Buffer.from(cles.publicKey).toString('base64'), paquet.publicKey)
+
+    // Mauvaise phrase actuelle, sortie dans le dépôt : refus, rien d'écrit.
+    const refus = join(dehors, 'paquet-refus.json')
+    assert.equal(lancer(['--ajouter', premier, refus], `faux\n${AUTRE}\n${AUTRE}\n`).status, 1)
+    assert.equal(existsSync(refus), false)
+    const dedans = join(ROOT, 'paquet-refuse.json')
+    assert.equal(
+      lancer(['--ajouter', premier, dedans], `${PHRASE}\n${AUTRE}\n${AUTRE}\n`).status,
+      1,
+    )
+    assert.equal(existsSync(dedans), false)
+  })
+
+  it('exige un chemin en .json : une phrase tapée à la place est refusée sans être répétée', () => {
+    const resultat = lancer([PHRASE])
+    assert.equal(resultat.status, 2)
+    assert.match(resultat.stderr, /jamais en argument/)
+    assert.ok(!resultat.stderr.includes(PHRASE))
+  })
 })

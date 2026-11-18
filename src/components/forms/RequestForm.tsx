@@ -31,6 +31,7 @@ import {
   ETAT_INITIAL,
   LANGUES,
   LIMITES,
+  CHAMP_PIEGE,
   ORIGINES,
   PAYS,
   POUR_QUI,
@@ -74,7 +75,7 @@ export type TextesFormulaire = {
     message: { label: string; hint: string }
     origine: { legend: string; options: Libelles }
     consentement: { label: string; link: string }
-    site: { label: string }
+    piege: { label: string }
   }
   buttons: { continue: string; back: string; send: string; sending: string }
   errors: { prefix: string; one: string; many: string; codes: Record<CodeErreur, string> }
@@ -339,10 +340,17 @@ export function RequestForm({ locale, textes, confidentialite }: RequestFormProp
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="jeton" value={jeton ?? ''} />
       {/* Piège à robots (story 3.5) : hors de l'écran, hors de la tabulation, ignoré des lecteurs
-          d'écran ; un humain ne le remplit jamais. */}
+          d'écran ; nom et libellé inconnus du remplissage automatique : un humain ne le remplit
+          jamais, même sans le voir. */}
       <div aria-hidden="true" className="sr-only">
-        <label htmlFor="contact-site">{f.site.label}</label>
-        <input id="contact-site" type="text" name="site" tabIndex={-1} autoComplete="off" />
+        <label htmlFor="contact-reference">{f.piege.label}</label>
+        <input
+          id="contact-reference"
+          type="text"
+          name={CHAMP_PIEGE}
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       {partie(

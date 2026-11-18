@@ -47,39 +47,55 @@ export function deriveKey(
   )
 }
 
-/**
- * Génère la paire de clés du coffre et chiffre la clé privée avec la phrase de passe.
- * Renvoie le paquet (à garder hors ligne) et la clé publique en base64 (`VAULT_PUBLIC_KEY`).
- */
-export async function createKeyPacket(
-  passphrase: string,
-): Promise<{ packet: KeyPacket; publicKey: string }> {
+/** Refuse une phrase de passe trop courte (comptée en caractères, après normalisation NFC). */
+export function assertPassphrase(passphrase: string): void {
   if ([...passphrase.normalize('NFC')].length < PASSPHRASE_MIN_LENGTH) {
     throw new RangeError(
       `Phrase de passe trop courte : ${PASSPHRASE_MIN_LENGTH} caractères au moins`,
     )
   }
-  const lib = await loadSodium()
+}
+
+/** Chiffre une clé privée avec une phrase de passe : un paquet, avec son propre sel et nonce. */
+export function lockPrivateKey(
+  lib: Sodium,
+  publicKey: Uint8Array,
+  privateKey: Uint8Array,
+  passphrase: string,
+): KeyPacket {
+  assertPassphrase(passphrase)
   const kdf = kdfParameters(lib)
-  const { publicKey, privateKey } = lib.crypto_box_keypair()
   const salt = lib.randombytes_buf(lib.crypto_pwhash_SALTBYTES)
   const nonce = lib.randombytes_buf(lib.crypto_secretbox_NONCEBYTES)
   const key = deriveKey(lib, passphrase, salt, kdf)
   try {
-    const ciphertext = lib.crypto_secretbox_easy(privateKey, nonce, key)
-    const publicKeyBase64 = toBase64(lib, publicKey)
     return {
-      packet: {
-        version: KEY_PACKET_VERSION,
-        kdf: { algorithm: ALGORITHM, ...kdf, salt: toBase64(lib, salt) },
-        nonce: toBase64(lib, nonce),
-        ciphertext: toBase64(lib, ciphertext),
-        publicKey: publicKeyBase64,
-      },
-      publicKey: publicKeyBase64,
+      version: KEY_PACKET_VERSION,
+      kdf: { algorithm: ALGORITHM, ...kdf, salt: toBase64(lib, salt) },
+      nonce: toBase64(lib, nonce),
+      ciphertext: toBase64(lib, lib.crypto_secretbox_easy(privateKey, nonce, key)),
+      publicKey: toBase64(lib, publicKey),
     }
   } finally {
     lib.memzero(key)
+  }
+}
+
+/**
+ * Génère la paire de clés du coffre et chiffre la clé privée avec la phrase de passe.
+ * Renvoie le paquet (à garder hors ligne) et la clé publique en base64 (`VAULT_PUBLIC_KEY`).
+ * Un second paquet de la même paire, pour une autre personne : `addPassphrase` (open.ts).
+ */
+export async function createKeyPacket(
+  passphrase: string,
+): Promise<{ packet: KeyPacket; publicKey: string }> {
+  assertPassphrase(passphrase)
+  const lib = await loadSodium()
+  const { publicKey, privateKey } = lib.crypto_box_keypair()
+  try {
+    const packet = lockPrivateKey(lib, publicKey, privateKey, passphrase)
+    return { packet, publicKey: packet.publicKey }
+  } finally {
     lib.memzero(privateKey)
   }
 }

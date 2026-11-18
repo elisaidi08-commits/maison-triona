@@ -24,6 +24,11 @@ export const ORIGINES = [
   'salon',
 ] as const
 
+// Piège à robots (story 3.5) : un nom et un libellé que le remplissage automatique des navigateurs
+// et des gestionnaires de mots de passe ne reconnaît pas (ni « site », ni « website », ni « url »,
+// ni nom, adresse, téléphone ou numéro), pour qu'il ne remplisse jamais le champ d'un humain.
+export const CHAMP_PIEGE = 'reference_interne'
+
 export const LIMITES = {
   nomMin: 2,
   nomMax: 120,

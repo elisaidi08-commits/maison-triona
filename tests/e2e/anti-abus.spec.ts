@@ -17,7 +17,7 @@ test.describe('sans JavaScript', () => {
   }) => {
     // Un robot remplit le piège : la réponse ressemble à un envoi, sans aucune vérification.
     await page.goto('/fr/contact')
-    await page.locator('#contact-site').fill('https://exemple.test', { force: true })
+    await page.locator('#contact-reference').fill('https://exemple.test', { force: true })
     await envoyer(page).click()
     await expect(statut(page)).toContainText('ouvrira bientôt')
     await expect(resume(page)).toHaveCount(0)
@@ -54,12 +54,14 @@ test('avec JavaScript : l’horodatage signé est demandé à l’affichage, san
 }) => {
   await page.goto('/fr/contact')
   await expect(page.locator('input[name="jeton"]')).toHaveValue(/^\d{13}\.[A-Za-z0-9_-]{43}$/)
-  // Le piège reste hors de la tabulation et des lecteurs d'écran.
-  await expect(page.locator('#contact-site')).toHaveAttribute('tabindex', '-1')
-  await expect(page.locator('#contact-site').locator('xpath=..')).toHaveAttribute(
-    'aria-hidden',
-    'true',
-  )
+  // Le piège reste hors de la tabulation et des lecteurs d'écran, inconnu du remplissage
+  // automatique (ni « site », ni « Website »).
+  const piege = page.locator('#contact-reference')
+  await expect(piege).toHaveAttribute('tabindex', '-1')
+  await expect(piege).toHaveAttribute('autocomplete', 'off')
+  await expect(piege).toHaveAttribute('name', 'reference_interne')
+  await expect(piege.locator('xpath=..')).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.locator('label[for="contact-reference"]')).not.toHaveText(/site|web|url/i)
 })
 
 // Zod sondait `new Function` (compilation à la volée), refusé par la CSP du site : la violation

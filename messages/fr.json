@@ -931,8 +931,8 @@
           "label": "J’accepte que Maison Triona utilise ces informations pour répondre à ma demande, comme décrit dans la politique de confidentialité.",
           "link": "Lire la politique de confidentialité (nouvel onglet)"
         },
-        "site": {
-          "label": "Site internet"
+        "piege": {
+          "label": "Référence interne"
         }
       },
       "buttons": {

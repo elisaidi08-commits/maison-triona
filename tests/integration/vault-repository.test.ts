@@ -42,6 +42,7 @@ function fakeRequest(overrides: Partial<NewVaultRequest> = {}): NewVaultRequest 
     source: null,
     sealed: fakeSealed(),
     retentionUntil: new Date('2028-01-01T00:00:00Z'),
+    privacyVersion: '2026-11-18',
     ...overrides,
   }
 }
@@ -104,14 +105,16 @@ describe('accès aux données du coffre', () => {
         status: 'new',
         frozen: false,
         retentionUntil,
+        privacyVersion: '2026-11-18',
       },
     )
   })
 
   it('renvoie 50 demandes par défaut, 200 au plus, avec un décalage', async () => {
     await pool.query(
-      `INSERT INTO vault_requests (kind, locale, retention_until, sealed)
-       SELECT 'request', 'fr', now() + interval '1 year', decode(repeat('00', 64), 'hex')
+      `INSERT INTO vault_requests (id, kind, locale, retention_until, sealed, privacy_version)
+       SELECT gen_random_uuid(), 'request', 'fr', now() + interval '1 year',
+              decode(repeat('00', 64), 'hex'), '2026-11-18'
        FROM generate_series(1, 205)`,
     )
     assert.equal((await listRequests(pool)).length, 50)
@@ -235,6 +238,20 @@ describe('accès aux données du coffre', () => {
       logAccess(pool, { actor: ACTOR, action: 'inconnue' as AccessAction }),
       refused,
     )
+    assert.deepEqual(await listRequests(pool), [])
+  })
+
+  it('exige la version de la politique de confidentialité acceptée (preuve du consentement)', async () => {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_requests (id, kind, locale, retention_until, sealed)
+         VALUES (gen_random_uuid(), 'request', 'fr', now(), decode(repeat('00', 64), 'hex'))`,
+      ),
+      { code: '23502' },
+    )
+    await assert.rejects(insertRequest(pool, fakeRequest({ privacyVersion: '' })), {
+      code: '23514',
+    })
     assert.deepEqual(await listRequests(pool), [])
   })
 

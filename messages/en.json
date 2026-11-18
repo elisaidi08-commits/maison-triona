@@ -925,8 +925,8 @@
           "label": "I agree that Maison Triona may use this information to respond to my request, as described in the privacy policy.",
           "link": "Read the privacy policy (opens in a new tab)"
         },
-        "site": {
-          "label": "Website"
+        "piege": {
+          "label": "Internal reference"
         }
       },
       "buttons": {

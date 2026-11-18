@@ -11,11 +11,12 @@ import { sealRequest, VaultKeyError, type SealedFields } from './seal.ts'
 // réponse, urgence, origine. Tout le reste (nom, e-mail, téléphone, « pour qui », créneau, mot
 // libre) est scellé avec la clé publique avant d'atteindre la base. Écrit dans une transaction :
 // la boîte d'envoi des e-mails (story 3.3) s'y ajoutera.
-// Ni le consentement (requis : toute demande enregistrée l'a donné) ni la langue de l'interface ne
-// sont gardés. Aucune erreur levée ne cite un champ (VaultKeyError, VaultError).
+// Consentement : la version de la politique acceptée (`privacy_version`) et la date (`created_at`).
+// La langue de l'interface n'est pas gardée. Aucune erreur levée ne cite un champ (VaultKeyError,
+// VaultError, RangeError si le texte dépasse 16 Kio).
 // Imports relatifs seulement : testé par node --test.
 
-export type ClearColumns = Omit<NewVaultRequest, 'sealed' | 'retentionUntil'>
+export type ClearColumns = Omit<NewVaultRequest, 'sealed' | 'retentionUntil' | 'privacyVersion'>
 
 export function splitRequest(demande: Demande): { clear: ClearColumns; sealed: SealedFields } {
   return {
@@ -38,19 +39,26 @@ export function splitRequest(demande: Demande): { clear: ClearColumns; sealed: S
   }
 }
 
+export interface StoreOptions {
+  /** Clé publique du coffre, base64 (`VAULT_PUBLIC_KEY`). */
+  publicKey: string
+  /** Version de la politique de confidentialité acceptée (`PRIVACY_POLICY_VERSION`). */
+  privacyVersion: string
+  now: Date
+}
+
 /** Scelle puis enregistre la demande ; renvoie son identifiant. */
 export async function storeRequest(
   pool: Pool,
   demande: Demande,
-  publicKeyBase64: string,
-  now: Date,
+  { publicKey, privacyVersion, now }: StoreOptions,
 ): Promise<string> {
   const { clear, sealed } = splitRequest(demande)
-  const octets = await sealRequest(sealed, publicKeyBase64)
+  const octets = await sealRequest(sealed, publicKey)
   const retentionUntil = retentionDeadline(now, RETENTION_MONTHS)
   try {
     return await withTransaction(pool, (client) =>
-      insertRequest(client, { ...clear, sealed: octets, retentionUntil }),
+      insertRequest(client, { ...clear, sealed: octets, retentionUntil, privacyVersion }),
     )
   } catch (error) {
     // Connexion refusée, transaction annulée : on ne garde que le code, jamais le message brut.
