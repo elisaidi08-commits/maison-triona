@@ -11,9 +11,18 @@ updates:
       timezone: Europe/Brussels
     open-pull-requests-limit: 5
     # Les types de Node suivent la version du moteur (package.json : node 24.x), pas la dernière.
+    # ESLint 10 et TypeScript 7 : bloqués en amont, pas par notre code (vérifié sur npm le 18/11/2026,
+    # PR n° 52 et n° 51 fermées). eslint-plugin-jsx-a11y 6.10.2, requis par eslint-config-next,
+    # n'accepte pas ESLint au-delà de 9 ; typescript-eslint 8.73.0 refuse TypeScript 7 (« does not
+    # support TS 7.0 », TypeScript < 6.1). Retirer chaque règle quand l'amont suit. TypeScript 6.0
+    # reste proposé : typescript-eslint le prend en charge.
     ignore:
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint'
+        versions: ['>= 10']
+      - dependency-name: 'typescript'
+        versions: ['>= 7']
     groups:
       correctifs:
         update-types: [minor, patch]
