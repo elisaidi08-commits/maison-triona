@@ -106,10 +106,13 @@ test('une adresse du coffre avec un point reçoit aussi la CSP du coffre', async
   expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
 })
 
-test('sans JavaScript, le coffre le dit sobrement', async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false })
-  const page = await context.newPage()
-  await page.goto('/coffre/connexion')
-  await expect(page.getByText('Le coffre demande JavaScript.')).toBeVisible()
-  await context.close()
+// Les sélecteurs de texte de Playwright ignorent le contenu des <noscript> : on lit le texte rendu
+// de <main> (innerText), qui ne contient la phrase que si JavaScript est coupé.
+test.describe('sans JavaScript', () => {
+  test.use({ javaScriptEnabled: false })
+
+  test('le coffre le dit sobrement', async ({ page }) => {
+    await page.goto('/coffre/connexion')
+    expect(await page.locator('main').innerText()).toContain('Le coffre demande JavaScript.')
+  })
 })
