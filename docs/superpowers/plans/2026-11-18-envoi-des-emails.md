@@ -22,7 +22,7 @@
 ## Avant de commencer
 
 1. **La 3.2 C est fusionnée dans `main`** (migrations `0003_auth.sql`, `0004_journal_coffre.sql`, rôle `coffre`, `getCoffrePool`). Rebaser cette branche sur `main` ; la migration de cette story est donc **`0005_boite_envoi.sql`** (vérifier qu'aucune autre story n'a pris le numéro).
-2. **Décisions de Sady** (§« Décisions à confirmer ») : n° 1 et n° 2 **tranchées le 18/11/2026** (« ok pour les deux recos ») ; n° 3 à 5 à confirmer avant la tâche 10. Les consigner dans `docs/decisions.md` avec le **prochain numéro libre au moment de la fusion** (une autre session écrit aussi dans ce fichier).
+2. **Décisions de Sady** (§« Décisions à confirmer ») : n° 1 et n° 2 **tranchées le 18/11/2026** (« ok pour les deux recos ») ; n° 3 à 5 **tranchées le 18/11/2026** (« ok pour les deux », et chemin confirmé par la session de la 3.2 D). Les consigner dans `docs/decisions.md` avec le **prochain numéro libre au moment de la fusion** (une autre session écrit aussi dans ce fichier).
 3. **Côté Scaleway, pour la production seulement** (le développement et la CI n'en ont pas besoin) : voir §« À faire par Sady ».
 
 ## Décisions à confirmer
@@ -31,9 +31,9 @@
 |---|---|---|
 | 1 | **E-mail de confirmation au visiteur** (prévu par l'annexe B.4). TEM garderait son adresse et le sujet « Votre demande est bien arrivée » tant que le domaine est actif. Il faut aussi une clé serveur (Key Manager) pour les reprises. Enfin, dans une boîte partagée en famille, le message révèle le contact avec la maison. | **Tranché par Sady le 18/11/2026 : reportée.** Cette story livre la notification à Cat et les alertes (partie A). La page `/contact/merci` confirme déjà l'arrivée à l'écran, et la réponse de Cat sous 48 heures ouvrées sert de confirmation écrite. La confirmation par e-mail devient une partie B, faite seulement si Cat la veut après avoir lu ces limites. |
 | 2 | **Suivi des rebonds** : TEM ne propose des webhooks que via **Topics and Events**. C'est un service compatible SNS, payant à part, avec un abonnement à confirmer, des signatures v1 à vérifier contre la chaîne de Scaleway, et des messages qui contiennent `email_to`. | **Tranché par Sady le 18/11/2026 : interroger le statut** (`GET /emails/{id}`) depuis la tâche planifiée, jusqu'à un état final ou 72 heures. Pas de point d'entrée public, pas de service en plus. Il faut donc corriger §6.7 et `email-deliverability.md` §4. |
-| 3 | **Doublons** : TEM n'a pas de clé d'idempotence. Si un appel expire sans réponse puis est rejoué, l'e-mail peut partir deux fois. | **Accepter** : une notification en double est sans conséquence. À documenter. |
-| 4 | **Conservation de la boîte d'envoi** : ses lignes ne portent que des identifiants, des dates et des statuts. | **30 jours**, puis effacement par la tâche planifiée. |
-| 5 | **Lien de la notification** : `/coffre/demandes/<id>`. Cette page n'existe pas encore : la 3.2 C ne livre que la liste. | Garder ce chemin et le **réserver** pour la page de lecture du coffre (partie suivante de la 3.2). En attendant, le lien mène à la connexion puis à la liste. |
+| 3 | **Doublons** : TEM n'a pas de clé d'idempotence. Si un appel expire sans réponse puis est rejoué, l'e-mail peut partir deux fois. | **Tranché le 18/11/2026 : accepter** : une notification en double est sans conséquence. À documenter. |
+| 4 | **Conservation de la boîte d'envoi** : ses lignes ne portent que des identifiants, des dates et des statuts. | **Tranché le 18/11/2026 : 30 jours**, puis effacement par la tâche planifiée. |
+| 5 | **Lien de la notification** : `/coffre/demandes/<id>`. Cette page n'existe pas encore : la 3.2 C ne livre que la liste. | **Confirmé par la 3.2 D** (page introuvable pour une demande inconnue). Garder ce chemin et le **réserver** pour la page de lecture du coffre (partie suivante de la 3.2). En attendant, le lien mène à la connexion puis à la liste. |
 
 ## Faits vérifiés (18/11/2026)
 
