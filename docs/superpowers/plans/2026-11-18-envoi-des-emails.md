@@ -21,7 +21,7 @@
 
 ## Avant de commencer
 
-1. **La 3.2 C est fusionnée dans `main`** (migrations `0003_auth.sql`, `0004_journal_coffre.sql`, rôle `coffre`, `getCoffrePool`). Rebaser cette branche sur `main` ; la migration de cette story est donc **`0005_boite_envoi.sql`** (vérifier qu'aucune autre story n'a pris le numéro).
+1. **La 3.2 C est fusionnée dans `main`** (migrations `0003_auth.sql`, `0004_journal_coffre.sql`, rôle `coffre`, `getCoffrePool`). Rebaser cette branche sur `main` ; la migration de cette story est **`0006_boite_envoi.sql`** (la 3.2 D a pris `0005`) (vérifier qu'aucune autre story n'a pris le numéro).
 2. **Décisions de Sady** (§« Décisions à confirmer ») : n° 1 et n° 2 **tranchées le 18/11/2026** (« ok pour les deux recos ») ; n° 3 à 5 **tranchées le 18/11/2026** (« ok pour les deux », et chemin confirmé par la session de la 3.2 D). Les consigner dans `docs/decisions.md` avec le **prochain numéro libre au moment de la fusion** (une autre session écrit aussi dans ce fichier).
 3. **Côté Scaleway, pour la production seulement** (le développement et la CI n'en ont pas besoin) : voir §« À faire par Sady ».
 
@@ -79,7 +79,7 @@
 
 | Fichier | Rôle |
 |---|---|
-| `db/migrations/0005_boite_envoi.sql` (créé) | Table `outbox` |
+| `db/migrations/0006_boite_envoi.sql` (créé) | Table `outbox` |
 | `db/roles/site_public.sql` (modifié) | + `INSERT` sur `outbox` |
 | `db/roles/envoi.sql` (créé) | Rôle `envoi` : boîte d'envoi seulement |
 | `src/lib/db/config.ts`, `src/lib/db/pool.ts` (modifiés) | `envoiPoolConfigFromEnv`, `getEnvoiPool()` (`ENVOI_DATABASE_URL`) |
@@ -106,7 +106,7 @@ Conventions (celles de la 3.2) : identifiants en anglais, commentaires en franç
 ### Task 1 : Migration et rôles
 
 - [ ] **Step 1 (TDD)** : `tests/integration/outbox-repository.test.ts`, premier bloc « schéma » : après `migrate`, une ligne `request_notification` sans `request_id` est refusée (`outbox_notification_shape`) ; une alerte sans `alert_event` est refusée (`outbox_alert_shape`) ; `status = 'accepted'` sans `provider_id` est refusé (`outbox_accepted_shape`). Lancer `npm run test:integration` : échec (table absente).
-- [ ] **Step 2** : `db/migrations/0005_boite_envoi.sql` :
+- [ ] **Step 2** : `db/migrations/0006_boite_envoi.sql` :
   ```sql
   -- Boîte d'envoi des e-mails (story 3.3, docs/architecture.md §6.6). Écrite dans la même
   -- transaction que la demande. Aucune adresse ni aucun contenu de demande : un gabarit et des

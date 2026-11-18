@@ -3,7 +3,7 @@ import type { Pool, PoolClient } from 'pg'
 import { withTransaction } from '../db/transaction.ts'
 import { guard, isUuid } from '../vault/repository.ts'
 
-// Accès aux données de la boîte d'envoi (story 3.3, db/migrations/0005_boite_envoi.sql). Une ligne
+// Accès aux données de la boîte d'envoi (story 3.3, db/migrations/0006_boite_envoi.sql). Une ligne
 // ne porte qu'un gabarit, des identifiants, des dates et des statuts : aucune adresse, aucun
 // contenu de demande. Requêtes paramétrées uniquement ; les erreurs de PostgreSQL passent par
 // `guard` (code et contrainte seulement) et les arguments refusés ne sont jamais cités.
