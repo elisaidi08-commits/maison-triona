@@ -29,7 +29,9 @@ cp .env.example .env.local        # puis ajuster si besoin ; jamais de vraie val
 | `npm run format` · `npm run format:check` | Prettier (code seulement ; la documentation n'est pas reformatée) |
 | `npm run test:e2e` | Playwright : la page répond, aucune requête tierce, aucun cookie, noindex hors production |
 | `npm run test:a11y` | axe, WCAG 2.2 AA |
-| `npm run test:unit` | Tests unitaires (testeur intégré de Node) : calcul des créneaux de la réservation d'appel |
+| `npm run test:unit` | Tests unitaires (testeur intégré de Node) : calcul des créneaux de la réservation d'appel, configuration de la base, échéance de conservation |
+| `npm run test:integration` | Tests contre PostgreSQL (base jetable `maison_triona_test`, vidée à chaque fichier ; `TEST_DATABASE_URL` pour une autre adresse, dont le nom doit finir par `_test`) |
+| `npm run db:migrate` | Applique les migrations de `db/migrations/` à la base de `DATABASE_URL` ; à lancer à la main, jamais pendant le build |
 | `npm run lighthouse` | Lighthouse 13, mobile et desktop, seuils ≥ 95 ; exige `npm run start -- --port 3100` dans un autre terminal |
 | `npm run check:content` | Échoue s'il reste un contenu provisoire (`[CONTENU À FOURNIR PAR CAT]`, `[À VALIDER…]`…) |
 | `npm run check:i18n` | Échoue si une clé existe en FR et pas en EN (ou l'inverse) |
@@ -37,6 +39,8 @@ cp .env.example .env.local        # puis ajuster si besoin ; jamais de vraie val
 | `bash scripts/ingest-media.sh …` | Ingestion d'un média généré (voir `/ingest-media` et `docs/media-pipeline.md`) |
 
 Les tests E2E et axe lancent eux-mêmes un build de production (port 3100), ou réutilisent un serveur déjà ouvert sur ce port.
+
+Base locale (coffre) : `brew install postgresql@17`, `brew link --force postgresql@17` (formule keg-only : sans lien, `createdb` n'est pas dans le `PATH`), `brew services start postgresql@17`, `createdb maison_triona_dev`, `createdb maison_triona_test`.
 
 ## Règles à connaître avant de coder
 
