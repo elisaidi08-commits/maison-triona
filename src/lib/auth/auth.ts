@@ -21,7 +21,7 @@ import {
 // tard, avec la vérification de l'utilisateur obligatoire). Le plugin two-factor ne s'impose qu'aux
 // connexions par identifiant : d'où aucune autre méthode de connexion.
 // Comptes, sessions et secrets TOTP (chiffrés par Better Auth) dans la base du coffre
-// (db/migrations/0002_auth.sql), par le pool `pg` de la partie A.
+// (db/migrations/0003_auth.sql), par le pool `pg` de la partie A.
 
 type Environnement = Record<string, string | undefined>
 

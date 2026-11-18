@@ -5,7 +5,7 @@ import { MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN, peutCreerCompte } from './config.ts
 
 // Création des comptes du coffre, à la main seulement (scripts/coffre-compte.mjs) : les inscriptions
 // sont fermées, y compris côté serveur (`disableSignUp`). Deux comptes au plus ; la base double la
-// règle d'un déclencheur (db/migrations/0002_auth.sql). Les messages ne citent jamais le mot de passe.
+// règle d'un déclencheur (db/migrations/0003_auth.sql). Les messages ne citent jamais le mot de passe.
 
 export class CompteRefuse extends Error {
   constructor(message: string) {

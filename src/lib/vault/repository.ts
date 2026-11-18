@@ -12,7 +12,7 @@ import { withTransaction } from '../db/transaction.ts'
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
-// `login_failed`, `logout` et `list` (lecture de la liste) : partie C, db/migrations/0002_auth.sql.
+// `login_failed`, `logout` et `list` (lecture de la liste) : partie C, db/migrations/0003_auth.sql.
 export type AccessAction =
   | 'login'
   | 'login_failed'

@@ -1,4 +1,5 @@
 -- Authentification du coffre (story 3.2, partie C ; D67) : schéma de Better Auth 1.7.25.
+-- Numéro 0003 : 0002 est réservé à la partie B (0002_consentement.sql).
 -- Généré par `getMigrations(auth.options).compileMigrations()` de better-auth (le plan que sa CLI
 -- `generate` imprime pour Kysely), avec la configuration de src/lib/auth/auth.ts, sur une base vide.
 -- Recopié tel quel, une instruction par bloc : noms de Better Auth conservés (tables, colonnes en
