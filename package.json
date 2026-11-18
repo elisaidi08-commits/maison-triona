@@ -26,6 +26,7 @@
     "check:third-party": "node scripts/check-third-party.mjs"
   },
   "dependencies": {
+    "libsodium-wrappers-sumo": "0.8.4",
     "next": "16.4.6",
     "next-intl": "4.15.1",
     "pg": "8.23.1",

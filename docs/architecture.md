@@ -21,7 +21,7 @@
 | Contenu | **CMS headless** | voir §5 | Cat édite elle-même les textes publics | `[À TRANCHER]` (reco : Sanity) |
 | Validation | **Zod** | `4.6.7` (dernière version, publiée le 12/10/2026, vérifiée sur le registre npm le 18/11/2026 ; aucune dépendance) | Un seul schéma pour la demande : la Server Action valide tout, le formulaire valide l'étape en cours avant de continuer, avec les mêmes règles et les mêmes codes d'erreur. L'écrire à la main dupliquerait les règles (deux listes à tenir d'accord) ; le poids côté navigateur reste sur la seule page Contact | **Installé (3.1)** |
 | **Coffre des demandes** | Base PostgreSQL **hébergée dans l'UE** | voir §6.5 | Une panne d'e-mail ne fait jamais perdre une demande | `[À TRANCHER]` (reco : Scaleway Managed PostgreSQL) |
-| **Chiffrement applicatif** | libsodium, « sealed box » | à vérifier en story E3-S8 | Une fuite de base, de sauvegarde ou de variables d'environnement ne révèle rien | Proposé |
+| **Chiffrement applicatif** | libsodium, « sealed box » : **`libsodium-wrappers-sumo`** (variante complète des enveloppes JavaScript de libsodium, ISC, libsodium 1.0.22 compilé en WebAssembly ; tire `libsodium-sumo` 0.8.4, figé par `package-lock.json`) | `0.8.4` (dernière version, publiée le 19/04/2026, vérifiée sur le registre npm le 18/11/2026) | Une fuite de base, de sauvegarde ou de variables d'environnement ne révèle rien. **Pourquoi « sumo »** : la variante standard `libsodium-wrappers` 0.8.4 déclare `crypto_pwhash` dans ses types mais **ne l'embarque pas** (`typeof sodium.crypto_pwhash === 'undefined'` à l'exécution, vérifié le 18/11/2026) ; or Argon2id protège la clé privée par la phrase de passe. Coût : environ 100 ko de plus que la variante standard (535 ko en tout, 190 ko compressés), côté serveur et, en partie C, sur `/coffre` seulement (jamais sur le site public). Types fournis par le paquet ; aucune autre dépendance. Écartés : une implémentation maison d'Argon2id ou un second paquet pour lui seul | **Installé (3.2 B)** |
 | **Authentification du coffre** | Better Auth (mot de passe + TOTP obligatoire, passkey) | à vérifier en story E3-S8 | Comptes nominatifs, A2F, données dans notre base | `[À TRANCHER]` |
 | E-mail | Transactionnel européen, **sans suivi** | voir §6.6 | Notification minimale à Cat, confirmation au visiteur | `[À TRANCHER]` (reco : Scaleway TEM) |
 | File d'envoi | Table « boîte d'envoi » + tâche planifiée Vercel (Cron) | — | Reprises sans sous-traitant supplémentaire | Proposé |
@@ -38,7 +38,7 @@
 
 **Story 1.1 (15/10/2026)** : versions installées à l'identique (`--save-exact`) ; `npm audit --omit=dev` : 0 vulnérabilité ; 5 alertes « high » en développement seulement (`braces` via `eslint-config-next` → `fast-glob`, déni de service sur des motifs malveillants, non atteignable ici ; correctif proposé par npm = rétrograder `eslint-config-next` en 14, refusé). `next dev` écrit un bloc géré dans `AGENTS.md` (documentation Next embarquée dans `node_modules/next/dist/docs/`) ; on le garde, il sert aussi à Codex.
 
-Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** figées ici : à vérifier sur le registre et la documentation au moment de la story E3-S8 (règle d'honnêteté technique).
+Le pilote PostgreSQL (`pg` 8.23.1, 3.2 A) et libsodium (`libsodium-wrappers-sumo` 0.8.4, 3.2 B) sont figés et vérifiés au moment de leur story ; la version de Better Auth le sera en partie C (règle d'honnêteté technique).
 
 ---
 
