@@ -12,7 +12,18 @@ import { withTransaction } from '../db/transaction.ts'
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
-export type AccessAction = 'login' | 'read' | 'export' | 'delete' | 'purge' | 'freeze' | 'unfreeze'
+// `login_failed`, `logout` et `list` (lecture de la liste) : partie C, db/migrations/0002_auth.sql.
+export type AccessAction =
+  | 'login'
+  | 'login_failed'
+  | 'logout'
+  | 'list'
+  | 'read'
+  | 'export'
+  | 'delete'
+  | 'purge'
+  | 'freeze'
+  | 'unfreeze'
 
 export interface NewVaultRequest {
   kind: RequestKind
@@ -183,25 +194,53 @@ export async function insertRequest(
   return id
 }
 
+function pageOffset(offset: number | undefined): number {
+  const value = offset ?? 0
+  if (!Number.isInteger(value) || value < 0) {
+    throw new RangeError('Décalage invalide : entier positif ou nul attendu')
+  }
+  return value
+}
+
+async function selectSummaries(
+  db: Pool | PoolClient,
+  limit: number,
+  offset: number,
+): Promise<VaultRequestSummary[]> {
+  const { rows } = await db.query<SummaryRow>(
+    `SELECT ${SUMMARY_COLUMNS} FROM vault_requests
+     ORDER BY created_at DESC, id DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset],
+  )
+  return rows.map(toSummary)
+}
+
 // Colonnes en clair seulement (jamais `sealed`), de la plus récente à la plus ancienne.
 export async function listRequests(
   pool: Pool,
   options: { limit?: number; offset?: number } = {},
 ): Promise<VaultRequestSummary[]> {
   const limit = pageLimit(options.limit)
-  const offset = options.offset ?? 0
-  if (!Number.isInteger(offset) || offset < 0) {
-    throw new RangeError('Décalage invalide : entier positif ou nul attendu')
-  }
-  return guard('listRequests', async () => {
-    const { rows } = await pool.query<SummaryRow>(
-      `SELECT ${SUMMARY_COLUMNS} FROM vault_requests
-       ORDER BY created_at DESC, id DESC
-       LIMIT $1 OFFSET $2`,
-      [limit, offset],
-    )
-    return rows.map(toSummary)
-  })
+  const offset = pageOffset(options.offset)
+  return guard('listRequests', () => selectSummaries(pool, limit, offset))
+}
+
+// Même liste, pour l'accueil du coffre : la lecture est journalisée (`list`, sans identifiant de
+// demande) dans la même transaction. Pas de lecture sans trace.
+export async function listRequestsLogged(
+  pool: Pool,
+  actor: string,
+  options: { limit?: number; offset?: number } = {},
+): Promise<VaultRequestSummary[]> {
+  const limit = pageLimit(options.limit)
+  const offset = pageOffset(options.offset)
+  return guard('listRequestsLogged', () =>
+    withTransaction(pool, async (client) => {
+      await client.query(INSERT_LOG, [actor, 'list', null])
+      return selectSummaries(client, limit, offset)
+    }),
+  )
 }
 
 // Renvoie les octets chiffrés d'une demande et journalise la lecture dans la même transaction :
