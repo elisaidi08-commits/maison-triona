@@ -76,7 +76,7 @@
       "label": "Services",
       "title": "Ce dont la maison s’occupe.",
       "text": {
-        "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice pour tout organiser.",
+        "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice, pour chaque demande.",
         "senior": "Une présence choisie, des journées qui gardent leur rythme et leurs plaisirs, à la maison comme en voyage.",
         "children": "Des personnes choisies une à une, pour quelques heures comme pour une saison."
       },
@@ -112,14 +112,14 @@
     "steps": [
       "Vous nous écrivez.",
       "Nous vous répondons personnellement.",
-      "Nous vous présentons la bonne personne."
+      "Nous vous présentons une ou plusieurs personnes ; vous choisissez avec nous."
     ],
     "model": "Chaque personne que la maison vous présente, nous la connaissons personnellement.",
     "situationsLabel": "Par exemple",
-    "process": "Vous nous écrivez, nous vous répondons personnellement, puis nous vous présentons la bonne personne.",
+    "process": "Vous nous écrivez, nous vous répondons personnellement, puis nous vous présentons une ou plusieurs personnes : vous choisissez avec nous.",
     "concierge": {
       "name": "Conciergerie de luxe",
-      "promise": "Une seule interlocutrice pour tout organiser.",
+      "promise": "Une seule interlocutrice, pour chaque demande.",
       "need": "Une maison de famille qui attend le bon artisan, une résidence à préparer avant une arrivée, une personne de confiance pour un séjour ou un voyage : vous nous dites ce qui compte, nous trouvons la personne juste.",
       "imageAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
       "link": "Découvrir la conciergerie de luxe",

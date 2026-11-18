@@ -68,6 +68,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   └── documents/              ← PDF « Comment ça se passe » FR/EN, générés au build
 ├── src/
 │   ├── app/
+│   │   ├── global-not-found.tsx        ← 404 bilingue des adresses inconnues, servie telle quelle (sans JavaScript ; pas de page attrape-tout : avec Cache Components, un notFound() à la requête ne rend son texte qu'en JavaScript)
 │   │   ├── [locale]/
 │   │   │   ├── layout.tsx              ← polices, MotionProvider, Header, Footer, SkipLink
 │   │   │   ├── page.tsx                ← Accueil (entrée par besoin)
@@ -91,7 +92,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 │   │   │   ├── confidentialite/page.tsx
 │   │   │   ├── accessibilite/page.tsx  ← déclaration d'accessibilité
 │   │   │   ├── demo/page.tsx           ← banc d'essai tokens et typo (noindex, retiré ou protégé en prod)
-│   │   │   └── not-found.tsx
+│   │   │   └── not-found.tsx         ← seulement pour un notFound() d'une page ; les adresses inconnues vont à global-not-found
 │   │   ├── coffre/                     ← espace d'administration (dynamique, noindex, A2F)
 │   │   │   ├── layout.tsx · connexion/page.tsx · page.tsx (liste) · [id]/page.tsx (lecture)
 │   │   │   ├── appels/page.tsx · disponibilites/page.tsx   ← agenda et réglages de Cat (D57)

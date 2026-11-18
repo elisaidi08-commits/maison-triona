@@ -619,27 +619,31 @@
   [data-carte] path[data-pays][data-actif] {
     fill: var(--color-sapin);
   }
+  /* Noms placés par `translate` en unités du cadre (--x et --y en centièmes, CarteTerritoires.tsx),
+     jamais par left/top : la vue s'anime à chaque image, sans décalage de mise en page (CLS). */
   [data-carte-noms] {
     position: absolute;
     inset: 0;
     pointer-events: none;
+    container-type: size;
   }
   [data-carte-noms] > * {
     position: absolute;
-    left: var(--x);
-    top: var(--y);
+    left: 0;
+    top: 0;
     display: flex;
     align-items: center;
     gap: var(--spacing-8);
-    translate: calc(-1 * var(--spacing-4)) -50%;
+    translate: calc(var(--x) * 1cqw - var(--spacing-4)) calc(var(--y) * 1cqh - 50%);
   }
   [data-carte-noms] > [data-pays] {
     pointer-events: auto;
     cursor: pointer;
   }
-  [data-carte-noms] [data-cote='gauche'] {
-    flex-direction: row-reverse;
-    translate: calc(-100% + var(--spacing-4)) -50%;
+  /* Nom à gauche de son point : seul le nom glisse (largeur, puis le point de 8 px et deux écarts
+     de 8 px), l'ordre et la mise en page ne changent pas quand le côté est choisi après la mesure. */
+  [data-carte-noms] [data-cote='gauche'] [data-nom] {
+    translate: calc(-100% - 3 * var(--spacing-8)) var(--dy, 0);
   }
   [data-repere] {
     width: var(--spacing-8);
@@ -1087,7 +1091,9 @@
   [data-zoom] [data-etiquette] {
     position: absolute;
     left: 0;
-    bottom: calc(1.25 * var(--u) * (2 * var(--p) + 1) + var(--spacing-16));
+    bottom: 0;
+    /* Montée par `translate`, pas par `bottom` : --p change à chaque cran de défilement (CLS). */
+    translate: 0 calc(-1 * (1.25 * var(--u) * (2 * var(--p) + 1) + var(--spacing-16)));
     /* Largeur de la carte, entre 5u et 7u : l'aplat déborde peu sur la carte voisine. */
     width: clamp(5 * var(--u), var(--u) * (2 * var(--p) + 1), 7 * var(--u));
     gap: var(--spacing-8);

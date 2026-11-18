@@ -43,7 +43,7 @@ export function MobileMenu({ openLabel, closeLabel, children }: MobileMenuProps)
     <details ref={details} className="group lg:hidden">
       <summary
         ref={summary}
-        className="relative z-20 inline-flex min-h-touch cursor-pointer list-none items-center text-nav text-encre"
+        className="relative z-20 inline-flex min-h-touch min-w-touch cursor-pointer list-none items-center justify-center text-nav text-encre"
       >
         <span className="group-open:hidden">{openLabel}</span>
         <span className="hidden group-open:inline">{closeLabel}</span>

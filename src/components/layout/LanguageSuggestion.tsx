@@ -75,7 +75,7 @@ export function LanguageSuggestion({
       ref={bar}
       lang={target}
       aria-label={text}
-      className="fixed inset-x-0 bottom-barre flex flex-wrap items-center justify-center gap-x-24 gap-y-8 border-t border-sapin-20 bg-pierre px-margin py-12 text-body-s text-encre"
+      className="fixed inset-x-0 bottom-barre z-5 flex flex-wrap items-center justify-center gap-x-24 gap-y-8 border-t border-sapin-20 bg-ivoire px-margin py-12 text-body-s text-encre"
     >
       <p>{text}</p>
       <Link

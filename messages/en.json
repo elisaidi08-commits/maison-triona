@@ -59,7 +59,7 @@
         "category": "Luxury concierge"
       },
       "senior": {
-        "label": "Support a loved one, or yourself",
+        "label": "For a loved one, or for yourself",
         "category": "Companionship in later life"
       },
       "children": {
@@ -76,7 +76,7 @@
       "label": "Services",
       "title": "What the house looks after.",
       "text": {
-        "concierge": "Residences, travel, reservations, household management: a single point of contact to organise everything.",
+        "concierge": "Residences, travel, reservations, household management: a single point of contact, for every request.",
         "senior": "A carefully chosen companion, and days that keep their rhythm and their pleasures, at home or away.",
         "children": "People chosen one by one, for a few hours or for a whole season."
       },
@@ -108,14 +108,14 @@
     "steps": [
       "You write to us.",
       "We reply to you personally.",
-      "We introduce you to the right person."
+      "We introduce you to one or more people; you choose with us."
     ],
     "model": "Every person we introduce to you is someone we know personally.",
     "situationsLabel": "For example",
-    "process": "You write to us, we reply to you personally, then we introduce you to the right person.",
+    "process": "You write to us, we reply to you personally, then we introduce you to one or more people: you choose with us.",
     "concierge": {
       "name": "Luxury concierge",
-      "promise": "One person to arrange everything for you.",
+      "promise": "A single point of contact, for every request.",
       "need": "A family house that needs the right craftsman, a residence to prepare before an arrival, a trusted person for a stay or a journey: you tell us what matters, and we find the right person.",
       "imageAlt": "On a dark wooden console, white flowers in a round vase and keys in a brass tray, against a pale wall.",
       "link": "Discover our luxury concierge",

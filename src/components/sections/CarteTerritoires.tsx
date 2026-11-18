@@ -307,8 +307,9 @@ export function CarteTerritoires({ pays, lieux, children }: CarteTerritoiresProp
   // `--dy` : décalage vertical du nom seul (placer), en pixels.
   const position = ([x, y]: [number, number], decalage?: number) =>
     ({
-      '--x': `${(((x * vue.s + vue.tx) / COTE) * 100).toFixed(3)}%`,
-      '--y': `${(((y * vue.s + vue.ty) / COTE) * 100).toFixed(3)}%`,
+      // En centièmes du cadre, sans unité : le CSS les convertit en cqw et cqh pour `translate`.
+      '--x': (((x * vue.s + vue.tx) / COTE) * 100).toFixed(3),
+      '--y': (((y * vue.s + vue.ty) / COTE) * 100).toFixed(3),
       ...(decalage ? { '--dy': `${decalage}px` } : {}),
     }) as CSSProperties
   // Repère sorti du cadre (vue rapprochée) : son nom ne reste pas coupé au bord.

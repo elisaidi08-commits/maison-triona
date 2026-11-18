@@ -27,7 +27,7 @@ import {
 // Jamais indexé, absent de la production (déplacé sous /fr/demo en story 1.4).
 
 export const metadata: Metadata = {
-  title: 'Banc d’essai · Maison Triona',
+  title: 'Banc d’essai',
   robots: { index: false, follow: false },
 }
 

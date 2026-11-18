@@ -35,10 +35,23 @@ test('le banc d’essai /fr/demo répond et n’est jamais indexé', async ({ pa
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
 })
 
-test('une adresse inconnue répond 404 dans la langue de la page', async ({ page }) => {
-  const response = await page.goto('/fr/adresse-inconnue')
-  expect(response?.status()).toBe(404)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cette page n’existe pas.')
+test('une adresse inconnue répond 404 avec la page bilingue', async ({ page }) => {
+  for (const path of ['/fr/adresse-inconnue', '/en/unknown-page']) {
+    const response = await page.goto(path)
+    expect(response?.status()).toBe(404)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cette page n’existe pas.')
+    await expect(page.getByRole('link', { name: /Back to the home page/ })).toHaveAttribute(
+      'href',
+      '/en',
+    )
+  }
+})
+
+// La 404 est servie telle quelle (global-not-found) : son texte est dans le HTML, sans JavaScript.
+test('la 404 se lit sans JavaScript', async ({ request }) => {
+  const response = await request.get('/fr/services/adresse-inconnue')
+  expect(response.status()).toBe(404)
+  expect(await response.text()).toContain('Cette page n’existe pas.')
 })
 
 test('hors production, chaque réponse porte X-Robots-Tag noindex', async ({ request }) => {
