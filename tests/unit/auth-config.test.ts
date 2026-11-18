@@ -4,6 +4,7 @@ import { describe, it } from 'node:test'
 import pg from 'pg'
 
 import { CHEMINS_AUTORISES, creerAuth } from '../../src/lib/auth/auth.ts'
+import { genererMotDePasse } from '../../src/lib/auth/comptes.ts'
 import { acteurLimitation, cheminAuth } from '../../src/lib/auth/enveloppe.ts'
 import {
   BASE_PATH_AUTH,
@@ -249,5 +250,16 @@ describe('enveloppe du gestionnaire', () => {
     assert.equal(VERROU_COMPTE_ECHECS, 10)
     assert.equal(DISJONCTEUR_ECHECS, 50)
     assert.equal(DELAI_ENROLEMENT_S, 24 * 60 * 60)
+  })
+})
+
+describe('mots de passe générés', () => {
+  it('font 35 caractères sans caractère ambigu, tous différents', () => {
+    const tires = new Set(Array.from({ length: 100 }, genererMotDePasse))
+    assert.equal(tires.size, 100)
+    for (const motDePasse of tires) {
+      assert.match(motDePasse, /^[a-hjkmnp-z2-9]{5}(-[a-hjkmnp-z2-9]{5}){5}$/)
+      assert.ok(motDePasse.length >= MOT_DE_PASSE_MIN)
+    }
   })
 })

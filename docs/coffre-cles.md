@@ -102,3 +102,23 @@ TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches)
 - Toutes les demandes scellées ont la **même taille** (16 Kio de texte complété, 16 432 octets) : la taille ne dit rien du message. Une demande plus longue est refusée ; la validation du formulaire l'empêche (la plus longue tient en moins de 14 Kio).
 - Une phrase saisie reste quelque temps dans la mémoire du programme (JavaScript ne permet pas de l'effacer) : générer les clés sur un poste de confiance, fermer le terminal ensuite.
 - Le déchiffrement dans le navigateur (partie C) exige `'wasm-unsafe-eval'` dans la CSP de `/coffre` : libsodium s'y exécute en WebAssembly (`docs/architecture.md` §9.1).
+
+## 7. Comptes du coffre : création et réenrôlement (partie C)
+
+Deux comptes nominatifs au plus (Cat, Sady), créés à la main avec `COFFRE_DATABASE_URL` (compte du coffre, §3.2). Les inscriptions sont fermées : aucun autre chemin ne crée un compte.
+
+**Créer un compte**, en présence des deux personnes, sur un poste de confiance :
+
+1. `npm run coffre:compte -- --nom "Prénom Nom" --email adresse@exemple.be`.
+2. Le script **génère** le mot de passe (35 caractères, environ 148 bits) et l'affiche **une seule fois** : la personne l'enregistre aussitôt dans son gestionnaire de mots de passe, puis on ferme le terminal. Pour en choisir un soi-même : `--saisir` (saisie masquée et confirmée ; refusé sous 24 caractères). Jamais en argument.
+3. **Dans les 24 heures** : se connecter sur `/coffre/connexion`, enrôler le TOTP (application d'authentification sur un appareil personnel), noter les 10 codes de secours hors ligne, à part du mot de passe. Au-delà de 24 heures, l'activation du TOTP est refusée et il faut réenrôler (ci-dessous). Tant que le TOTP n'est pas enrôlé, la session ne donne accès qu'à l'enrôlement.
+4. L'enrôlement est inscrit au journal d'accès (`totp_enrolled`) ; sa lecture dans le coffre viendra en partie D.
+
+**Réenrôler** (téléphone perdu ou remplacé sans les codes de secours, délai de 24 heures dépassé, doute sur un mot de passe) :
+
+1. Les deux personnes sont présentes ; la personne concernée confirme son identité à l'autre de vive voix, jamais par un message.
+2. `npm run coffre:compte -- --reenroler --email adresse@exemple.be` : le compte est supprimé (sessions, secret TOTP, codes de secours, ancien mot de passe) puis recréé sous le même nom et la même adresse, avec un mot de passe **neuf** affiché une seule fois (`--saisir` possible).
+3. Supprimer l'ancienne entrée « Maison Triona » de l'application d'authentification, puis enrôler le nouveau TOTP dans les 24 heures (étape 3 ci-dessus).
+4. Les demandes ne sont pas touchées : elles appartiennent au coffre, pas au compte. Le paquet de clé et la phrase de passe (§2) ne changent pas.
+
+Le journal d'accès garde l'adresse du compte comme acteur : il reste lisible après un réenrôlement.
