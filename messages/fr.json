@@ -76,7 +76,7 @@
       "label": "Services",
       "title": "Ce dont la maison s’occupe.",
       "text": {
-        "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice pour tout organiser.",
+        "concierge": "Résidences, déplacements, réservations, intendance : une seule interlocutrice, pour chaque demande.",
         "senior": "Une présence choisie, des journées qui gardent leur rythme et leurs plaisirs, à la maison comme en voyage.",
         "children": "Des personnes choisies une à une, pour quelques heures comme pour une saison."
       },
@@ -112,14 +112,14 @@
     "steps": [
       "Vous nous écrivez.",
       "Nous vous répondons personnellement.",
-      "Nous vous présentons la bonne personne."
+      "Nous vous présentons une ou plusieurs personnes ; vous choisissez avec nous."
     ],
     "model": "Chaque personne que la maison vous présente, nous la connaissons personnellement.",
     "situationsLabel": "Par exemple",
-    "process": "Vous nous écrivez, nous vous répondons personnellement, puis nous vous présentons la bonne personne.",
+    "process": "Vous nous écrivez, nous vous répondons personnellement, puis nous vous présentons une ou plusieurs personnes : vous choisissez avec nous.",
     "concierge": {
       "name": "Conciergerie de luxe",
-      "promise": "Une seule interlocutrice pour tout organiser.",
+      "promise": "Une seule interlocutrice, pour chaque demande.",
       "need": "Une maison de famille qui attend le bon artisan, une résidence à préparer avant une arrivée, une personne de confiance pour un séjour ou un voyage : vous nous dites ce qui compte, nous trouvons la personne juste.",
       "imageAlt": "Sur une console de bois sombre, un bouquet de fleurs blanches dans un vase rond et des clés dans un plateau de laiton, contre un mur clair.",
       "link": "Découvrir la conciergerie de luxe",
@@ -249,8 +249,8 @@
           "text": "Un échange, par téléphone ou en rendez-vous, pour comprendre la situation, les habitudes et les attentes."
         },
         {
-          "title": "Nous vous présentons la bonne personne.",
-          "text": "Une ou plusieurs personnes, choisies pour vous. Vous décidez avec nous ; nous ne choisissons jamais à votre place."
+          "title": "Nous vous présentons une ou plusieurs personnes.",
+          "text": "Retenues pour votre situation. Vous décidez avec nous ; nous ne décidons jamais à votre place."
         },
         {
           "title": "Vous signez directement avec le professionnel choisi.",
@@ -457,7 +457,7 @@
           "Comment vous avez connu la maison, si vous souhaitez le dire."
         ],
         "after": [
-          "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter la bonne personne. La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes.",
+          "Ces informations servent à vous répondre et, si vous le souhaitez, à vous présenter une ou plusieurs personnes. La façon dont vous avez connu la maison nous sert seulement à savoir d’où viennent les demandes.",
           "Le service, le pays, l’urgence, votre nom, une adresse e-mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
           "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix.",
           "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation.",

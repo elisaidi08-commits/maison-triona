@@ -43,3 +43,8 @@ npm-debug.log*
 /TYPO*/
 /maison-triona-prd.pdf
 /bascule-satoshi.js
+
+# Moodboard : référence de style interne, sans droits (docs/moodboard/README.md).
+# Seul l'index est versionné ; une image copiée ici ne doit jamais entrer dans le dépôt.
+/docs/moodboard/*
+!/docs/moodboard/README.md

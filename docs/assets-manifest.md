@@ -109,9 +109,9 @@ Les ancres ne sont **jamais publiées** : elles servent de référence de style 
 
 | ID | Scène | Destination du choix | Ratio | Durée | Flags | Image de départ | Modèle | Statut | Fichier final |
 |---|---|---|---|---|---|---|---|---|---|
-| V01 | S1 Seuil · hero + entrée | — (porte les 4 choix) | 16:9 | 8 s | boucle · scrub | P01-d | `kling3_0` pro | intégré (story 2.5), **retiré** de l'accueil par la V4 (D36, D63) ; fichiers à retirer de `public/` (lot 0) | `public/media/seuil/V01-fenetre-mer.{mp4,webm}` |
-| V02 | S2 La maison | — | 16:9 | 8 s | boucle | P02-d | `kling3_0` pro | intégré (story 2.5), **retiré** de l'accueil par la V4 (D36, D63) ; fichiers à retirer de `public/` (lot 0) | `public/media/maison/V02-porte-ocre.{mp4,webm}` |
-| V03 | S3 Conciergerie | **Choix 1** `#conciergerie` | 16:9 | 8 s | scrub | P03-d | `kling3_0` pro | intégré (story 2.5), **retiré** : la console P13 remplace le bateau (D44, D58) ; fichiers à retirer de `public/` (lot 0) | `public/media/conciergerie/V03-bateau-quai.{mp4,webm}` |
+| V01 | S1 Seuil · hero + entrée | — (porte les 4 choix) | 16:9 | 8 s | boucle · scrub | P01-d | `kling3_0` pro | intégré (story 2.5), **retiré** de l'accueil par la V4 (D36, D63) ; fichiers retirés de `public/` le 18/11/2026 (lot 0), sources dans l'historique git | `public/media/seuil/V01-fenetre-mer.{mp4,webm}` |
+| V02 | S2 La maison | — | 16:9 | 8 s | boucle | P02-d | `kling3_0` pro | intégré (story 2.5), **retiré** de l'accueil par la V4 (D36, D63) ; fichiers retirés de `public/` le 18/11/2026 (lot 0), sources dans l'historique git | `public/media/maison/V02-porte-ocre.{mp4,webm}` |
+| V03 | S3 Conciergerie | **Choix 1** `#conciergerie` | 16:9 | 8 s | scrub | P03-d | `kling3_0` pro | intégré (story 2.5), **retiré** : la console P13 remplace le bateau (D44, D58) ; fichiers retirés de `public/` le 18/11/2026 (lot 0), sources dans l'historique git | `public/media/conciergerie/V03-bateau-quai.{mp4,webm}` |
 | V04 | S4 Grand âge | **Choix 2** `#grand-age` | 16:9 | 8 s | boucle | P04-d | `kling3_0` pro | à générer | `public/media/grand-age/V04-mains-livre.{mp4,webm}` |
 | V05 | S5 Table et générations | **Choix 3** `#enfants` (secondaire) | 16:9 | 8 s | boucle (post) | P05-d | `kling3_0` pro | à générer | `public/media/enfants/V05-table-partagee.{mp4,webm}` |
 | V06 | S5 Table et générations | **Choix 3** `#enfants` (principal) | 16:9 | 8 s | boucle | P06-d | `kling3_0` pro | à générer | `public/media/enfants/V06-mains-romarin.{mp4,webm}` |
@@ -124,10 +124,10 @@ Scrub : au plus **deux** scènes en version liée au scroll (recommandé : V01 e
 
 | ID | Usage | Destination du choix | Ratio | Modèle (brouillon → final) | Statut | Fichier final (racine) |
 |---|---|---|---|---|---|---|
-| P01-d | Poster V01, image de départ | — | 16:9 | `soul_cinematic` (sans référence) → upscale 4k | intégré (story 2.1), **retiré** de l'accueil par la V4 (D36, D63) ; à retirer de `public/` (lot 0) | `public/media/seuil/P01-fenetre-mer` |
+| P01-d | Poster V01, image de départ | — | 16:9 | `soul_cinematic` (sans référence) → upscale 4k | intégré (story 2.1), **retiré** de l'accueil par la V4 (D36, D63) ; retiré de `public/` le 18/11/2026 (lot 0) | `public/media/seuil/P01-fenetre-mer` |
 | P01-m | Hero mobile | — | 4:5 | recadrage 4:5 de P01-d (Nano Banana Pro 4k réservé à l'offre Pro) | intégré, **retiré** avec P01-d | `public/media/seuil/P01-fenetre-mer-m` |
 | P02-d / P02-m | Poster V02 / mobile | — | 16:9 / 4:5 | `soul_cinematic` (réf. A01) → upscale ; Nano Banana Pro 4:5 | intégré ; ne sert plus qu'au banc d'essai `/demo` | `public/media/maison/P02-porte-ocre[-m]` |
-| P03-d / P03-m | Poster V03 / mobile | **Choix 1** | 16:9 / 4:5 | `soul_cinematic` (réf. A01) → upscale ; Nano Banana Pro 4:5 | intégré, **retiré** de l'affichage (D44, D58) ; à retirer de `public/` (lot 0) | `public/media/conciergerie/P03-bateau-quai[-m]` |
+| P03-d / P03-m | Poster V03 / mobile | **Choix 1** | 16:9 / 4:5 | `soul_cinematic` (réf. A01) → upscale ; Nano Banana Pro 4:5 | intégré, **retiré** de l'affichage (D44, D58) ; retiré de `public/` le 18/11/2026 (lot 0) | `public/media/conciergerie/P03-bateau-quai[-m]` |
 | P04-d / P04-m | Poster V04 / mobile | **Choix 2** | 16:9 / 4:5 | `soul_cinematic` (sans référence) → upscale ; 4:5 recadré | **généré** : prise p4 retenue, upscalée 4k (`media-incoming/lot2/upscale/P04-d.png`, non étalonnée) ; lot 2 interrompu | `public/media/grand-age/P04-mains-livre[-m]` |
 | P05-d / P05-m | Poster V05 / mobile | **Choix 3** | 16:9 / 4:5 | `soul_cinematic` (sans référence) → upscale ; 4:5 recadré | brouillons générés, prise p1 choisie, **non upscalée** (lot 2 interrompu) | `public/media/enfants/P05-table-partagee[-m]` |
 | P06-d / P06-m | Poster V06 / mobile (**visuel principal S5**) | **Choix 3** | 16:9 / 4:5 | `soul_cinematic` (sans référence) → upscale ; 4:5 recadré | brouillons générés, prise p4 choisie, **non upscalée** (lot 2 interrompu) | `public/media/enfants/P06-mains-romarin[-m]` |

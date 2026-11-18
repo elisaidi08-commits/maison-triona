@@ -1,0 +1,26 @@
+# Mises à jour des dépendances (audit du 06/11/2026, §3.1 n° 15).
+# Une PR par semaine et par écosystème au plus ; les correctifs de sécurité arrivent dès leur publication.
+# Aucune PR n'est fusionnée sans CI verte ni relecture (CLAUDE.md : aucune nouvelle dépendance sans justification).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Brussels
+    open-pull-requests-limit: 5
+    groups:
+      correctifs:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: 'Dépendances'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Brussels
+    commit-message:
+      prefix: 'CI'
