@@ -45,6 +45,14 @@
       "faq": {
         "title": "Questions fréquentes",
         "description": "Confidentialité, rémunération, choix des personnes, délai de réponse : les réponses aux questions que l’on se pose avant d’écrire à la maison."
+      },
+      "howItWorks": {
+        "title": "Comment ça se passe",
+        "description": "Vous nous écrivez, nous vous répondons sous 48 heures ouvrées, puis nous vous présentons une ou plusieurs personnes : vous choisissez avec nous."
+      },
+      "easyRead": {
+        "title": "Comment ça se passe, en langage simple",
+        "description": "Les étapes d’une demande à la maison, en phrases courtes : vous écrivez, nous répondons, nous parlons ensemble, vous choisissez avec nous."
       }
     }
   },
@@ -92,7 +100,9 @@
     "contact": "Contact",
     "legal": "Mentions légales",
     "privacy": "Confidentialité",
-    "faq": "Questions fréquentes"
+    "faq": "Questions fréquentes",
+    "howItWorks": "Comment ça se passe",
+    "easyRead": "Comment ça se passe, en langage simple"
   },
   "NotFound": {
     "title": "Cette page n’existe pas.",
@@ -704,5 +714,27 @@
         "answer": "Oui. Vous pouvez nous écrire pour vous ou pour l’un de vos proches. Quelques lignes suffisent ; nous faisons ensuite connaissance lors d’un premier échange."
       }
     ]
+  },
+  "HowItWorksPage": {
+    "title": "Comment ça se passe",
+    "intro": "Vous nous écrivez, nous vous présentons une ou plusieurs personnes, et vous choisissez avec nous. Voici, étape par étape, ce qui se passe après votre demande.",
+    "stepsTitle": "Étape par étape",
+    "easyReadLink": "Lire la version en langage simple",
+    "fullLink": "Lire la version complète",
+    "detailLink": "Tout le déroulé, sur une page",
+    "faqLink": "Questions fréquentes",
+    "easyRead": {
+      "title": "Comment ça se passe, en langage simple",
+      "intro": "Les mêmes étapes, en phrases courtes.",
+      "steps": [
+        "Vous nous écrivez.",
+        "Nous répondons sous 48 heures ouvrées.",
+        "Nous parlons ensemble de votre situation.",
+        "Nous vous présentons une ou plusieurs personnes.",
+        "Vous choisissez avec nous.",
+        "Vous signez avec le professionnel choisi.",
+        "Ensuite, nous prenons de vos nouvelles."
+      ]
+    }
   }
 }

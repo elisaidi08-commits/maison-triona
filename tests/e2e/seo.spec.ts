@@ -16,6 +16,8 @@ const PAGES: InternalPath[] = [
   '/la-maison',
   '/territoires',
   '/faq',
+  '/comment-ca-se-passe',
+  '/comment-ca-se-passe/langage-simple',
   '/contact',
   '/mentions-legales',
   '/confidentialite',

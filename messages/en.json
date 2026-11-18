@@ -45,6 +45,14 @@
       "faq": {
         "title": "Frequently asked questions",
         "description": "Confidentiality, who pays, how we choose, how quickly we reply: answers to the questions you may have before writing to the house."
+      },
+      "howItWorks": {
+        "title": "How it works",
+        "description": "You write to us, we reply within 48 working hours, then introduce you to one or more people: you choose with us. Every step, explained simply."
+      },
+      "easyRead": {
+        "title": "How it works, in plain language",
+        "description": "The steps of a request to the house, in short sentences: you write, we reply, we talk together, and you choose with us."
       }
     }
   },
@@ -92,7 +100,9 @@
     "contact": "Contact",
     "legal": "Legal notice",
     "privacy": "Privacy",
-    "faq": "Common questions"
+    "faq": "Common questions",
+    "howItWorks": "How it works",
+    "easyRead": "How it works, in plain English"
   },
   "NotFound": {
     "title": "This page does not exist.",
@@ -286,7 +296,7 @@
         },
         {
           "title": "We reply to you.",
-          "text": "Personally, within two working days."
+          "text": "Personally, within 48 working hours."
         },
         {
           "title": "We get to know you.",
@@ -698,5 +708,27 @@
         "answer": "Yes. You can write to us for yourself or for someone close to you. A few lines are enough; we then get to know each other in a first conversation."
       }
     ]
+  },
+  "HowItWorksPage": {
+    "title": "How it works",
+    "intro": "You write to us, we introduce you to one or more people, and you choose with us. Here, step by step, is what happens after your enquiry.",
+    "stepsTitle": "Step by step",
+    "easyReadLink": "Read the plain-language version",
+    "fullLink": "Read the full version",
+    "detailLink": "The whole process, on one page",
+    "faqLink": "Frequently asked questions",
+    "easyRead": {
+      "title": "How it works, in plain English",
+      "intro": "The same steps, in short sentences.",
+      "steps": [
+        "You write to us.",
+        "We reply within 48 working hours.",
+        "We talk about your situation together.",
+        "We introduce you to one or more people.",
+        "You choose with us.",
+        "You sign with your chosen professional.",
+        "Then we keep in touch."
+      ]
+    }
   }
 }

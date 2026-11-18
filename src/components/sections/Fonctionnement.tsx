@@ -57,18 +57,24 @@ export function FicheRow({
 export async function CommentCaSePasse({
   locale,
   extraLimit,
+  title,
+  pageLink = true,
 }: {
   locale: Locale
   extraLimit?: string
+  // Page « Comment ça se passe » : un intitulé qui ne répète pas le h1, et pas de lien vers elle-même.
+  title?: string
+  pageLink?: boolean
 }) {
   const t = await getTranslations('HowItWorks')
+  const page = await getTranslations('HowItWorksPage')
   const steps = t.raw('steps.items') as Item[]
   const selection = t.raw('selection') as Block
   const payment = t.raw('payment') as Block
   const confidentiality = t.raw('confidentiality') as Block
   const limits = [...(t.raw('limits.items') as string[]), ...(extraLimit ? [extraLimit] : [])]
   return (
-    <FicheRow id="deroule" title={t('steps.title')}>
+    <FicheRow id="deroule" title={title ?? t('steps.title')}>
       <ol className="flex flex-col">
         {steps.map((step, index) => (
           <li
@@ -85,6 +91,14 @@ export async function CommentCaSePasse({
           </li>
         ))}
       </ol>
+
+      {pageLink ? (
+        <p className="mt-32">
+          <TextLink href={localizedPath('/comment-ca-se-passe', locale)}>
+            {page('detailLink')}
+          </TextLink>
+        </p>
+      ) : null}
 
       <div className="my-48 flex flex-col gap-24 lg:my-64">
         <Rule short />
