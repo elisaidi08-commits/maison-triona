@@ -31,32 +31,28 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// Palette du kit de Cat (D43, D50) et ses dérivés, valeurs de src/styles/tokens.css. Pierre, cyprès,
+// sauge et terracotta, hors kit, sont retirés du site (D64 (5)).
 const PALETTE = [
-  { token: 'ivoire', hex: '#F4EDE0', role: 'Fond principal' },
-  { token: 'pierre', hex: '#D8C8AE', role: 'Surface secondaire rare' },
-  { token: 'sapin', hex: '#1C3B2A', role: 'Signature (à trancher) : titres, bloc Contact, focus' },
-  { token: 'cypres', hex: '#3F5A3C', role: 'Vert secondaire : numéros, survols' },
-  { token: 'sauge', hex: '#9AAE8F', role: 'Filets sur fond sombre, désactivé' },
-  { token: 'or', hex: '#B8944D', role: 'Filets, point du « K. », bordure de bouton sur sapin' },
-  { token: 'champagne', hex: '#D2B98A', role: 'Seul or autorisé en texte, sur sapin uniquement' },
-  { token: 'encre', hex: '#1F1E1A', role: 'Texte courant' },
-  { token: 'encre-68', hex: '#1F1E1AAD', role: 'Texte secondaire, ligne des champs' },
-  { token: 'ivoire-80', hex: '#F4EDE0CC', role: 'Texte secondaire sur sapin' },
-  { token: 'terracotta', hex: '#A66A4E', role: 'Ligne des champs en erreur' },
+  { token: 'ivoire', hex: '#F3EDE1', role: 'Fond principal' },
+  { token: 'sapin', hex: '#26382F', role: 'Signature : titres, numéros, bloc Contact, focus' },
+  { token: 'or', hex: '#B58E4C', role: 'Filets, point du « K. », bordure de bouton sur sapin' },
+  { token: 'champagne', hex: '#C6A96B', role: 'Seul or autorisé en texte, sur sapin uniquement' },
+  { token: 'encre', hex: '#2A241F', role: 'Texte courant, ligne des champs en erreur (2 px)' },
+  { token: 'encre-68', hex: '#2A241FAD', role: 'Texte secondaire, ligne des champs au repos' },
+  { token: 'ivoire-80', hex: '#F3EDE1CC', role: 'Texte secondaire sur sapin' },
+  { token: 'sapin-20', hex: '#26382F33', role: 'Filet discret, fond d’image en chargement' },
 ] as const
 
 const SWATCH_BG: Record<(typeof PALETTE)[number]['token'], string> = {
   ivoire: 'bg-ivoire',
-  pierre: 'bg-pierre',
   sapin: 'bg-sapin',
-  cypres: 'bg-cypres',
-  sauge: 'bg-sauge',
   or: 'bg-or',
   champagne: 'bg-champagne',
   encre: 'bg-encre',
   'encre-68': 'bg-encre-68',
   'ivoire-80': 'bg-ivoire-80',
-  terracotta: 'bg-terracotta',
+  'sapin-20': 'bg-sapin-20',
 }
 
 const HEX = Object.fromEntries(PALETTE.map(({ token, hex }) => [token, hex])) as Record<
@@ -68,16 +64,13 @@ const HEX = Object.fromEntries(PALETTE.map(({ token, hex }) => [token, hex])) as
 // controle = paire interdite en texte, affichée pour le prouver.
 const PAIRS = [
   ['encre', 'ivoire', 'Corps de texte', 'texte'],
-  ['encre', 'pierre', 'Corps sur pierre', 'texte'],
-  ['sapin', 'ivoire', 'Titres, liens', 'texte'],
-  ['sapin', 'pierre', 'Titre sur pierre', 'texte'],
+  ['sapin', 'ivoire', 'Titres, liens, numéros', 'texte'],
   ['ivoire', 'sapin', 'Texte du bloc Contact', 'texte'],
   ['ivoire-80', 'sapin', 'Texte secondaire sur sapin', 'texte'],
   ['champagne', 'sapin', 'Label, focus sur sombre', 'texte'],
-  ['cypres', 'ivoire', 'Numéros, survols (jamais le corps)', 'texte'],
   ['encre-68', 'ivoire', 'Ligne des champs au repos, placeholders', 'texte'],
+  ['encre', 'ivoire', 'Ligne d’erreur des champs (2 px)', 'interface'],
   ['or', 'sapin', 'Bordure de bouton', 'interface'],
-  ['terracotta', 'ivoire', 'Ligne d’erreur des champs', 'interface'],
   ['or', 'ivoire', 'Or en texte sur ivoire', 'controle'],
   ['champagne', 'ivoire', 'Champagne en texte sur ivoire', 'controle'],
 ] as const
@@ -315,7 +308,7 @@ export default function DemoPage() {
               {PAIRS.map(([fore, back, usage, kind]) => {
                 const ratio = contrastRatio(HEX[fore], HEX[back])
                 return (
-                  <tr key={`${fore}-${back}`} className="border-b border-sapin-20">
+                  <tr key={`${fore}-${back}-${kind}`} className="border-b border-sapin-20">
                     <td className="py-12 pr-16">{fore}</td>
                     <td className="py-12 pr-16">{back}</td>
                     <td className="py-12 pr-16">{ratio.toFixed(2).replace('.', ',')}:1</td>
@@ -334,7 +327,7 @@ export default function DemoPage() {
         <ul className="flex flex-col">
           {SCALE.map(({ token, spec, display }) => (
             <li key={token} className="flex flex-col gap-8 border-b border-sapin-20 py-24">
-              <span className="text-label text-cypres uppercase">
+              <span className="text-label text-encre uppercase">
                 {token} · {spec}
               </span>
               <span
@@ -395,44 +388,6 @@ export default function DemoPage() {
         ))}
       </section>
 
-      <section aria-labelledby="vert" className="flex flex-col gap-48">
-        <SectionTitle
-          id="vert"
-          label="Décision à prendre"
-          title="Vert signature : sapin ou cyprès"
-        />
-        <p className="max-w-measure">
-          Même titre, même lien, même numéro, en sapin puis en cyprès. Le bloc Contact reste en
-          sapin dans les deux cas. Décision finale à prendre sur le logo réel.
-        </p>
-        <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
-          {(
-            [
-              ['sapin', '#1C3B2A · 10,56:1 sur ivoire', 'text-sapin'],
-              ['cyprès', '#3F5A3C · 6,58:1 sur ivoire', 'text-cypres'],
-            ] as const
-          ).map(([name, spec, color]) => (
-            <div key={name} className="flex flex-col gap-24 border border-sapin-20 p-24 md:p-48">
-              <p className="text-label text-encre uppercase">
-                {name} · {spec}
-              </p>
-              <p className={`font-display text-title-h2 text-balance ${color}`}>
-                Parlons-en, en toute discrétion.
-              </p>
-              <p className={`flex items-baseline gap-24 ${color}`}>
-                <span className="text-label">01</span>
-                <a
-                  href="#vert"
-                  className="inline-flex min-h-touch items-center underline decoration-or decoration-1 underline-offset-8"
-                >
-                  Parlez-nous de votre situation
-                </a>
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section aria-labelledby="filets" className="flex flex-col gap-48">
         <SectionTitle id="filets" label="Formes" title="Filets et cachet" />
         <div className="flex flex-col gap-32">
@@ -449,7 +404,7 @@ export default function DemoPage() {
           <Stamp size="lg" />
         </div>
         <div data-surface="sapin" className="flex flex-wrap items-end gap-64 p-24 md:p-48">
-          <Rule tone="sauge" short />
+          <Rule short />
           <Stamp size="md" onDark />
         </div>
       </section>
@@ -479,7 +434,7 @@ export default function DemoPage() {
             label="E-mail"
             autoComplete="email"
             defaultValue="cat@exemple"
-            error="Erreur : merci d’indiquer une adresse e-mail valide."
+            error="Erreur : merci d’indiquer une adresse e‑mail valide."
           />
           <TextField
             id="demo-message"
@@ -517,7 +472,7 @@ export default function DemoPage() {
               },
               {
                 href: '#demo-email',
-                message: 'Merci d’indiquer une adresse e-mail valide.',
+                message: 'Merci d’indiquer une adresse e‑mail valide.',
               },
             ]}
           />

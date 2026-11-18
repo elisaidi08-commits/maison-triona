@@ -1,19 +1,20 @@
 import { getTranslations } from 'next-intl/server'
 import { ContactBlock } from '@/components/sections/ContactBlock'
-import { ASavoir, Deroule, Devise, FicheRow } from '@/components/sections/Fonctionnement'
+import { CommentCaSePasse, FicheRow } from '@/components/sections/Fonctionnement'
 import { SceneService } from '@/components/sections/SceneService'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICES, SERVICE_PATHS, type Service } from '@/lib/services'
 
-// Page de service (story 2.13, refondue en 2.14 : les services deviennent le cœur du site). Trois
-// temps, structure identique × 3 :
-// 1. la scène (SceneService) : label, promesse en h1, image collante ; à côté, ce que la maison
-//    fait pour ce service et le lien vers le formulaire ;
-// 2. la fiche, en pleine largeur et en trois chapitres : quelques situations, le déroulé en six
-//    étapes, puis, après la phrase du modèle posée seule, ce qu'il faut savoir (sélection,
-//    rémunération, ce que la maison ne fait pas, confidentialité) ; les autres services en pied ;
-// 3. le bloc Contact sapin.
+// Page de service (story 2.13, refondue en 2.14 : les services deviennent le cœur du site ; en trois
+// temps depuis l'audit du 06/11/2026 §4, D64). Structure identique × 3 :
+// - la scène (SceneService) : le nom du service et sa promesse en h1, sur deux lignes (D64 n° 6),
+//   image collante ; à côté, ce que la maison fait pour ce service et le lien vers le formulaire ;
+// 1. quelques situations ;
+// 2. comment ça se passe : le déroulé en six étapes, la phrase du modèle, ce qu'il faut savoir
+//    (sélection, rémunération, ce que la maison ne fait pas, confidentialité), en un seul chapitre ;
+//    les autres services en pied, sur une ligne discrète (un repère, pas un intitulé de plus) ;
+// 3. nous écrire : le bloc Contact sapin.
 // Faits : réponses de Cat du 26/10/2026 (D40, D42). Aucun tarif, aucune promesse médicale, aucun
 // âge ni langue pour la garde d'enfants tant que Cat ne les a pas donnés. Le formulaire est
 // atteint sans `?service=` : la présélection passera par le stockage de session (D26, story 3.4).
@@ -48,9 +49,7 @@ async function ServiceDetails({ service, locale }: { service: Service; locale: L
         </ul>
       </FicheRow>
 
-      <Deroule />
-      <Devise />
-      <ASavoir
+      <CommentCaSePasse
         locale={locale}
         extraLimit={service.key === 'senior' ? t('senior.limit') : undefined}
       />
@@ -59,9 +58,9 @@ async function ServiceDetails({ service, locale }: { service: Service; locale: L
         aria-labelledby="autres-services-titre"
         className="flex flex-col gap-16 border-t border-sapin-20 py-48 lg:flex-row lg:items-center lg:gap-48"
       >
-        <h2 id="autres-services-titre" className="text-label text-encre uppercase">
+        <p id="autres-services-titre" className="text-label text-encre uppercase">
           {page('othersLabel')}
-        </h2>
+        </p>
         <ul className="flex flex-col items-start gap-8 lg:flex-row lg:gap-32">
           {others.map((other) => (
             <li key={other.id}>

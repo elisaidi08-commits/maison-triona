@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 
+// Scènes des services de l'accueil (D64 (3)). Les pages déjà visitées restent dans le document,
+// masquées (Next.js) : la page de la conciergerie a aussi son `#conciergerie`, on vise l'accueil.
+const CONCIERGE_SCENE = 'section[aria-labelledby="services-titre"] #conciergerie'
+const CONCIERGE_LINK = `${CONCIERGE_SCENE} a`
+const GRAND_AGE_LINK = 'section[aria-labelledby="services-titre"] #grand-age a'
+
 // MT-03B : le retour arrière et le focus après une navigation interne. Causes mesurées et corrigées :
 // le défilement doux (M12) animait la restauration du navigateur et la remontée de Next.js, et le
 // focus partait au titre de l'accueil au retour. Les positions sont vérifiées à 2 px près.
@@ -27,22 +33,14 @@ const scrollY = (page: Page) => page.evaluate(() => Math.round(window.scrollY))
 // Le temps d'un geste humain entre deux actions.
 const pause = (page: Page) => page.waitForTimeout(300)
 
-// Place la conciergerie à une position donnée (part de la hauteur de l'écran). Services empilés
-// (téléphone, mouvement réduit) : le haut de son bloc à cette hauteur. File de cartes (M21) : une
-// position du premier tiers de la piste, où la conciergerie est en vedette et son lien visible.
+// Place la scène de la conciergerie (D64 (3)) à une position donnée : le haut de son bloc à cette
+// part de la hauteur de l'écran.
 const conciergeLink = async (page: Page, at = 0.42) => {
-  await page.evaluate((at) => {
-    const track = document.querySelector<HTMLElement>('[data-zoom]')!
-    const block = document.getElementById('conciergerie')!
-    const top =
-      getComputedStyle(block).position === 'absolute'
-        ? track.getBoundingClientRect().top +
-          window.scrollY +
-          (track.offsetHeight - window.innerHeight) * at * 0.4
-        : block.getBoundingClientRect().top + window.scrollY - window.innerHeight * at
+  await page.locator(CONCIERGE_SCENE).evaluate((block, at) => {
+    const top = block.getBoundingClientRect().top + window.scrollY - window.innerHeight * at
     window.scrollTo({ top, behavior: 'instant' })
   }, at)
-  return page.locator('#conciergerie [data-etiquette] a')
+  return page.locator(CONCIERGE_LINK)
 }
 
 const expectBackAt = (page: Page, before: number) =>
@@ -130,10 +128,10 @@ test.describe('MT-03B · retour arrière', () => {
     await page.goBack()
     await expect(page).toHaveURL(/\/fr$/)
     await expectBackAt(page, before)
-    await expect(page.locator('#conciergerie [data-etiquette] a')).toBeFocused()
+    await expect(page.locator(CONCIERGE_LINK)).toBeFocused()
     // La tabulation suivante continue dans l'accueil, au service suivant, sans remonter.
     await page.keyboard.press(tab)
-    await expect(page.locator('#grand-age [data-etiquette] a')).toBeFocused()
+    await expect(page.locator(GRAND_AGE_LINK)).toBeFocused()
     expect(await scrollY(page)).toBeGreaterThan(before - 2)
   })
 
@@ -152,7 +150,7 @@ test.describe('MT-03B · retour arrière', () => {
     await page.goBack()
     await expect(page).toHaveURL(/\/fr$/)
     await expectBackAt(page, before)
-    await expect(page.locator('#conciergerie [data-etiquette] a')).toBeFocused()
+    await expect(page.locator(CONCIERGE_LINK)).toBeFocused()
   })
 
   test('sans l’API Navigation (Safari avant 26.2) : la position revient, sans erreur', async ({

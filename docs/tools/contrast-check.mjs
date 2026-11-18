@@ -160,9 +160,11 @@ for (const [tn, t, vn, v, wn, w] of [
 }
 
 // F. Palette du kit de Cat (D43), posée sur le site en D50 : les paires réellement utilisées.
+// Pierre, cyprès, sauge et terracotta, hors kit, sont retirés du site (D64 (5)) : leurs remplaçants
+// sont contrôlés ici (numéros et survols en sapin, ligne d'erreur en encre, sélection sapin).
 const K = {
   sapin: '#26382F', champagne: '#C6A96B', or: '#B58E4C', ivoire: '#F3EDE1', encre: '#2A241F',
-  encre68: '#2A241F@0.68', ivoire80: '#F3EDE1@0.80', pierre: C.pierre, terracotta: '#A66A4E',
+  encre68: '#2A241F@0.68', ivoire80: '#F3EDE1@0.80', sapin20: '#26382F@0.20',
 };
 console.log('\n### F. Palette du kit (D43, D50) : paires du site\n');
 console.log('| Avant-plan | Fond | Ratio | Usage | Type | Verdict |');
@@ -170,20 +172,23 @@ console.log('|---|---|---|---|---|---|');
 for (const [fgName, fg, bgName, bg, kind, usage] of [
   ['encre', K.encre, 'ivoire', K.ivoire, 'text', 'Corps, navigation, libellés'],
   ['encre-68', K.encre68, 'ivoire', K.ivoire, 'text', 'Texte secondaire, langue inactive'],
-  ['sapin', K.sapin, 'ivoire', K.ivoire, 'text', 'Titres, nom du logo, liens'],
+  ['sapin', K.sapin, 'ivoire', K.ivoire, 'text', 'Titres, nom du logo, liens, numéros (ex-cyprès)'],
   ['ivoire', K.ivoire, 'sapin', K.sapin, 'text', 'Texte sur aplat sapin'],
   ['ivoire-80', K.ivoire80, 'sapin', K.sapin, 'text', 'Texte secondaire sur sapin'],
   ['champagne', K.champagne, 'sapin', K.sapin, 'text', 'Texte or sur sapin (labels, liens)'],
   ['or profond', K.or, 'sapin', K.sapin, 'ui', 'Bordure de bouton, filets sur sapin'],
   ['sapin', K.sapin, 'ivoire', K.ivoire, 'ui', 'Anneau de focus sur fond clair'],
   ['champagne', K.champagne, 'sapin', K.sapin, 'ui', 'Anneau de focus sur fond sombre'],
-  ['encre-68', K.encre68, 'ivoire', K.ivoire, 'ui', 'Ligne des champs au repos (1.4.11)'],
-  ['sapin', K.sapin, 'pierre', K.pierre, 'text', 'Titre sur surface pierre'],
-  ['encre', K.encre, 'pierre', K.pierre, 'text', 'Corps sur pierre'],
+  ['encre-68', K.encre68, 'ivoire', K.ivoire, 'ui', 'Ligne des champs au repos, 1 px (1.4.11)'],
+  ['encre', K.encre, 'ivoire', K.ivoire, 'ui', 'Ligne d’erreur des champs, 2 px (ex-terracotta 3,76:1)'],
+  ['sapin', K.sapin, 'ivoire', K.ivoire, 'ui', 'Filet sous un lien au survol (le filet or reste au repos)'],
+  ['ivoire', K.ivoire, 'sapin', K.sapin, 'text', 'Texte sélectionné sur ivoire (aplat sapin, ex-pierre)'],
+  ['sapin', K.sapin, 'champagne', K.champagne, 'text', 'Texte sélectionné sur une surface sapin (aplat champagne)'],
+  ['sapin-20', K.sapin20, 'ivoire', K.ivoire, 'deco', 'Fond d’image en chargement (ex-pierre), filet discret'],
   ['or profond', K.or, 'ivoire', K.ivoire, 'logo', 'T du logo sur ivoire, logotype'],
   ['or profond', K.or, 'ivoire', K.ivoire, 'deco', 'Filets or sur ivoire : décoratif uniquement'],
+  ['or profond', K.or, 'ivoire', K.ivoire, 'ui', 'Contrôle : or profond en bordure de champ ou de bouton sur ivoire (interdit, D43)'],
   ['champagne', K.champagne, 'ivoire', K.ivoire, 'text', 'Contrôle : champagne en texte sur ivoire (interdit)'],
-  ['terracotta', K.terracotta, 'ivoire', K.ivoire, 'ui', 'Ligne d’erreur des champs'],
 ]) {
   const r = ratio(fg, bg);
   const fgShown = fg.includes('@') ? `${fg} (= ${toHex(over(parse(fg), parse(bg)))})` : fg;

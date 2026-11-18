@@ -5,7 +5,8 @@
 // gratuits. La pastille cochée suffit à dire le choix : le filet or sous le libellé ne vient qu'au
 // survol et au focus (un soulignement permanent se lirait comme un lien). Pastille ronde native :
 // exception de lecture au « rayon 0 », à inscrire par Sady (docs/design-tokens.md §5).
-// Erreur : filet terracotta 2 px à gauche du groupe et message en encre (jamais la couleur seule).
+// Erreur : filet encre 2 px à gauche du groupe (13,14:1, D64) et message « Erreur : … » en encre
+// (jamais la couleur seule).
 
 export type ChoiceOption = {
   value: string
@@ -65,9 +66,9 @@ export function ChoiceRow({
           {error}
         </p>
       ) : null}
-      {/* En erreur, le filet terracotta est posé à l'extérieur de la liste : le filet or du haut
+      {/* En erreur, le filet encre de 2 px est posé à l'extérieur de la liste : le filet or du haut
           et ceux des lignes partent du même point. */}
-      <div className={error ? 'border-l-2 border-terracotta pl-16' : ''}>
+      <div className={error ? 'border-l-2 border-encre pl-16' : ''}>
         <div className={`border-t border-or ${columns === 3 ? 'md:grid md:grid-cols-3' : ''}`}>
           {options.map((option) => {
             const inputId = choiceInputId(id, option.value)

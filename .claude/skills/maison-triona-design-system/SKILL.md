@@ -12,16 +12,15 @@ Source complète : `docs/design-tokens.md` et `docs/art-direction.md`. En cas d'
 |---|---|---|
 | `ivoire` | `#F3EDE1` | Fond (~80 %) |
 | `sapin` | `#26382F` | Signature : titres, nom du logo, bloc Contact, focus |
-| `cypres` | `#3F5A3C` | Second rôle : numéros, survols |
-| `pierre` | `#D8C8AE` | Surface rare |
-| `sauge` | `#9AAE8F` | Filets sur sombre, désactivé |
 | `or` | `#B58E4C` | Filets, T du logo sur ivoire, point du « K. », bordure de bouton sur sapin |
 | `champagne` | `#C6A96B` | Seul or **en texte**, sur sapin uniquement |
 | `encre` / `encre-68` | `#2A241F` / 68 % | Texte / texte secondaire |
 | `ivoire-80` | ivoire 80 % | Texte secondaire sur sapin (AAA) |
-| `terracotta` | `#A66A4E` | Ligne de champ en erreur |
+| `sapin-20` | sapin 20 % | Fonds d'image en chargement, états désactivés, filets discrets |
 
-**Paires interdites** : or, champagne ou sauge en texte sur ivoire ou pierre ; cyprès sur sapin ; filet or sur pierre (invisible).
+**Kit seul** (D50, D64 n° 5) : cyprès, pierre, sauge et terracotta sont **retirés**. Numéros et survols en sapin ; ligne de champ en erreur en **encre 2 px** avec le message « Erreur : » (jamais la couleur seule).
+
+**Paires interdites** : or ou champagne en texte sur ivoire ; or profond sur ivoire ailleurs qu'en filet décoratif (2,6:1, D43).
 
 ## Typographie
 | Classe | Usage | Famille |
@@ -82,7 +81,7 @@ export function Stamp({ size = 'sm', onDark = false }: { size?: keyof typeof siz
   {choices.map((c, i) => (
     <li key={c.id} className="border-b border-or">
       <a href={c.href} className="group flex min-h-touch-lg items-baseline gap-16 py-16 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-sapin">
-        {c.numbered && <span className="text-label text-cypres">{String(i + 1).padStart(2, '0')}</span>}
+        {c.numbered && <span className="text-label text-sapin">{String(i + 1).padStart(2, '0')}</span>}
         <span>
           <span className="block text-title-h3 text-sapin">{c.label}</span>
           <span className="block text-label uppercase text-encre">{c.service}</span>

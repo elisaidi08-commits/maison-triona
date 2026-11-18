@@ -25,39 +25,45 @@
 | Token CSS | Hex | Nom | Rôle | Origine |
 |---|---|---|---|---|
 | `--color-ivoire` | `#F3EDE1` | Ivoire | Fond principal, jamais de blanc pur | **Kit de Cat (D43)** |
-| `--color-pierre` | `#D8C8AE` | Pierre | Surface secondaire rare, fond d'image en chargement | Figma v2 (hors kit, à confirmer) |
-| `--color-sapin` | `#26382F` | Vert sapin | **Signature** : titres, nom du logo, bloc Contact, focus | **Kit de Cat (D43)** |
-| `--color-cypres` | `#3F5A3C` | Cyprès | Vert secondaire : numéros, survols, liens secondaires | Figma v2 (hors kit, à confirmer) |
-| `--color-sauge` | `#9AAE8F` | Sauge | Filets sur fond sombre, état désactivé | Figma v2 (hors kit, à confirmer) |
-| `--color-or` | `#B58E4C` | Or profond | Filets, T du logo sur ivoire, point du « K. », bordure de bouton sur sapin | **Kit de Cat (D43)** |
+| `--color-sapin` | `#26382F` | Vert sapin | **Signature** : titres, nom du logo, numéros, bloc Contact, focus, sélection de texte | **Kit de Cat (D43)** |
+| `--color-or` | `#B58E4C` | Or profond | Filets, T du logo sur ivoire, point du « K. », bordure de bouton sur sapin. Sur ivoire : **décoratif seulement** (2,60:1), jamais une bordure de champ ni de bouton | **Kit de Cat (D43)** |
 | `--color-champagne` | `#C6A96B` | Champagne | Le sillage, les filets, par touches ; **seul or autorisé en texte**, uniquement sur sapin ; focus sur fond sombre | **Kit de Cat (D43)** |
-| `--color-encre` | `#2A241F` | Encre | Texte courant sur ivoire | **Kit de Cat (D43)** |
+| `--color-encre` | `#2A241F` | Encre | Texte courant sur ivoire ; ligne des champs en erreur (2 px) | **Kit de Cat (D43)** |
 | `--color-encre-68` | `#2A241FAD` | Encre 68 % | Texte secondaire, placeholders, ligne des champs (4,99:1) | Kit, dérivé |
 | `--color-ivoire-80` | `#F3EDE1CC` | Ivoire 80 % | Texte secondaire sur sapin (7,45:1, AAA) | Kit, dérivé |
-| `--color-terracotta` | `#A66A4E` | Terracotta | Ligne des champs en erreur (3,76:1 sur ivoire du kit) | Figma v2 corrigé (hors kit) |
-| `--color-sapin-20` | `#26382F33` | Sapin 20 % | Filet discret sur ivoire (séparations, bordures du banc d'essai) | Kit, dérivé |
+| `--color-sapin-20` | `#26382F33` | Sapin 20 % | Filet discret sur ivoire (séparations, bordures du banc d'essai), fond d'image en chargement, bordure d'un bouton inactif, pays voisins de la carte | Kit, dérivé |
 
-**Palette du kit posée le 29/10/2026 (D50).** Contrastes recalculés : `node docs/tools/contrast-check.mjs`, section F (toutes les paires du site conformes ; texte courant, titres et texte sur sapin en AAA). Les tableaux du §2.2 ci-dessous gardent l'historique de l'ancienne palette.
+**Palette du kit posée le 29/10/2026 (D50) ; le site n'utilise plus que le kit depuis D64 (5), story 2.15 (18/11/2026).** Contrastes recalculés : `node docs/tools/contrast-check.mjs`, section F (toutes les paires du site conformes ; texte courant, titres et texte sur sapin en AAA). Les tableaux du §2.3 gardent l'historique de l'ancienne palette.
 
-Si Sady garde le **cyprès comme signature**, seul `--color-sapin` change de rôle : les titres passent en cyprès (6,58:1, conforme) et le bloc Contact reste en sapin pour garder la profondeur.
+**Couleurs retirées (D64 (5), story 2.15)** : pierre, cyprès, sauge et terracotta, absentes du kit, n'existent plus dans `tokens.css` (une classe `bg-pierre` ne génère plus rien). Remplacements :
 
-### 2.2 Paires autorisées
+| Ancien usage | Remplacé par | Ratio (kit) |
+|---|---|---|
+| Cyprès : numéros 01 · 02 · 03, compteur des services | Sapin | 10,66:1 sur ivoire (AAA) |
+| Cyprès : survol des liens (sapin → cyprès) | Le filet or passe au sapin, le texte ne change pas (lien à filet, bouton « Retour », résumé d'erreurs) ; liens de navigation et commandes en encre : texte sapin et filet or qui apparaît | filet sapin 10,66:1 ; texte sapin 10,66:1 |
+| Cyprès : label des chapitres (banc d'essai) | Encre, comme les autres labels | 13,14:1 |
+| Pierre : bloc Contact de l'accueil | Aplat sapin (`ContactBlock`, DA §7.5) : label champagne, titre ivoire, réassurance ivoire 80 %, bouton à bordure or | 5,50 · 10,66 · 7,45 · 4,11:1 |
+| Pierre : fond d'image en chargement | Sapin 20 % | décoratif |
+| Pierre : sélection de texte | Aplat sapin, texte ivoire ; sur une surface sapin, aplat champagne, texte sapin | 10,66:1 · 5,50:1 |
+| Sauge : bordure du bouton inactif | Sapin 20 % (un contrôle inactif n'a pas de seuil, WCAG 1.4.3) | — |
+| Sauge : filet court sur sapin, pays voisins de la carte au trait | Or (filet court) ; sapin 20 % (carte) | 4,11:1 · décoratif |
+| Terracotta : ligne des champs en erreur, filet du résumé d'erreurs et des choix en erreur | **Encre pleine, 2 px** (au repos : encre 68 %, 1 px). L'erreur ne repose jamais sur la seule couleur : épaisseur doublée, message « Erreur : … » écrit au-dessus du champ, `aria-invalid`, résumé d'erreurs en tête | 13,14:1 (≥ 3:1, WCAG 1.4.11) |
 
-| Texte ↓ / Fond → | ivoire | pierre | sapin | cyprès |
-|---|---|---|---|---|
-| encre | ✅ 14,33 | ✅ 10,16 | ✗ | ✗ |
-| encre-68 | ✅ 5,34 | ⚠️ 4,53 (limite) | ✗ | ✗ |
-| sapin | ✅ 10,56 | ✅ 7,49 | — | ✗ |
-| cyprès | ✅ 6,58 | ⚠️ 4,67 (limite) | ✗ 1,60 | — |
-| ivoire | — | ✗ | ✅ 10,56 | ✅ 6,58 |
-| ivoire-80 | — | ✗ | ✅ 7,37 | ✗ |
-| champagne | ✗ 1,63 | ✗ | ✅ 6,47 | ✗ |
-| or | ✗ 2,44 | ✗ 1,73 | ⚠️ 4,32 (UI et filets seulement) | ✗ |
-| sauge | ✗ 2,04 | ✗ 1,45 | décoratif (5,17) | ✗ |
+### 2.2 Paires autorisées (kit, D64)
+
+| Texte ↓ / Fond → | ivoire | sapin | champagne |
+|---|---|---|---|
+| encre | ✅ 13,14 | ✗ | — |
+| encre-68 | ✅ 4,99 | ✗ | — |
+| sapin | ✅ 10,66 | — | ✅ 5,50 (texte sélectionné seulement) |
+| ivoire | — | ✅ 10,66 | — |
+| ivoire-80 | — | ✅ 7,45 | — |
+| champagne | ✗ 1,94 | ✅ 5,50 | — |
+| or profond | ✗ 2,60 (filets et logotype seulement, jamais une bordure de champ ni de bouton) | ⚠️ 4,11 (UI et filets seulement) | — |
 
 ✅ texte courant autorisé · ⚠️ autorisé seulement ≥ 24 px ou pour un élément d'interface · ✗ interdit.
 
-**Cible AAA pour le texte courant** (spec d'entrée §4) : encre sur ivoire (14,33), encre sur pierre (10,16), sapin sur ivoire (10,56), ivoire sur sapin (10,56) et ivoire-80 sur sapin (7,37) passent **7:1**. Le cyprès (6,58) et `encre-68` (5,34) restent AA : réservés aux numéros, aux survols, aux placeholders et aux éléments non textuels, **jamais au corps de texte**.
+**Cible AAA pour le texte courant** (spec d'entrée §4) : encre sur ivoire (13,14), sapin sur ivoire (10,66), ivoire sur sapin (10,66) et ivoire-80 sur sapin (7,45) passent **7:1**. `encre-68` (4,99) reste AA : réservé aux placeholders, à la langue inactive et aux éléments non textuels, **jamais au corps de texte**. Le champagne (5,50) reste AA : labels et liens sur sapin.
 
 ### 2.4 Texte posé sur une image ou une vidéo (voiles)
 
@@ -73,6 +79,8 @@ Opacité minimale d'un voile pour garantir le contraste **quelle que soit l'imag
 **Règle** : sur la vidéo du hero, seul le **titre display** (grand texte) se pose sur l'image, avec un voile sapin d'au moins 58 % (`--veil-hero`). La question, les choix et tout texte courant vont sur un **aplat**. Variante plus légère : mesurer à l'ingestion le pixel le plus clair sous la zone de texte sur plusieurs images du clip, puis ajuster le voile avec une marge de 10 points.
 
 ### 2.3 Ratios calculés (sortie de `contrast-check.mjs`)
+
+> **Historique** : les tableaux A à C ci-dessous datent de la palette d'avant le kit (Figma v2, PRD). Pierre, cyprès, sauge et terracotta n'existent plus sur le site (D64) ; les paires du site sont dans la section F du script.
 
 #### A. Paires réellement utilisées dans la maquette Figma
 
@@ -142,7 +150,7 @@ Opacité minimale d'un voile pour garantir le contraste **quelle que soit l'imag
 | `--font-display` | **Cormorant Garamond**, Light 300 / Regular 400 (`src/fonts/cormorant-garamond.woff2`, 24 ko) | **Kit de Cat (D43, D50)** |
 | `--font-text` | **EB Garamond**, Regular 400 / Medium 500 (`src/fonts/eb-garamond.woff2`, 32 ko) | **Kit de Cat (D43, D50)** |
 
-Les deux fichiers sont produits par `scripts/polices-kit.py` (polices variables réduites à leur plage de graisses, sous-ensemble latin du français, woff2) : **56 ko préchargés** pour un budget de 80 ko. Licences OFL dans `src/fonts/`. Newsreader et Manrope ne servent plus (Newsreader reste sur le banc d'essai `/demo`).
+Les deux fichiers sont produits par `scripts/polices-kit.py` (polices variables réduites à leur plage de graisses, sous-ensemble latin du français, woff2) : **56 ko préchargés** (24,1 + 32,2 ko) pour un budget de 80 ko. Le sous-ensemble contient le trait d'union insécable U+2011 depuis la story 2.15 (« vous‑même », « e‑mail » ne passent plus par une police de secours ni ne se coupent en fin de ligne). Licences OFL dans `src/fonts/`. Newsreader et Manrope ne servent plus (Newsreader reste sur le banc d'essai `/demo`).
 
 Chargement : `next/font` (la doc Next.js confirme que les fichiers sont téléchargés au build et servis par le site : aucune requête du navigateur vers Google). Préchargement limité à deux fichiers (display + texte Regular).
 
@@ -249,15 +257,13 @@ Les trois tokens qui varient se déclarent dans `@theme` avec leur valeur mobile
 | `arch` (utilitaire `@utility`) | `border-radius: 50% 50% 0 0 / 40% 40% 0 0` | Image en arche du hero `[À TRANCHER]` |
 | `--aspect-hero` (`aspect-hero`) | 16 / 9 | Vidéo et poster hero desktop |
 | `--aspect-portrait` (`aspect-portrait`) | 4 / 5 | Images de section, poster mobile, arche |
-| `h-bande` (utilitaire `@utility`) | `min(55svh, 36rem)` | Images des services empilés à partir de 1024 px (écran tactile, mouvement réduit, sans JavaScript), prototype V4 |
-| `--u`, `--zoom-course`, `--zoom-entete` (bloc M21 de `tokens.css`) | 1/18 de la largeur (réduit pour tenir en hauteur), 160svh, 10rem | File de cartes des services (M21, D52) : unité des cartes, défilement de la scène, place de l'en-tête |
 | `--stroke-hairline` | 1 px | Filets, bordures, ligne des champs |
 | `--stroke-focus` | **3 px** | Anneau de focus (« épais et contrasté », spec d'entrée §4.2) |
 | `--focus-offset` | 3 px | Écart anneau / élément |
 | `--veil-hero` | sapin à 58 % minimum | Voile sous le titre posé sur la vidéo du hero (§2.4) |
 | Ombres | **aucune** | — |
 
-Filets : or `#B8944D` sur ivoire et sur sapin, sauge sur sapin, sapin à 20 % pour les séparations discrètes sur ivoire. Jamais de filet or sur pierre.
+Filets : or profond sur ivoire et sur sapin (décoratif sur ivoire, 2,60:1), sapin à 20 % pour les séparations discrètes sur ivoire. `h-bande` et les variables de la file de cartes (M21) sont retirées avec elle (D64 (3)) ; le bloc M22 du pied de page aussi (D64 (2) : pied immobile, en classes de jetons).
 
 ---
 
@@ -313,16 +319,12 @@ Illustration de la cible, **pas du code à copier tel quel**. Comportements vér
   --spacing-*: initial;
 
   --color-ivoire: #F4EDE0;
-  --color-pierre: #D8C8AE;
   --color-sapin: #1C3B2A;
-  --color-cypres: #3F5A3C;
-  --color-sauge: #9AAE8F;
   --color-or: #B8944D;
   --color-champagne: #D2B98A;
   --color-encre: #1F1E1A;
   --color-encre-68: #1F1E1AAD;
   --color-ivoire-80: #F4EDE0CC;
-  --color-terracotta: #A66A4E;
 
   --spacing-0: 0px;
   --spacing-4: 4px;   --spacing-8: 8px;   --spacing-12: 12px;  --spacing-16: 16px;
@@ -360,14 +362,14 @@ Illustration de la cible, **pas du code à copier tel quel**. Comportements vér
 
 | Figma | Token code | Changement |
 |---|---|---|
-| `color/bg/ivoire` | `--color-ivoire` | = |
-| `color/bg/pierre` | `--color-pierre` | = |
-| `color/brand/cypres` | `--color-cypres` | Passe en second rôle si sapin retenu |
-| — | `--color-sapin` | **Nouveau** (PRD) |
-| `color/brand/sauge` | `--color-sauge` | = |
-| `color/accent/or` | `--color-or` | = |
-| — | `--color-champagne` | **Nouveau** (PRD) |
-| `color/accent/terracotta` | `--color-terracotta` | `#C4876A` → `#A66A4E` |
+| `color/bg/ivoire` | `--color-ivoire` | Valeur du kit `#F3EDE1` |
+| `color/bg/pierre` | — | **Retiré** (D64 (5)) : sapin 20 % ou aplat sapin |
+| `color/brand/cypres` | — | **Retiré** (D64 (5)) : sapin |
+| — | `--color-sapin` | **Nouveau** (PRD), valeur du kit `#26382F` |
+| `color/brand/sauge` | — | **Retiré** (D64 (5)) : sapin 20 % ou or |
+| `color/accent/or` | `--color-or` | Valeur du kit `#B58E4C` |
+| — | `--color-champagne` | **Nouveau** (PRD), valeur du kit `#C6A96B` |
+| `color/accent/terracotta` | — | **Retiré** (D64 (5)) : encre 2 px |
 | `color/ink/encre` | `--color-encre` | = |
 | `color/ink/encre-68` | `--color-encre-68` | = |
 | `space/scale/*` | `--spacing-*` | + 160 dans l'échelle |

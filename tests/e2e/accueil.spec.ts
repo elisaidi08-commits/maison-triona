@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // Accueil (maquette Figma D·01, D36) : le titre validé et ce que fait la maison face aux portes, les
-// trois services avec leurs images, les territoires, le contact sur pierre. La version fixe
-// (mobile, mouvement réduit) est complète.
+// trois services en scènes alternées (D64 (3)), les territoires, le contact sur aplat sapin (D64 (4)).
+// La version fixe (mobile, mouvement réduit, sans JavaScript) est complète.
 
 const videoRequests = (page: Page) => {
   const urls: string[] = []
@@ -36,8 +36,8 @@ test('une idée par section, dans l’ordre de la maquette', async ({ page }) =>
 test('les trois services mènent à leur page, en français comme en anglais', async ({ page }) => {
   const links = () =>
     page
-      // Liens des services eux-mêmes : ni l'image (réservée à la souris) ni les copies de la file.
-      .locator('section[aria-labelledby="services-titre"] li:not([aria-hidden]) [data-etiquette] a')
+      // Un seul lien par scène, celui du texte (l'image n'est pas un lien).
+      .locator('section[aria-labelledby="services-titre"] li a')
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')))
   await page.goto('/fr')
   expect(await links()).toEqual([
@@ -83,87 +83,82 @@ test('desktop : les portes s’ouvrent une fois, cinq secondes, sans boucle', as
   )
 })
 
-// M21 (D52) : file de cartes. Position de défilement d'une fraction de la piste, carte en vedette,
-// étiquettes visibles.
-const scrollTrack = (page: Page, fraction: number) =>
-  page.locator('[data-zoom]').evaluate((track, f) => {
-    const top = track.getBoundingClientRect().top + window.scrollY
-    const course = (track as HTMLElement).offsetHeight - window.innerHeight
-    window.scrollTo({ top: top + f * course, behavior: 'instant' })
-  }, fraction)
-const featured = (page: Page) =>
-  page.locator('[data-carte-rang][data-vedette]').evaluate((card) => card.id)
-const shownLabels = (page: Page) =>
-  page
-    .locator('[data-carte-rang]:not([aria-hidden]) [data-etiquette]')
-    .evaluateAll((labels) => labels.map((label) => getComputedStyle(label).opacity))
-const cardWidth = (page: Page, id: string) =>
-  page.locator(`#${id} [data-carte]`).evaluate((card) => card.getBoundingClientRect().width)
+// Scènes des services (D64 (3)) : boîte du texte et de l'image de chaque scène.
+const SCENES = ['conciergerie', 'grand-age', 'enfants'] as const
+const sceneBoxes = (page: Page, id: string) =>
+  page.locator(`#${id}`).evaluate((scene) => {
+    const [text, image] = Array.from(scene.children).map((child) => child.getBoundingClientRect())
+    return {
+      text: { x: text!.x, top: text!.top, bottom: text!.bottom },
+      image: { x: image!.x, top: image!.top, width: image!.width, height: image!.height },
+      position: getComputedStyle(scene).position,
+    }
+  })
 
-test('desktop : les cartes avancent et grandissent avec le défilement, chaque service en vedette', async ({
+test('desktop : trois scènes, l’image 4:5 alterne à gauche et à droite du texte', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
-  await scrollTrack(page, 0)
-  await expect.poll(() => featured(page)).toBe('conciergerie')
-  await expect.poll(() => shownLabels(page)).toEqual(['1', '0', '0'])
-  const before = await cardWidth(page, 'grand-age')
-  await scrollTrack(page, 0.5)
-  await expect.poll(() => featured(page)).toBe('grand-age')
-  expect(await cardWidth(page, 'grand-age')).toBeGreaterThan(before)
-  await scrollTrack(page, 1)
-  await expect.poll(() => featured(page)).toBe('enfants')
-  await expect.poll(() => shownLabels(page)).toEqual(['0', '0', '1'])
-  // La scène reste collée en haut de l'écran (au pixel près : la fin de piste tombe entre deux
-  // pixels) ; rien ne déborde en largeur.
-  const sceneTop = await page
-    .locator('[data-scene]')
-    .evaluate((scene) => scene.getBoundingClientRect().top)
-  expect(Math.abs(sceneTop)).toBeLessThan(1)
+  for (const [index, id] of SCENES.entries()) {
+    const { text, image, position } = await sceneBoxes(page, id)
+    // Conciergerie et enfants : image à gauche ; grand âge : image à droite.
+    if (index % 2 === 0) expect(image.x).toBeLessThan(text.x)
+    else expect(image.x).toBeGreaterThan(text.x)
+    expect(image.height / image.width).toBeCloseTo(1.25, 2)
+    // Rien ne colle ni ne bouge.
+    expect(position).toBe('static')
+  }
+  // Le nom du service en `title-h2`, comme le titre du bloc Contact, sous le titre de la section.
+  const fontSize = (selector: string) =>
+    page.locator(selector).evaluate((element) => getComputedStyle(element).fontSize)
+  expect(await fontSize('#grand-age-titre')).toBe(await fontSize('#contact-titre'))
+  await expect(page.locator('section[aria-labelledby="services-titre"] ol h3')).toHaveCount(3)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
 })
 
-test('desktop : le survol d’une carte montre son service, le clavier amène le sien en vedette', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr')
-  await scrollTrack(page, 0)
-  await page.locator('#enfants [data-carte]').hover()
-  await expect.poll(() => shownLabels(page)).toEqual(['0', '0', '1'])
-  await page.mouse.move(700, 5)
-  await expect.poll(() => shownLabels(page)).toEqual(['1', '0', '0'])
-  // Une touche avant le focus : le navigateur le traite comme un focus clavier (:focus-visible).
-  await page.keyboard.press('Shift')
-  await page.locator('#grand-age [data-etiquette] a').focus()
-  await expect.poll(() => featured(page)).toBe('grand-age')
-  await expect(page.locator('#grand-age [data-etiquette] a')).toBeInViewport()
-})
+for (const [width, height] of [
+  [834, 1112],
+  [390, 844],
+] as const) {
+  test(`${width} px : le texte, puis l’image en pleine largeur`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/fr')
+    for (const id of SCENES) {
+      const { text, image } = await sceneBoxes(page, id)
+      expect(image.top).toBeGreaterThan(text.bottom)
+      expect(image.x).toBe(0)
+      expect(image.width).toBe(width)
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    )
+  })
+}
 
 test.describe('sans JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('desktop : les services restent empilés, chacun avec son texte et son lien', async ({
-    page,
-  }) => {
+  test('desktop : chaque service garde son image, son texte et son lien', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/fr')
-    for (const id of ['conciergerie', 'grand-age', 'enfants']) {
-      await expect(page.locator(`#${id} [data-etiquette] a`)).toBeVisible()
+    for (const id of SCENES) {
+      await expect(page.locator(`#${id} a`)).toBeVisible()
+      await expect(page.locator(`#${id} img`)).toBeVisible()
     }
-    await expect(page.locator('[data-carte-rang][aria-hidden]').first()).toBeHidden()
   })
 })
 
-test('mouvement réduit : les services restent empilés', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.setViewportSize({ width: 1440, height: 900 })
+// Bloc Contact (D64 (4), DA §7.5) : aplat sapin, label champagne, titre ivoire, bouton à bordure or.
+test('le bloc Contact de l’accueil est sur aplat sapin, bouton à bordure or', async ({ page }) => {
   await page.goto('/fr')
-  expect(await page.locator('#enfants').evaluate((card) => getComputedStyle(card).position)).toBe(
-    'static',
-  )
-  await expect(page.locator('[data-carte-rang][aria-hidden]').first()).toBeHidden()
+  const contact = page.locator('section[aria-labelledby="contact-titre"]')
+  await expect(contact).toHaveCSS('background-color', 'rgb(38, 56, 47)')
+  await expect(page.locator('#contact-titre')).toHaveCSS('color', 'rgb(243, 237, 225)')
+  const button = contact.getByRole('link', { name: 'Nous écrire' })
+  await expect(button).toHaveAttribute('href', '/fr/contact')
+  await expect(button).toHaveCSS('border-top-color', 'rgb(181, 142, 76)')
+  expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(48)
 })
 
 test('mobile et mouvement réduit : aucune vidéo, chaque service garde son image', async ({

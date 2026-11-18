@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 
-// Pied de page (D54, M22) : panneau sapin, disque et dalle cyprès, phrase de l'accueil, touche
-// « revenir en haut », trois colonnes, le nom en très grand, barre légale. Aucun réseau social.
+// Pied de page « Kiln » (D54), immobile et resserré par D64 (2) : fond ivoire, filet or en tête,
+// phrase de l'accueil, touche « revenir en haut », trois colonnes, « Maison Triona » signé du « K. »,
+// barre légale avec la mention IA sur sa propre ligne. Aucun réseau social, rien qui bouge.
 
 test('le pied de page garde ses liens, sans aucun réseau social', async ({ page }) => {
   await page.goto('/fr')
@@ -22,12 +23,61 @@ test('le pied de page garde ses liens, sans aucun réseau social', async ({ page
   expect(
     hrefs.some((href) => /facebook|instagram|linkedin|youtube|pinterest|x\.com/i.test(href ?? '')),
   ).toBe(false)
-  await expect(footer.locator('[data-mot]')).toHaveAttribute('aria-hidden', 'true')
   await expect(footer.getByRole('heading', { level: 2 })).toHaveText([
     'Maison Triona',
     'Navigation',
     'Contact',
   ])
+})
+
+test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page }) => {
+  await page.goto('/fr')
+  const footer = page.locator('footer')
+  const name = footer.locator('p[aria-hidden="true"]', { hasText: 'Maison Triona' })
+  await expect(name).toHaveText('Maison Triona')
+  const stamp = footer.locator('span[aria-hidden="true"]', { hasText: /^K\.$/ })
+  await expect(stamp).toHaveCSS('font-size', '48px')
+})
+
+for (const [width, height, max] of [
+  [1440, 900, 800],
+  [834, 1112, 950],
+  [390, 844, 1200],
+] as const) {
+  test(`${width} px : nettement plus court qu’avant (moins de ${max} px), mention IA seule sur sa ligne`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto('/fr')
+    const footer = page.locator('footer')
+    expect((await footer.boundingBox())!.height).toBeLessThan(max)
+    const ai = footer.getByText('Images créées par intelligence artificielle.')
+    const aiBox = (await ai.boundingBox())!
+    const legal = (await footer.getByRole('link', { name: 'Confidentialité' }).boundingBox())!
+    // La mention commence sous la dernière ligne de la barre et tient sur une ligne.
+    expect(aiBox.y).toBeGreaterThanOrEqual(legal.y + legal.height)
+    expect(aiBox.height).toBeLessThan(40)
+  })
+}
+
+test('immobile : ni disque, ni lettres animées, ni flèche qui part', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/fr')
+  const footer = page.locator('footer')
+  await footer.scrollIntoViewIfNeeded()
+  // Un seul dessin, la flèche de la touche ; aucun fond tracé derrière le texte.
+  await expect(footer.locator('svg')).toHaveCount(1)
+  const top = page.getByRole('link', { name: 'Revenir en haut de la page' })
+  await top.hover()
+  await page.waitForTimeout(400)
+  const moving = await footer.evaluate(
+    (element) =>
+      element
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running').length,
+  )
+  expect(moving).toBe(0)
+  expect(await top.evaluate((link) => getComputedStyle(link).transform)).toBe('none')
 })
 
 test('la touche ramène en haut de la page', async ({ page }) => {
@@ -36,38 +86,12 @@ test('la touche ramène en haut de la page', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(2)
 })
 
-test('desktop : un clic sur le fond change la composition, la souris épaissit le nom', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/fr')
-  const footer = page.locator('footer')
-  await footer.scrollIntoViewIfNeeded()
-  const disc = () => page.locator('[data-pied-fond] circle').getAttribute('transform')
-  const before = await disc()
-  const box = (await footer.boundingBox())!
-  await page.mouse.click(box.x + box.width / 2, box.y + 300)
-  await expect.poll(disc).not.toBe(before)
-
-  const word = (await page.locator('[data-mot]').boundingBox())!
-  await page.mouse.move(word.x + word.width * 0.05, word.y + word.height / 2)
-  const weights = () =>
-    page
-      .locator('[data-mot] [data-lettre]')
-      .evaluateAll((letters) =>
-        letters.map((letter) => Number(getComputedStyle(letter).fontWeight)),
-      )
-  await expect.poll(async () => (await weights())[0]).toBeGreaterThan(350)
-  expect((await weights()).at(-1)).toBe(300)
-})
-
 test.describe('sans JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('le nom est en place et la touche fonctionne', async ({ page }) => {
+  test('le pied de page est complet et la touche fonctionne', async ({ page }) => {
     await page.goto('/fr')
-    const letter = page.locator('[data-mot] [data-lettre]').first()
-    expect(await letter.evaluate((element) => getComputedStyle(element).transform)).toBe('none')
+    await expect(page.locator('footer').getByRole('link', { name: 'Nous écrire' })).toBeVisible()
     await page.getByRole('link', { name: 'Revenir en haut de la page' }).click()
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(2)
   })

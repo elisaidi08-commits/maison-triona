@@ -50,6 +50,8 @@ Ce qu'on ne veut **pas** évoquer : le hall d'hôtel cinq étoiles clinquant, le
 
 Valeurs, ratios et tokens : `docs/design-tokens.md`.
 
+> **Mis à jour par D50 et D64 n° 5 (18/11/2026)** : les couleurs du kit de Cat font foi (sapin `#26382F`, champagne `#C6A96B`, or `#B58E4C`, ivoire `#F3EDE1`, encre `#2A241F` et leurs dérivés). **Cyprès, pierre, sauge et terracotta sont retirés du site** ; le tableau ci-dessous reste comme trace de la v2. Valeurs en vigueur : `docs/design-tokens.md`.
+
 | Rôle | Couleur | Part de surface | Usage |
 |---|---|---|---|
 | Fond | **ivoire** `#F4EDE0` | ~80 % | Toutes les pages. |
@@ -210,6 +212,8 @@ Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (
 - Variante pour la page Contact elle-même : le bloc n'apparaît pas.
 
 ### 7.6 Pied de page
+
+> **D64 n° 2 (18/11/2026)** : le pied de page est désormais **immobile et plus court** (727 px à 1440, 1 145 px à 390) : ni disque ni dalle, ni loupe, ni lettres qui montent ; le nom en 56 px ; filets or hors des blocs de texte ; mention IA sur sa propre ligne ; « K. » de 48 px en signature. La description ci-dessous est celle de D54, avant cette décision.
 - **D54, validé par Cat** : panneau « Kiln » aux **mêmes couleurs que l'en-tête et les pages** (06/11/2026) : fond **ivoire**, filet or en tête, grand disque et dalle tracés d'un **filet or** derrière, phrase et nom en sapin, intitulés en encre, focus sapin.
 - En haut : la phrase de l'accueil en deux lignes (Cormorant Garamond), la touche « revenir en haut » (vrai lien `#top`, 48 × 96 px, sapin, flèche ivoire).
 - Trois colonnes : « Maison Triona » et ses cinq pays · Navigation (les pages et les trois services) · Contact (réassurance, « Nous écrire »). Liens en capitales, un aplat sapin se déroule dessous au survol et au focus (texte ivoire). Assouplit `anti-patterns.md` n° 30 (colonnes, navigation répétée).
