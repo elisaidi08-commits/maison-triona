@@ -5,6 +5,13 @@
 
 ---
 
+## 0. Relevé du 18/11/2026 (point de contrôle ③, lot C)
+
+- **axe** (WCAG 2.2 AA, `tests/a11y/pages.spec.ts`) : 0 violation sur les 32 adresses testées, FR et EN : accueil, services, pages de service, La Maison, Territoires, FAQ, Comment ça se passe et sa version simple, Notre indépendance, contact, mentions légales, confidentialité, accessibilité, démo, 404.
+- **Lighthouse 13** : accessibilité 100 partout ; performance 96 à 100 ; SEO et bonnes pratiques 100 ; CLS 0. LCP mobile de 2,0 à 2,8 s sur les pages de texte (story 5.3).
+- **Clavier, sans JavaScript, impression** : couverts par les tests e2e (FAQ en `<details>`, menu, lien d'évitement à 48 px, partage, impression des pages de réassurance).
+- **Non fait** : VoiceOver, NVDA, zoom 200 %, appareils mobiles réels, tests utilisateurs (5.4). La déclaration d'accessibilité (`/fr/accessibilite`) le dit.
+
 ## 1. Matrice de tests
 
 Une ligne par page et par langue. ✅ conforme · ⛔ non conforme (avec lien vers le constat) · — non applicable.

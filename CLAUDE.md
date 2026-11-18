@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lot A (remise à plat) fait le 18/11/2026, puis lot 0 (correctifs sans dépendance), B (SEO technique et sécurité), C (pages vitrine, ③), D (formulaire, ④), E (coffre, envoi, appels), F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lots A, 0, B et C faits le 18/11/2026 ; **arrêt au point de contrôle ③ (pages)**, en attente de l'OK de Sady ; ensuite D (formulaire, ④), E (coffre, envoi, appels), F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 

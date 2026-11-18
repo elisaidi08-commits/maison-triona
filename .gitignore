@@ -48,3 +48,4 @@ npm-debug.log*
 # Seul l'index est versionné ; une image copiée ici ne doit jamais entrer dans le dépôt.
 /docs/moodboard/*
 !/docs/moodboard/README.md
+/.playwright-mcp/

@@ -698,7 +698,7 @@
       },
       {
         "id": "qui-paie",
-        "question": "Qui paie qui ? Combien cela me coûte-t-il ?",
+        "question": "Qui paie qui ? Combien cela me coûte‑t‑il ?",
         "answer": "Vous ne payez rien à la maison. Vous réglez directement le professionnel que vous avez choisi. La maison est rémunérée par lui."
       },
       {
@@ -708,7 +708,7 @@
       },
       {
         "id": "si-cela-ne-convient-pas",
-        "question": "Que se passe-t-il si la personne ne me convient pas ?",
+        "question": "Que se passe‑t‑il si la personne ne me convient pas ?",
         "answer": "Dites-le-nous. Nous ajustons, ou nous vous présentons une autre personne, sans que vous ayez à vous justifier."
       },
       {

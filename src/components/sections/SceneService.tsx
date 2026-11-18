@@ -158,9 +158,7 @@ export async function SceneService({
         }`}
       >
         <div className="flex max-w-measure flex-col justify-end lg:min-h-scene-intro">{intro}</div>
-        <div className="mt-48 flex max-w-measure flex-col gap-48 lg:mt-section lg:pb-section">
-          {details}
-        </div>
+        <div className="mt-48 flex max-w-measure flex-col gap-48 lg:pb-section">{details}</div>
       </div>
     </section>
   )

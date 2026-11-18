@@ -36,11 +36,10 @@ export default async function EasyReadPage() {
               key={step}
               className="flex items-baseline gap-24 border-b border-sapin-20 py-24 text-body-l"
             >
-              <span
-                aria-hidden="true"
-                className="w-32 shrink-0 font-display text-title-h2 text-sapin"
-              >
-                {index + 1}
+              {/* Repère « 01 » comme ailleurs sur le site : en chiffres elzéviriens, un « 1 » seul se
+                  lisait « I » (revue DA du point ③). */}
+              <span aria-hidden="true" className="w-32 shrink-0 text-label text-sapin">
+                {String(index + 1).padStart(2, '0')}
               </span>
               <span>{step}</span>
             </li>

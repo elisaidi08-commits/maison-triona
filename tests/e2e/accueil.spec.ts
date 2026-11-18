@@ -117,10 +117,22 @@ test('desktop : trois scènes, l’image 4:5 alterne à gauche et à droite du t
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
 })
 
-for (const [width, height] of [
-  [834, 1112],
-  [390, 844],
-] as const) {
+// Tablette (revue DA du point ③) : deux colonnes dès 768 px, l'image tient dans l'écran.
+test('834 px : le texte et l’image côte à côte, l’image dans la hauteur de l’écran', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 834, height: 1112 })
+  await page.goto('/fr')
+  for (const id of SCENES) {
+    const { text, image } = await sceneBoxes(page, id)
+    expect(image.width).toBeLessThan(834 / 2)
+    expect(image.height).toBeLessThan(1112)
+    expect(Math.abs(image.top - text.top)).toBeLessThan(image.height)
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(834)
+})
+
+for (const [width, height] of [[390, 844]] as const) {
   test(`${width} px : le texte, puis l’image en pleine largeur`, async ({ page }) => {
     await page.setViewportSize({ width, height })
     await page.goto('/fr')

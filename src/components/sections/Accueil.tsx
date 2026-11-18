@@ -105,6 +105,8 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
       </div>
       <ol className="mt-64 flex flex-col gap-section lg:mt-96">
         {SERVICES.map((service, index) => {
+          // Deux colonnes dès 768 px (revue DA du point ③) : en 834, l'image 4:5 en pleine largeur
+          // dépassait la hauteur de l'écran (environ 1 040 px).
           const imageADroite = index % 2 === 1
           const versPiece = service.key === 'concierge' ? ['vers-piece'] : undefined
           const image = (
@@ -112,18 +114,18 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
               desktop={SERVICE_IMAGES[service.key]}
               mobile={SERVICE_IMAGES[service.key]}
               alt={alts[service.key]}
-              sizes="(min-width: 64rem) 40vw, 100vw"
+              sizes="(min-width: 48rem) 45vw, 100vw"
             />
           )
           return (
             <li
               key={service.id}
               id={service.anchor}
-              className="grid grid-cols-1 gap-y-32 lg:grid-cols-12 lg:items-center lg:gap-x-gutter"
+              className="grid grid-cols-1 gap-y-32 md:grid-cols-12 md:items-center md:gap-x-gutter"
             >
               <div
-                className={`flex flex-col items-start gap-16 lg:row-start-1 lg:col-span-5 ${
-                  imageADroite ? 'lg:col-start-1' : 'lg:col-start-8'
+                className={`flex flex-col items-start gap-16 md:row-start-1 md:col-span-6 lg:col-span-5 ${
+                  imageADroite ? 'md:col-start-1' : 'md:col-start-7 lg:col-start-8'
                 }`}
               >
                 <p aria-hidden="true" className="text-label text-sapin">
@@ -145,8 +147,8 @@ export async function ServicesAccueil({ locale }: { locale: Locale }) {
                 </TextLink>
               </div>
               <div
-                className={`relative -mx-margin aspect-portrait overflow-hidden bg-sapin-20 lg:row-start-1 lg:mx-0 lg:col-span-5 ${
-                  imageADroite ? 'lg:col-start-8' : 'lg:col-start-1'
+                className={`relative -mx-margin aspect-portrait overflow-hidden bg-sapin-20 md:row-start-1 md:mx-0 md:col-span-6 lg:col-span-5 ${
+                  imageADroite ? 'md:col-start-7 lg:col-start-8' : 'md:col-start-1'
                 }`}
               >
                 {versPiece ? (
