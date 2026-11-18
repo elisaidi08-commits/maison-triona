@@ -286,28 +286,19 @@ export async function readSealed(
   )
 }
 
-// Lecture d'une demande pour la page du coffre (partie D) : colonnes en clair et octets scellés,
-// jamais rien de déchiffré (la clé privée ne vit que dans le navigateur). La lecture est
-// journalisée (`read`, identifiant seulement) dans la même transaction : pas de lecture sans trace.
-// Demande inconnue : null, sans ligne de journal.
-export async function readRequest(
-  pool: Pool,
-  id: string,
-  actor: string,
-): Promise<{ request: VaultRequestSummary; sealed: Uint8Array } | null> {
+// Colonnes en clair d'une demande, pour sa page du coffre (partie D) : les mêmes que la liste, jamais
+// `sealed`. Sans journal : Next 16 (Cache Components) peut rendre une page deux fois par requête,
+// une écriture pendant le rendu doublerait la ligne. La lecture journalisée est la remise des
+// octets scellés (`readSealed`), par une action serveur, une fois par déverrouillage.
+export async function getRequest(pool: Pool, id: string): Promise<VaultRequestSummary | null> {
   if (!isUuid(id)) return null
-  return guard('readRequest', () =>
-    withTransaction(pool, async (client) => {
-      const { rows } = await client.query<SummaryRow & { sealed: Uint8Array }>(
-        `SELECT ${SUMMARY_COLUMNS}, sealed FROM vault_requests WHERE id = $1`,
-        [id],
-      )
-      const row = rows[0]
-      if (!row) return null
-      await client.query(INSERT_LOG, [actor, 'read', id])
-      return { request: toSummary(row), sealed: new Uint8Array(row.sealed) }
-    }),
-  )
+  return guard('getRequest', async () => {
+    const { rows } = await pool.query<SummaryRow>(
+      `SELECT ${SUMMARY_COLUMNS} FROM vault_requests WHERE id = $1`,
+      [id],
+    )
+    return rows[0] ? toSummary(rows[0]) : null
+  })
 }
 
 // Export d'une demande (partie D) : le fichier est composé dans le navigateur, le serveur n'en voit

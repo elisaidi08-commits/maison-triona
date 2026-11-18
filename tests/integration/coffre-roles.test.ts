@@ -8,11 +8,12 @@ import pg from 'pg'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import {
   deleteRequest,
+  getRequest,
   insertRequest,
   listRequestsLogged,
   logExport,
   purgeExpired,
-  readRequest,
+  readSealed,
   setFrozen,
 } from '../../src/lib/vault/repository.ts'
 import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
@@ -110,7 +111,8 @@ describe('rôles de connexion du coffre', () => {
 
   it('coffre lit, gèle, exporte et efface une demande, en journalisant chaque geste (partie D)', async () => {
     const id = await insertRequest(admin, demande())
-    assert.ok(await readRequest(coffre, id, 'u1@exemple.test'))
+    assert.ok(await getRequest(coffre, id))
+    assert.ok(await readSealed(coffre, id, 'u1@exemple.test'))
     assert.equal(await setFrozen(coffre, id, true, 'u1@exemple.test'), true)
     assert.equal(await logExport(coffre, id, 'u1@exemple.test'), true)
     // Gelée : la conservation ne l'efface pas, même échue.

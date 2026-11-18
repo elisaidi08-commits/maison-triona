@@ -5,47 +5,28 @@ import { Button } from '@/components/ui/Button'
 import { listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import {
+  date,
+  dateHeure,
+  LANGUES,
+  libelle,
+  SERVICES,
+  STATUTS,
+  TYPES,
+  URGENCES,
+} from '@/lib/coffre/libelles'
 import type { VaultRequestSummary } from '@/lib/vault/repository'
 
 import { seDeconnecter } from './actions'
 import { EnTete } from './_composants/EnTete'
+import { LienCoffre } from './_composants/LienCoffre'
 
-// Accueil du coffre (story 3.2, partie C) : liste des demandes, colonnes en clair seulement (jamais
-// le contenu chiffré), lue par le repository et journalisée (`list`). Le déchiffrement viendra en
-// partie D. Toutes les valeurs sont rendues comme texte.
+// Accueil du coffre (story 3.2, parties C et D) : liste des demandes, colonnes en clair seulement
+// (jamais le contenu chiffré), lue par le repository et journalisée (`list`). La date de chaque
+// demande mène à sa page de lecture (/coffre/demandes/<uuid>, déchiffrement dans le navigateur),
+// par un lien simple, sans préchargement. Toutes les valeurs sont rendues comme texte.
 
 export const metadata: Metadata = { title: 'Demandes' }
-
-const TYPES: Record<string, string> = { request: 'Demande', urgent: 'Urgente' }
-const STATUTS: Record<string, string> = {
-  new: 'Nouvelle',
-  in_progress: 'En cours',
-  closed: 'Close',
-}
-const SERVICES: Record<string, string> = {
-  conciergerie: 'Conciergerie',
-  'grand-age': 'Grand âge',
-  enfants: 'Enfants',
-  indecis: 'À préciser',
-}
-const LANGUES: Record<string, string> = { fr: 'Français', en: 'Anglais' }
-const URGENCES: Record<string, string> = {
-  aucune: 'Aucune',
-  semaines: 'Semaines à venir',
-  urgent: 'Urgent',
-}
-
-const dateHeure = new Intl.DateTimeFormat('fr-BE', {
-  dateStyle: 'short',
-  timeStyle: 'short',
-  timeZone: 'Europe/Brussels',
-})
-const date = new Intl.DateTimeFormat('fr-BE', { dateStyle: 'short', timeZone: 'Europe/Brussels' })
-
-function libelle(valeurs: Record<string, string>, valeur: string | null): string {
-  if (valeur === null) return '–'
-  return valeurs[valeur] ?? valeur
-}
 
 const COLONNES = [
   'Reçue le',
@@ -62,7 +43,12 @@ const COLONNES = [
 function Ligne({ demande }: { demande: VaultRequestSummary }) {
   return (
     <tr className="border-b border-sapin-20">
-      <td className="py-12 pr-16">{dateHeure.format(demande.createdAt)}</td>
+      <td className="py-12 pr-16">
+        <LienCoffre href={`/coffre/demandes/${demande.id}`}>
+          <span className="sr-only">Lire la demande du </span>
+          {dateHeure.format(demande.createdAt)}
+        </LienCoffre>
+      </td>
       <td className="py-12 pr-16">{libelle(TYPES, demande.kind)}</td>
       <td className="py-12 pr-16">{libelle(SERVICES, demande.service)}</td>
       <td className="py-12 pr-16">{demande.country ?? '–'}</td>
@@ -78,7 +64,8 @@ function Ligne({ demande }: { demande: VaultRequestSummary }) {
   )
 }
 
-export default async function AccueilCoffre() {
+export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre'>) {
+  const { effacee } = await searchParams
   const acces = await lireAccesRequete()
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')
   if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
@@ -88,10 +75,16 @@ export default async function AccueilCoffre() {
     <>
       <EnTete titre="Demandes">
         <p>
-          Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu des
-          demandes reste chiffré.
+          Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu
+          d’une demande s’ouvre sur sa page, dans ce navigateur, avec votre paquet de clé.
         </p>
       </EnTete>
+
+      {effacee === '1' ? (
+        <p role="status" className="max-w-measure border-l-2 border-or py-8 pl-24">
+          La demande a été effacée. Le journal d’accès garde la trace de l’effacement, sans contenu.
+        </p>
+      ) : null}
 
       {demandes.length === 0 ? (
         <p>Aucune demande pour l’instant.</p>

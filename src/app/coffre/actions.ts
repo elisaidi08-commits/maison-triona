@@ -4,16 +4,21 @@ import { parseSetCookieHeader, toCookieOptions } from 'better-auth/cookies'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { effacementDuCoffre, exportDuCoffre, gelDuCoffre, scelleDuCoffre } from '@/lib/auth/acces'
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
 import { qrCodeSvg } from '@/lib/auth/qr-code'
-import { getAuth } from '@/lib/auth/serveur'
+import { getAuth, lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import { isRequestId } from '@/lib/vault/repository'
 
-// Formulaires du coffre (story 3.2, partie C), utilisables sans JavaScript (POST natif vers la
-// Server Action). Chaque action appelle la route Better Auth correspondante par `auth.handler`
-// (limitation de débit, contrôle d'origine, liste fermée de routes, journal d'accès), puis recopie
-// ses cookies vers le navigateur. Rien n'est journalisé ici : ni adresse, ni mot de passe, ni code.
+// Formulaires du coffre (story 3.2, parties C et D), utilisables sans JavaScript (POST natif vers la
+// Server Action). Connexion : chaque action appelle la route Better Auth correspondante par
+// `auth.handler` (limitation de débit, contrôle d'origine, liste fermée de routes, journal d'accès),
+// puis recopie ses cookies vers le navigateur. Rien n'est journalisé ici : ni adresse, ni mot de
+// passe, ni code. Demandes (partie D) : gel, effacement et export revérifient l'accès (session et
+// TOTP) à chaque appel, ne reçoivent qu'un identifiant et passent par les fonctions journalisées de
+// src/lib/auth/acces.ts. Aucune ne reçoit ni ne renvoie un contenu déchiffré.
 
 export type ErreurConnexion = 'saisie' | 'identifiants' | 'trop-de-tentatives' | 'indisponible'
 export type EtatConnexion = { erreur: ErreurConnexion | null; email: string }
@@ -167,4 +172,58 @@ async function confirmerEnrolement(
 export async function seDeconnecter(): Promise<void> {
   await appeler('/sign-out', {})
   redirect('/coffre/connexion')
+}
+
+// Accès autorisé, ou redirection (connexion, enrôlement) : une action sur une demande n'aboutit
+// jamais sans session ouverte par le second facteur.
+async function accesAutorise() {
+  const acces = await lireAccesRequete()
+  if (acces.etat === 'anonyme') redirect('/coffre/connexion')
+  if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
+  return acces
+}
+
+export async function basculerGel(donnees: FormData): Promise<void> {
+  const id = champ(donnees, 'id')
+  const gel = champ(donnees, 'gel') === 'oui'
+  const acces = await accesAutorise()
+  if (!isRequestId(id) || !(await gelDuCoffre(getCoffrePool(), acces, id, gel))) redirect('/coffre')
+  redirect(`/coffre/demandes/${id}`)
+}
+
+// Effacement définitif, après la case de confirmation (exigée aussi par le navigateur, `required`).
+export async function effacerDemande(donnees: FormData): Promise<void> {
+  const id = champ(donnees, 'id')
+  const acces = await accesAutorise()
+  if (!isRequestId(id)) redirect('/coffre')
+  if (champ(donnees, 'confirmation') !== 'oui') redirect(`/coffre/demandes/${id}`)
+  const efface = await effacementDuCoffre(getCoffrePool(), acces, id)
+  redirect(efface ? '/coffre?effacee=1' : '/coffre')
+}
+
+// Lecture : appelée par le navigateur au déverrouillage, une fois par page ; elle ne reçoit que
+// l'identifiant, inscrit `read` au journal et rend les octets scellés (base64), rien de lisible.
+export async function lireScelle(id: unknown): Promise<{ scelle: string } | null> {
+  if (!isRequestId(id)) return null
+  const acces = await lireAccesRequete()
+  if (acces.etat !== 'autorise') return null
+  try {
+    const octets = await scelleDuCoffre(getCoffrePool(), acces, id)
+    return octets ? { scelle: Buffer.from(octets).toString('base64') } : null
+  } catch {
+    return null
+  }
+}
+
+// Export : appelée par le navigateur avant de composer le fichier ; elle ne reçoit que
+// l'identifiant et n'inscrit que `export`. Pas d'export sans trace : `ok: false` arrête l'export.
+export async function journaliserExport(id: unknown): Promise<{ ok: boolean }> {
+  if (!isRequestId(id)) return { ok: false }
+  const acces = await lireAccesRequete()
+  if (acces.etat !== 'autorise') return { ok: false }
+  try {
+    return { ok: await exportDuCoffre(getCoffrePool(), acces, id) }
+  } catch {
+    return { ok: false }
+  }
 }

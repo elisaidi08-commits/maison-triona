@@ -134,3 +134,56 @@ test('la tâche de conservation refuse tout appel sans le secret', async ({ requ
   }
   expect((await request.post('/api/cron/retention')).status()).toBe(405)
 })
+
+// Lecture déchiffrée (story 3.2, partie D) : libsodium s'exécute en WebAssembly dans le navigateur,
+// d'où 'wasm-unsafe-eval' dans la CSP du coffre, et dans elle seule.
+const CSP_PUBLIQUE = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "media-src 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
+test('la CSP du coffre autorise WebAssembly, et seulement lui', async ({ request }) => {
+  for (const path of ['/coffre/connexion', '/coffre/demandes/pas-un-identifiant']) {
+    const csp = (await request.get(path)).headers()['content-security-policy'] ?? ''
+    const scriptSrc = csp.split('; ').find((directive) => directive.startsWith('script-src '))
+    expect(scriptSrc, path).toMatch(
+      /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' 'wasm-unsafe-eval'$/,
+    )
+    expect(csp.match(/wasm-unsafe-eval/g), path).toHaveLength(1)
+    expect(csp.replace("'wasm-unsafe-eval'", ''), path).not.toContain('unsafe-eval')
+  }
+})
+
+test('la CSP du site public ne change pas : ni WebAssembly ni nonce', async ({ request }) => {
+  for (const path of ['/fr', '/en', '/fr/contact', '/api/cron/retention', '/fr/adresse-inconnue']) {
+    const csp = (await request.get(path)).headers()['content-security-policy']
+    expect(csp, path).toBe(CSP_PUBLIQUE)
+  }
+})
+
+test('une demande mal formée répond 404, sans citer l’identifiant', async ({ page }) => {
+  const identifiant = 'pas-un-identifiant-temoin'
+  const response = await page.goto(`/coffre/demandes/${identifiant}`)
+  expect(response?.status()).toBe(404)
+  expect(response?.headers()['x-robots-tag']).toBe('noindex, nofollow')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Introuvable')
+  expect(await page.locator('main').innerText()).not.toContain(identifiant)
+  await expect(page).toHaveTitle(/Coffre · Maison Triona/)
+  expect(await page.title()).not.toContain(identifiant)
+})
+
+test('sans session, une demande bien formée mène à la connexion, sans rien lire', async ({
+  page,
+}) => {
+  await page.goto('/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+})

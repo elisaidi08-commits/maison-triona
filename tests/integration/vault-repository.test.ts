@@ -7,6 +7,7 @@ import { inspect } from 'node:util'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import {
   deleteRequest,
+  getRequest,
   insertRequest,
   listAccessLog,
   listRequests,
@@ -15,7 +16,6 @@ import {
   logExport,
   logRetention,
   purgeExpired,
-  readRequest,
   readSealed,
   setFrozen,
 } from '../../src/lib/vault/repository.ts'
@@ -176,27 +176,19 @@ describe('accès aux données du coffre', () => {
     assert.deepEqual(await listAccessLog(pool), [])
   })
 
-  it('lit une demande pour la page du coffre : colonnes en clair, octets exacts, lecture journalisée', async () => {
-    const sealed = fakeSealed(64)
-    const id = await insertRequest(pool, fakeRequest({ sealed, service: 'enfants' }))
-    const lue = await readRequest(pool, id, ACTOR)
-    assert.ok(lue)
-    assert.equal(lue.request.id, id)
-    assert.equal(lue.request.service, 'enfants')
-    assert.equal(lue.request.frozen, false)
-    assert.deepEqual(lue.sealed, sealed)
-    assert.ok(!('sealed' in lue.request))
-    assert.deepEqual(entries(await listAccessLog(pool)), [
-      { actor: ACTOR, action: 'read', requestId: id },
-    ])
-
-    // Inconnue ou mal formée : null, sans ligne de journal.
-    assert.equal(await readRequest(pool, randomUUID(), ACTOR), null)
-    assert.equal(await readRequest(pool, 'pas-un-identifiant', ACTOR), null)
-    assert.equal((await listAccessLog(pool)).length, 1)
-    // Journal impossible : rien n'est rendu.
-    await assert.rejects(readRequest(pool, id, ''), { code: '23514' })
-    assert.equal((await listAccessLog(pool)).length, 1)
+  it('rend les colonnes en clair d’une demande pour sa page, sans octets ni journal', async () => {
+    const id = await insertRequest(pool, fakeRequest({ service: 'enfants' }))
+    const demande = await getRequest(pool, id)
+    assert.ok(demande)
+    assert.equal(demande.id, id)
+    assert.equal(demande.service, 'enfants')
+    assert.equal(demande.frozen, false)
+    assert.ok(!('sealed' in demande))
+    assert.deepEqual(demande, (await listRequests(pool))[0])
+    // Le rendu de la page n'écrit rien : la lecture journalisée est celle des octets (readSealed).
+    assert.deepEqual(await listAccessLog(pool), [])
+    assert.equal(await getRequest(pool, randomUUID()), null)
+    assert.equal(await getRequest(pool, 'pas-un-identifiant'), null)
   })
 
   it('journalise un export par son seul identifiant, si la demande existe', async () => {
