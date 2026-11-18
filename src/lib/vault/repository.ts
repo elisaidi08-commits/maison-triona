@@ -12,7 +12,23 @@ import { withTransaction } from '../db/transaction.ts'
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
-export type AccessAction = 'login' | 'read' | 'export' | 'delete' | 'purge' | 'freeze' | 'unfreeze'
+// Actions de connexion et de lecture de la liste : partie C (db/migrations/0003_auth.sql,
+// 0004_journal_coffre.sql).
+export type AccessAction =
+  | 'login'
+  | 'login_backup_code'
+  | 'login_failed'
+  | 'password_ok'
+  | 'totp_enrolled'
+  | 'rate_limited'
+  | 'logout'
+  | 'list'
+  | 'read'
+  | 'export'
+  | 'delete'
+  | 'purge'
+  | 'freeze'
+  | 'unfreeze'
 
 export interface NewVaultRequest {
   kind: RequestKind
@@ -183,25 +199,53 @@ export async function insertRequest(
   return id
 }
 
+function pageOffset(offset: number | undefined): number {
+  const value = offset ?? 0
+  if (!Number.isInteger(value) || value < 0) {
+    throw new RangeError('Décalage invalide : entier positif ou nul attendu')
+  }
+  return value
+}
+
+async function selectSummaries(
+  db: Pool | PoolClient,
+  limit: number,
+  offset: number,
+): Promise<VaultRequestSummary[]> {
+  const { rows } = await db.query<SummaryRow>(
+    `SELECT ${SUMMARY_COLUMNS} FROM vault_requests
+     ORDER BY created_at DESC, id DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset],
+  )
+  return rows.map(toSummary)
+}
+
 // Colonnes en clair seulement (jamais `sealed`), de la plus récente à la plus ancienne.
 export async function listRequests(
   pool: Pool,
   options: { limit?: number; offset?: number } = {},
 ): Promise<VaultRequestSummary[]> {
   const limit = pageLimit(options.limit)
-  const offset = options.offset ?? 0
-  if (!Number.isInteger(offset) || offset < 0) {
-    throw new RangeError('Décalage invalide : entier positif ou nul attendu')
-  }
-  return guard('listRequests', async () => {
-    const { rows } = await pool.query<SummaryRow>(
-      `SELECT ${SUMMARY_COLUMNS} FROM vault_requests
-       ORDER BY created_at DESC, id DESC
-       LIMIT $1 OFFSET $2`,
-      [limit, offset],
-    )
-    return rows.map(toSummary)
-  })
+  const offset = pageOffset(options.offset)
+  return guard('listRequests', () => selectSummaries(pool, limit, offset))
+}
+
+// Même liste, pour l'accueil du coffre : la lecture est journalisée (`list`, sans identifiant de
+// demande) dans la même transaction. Pas de lecture sans trace.
+export async function listRequestsLogged(
+  pool: Pool,
+  actor: string,
+  options: { limit?: number; offset?: number } = {},
+): Promise<VaultRequestSummary[]> {
+  const limit = pageLimit(options.limit)
+  const offset = pageOffset(options.offset)
+  return guard('listRequestsLogged', () =>
+    withTransaction(pool, async (client) => {
+      await client.query(INSERT_LOG, [actor, 'list', null])
+      return selectSummaries(client, limit, offset)
+    }),
+  )
 }
 
 // Renvoie les octets chiffrés d'une demande et journalise la lecture dans la même transaction :
@@ -313,4 +357,42 @@ export async function listAccessLog(
       requestId: row.request_id,
     }))
   })
+}
+
+// Échecs de connexion depuis `since` : d'un compte (verrou par compte), ou de tous (disjoncteur).
+export async function countRecentFailures(
+  pool: Pool,
+  since: Date,
+  actor: string | null = null,
+): Promise<number> {
+  assertValidDate(since, 'Début de fenêtre')
+  return guard('countRecentFailures', async () => {
+    const { rows } = await pool.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM vault_access_log
+       WHERE action = 'login_failed' AND at > $1 AND ($2::text IS NULL OR actor = $2)`,
+      [since, actor],
+    )
+    return rows[0]?.n ?? 0
+  })
+}
+
+// Réponse 429 journalisée une fois au plus par acteur (la route) depuis `since` : une rafale ne
+// remplit pas le journal. Le verrou consultatif sérialise deux 429 simultanés. Vrai si écrit.
+export async function logRateLimitedOnce(pool: Pool, actor: string, since: Date): Promise<boolean> {
+  assertValidDate(since, 'Début de fenêtre')
+  return guard('logRateLimitedOnce', () =>
+    withTransaction(pool, async (client) => {
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('maison-triona:limite:' || $1))", [
+        actor,
+      ])
+      const { rowCount } = await client.query(
+        `SELECT 1 FROM vault_access_log
+         WHERE action = 'rate_limited' AND actor = $1 AND at > $2 LIMIT 1`,
+        [actor, since],
+      )
+      if (rowCount) return false
+      await client.query(INSERT_LOG, [actor, 'rate_limited', null])
+      return true
+    }),
+  )
 }

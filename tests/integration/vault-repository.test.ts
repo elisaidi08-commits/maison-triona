@@ -10,6 +10,7 @@ import {
   insertRequest,
   listAccessLog,
   listRequests,
+  listRequestsLogged,
   logAccess,
   purgeExpired,
   readSealed,
@@ -122,6 +123,32 @@ describe('accès aux données du coffre', () => {
     assert.equal((await listRequests(pool, { limit: 10, offset: 200 })).length, 5)
     await assert.rejects(listRequests(pool, { limit: 0 }), RangeError)
     await assert.rejects(listRequests(pool, { offset: -1 }), RangeError)
+  })
+
+  it('journalise la lecture de la liste dans la même transaction (partie C)', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    const rows = await listRequestsLogged(pool, ACTOR, { limit: 10 })
+    assert.deepEqual(
+      rows.map((row) => row.id),
+      [id],
+    )
+    assert.equal('sealed' in (rows[0] ?? {}), false)
+    assert.deepEqual(entries(await listAccessLog(pool)), [
+      { actor: ACTOR, action: 'list', requestId: null },
+    ])
+    // Journal impossible (acteur vide) : rien n'est lu.
+    await assert.rejects(listRequestsLogged(pool, ''), { code: '23514' })
+    assert.equal((await listAccessLog(pool)).length, 1)
+  })
+
+  it('accepte les actions de connexion de la partie C', async () => {
+    for (const action of ['login_failed', 'logout', 'list'] as const) {
+      await logAccess(pool, { actor: ACTOR, action })
+    }
+    assert.deepEqual(
+      (await listAccessLog(pool)).map((entry) => entry.action),
+      ['list', 'logout', 'login_failed'],
+    )
   })
 
   it('lit les octets exacts et journalise la lecture', async () => {

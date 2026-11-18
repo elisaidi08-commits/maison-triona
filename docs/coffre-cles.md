@@ -52,17 +52,27 @@ Le site public écrit des demandes, il n'a jamais besoin d'en lire une. Son comp
 2. Créer le compte de connexion du site (sur Scaleway : console de l'instance, utilisateur sans aucun droit donné par la console) et lui donner le rôle : `GRANT site_public TO <compte du site>;`. Mot de passe long et aléatoire, jamais dans le dépôt. La façon exacte de créer un compte sans droit sur l'offre gérée de Scaleway reste **à vérifier sur l'instance**.
 3. Vérifier, connecté avec ce compte : `SELECT count(*) FROM vault_requests;` doit être **refusé** (`permission denied`).
 
-### 3.2 Deux URL de connexion
+### 3.2 Un second rôle pour l'espace du coffre : `coffre` (partie C)
+
+L'espace `/coffre` et le script des comptes (`npm run coffre:compte`) se connectent avec **un autre compte**, qui a le rôle **`coffre`** (`db/roles/coffre.sql`) : `USAGE` sur le schéma ; lecture, écriture et effacement sur les six tables de Better Auth (`"user"`, `"session"`, `"account"`, `"verification"`, `"twoFactor"`, `"rateLimit"`) ; **lecture seule** de `vault_requests` ; **`INSERT` et `SELECT` seulement** sur `vault_access_log` (le journal ne se modifie ni ne s'efface). Ni la table des migrations, ni la création d'objet. Le gel et l'effacement des demandes viendront en partie D, qui étendra ce fichier. Prouvé par `tests/integration/coffre-roles.test.ts`, qui vérifie aussi que `site_public` ne lit, n'écrit ni n'efface **aucune** table de Better Auth ; toute l'authentification y est testée sous ce rôle.
+
+1. Avec le compte administrateur, **après** `npm run db:migrate` : `psql "<URL administrateur>" -f db/roles/site_public.sql -f db/roles/coffre.sql`. Les deux fichiers sont rejouables ; les rejouer après chaque migration qui ajoute une table.
+2. Créer le compte de connexion du coffre, distinct de celui du site, et lui donner le rôle : `GRANT coffre TO <compte du coffre>;`. Mot de passe long et aléatoire, jamais dans le dépôt.
+3. Vérifier, connecté avec ce compte : `UPDATE vault_requests SET status = status;` et `DELETE FROM vault_access_log;` doivent être **refusés**.
+
+### 3.3 Deux URL de connexion
 
 | Variable | Compte | Utilisé par | Droits |
 |---|---|---|---|
 | `DATABASE_URL` | compte du site (`site_public`) | Server Action du formulaire | Insertion seule |
-| URL distincte pour `/coffre` (nom à fixer en partie C, par exemple `VAULT_ADMIN_DATABASE_URL`) | compte du coffre | Espace `/coffre` : liste, lecture, effacement, gel, journal d'accès | Ce que le coffre exige, défini en partie C |
+| `COFFRE_DATABASE_URL` | compte du coffre (`coffre`) | Espace `/coffre` (connexion, sessions, liste) et `npm run coffre:compte` | Tables de Better Auth ; lecture des demandes ; journal en insertion et lecture |
 | URL administrateur | propriétaire du schéma | `npm run db:migrate` et `db/roles/*.sql`, à la main | Tous ; **jamais** dans une variable de Vercel |
+
+Deux pools distincts dans le code (`getPool`, `getCoffrePool`, `src/lib/db/pool.ts`) : le site public ne peut pas emprunter le compte du coffre. Sur un déploiement, une `COFFRE_DATABASE_URL` identique à `DATABASE_URL` est refusée au démarrage du coffre.
 
 TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches) : sans `DATABASE_CA_CERT`, la connexion est refusée. Délais : 5 s pour se connecter, 5 s par requête ; au-delà, l'envoi échoue (« L'envoi n'a pas abouti ») et le visiteur garde sa saisie.
 
-### 3.3 Poser `VAULT_PUBLIC_KEY`
+### 3.4 Poser `VAULT_PUBLIC_KEY`
 
 1. Vercel → projet → *Settings* → *Environment Variables* : `VAULT_PUBLIC_KEY` = la clé publique affichée, environnement **Production** seulement. Vérifier qu'elle est identique au champ `publicKey` des paquets.
 2. Le formulaire n'enregistre une demande que si **`DATABASE_URL` et `VAULT_PUBLIC_KEY`** sont posées. Sans l'une des deux, il garde l'état « L'envoi des demandes ouvrira bientôt » et n'écrit rien.
@@ -92,3 +102,23 @@ TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches)
 - Toutes les demandes scellées ont la **même taille** (16 Kio de texte complété, 16 432 octets) : la taille ne dit rien du message. Une demande plus longue est refusée ; la validation du formulaire l'empêche (la plus longue tient en moins de 14 Kio).
 - Une phrase saisie reste quelque temps dans la mémoire du programme (JavaScript ne permet pas de l'effacer) : générer les clés sur un poste de confiance, fermer le terminal ensuite.
 - Le déchiffrement dans le navigateur (partie C) exige `'wasm-unsafe-eval'` dans la CSP de `/coffre` : libsodium s'y exécute en WebAssembly (`docs/architecture.md` §9.1).
+
+## 7. Comptes du coffre : création et réenrôlement (partie C)
+
+Deux comptes nominatifs au plus (Cat, Sady), créés à la main avec `COFFRE_DATABASE_URL` (compte du coffre, §3.2). Les inscriptions sont fermées : aucun autre chemin ne crée un compte.
+
+**Créer un compte**, en présence des deux personnes, sur un poste de confiance :
+
+1. `npm run coffre:compte -- --nom "Prénom Nom" --email adresse@exemple.be`.
+2. Le script **génère** le mot de passe (35 caractères, environ 148 bits) et l'affiche **une seule fois** : la personne l'enregistre aussitôt dans son gestionnaire de mots de passe, puis on ferme le terminal. Pour en choisir un soi-même : `--saisir` (saisie masquée et confirmée ; refusé sous 24 caractères). Jamais en argument.
+3. **Dans les 24 heures** : se connecter sur `/coffre/connexion`, enrôler le TOTP (application d'authentification sur un appareil personnel), noter les 10 codes de secours hors ligne, à part du mot de passe. Au-delà de 24 heures, l'activation du TOTP est refusée et il faut réenrôler (ci-dessous). Tant que le TOTP n'est pas enrôlé, la session ne donne accès qu'à l'enrôlement.
+4. L'enrôlement est inscrit au journal d'accès (`totp_enrolled`) ; sa lecture dans le coffre viendra en partie D.
+
+**Réenrôler** (téléphone perdu ou remplacé sans les codes de secours, délai de 24 heures dépassé, doute sur un mot de passe) :
+
+1. Les deux personnes sont présentes ; la personne concernée confirme son identité à l'autre de vive voix, jamais par un message.
+2. `npm run coffre:compte -- --reenroler --email adresse@exemple.be` : le compte est supprimé (sessions, secret TOTP, codes de secours, ancien mot de passe) puis recréé sous le même nom et la même adresse, avec un mot de passe **neuf** affiché une seule fois (`--saisir` possible).
+3. Supprimer l'ancienne entrée « Maison Triona » de l'application d'authentification, puis enrôler le nouveau TOTP dans les 24 heures (étape 3 ci-dessus).
+4. Les demandes ne sont pas touchées : elles appartiennent au coffre, pas au compte. Le paquet de clé et la phrase de passe (§2) ne changent pas.
+
+Le journal d'accès garde l'adresse du compte comme acteur : il reste lisible après un réenrôlement.

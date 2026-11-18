@@ -29,11 +29,11 @@ const csp = [
   ...(deploye ? ['upgrade-insecure-requests'] : []),
 ].join('; ')
 
-const securityHeaders = [
-  { key: 'Content-Security-Policy', value: csp },
+// En-têtes communs au site et au coffre (story 5.1). La CSP est à part : statique pour le site,
+// à nonce pour le coffre (src/proxy.ts) ; deux CSP sur une même réponse se cumuleraient.
+const commonHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
@@ -41,6 +41,24 @@ const securityHeaders = [
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
 ]
+
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: csp },
+  ...commonHeaders,
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+]
+
+// Coffre (story 3.2 C, docs/architecture.md §9.1) : jamais indexé, même le site ouvert ; jamais mis
+// en cache ; aucun référent envoyé. Placé en dernier : pour une même clé, la dernière règle l'emporte.
+const coffreHeaders = [
+  ...commonHeaders,
+  { key: 'Referrer-Policy', value: 'no-referrer' },
+  { key: 'Cache-Control', value: 'no-store' },
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+]
+
+// Tout sauf /coffre et ce qui est dessous.
+const HORS_COFFRE = '/((?!coffre(?:/|$)).*)'
 
 const nextConfig: NextConfig = {
   // Requis par `ensureStatic` (docs/architecture.md §2).
@@ -55,13 +73,16 @@ const nextConfig: NextConfig = {
   // Préproduction (story 1.5) et aperçu public (D62) : tout ce qui n'est pas le site ouvert porte
   // X-Robots-Tag noindex, y compris les images et les vidéos que la balise meta ne couvre pas, même si
   // un domaine personnalisé est attribué à une branche (docs/trust-contact-launch.md D.6).
-  // En-têtes de sécurité sur toutes les routes, production comprise (story 5.1).
+  // En-têtes de sécurité sur toutes les routes, production comprise (story 5.1) ; ceux du coffre à
+  // part (story 3.2 C).
   async headers() {
-    const rules = [{ source: '/:path*', headers: securityHeaders }]
-    if (ouvert) return rules
+    const site = [{ source: HORS_COFFRE, headers: securityHeaders }]
+    const coffre = [{ source: '/coffre/:path*', headers: coffreHeaders }]
+    if (ouvert) return [...site, ...coffre]
     return [
-      ...rules,
+      ...site,
       { source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
+      ...coffre,
     ]
   },
   // Le jour de l'ouverture, l'adresse vercel.app redirige vers le domaine (308) : sinon elle serait
