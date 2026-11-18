@@ -116,3 +116,87 @@ test.describe('sans JavaScript', () => {
     expect(await page.locator('main').innerText()).toContain('Le coffre demande JavaScript.')
   })
 })
+
+// Conservation planifiée (story 3.2, partie D) : sans le secret de Vercel Cron, rien ne s'exécute.
+// Le serveur de test n'a pas de CRON_SECRET : tout appel est refusé, sans base.
+test('la tâche de conservation refuse tout appel sans le secret', async ({ request }) => {
+  const essais: Record<string, string>[] = [
+    {},
+    { authorization: 'Bearer ' },
+    { authorization: 'Bearer secret-factice-de-la-tache-0123456789abcdef' },
+  ]
+  for (const headers of essais) {
+    const response = await request.get('/api/cron/retention', { headers })
+    expect(response.status(), JSON.stringify(headers)).toBe(401)
+    expect(response.headers()['cache-control']).toContain('no-store')
+    expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
+    expect(await response.text()).toBe('Unauthorized')
+  }
+  expect((await request.post('/api/cron/retention')).status()).toBe(405)
+})
+
+// Lecture déchiffrée (story 3.2, partie D) : libsodium s'exécute en WebAssembly dans le navigateur,
+// d'où 'wasm-unsafe-eval' dans la CSP du coffre, et dans elle seule.
+const CSP_PUBLIQUE = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "media-src 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
+test('WebAssembly n’est admis que sur les pages de lecture du coffre', async ({ request }) => {
+  const scriptSrc = async (path: string) => {
+    const csp = (await request.get(path, { maxRedirects: 0 })).headers()['content-security-policy']
+    return (csp ?? '').split('; ').find((directive) => directive.startsWith('script-src ')) ?? ''
+  }
+  for (const path of [
+    '/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+    '/coffre/demandes/pas-un-identifiant',
+  ]) {
+    expect(await scriptSrc(path), path).toMatch(
+      /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' 'wasm-unsafe-eval'$/,
+    )
+  }
+  for (const path of [
+    '/coffre',
+    '/coffre/connexion',
+    '/coffre/enrolement',
+    '/coffre/verification',
+  ]) {
+    expect(await scriptSrc(path), path).toMatch(
+      /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'$/,
+    )
+  }
+})
+
+test('la CSP du site public ne change pas : ni WebAssembly ni nonce', async ({ request }) => {
+  for (const path of ['/fr', '/en', '/fr/contact', '/api/cron/retention', '/fr/adresse-inconnue']) {
+    const csp = (await request.get(path)).headers()['content-security-policy']
+    expect(csp, path).toBe(CSP_PUBLIQUE)
+  }
+})
+
+test('une demande mal formée répond 404, sans citer l’identifiant', async ({ page }) => {
+  const identifiant = 'pas-un-identifiant-temoin'
+  const response = await page.goto(`/coffre/demandes/${identifiant}`)
+  expect(response?.status()).toBe(404)
+  expect(response?.headers()['x-robots-tag']).toBe('noindex, nofollow')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Introuvable')
+  expect(await page.locator('main').innerText()).not.toContain(identifiant)
+  await expect(page).toHaveTitle(/Coffre · Maison Triona/)
+  expect(await page.title()).not.toContain(identifiant)
+})
+
+test('sans session, une demande bien formée mène à la connexion, sans rien lire', async ({
+  page,
+}) => {
+  await page.goto('/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+})

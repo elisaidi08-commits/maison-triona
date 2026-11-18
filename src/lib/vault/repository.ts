@@ -8,12 +8,13 @@ import { withTransaction } from '../db/transaction.ts'
 // octets de la sealed box) : ce module ne voit jamais de nom, de coordonnée ni de message.
 // Requêtes paramétrées uniquement ; aucune erreur levée ne cite un argument ni des octets.
 // `insertRequest` est la seule fonction du site public : elle passe avec le rôle `site_public`
-// (db/roles/site_public.sql), qui n'a que le droit d'insérer. Les autres servent au coffre.
+// (db/roles/site_public.sql), qui n'a que le droit d'insérer. Les autres servent au coffre (rôle
+// `coffre`, db/roles/coffre.sql : lecture, effacement, gel, journal en insertion et lecture).
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
 // Actions de connexion et de lecture de la liste : partie C (db/migrations/0003_auth.sql,
-// 0004_journal_coffre.sql).
+// 0004_journal_coffre.sql) ; résumé de la conservation planifiée : partie D (0005_conservation.sql).
 export type AccessAction =
   | 'login'
   | 'login_backup_code'
@@ -29,6 +30,7 @@ export type AccessAction =
   | 'purge'
   | 'freeze'
   | 'unfreeze'
+  | 'retention'
 
 export interface NewVaultRequest {
   kind: RequestKind
@@ -57,6 +59,14 @@ export interface VaultRequestSummary {
   retentionUntil: Date
   // Nulle pour une ligne antérieure à la migration 0002.
   privacyVersion: string | null
+}
+
+// Résumé d'un passage de la conservation planifiée : des nombres seulement (migration 0005).
+export interface RetentionCounts {
+  requests: number
+  sessions: number
+  rateLimits: number
+  verifications: number
 }
 
 export interface AccessLogEntry {
@@ -135,6 +145,11 @@ async function guard<T>(operation: string, run: () => Promise<T>): Promise<T> {
 
 function isUuid(id: string): boolean {
   return UUID.test(id)
+}
+
+/** Identifiant de demande bien formé (UUID). Une adresse qui n'en est pas un répond 404. */
+export function isRequestId(id: unknown): id is string {
+  return typeof id === 'string' && isUuid(id)
 }
 
 function assertValidDate(date: Date, label: string): void {
@@ -231,8 +246,15 @@ export async function listRequests(
   return guard('listRequests', () => selectSummaries(pool, limit, offset))
 }
 
+// Fenêtre dans laquelle un même compte n'inscrit qu'une ligne `list` (partie D).
+export const LIST_LOG_WINDOW_S = 2
+
 // Même liste, pour l'accueil du coffre : la lecture est journalisée (`list`, sans identifiant de
 // demande) dans la même transaction. Pas de lecture sans trace.
+// Une ligne par affichage : Next 16 (Cache Components) rend la page deux fois par requête, et
+// l'écriture se fait au rendu. Une ligne `list` du même compte de moins de 2 secondes tient lieu
+// de trace ; le verrou consultatif par compte sérialise deux rendus simultanés (sans lui, chacun
+// pourrait ne pas voir la ligne de l'autre et écrire la sienne).
 export async function listRequestsLogged(
   pool: Pool,
   actor: string,
@@ -242,7 +264,19 @@ export async function listRequestsLogged(
   const offset = pageOffset(options.offset)
   return guard('listRequestsLogged', () =>
     withTransaction(pool, async (client) => {
-      await client.query(INSERT_LOG, [actor, 'list', null])
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('maison-triona:liste:' || $1))", [
+        actor,
+      ])
+      await client.query(
+        `INSERT INTO vault_access_log (actor, action)
+         SELECT $1::text, 'list'
+         WHERE NOT EXISTS (
+           SELECT 1 FROM vault_access_log
+           WHERE action = 'list' AND actor = $1::text
+             AND at > now() - make_interval(secs => $2)
+         )`,
+        [actor, LIST_LOG_WINDOW_S],
+      )
       return selectSummaries(client, limit, offset)
     }),
   )
@@ -269,6 +303,35 @@ export async function readSealed(
       return new Uint8Array(row.sealed)
     }),
   )
+}
+
+// Colonnes en clair d'une demande, pour sa page du coffre (partie D) : les mêmes que la liste, jamais
+// `sealed`. Sans journal : Next 16 (Cache Components) peut rendre une page deux fois par requête,
+// une écriture pendant le rendu doublerait la ligne. La lecture journalisée est la remise des
+// octets scellés (`readSealed`), par une action serveur, une fois par déverrouillage.
+export async function getRequest(pool: Pool, id: string): Promise<VaultRequestSummary | null> {
+  if (!isUuid(id)) return null
+  return guard('getRequest', async () => {
+    const { rows } = await pool.query<SummaryRow>(
+      `SELECT ${SUMMARY_COLUMNS} FROM vault_requests WHERE id = $1`,
+      [id],
+    )
+    return rows[0] ? toSummary(rows[0]) : null
+  })
+}
+
+// Export d'une demande (partie D) : le fichier est composé dans le navigateur, le serveur n'en voit
+// rien ; il ne reçoit que l'identifiant et inscrit `export` au journal, si la demande existe.
+export async function logExport(pool: Pool, id: string, actor: string): Promise<boolean> {
+  if (!isUuid(id)) return false
+  return guard('logExport', async () => {
+    const { rowCount } = await pool.query(
+      `INSERT INTO vault_access_log (actor, action, request_id)
+       SELECT $1, 'export', id FROM vault_requests WHERE id = $2`,
+      [actor, id],
+    )
+    return Boolean(rowCount)
+  })
 }
 
 // Efface une demande ; la ligne `delete` du journal lui survit (pas de clé étrangère).
@@ -307,10 +370,11 @@ export async function setFrozen(
 
 // Efface les demandes échues (`retention_until <= now`) non gelées et écrit une ligne `purge` par
 // demande, au nom de `system`, dans une seule instruction. Renvoie les identifiants effacés.
-export async function purgeExpired(pool: Pool, now: Date): Promise<string[]> {
+// Même règle que `isExpired` (retention.ts). Accepte le client d'une transaction (conservation.ts).
+export async function purgeExpired(db: Pool | PoolClient, now: Date): Promise<string[]> {
   assertValidDate(now, 'Date de purge')
   return guard('purgeExpired', async () => {
-    const { rows } = await pool.query<{ request_id: string }>(
+    const { rows } = await db.query<{ request_id: string }>(
       `WITH purged AS (
          DELETE FROM vault_requests
          WHERE retention_until <= $1 AND NOT frozen
@@ -322,6 +386,34 @@ export async function purgeExpired(pool: Pool, now: Date): Promise<string[]> {
       [now, SYSTEM_ACTOR],
     )
     return rows.map((row) => row.request_id)
+  })
+}
+
+// Résumé d'un passage de la conservation planifiée, au nom de `system` : des nombres, rien d'autre.
+export async function logRetention(db: Pool | PoolClient, counts: RetentionCounts): Promise<void> {
+  for (const value of Object.values(counts)) {
+    if (!Number.isInteger(value) || value < 0) {
+      throw new RangeError('Résumé de conservation invalide : entiers positifs ou nuls attendus')
+    }
+  }
+  await guard('logRetention', () =>
+    db.query(
+      `INSERT INTO vault_access_log
+         (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications)
+       VALUES ($1, 'retention', $2, $3, $4, $5)`,
+      [SYSTEM_ACTOR, counts.requests, counts.sessions, counts.rateLimits, counts.verifications],
+    ),
+  )
+}
+
+// Date du dernier passage de la conservation planifiée (`retention`), ou null s'il n'y en a aucun :
+// l'accueil du coffre la montre, avec une alerte au-delà de 48 heures (retentionRunStatus).
+export async function lastRetentionRun(pool: Pool): Promise<Date | null> {
+  return guard('lastRetentionRun', async () => {
+    const { rows } = await pool.query<{ at: Date | null }>(
+      `SELECT max(at) AS at FROM vault_access_log WHERE action = 'retention'`,
+    )
+    return rows[0]?.at ?? null
   })
 }
 

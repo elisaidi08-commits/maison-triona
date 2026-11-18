@@ -1,7 +1,9 @@
--- Rôle de l'espace /coffre (story 3.2 C, docs/coffre-cles.md §3) : comptes et sessions de Better Auth,
--- lecture des demandes, journal d'accès en écriture et en lecture, rien d'autre. Ni modification ni
--- effacement des demandes (gel et effacement : partie D, qui étendra ce fichier), ni modification ni
--- effacement du journal, ni table de migrations, ni création d'objet.
+-- Rôle de l'espace /coffre (story 3.2 C et D, docs/coffre-cles.md §3) : comptes et sessions de Better
+-- Auth, lecture des demandes, gel et effacement des demandes (partie D), journal d'accès en écriture et
+-- en lecture, rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
+-- `frozen` (ni le contenu scellé, ni l'échéance, ni le statut), ni modification ni effacement du
+-- journal, ni table de migrations, ni création d'objet. La tâche planifiée de conservation
+-- (/api/cron/retention) passe par ce même rôle.
 -- Hors des migrations automatiques : appliqué à la main, par l'administrateur de la base, APRÈS
 -- `npm run db:migrate` (les droits portent sur des tables existantes). Rejouable.
 -- Aucun mot de passe ici : le compte qui se connecte (COFFRE_DATABASE_URL) reçoit ce rôle à part.
@@ -27,8 +29,10 @@ grant select, insert, update, delete
   on "user", "session", "account", "verification", "twoFactor", "rateLimit"
   to coffre;
 
--- Demandes : lecture seule (liste, octets scellés).
-grant select on vault_requests to coffre;
+-- Demandes : lecture (liste, octets scellés), effacement (à la demande ou par la conservation) et
+-- gel (`frozen` seulement : limitation, RGPD art. 18). Aucune autre colonne ne se modifie.
+grant select, delete on vault_requests to coffre;
+grant update (frozen) on vault_requests to coffre;
 
 -- Journal d'accès : écrire et relire, jamais modifier ni effacer.
 grant select, insert on vault_access_log to coffre;

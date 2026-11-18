@@ -5,7 +5,15 @@ import { fileURLToPath } from 'node:url'
 
 import { getMigrations } from 'better-auth/db/migration'
 
-import { lireAcces, listeDuCoffre } from '../../src/lib/auth/acces.ts'
+import {
+  demandeDuCoffre,
+  effacementDuCoffre,
+  exportDuCoffre,
+  gelDuCoffre,
+  lireAcces,
+  listeDuCoffre,
+  scelleDuCoffre,
+} from '../../src/lib/auth/acces.ts'
 import { appelerAuth } from '../../src/lib/auth/appel.ts'
 import type { ReponseAuth } from '../../src/lib/auth/appel.ts'
 import { creerAuth } from '../../src/lib/auth/auth.ts'
@@ -13,8 +21,12 @@ import type { AuthCoffre } from '../../src/lib/auth/auth.ts'
 import { creerCompte } from '../../src/lib/auth/comptes.ts'
 import { servirAuth } from '../../src/lib/auth/enveloppe.ts'
 import { purgerAuth } from '../../src/lib/auth/purge.ts'
+import { qrCodeSvg } from '../../src/lib/auth/qr-code.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
+import { runRetention } from '../../src/lib/vault/conservation.ts'
 import { insertRequest } from '../../src/lib/vault/repository.ts'
+import { sealRequest } from '../../src/lib/vault/seal.ts'
+import { loadSodium, toBase64 } from '../../src/lib/vault/sodium.ts'
 import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
 import { codeFaux, codeTotp, secretDeLUri } from './totp.ts'
 
@@ -335,6 +347,17 @@ describe('authentification du coffre', () => {
     assert.deepEqual(await journal(), [])
   })
 
+  it('produit le QR code d’enrôlement à partir de l’URI de Better Auth (D68)', async () => {
+    await compteSansTotp('qr@exemple.test')
+    const navigateur = new Navigateur()
+    assert.equal((await navigateur.connexion('qr@exemple.test')).statut, 200)
+    const enrolement = await navigateur.appeler('/two-factor/enable', { password: MOT_DE_PASSE })
+    const { totpURI } = enrolement.donnees as { totpURI: string }
+    const svg = await qrCodeSvg(totpURI)
+    assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="240" height="240" /)
+    assert.ok(!svg.includes(secretDeLUri(totpURI)))
+  })
+
   it('journalise l’enrôlement, le mot de passe juste et le code de secours à part', async () => {
     const { secret, codesSecours } = await compteAvecTotp('actions@exemple.test')
     const totp = new Navigateur()
@@ -483,13 +506,25 @@ describe('authentification du coffre', () => {
       { actor: 'journal@exemple.test', action: 'logout', request_id: null },
     ])
 
-    const { rows: colonnes } = await pool.query<{ column_name: string }>(
-      `SELECT column_name FROM information_schema.columns
+    // Aucune colonne ne peut recevoir un contenu : hors acteur et action (listes fermées, adresse du
+    // compte), des dates, des identifiants et les compteurs entiers de la conservation (partie D).
+    const { rows: colonnes } = await pool.query<{ column_name: string; data_type: string }>(
+      `SELECT column_name, data_type FROM information_schema.columns
        WHERE table_name = 'vault_access_log' ORDER BY ordinal_position`,
     )
     assert.deepEqual(
-      colonnes.map((colonne) => colonne.column_name),
-      ['id', 'at', 'actor', 'action', 'request_id'],
+      colonnes.map((colonne) => `${colonne.column_name}:${colonne.data_type}`),
+      [
+        'id:bigint',
+        'at:timestamp with time zone',
+        'actor:text',
+        'action:text',
+        'request_id:uuid',
+        'purged_requests:integer',
+        'purged_sessions:integer',
+        'purged_rate_limits:integer',
+        'purged_verifications:integer',
+      ],
     )
     const { rows: tout } = await pool.query('SELECT * FROM vault_access_log')
     const brut = JSON.stringify(tout)
@@ -504,6 +539,100 @@ describe('authentification du coffre', () => {
       Buffer.from(contenu.sealed).toString('hex'),
     ]) {
       assert.ok(!brut.includes(secretSaisi), 'le journal ne contient aucune saisie')
+    }
+  })
+
+  it('partie D : lecture, export, gel et effacement, journalisés au nom du compte seulement', async () => {
+    const { navigateur } = await compteAvecTotp('lecture@exemple.test')
+    await pool.query('TRUNCATE vault_access_log RESTART IDENTITY')
+    const contenu = demandeFactice()
+    const id = await insertRequest(pool, contenu)
+    const acces = await lireAcces(auth, coffre, navigateur.entetes())
+    assert.equal(acces.etat, 'autorise')
+
+    // La page : colonnes de tri, sans journal. La lecture : les octets exacts, journalisée.
+    assert.equal((await demandeDuCoffre(coffre, acces, id))?.id, id)
+    assert.deepEqual(await scelleDuCoffre(coffre, acces, id), contenu.sealed)
+    assert.equal(await exportDuCoffre(coffre, acces, id), true)
+    assert.equal(await gelDuCoffre(coffre, acces, id, true), true)
+    assert.equal(await gelDuCoffre(coffre, acces, id, false), true)
+    assert.equal(await effacementDuCoffre(coffre, acces, id), true)
+    assert.equal(await demandeDuCoffre(coffre, acces, id), null)
+    assert.equal(await scelleDuCoffre(coffre, acces, id), null)
+    assert.deepEqual(await journal(), [
+      { actor: 'lecture@exemple.test', action: 'read', request_id: id },
+      { actor: 'lecture@exemple.test', action: 'export', request_id: id },
+      { actor: 'lecture@exemple.test', action: 'freeze', request_id: id },
+      { actor: 'lecture@exemple.test', action: 'unfreeze', request_id: id },
+      { actor: 'lecture@exemple.test', action: 'delete', request_id: id },
+    ])
+  })
+
+  it('partie D : sans session autorisée, rien n’est lu, gelé, exporté ni effacé', async () => {
+    await compteSansTotp('enrolement@exemple.test')
+    const enrolement = new Navigateur()
+    assert.equal((await enrolement.connexion('enrolement@exemple.test')).statut, 200)
+    await pool.query('TRUNCATE vault_access_log RESTART IDENTITY')
+    const id = await insertRequest(pool, demandeFactice())
+    for (const acces of [
+      await lireAcces(auth, coffre, enrolement.entetes()),
+      await lireAcces(auth, coffre, new Navigateur().entetes()),
+    ]) {
+      assert.notEqual(acces.etat, 'autorise')
+      assert.equal(await demandeDuCoffre(coffre, acces, id), null)
+      assert.equal(await scelleDuCoffre(coffre, acces, id), null)
+      assert.equal(await exportDuCoffre(coffre, acces, id), false)
+      assert.equal(await gelDuCoffre(coffre, acces, id, true), false)
+      assert.equal(await effacementDuCoffre(coffre, acces, id), false)
+    }
+    const { rows } = await pool.query('SELECT frozen FROM vault_requests WHERE id = $1', [id])
+    assert.deepEqual(rows, [{ frozen: false }])
+    assert.deepEqual(await journal(), [])
+  })
+
+  it('partie D : le journal ne contient jamais de contenu, conservation comprise', async () => {
+    const { navigateur } = await compteAvecTotp('temoin@exemple.test')
+    const lib = await loadSodium()
+    const { publicKey } = lib.crypto_box_keypair()
+    const temoins = {
+      nom: 'Nom-Temoin-Factice',
+      email: 'temoin-scelle@exemple.test',
+      telephone: '+32 470 99 99 99',
+      pourQui: 'proche',
+      creneau: 'soir',
+      message: 'Mot-libre-temoin-factice',
+    }
+    const sealed = await sealRequest(temoins, toBase64(lib, publicKey))
+    const lue = await insertRequest(pool, { ...demandeFactice(), sealed })
+    const echue = await insertRequest(pool, {
+      ...demandeFactice(),
+      sealed,
+      retentionUntil: new Date('2026-01-01T00:00:00Z'),
+    })
+    const acces = await lireAcces(auth, coffre, navigateur.entetes())
+    await listeDuCoffre(coffre, acces)
+    await scelleDuCoffre(coffre, acces, lue)
+    await exportDuCoffre(coffre, acces, lue)
+    await gelDuCoffre(coffre, acces, lue, true)
+    await effacementDuCoffre(coffre, acces, lue)
+    await runRetention(coffre, new Date())
+
+    const { rows } = await pool.query('SELECT * FROM vault_access_log')
+    assert.ok(rows.some((row) => row.action === 'purge' && row.request_id === echue))
+    assert.ok(rows.some((row) => row.action === 'retention'))
+    const brut = JSON.stringify(rows)
+    const hex = Buffer.from(sealed).toString('hex')
+    for (const temoin of [
+      ...Object.values(temoins),
+      hex.slice(0, 64),
+      toBase64(lib, sealed).slice(0, 64),
+    ]) {
+      assert.ok(!brut.includes(temoin), 'le journal ne contient aucun contenu')
+    }
+    // Seules colonnes renseignées : date, acteur (adresse du compte ou « system »), action,
+    // identifiant de demande, compteurs entiers.
+    for (const row of rows) {
+      assert.ok(['temoin@exemple.test', 'system'].includes(row.actor), row.actor)
     }
   })
 })
