@@ -8,7 +8,7 @@ Site vitrine d'une **conciergerie de luxe / apporteur d'affaires** : met en rela
 
 ## Phase en cours
 
-**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lots A, 0, B et C faits le 18/11/2026 ; **arrêt au point de contrôle ③ (pages)**, en attente de l'OK de Sady ; ensuite D (formulaire, ④), E (coffre, envoi, appels), F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
+**Phase 1 ouverte le 15/10/2026** (`GO PHASE 1` confirmé par Sady, `docs/decisions.md` D16). **Accueil V4 validé par Cat et fusionné** (D63). **Feuille de route en cours : `docs/plan-implementation.md` §2 ter** (audit du 06/11/2026, adopté par D64) : lots A, 0, B, C et D faits le 18/11/2026 (point ③ validé, D66), coffre commencé (3.2 A, B, C ; Better Auth, D67) ; **arrêt au point de contrôle ④ (contact)**, en attente de l'OK de Sady ; ensuite la suite du lot E (3.2 D, e-mails, réservation d'appel, qui demandent les comptes Scaleway et le DNS), puis F (ouverture, pas avant l'inscription de la société, D38). Domaine : maisontriona.com (D65). Dépôt privé `elisaidi08-commits/maison-triona`, dans le dossier actuel (D17).
 
 ## Règles d'or
 
@@ -92,7 +92,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **Aucune icône pictographique** ; séparateurs = filets 1 px ou glyphes.
 - **CTA** : « Nous écrire », « Prendre contact », « Parlez-nous de votre situation », « Écrire en toute discrétion ». Pas de tiret cadratin dans les titres, la navigation ni les CTA.
 - **Images** : `next/image` (AVIF puis WebP), `aspect-ratio` réservé ; le poster est l'élément LCP. Aucune vidéo en mobile.
-- **Formulaire** : validation serveur Zod, `?service=` présélectionne la demande, langue passée explicitement, aucun champ santé.
+- **Formulaire** : validation serveur Zod (`jitless`), présélection par `sessionStorage` (D26, rien dans l'URL), langue passée explicitement, aucun champ santé ; enregistrement chiffré seulement si `DATABASE_URL` et `VAULT_PUBLIC_KEY` existent, sinon envoi fermé.
 - **Contenu** : textes éditoriaux dans `messages/{fr,en}.json` et `content/` jusqu'au CMS (après l'ouverture, D45), puis via `lib/cms` ; libellés d'interface dans `messages/{fr,en}.json` ; jamais de traduction automatique publiée sans relecture.
 - **Dépendances** : aucune nouvelle dépendance sans justification écrite. **Commits** : français, impératif, une story par branche.
 
