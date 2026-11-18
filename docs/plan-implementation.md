@@ -1,6 +1,6 @@
 # Plan d'implémentation — Maison Triona
 
-> **Statut** : v3, proposition phase 0 (15/10/2026). Révise le PRD §9 en y intégrant la DA v2 (`docs/art-direction.md`), le mouvement (`docs/motion-spec.md`), le brief assets IA (`docs/assets-ia-brief.md`, `docs/assets-manifest.md`), la spec d'entrée par besoin (`docs/ux-entry-i18n-a11y.md`, prioritaire), puis les specs **confiance, contact, sécurité, lancement** (`docs/trust-contact-launch.md`), **SEO** (`docs/seo-strategy.md`) et **partenaires** (`docs/partners-credibility.md`, phase 2).
+> **Statut** : v3, proposition phase 0 (15/10/2026), révisée le 18/11/2026 (§2 ter, D64). Révise le PRD §9 en y intégrant la DA v2 (`docs/art-direction.md`), le mouvement (`docs/motion-spec.md`), le brief assets IA (`docs/assets-ia-brief.md`, `docs/assets-manifest.md`), la spec d'entrée par besoin (`docs/ux-entry-i18n-a11y.md`, prioritaire), puis les specs **confiance, contact, sécurité, lancement** (`docs/trust-contact-launch.md`), **SEO** (`docs/seo-strategy.md`) et **partenaires** (`docs/partners-credibility.md`, phase 2).
 > **Démarrage** : uniquement sur message explicite **`GO PHASE 1`** de Sady.
 > **Règle d'or** : une story à la fois. À la fin de chaque story visuelle, **arrêt obligatoire** au point de contrôle (§3). Aucun enchaînement automatique d'un écran à l'autre.
 
@@ -48,7 +48,7 @@ Les **réponses de Cat** (FAQ, déroulé, indépendance, délais, conservation) 
 | 22 | **3.8 à 3.13 Réservation d'appel** (D57, remplace 3.6) | **E3-S6** | — | ⛳ | 6½ j | Libellé du CTA, fournisseur SMS, heures exactes des plages |
 | 23 | **3.7 Situation urgente** *(conditionnelle)* | **E3-S7** | — | ⛳ | ½ j | D04 : sans doute close sans code `[À CONFIRMER]` |
 | 24 | **4.1 i18n FR/EN complète** | **E4-S4** | 4.1 | ⛳ | 1 j | Traduction relue |
-| 25 | 4.2 CMS | — | PRD §8 | — | 1½ j | Choix du CMS |
+| 25 | 4.2 CMS | — | PRD §8 | — | 1½ j | **Après l'ouverture** (D45) ; choix du CMS |
 | 26 | **7.1 Revalidation de l'étude SEO** | **E7-S1** | — | — | ½ j | Pays prioritaires |
 | 27 | **7.2 Architecture SEO et briefs de contenu** | **E7-S2** | — | — | 1 j | Faits fournis par Cat |
 | 28 | **4.3 SEO technique** | **E7-S3** | 4.2 | — | 1 j | Domaine |
@@ -69,6 +69,8 @@ Total estimé : **~40 jours** de développement assisté (v2 : ~20 ; D57 : +5½ 
 
 ## 2 bis. Refonte V3 : ordre des lots (D26, 16/10/2026)
 
+> **Achevé ou remplacé** (18/11/2026) : lots 1 et 2 faits ; l'accueil en neuf séquences a laissé place à l'accueil calme de la V4 (D36, validé par Cat : D63). La suite suit le **§2 ter**.
+
 L'ordre ci-dessous **prime sur le tableau du §2** pour les stories qu'il cite ; les autres gardent leur place. Une branche par story ; Claude fusionne chaque PR quand la CI est verte (D22) et s'arrête au point de contrôle de chaque lot, à partir du lot 2, avec les captures 1440, 834 et 390.
 
 | Lot | Stories | Contenu | Point de contrôle |
@@ -88,6 +90,23 @@ Le coffre et l'envoi réel (3.2, 3.3), puis la réservation d'appel (3.8 à 3.13
 
 **1.7 Carte des territoires : outil et tracé (lot 1)** — Script `scripts/carte-territoires.mjs`, lancé à la main : frontières Natural Earth (pays au 1:10 000 000, domaine public), projection Lambert azimutale équivalente (EPSG:3035), simplification avec **mapshaper** (dépendance de développement, D26), SVG figé dans le dépôt avec sa provenance (source, version, date, licence). Composant serveur `TerritoriesMap` : les cinq pays en filet sapin, les voisins en filet sauge, un point or par pays, Monaco en point seul. Présenté sur `/demo` ; liste, panneaux et choix d'un pays au lot 5.
 **CA** : SVG ≤ 60 ko ; aucune bibliothèque envoyée au navigateur ; carte décorative (`aria-hidden`), les noms de pays portés par du texte réel ; aucune ville, adresse ni partenaire ; provenance et licence écrites ; aucune image générée par IA.
+
+---
+
+## 2 ter. Feuille de route après l'audit du 06/11/2026 (D64)
+
+Adoptée par Sady le 18/11/2026 (`docs/audit-2026-11-06.md` §9). **Elle prime sur le §2 et le §2 bis.** Une branche par story ou par lot de correctifs ; Claude fusionne quand la CI est verte (D22) et s'arrête aux points de contrôle indiqués.
+
+| Lot | Contenu | Dépend de | Arrêt | État |
+|---|---|---|---|---|
+| **A · Remise à plat** | Branches réconciliées (V4, #40, #42, #43, #30, lot 5) ; D63 à D65 ; CLAUDE.md, plan et manifeste remis d'accord avec le code (audit §7) | OK de Sady, OK de Cat sur la V4 | — | **Fait** le 18/11/2026 |
+| **0 · Correctifs sans dépendance** | Les quatre textes faux de l'audit §3.1 (en brouillon) ; cibles de 48 px (« Menu », « Close », lien d'évitement) ; 404 statique ; CLS en `transform` ; `check:content` branché sur le build de production ; Next 16.4.5 et Dependabot ; moodboard ignoré par git ; médias inutilisés retirés de `public/` (V01, V01-s, V02, V03, P01, P03 : environ 9 Mo) ; titre de `/demo` | Rien | Fusion quand la CI est verte | À faire |
+| **B · SEO technique et sécurité** | 4.3 : métadonnées en brouillon, canonical, hreflang dans le HTML et le sitemap (D64, n° 7), robots, JSON-LD sans Cat, `SITE_URL` obligatoire au build de production, redirection 308 de vercel.app prête ; 5.1 : en-têtes de sécurité (`architecture.md` §9.1) | Domaine (D65) ; une variable d'environnement suffit d'ici l'ouverture | Revue de Sady | À faire |
+| **C · Pages vitrine** | 2.8 à 2.11, La Maison, 4.4 (squelettes, D61), page 500, déclaration d'accessibilité, image de partage FR/EN ; décisions 2 à 6 de D64 (pied de page immobile, trois scènes, Contact sur sapin, couleurs du kit seules, nom du service dans le h1) | A ; textes de Cat (brouillons balisés en attendant) | ③ Pages | À faire |
+| **D · Formulaire, interface** | 3.1, 3.4 (présélection par `sessionStorage`), 3.5 ; envoi désactivé | A ; Upstash | ④ Formulaire (interface) | À faire |
+| **E · Coffre, envoi, appels** | 3.2, 3.3, 3.9 à 3.13 (3.8 A fait, #44) | Scaleway, DNS du domaine (SPF, DKIM, DMARC), fournisseur SMS | ④ complet | Commencé : 3.2 A (connexion et migrations) sur `story/3.2a-base-du-coffre`, sans PR |
+| **F · Mesure, QA, ouverture** | 5.2 Plausible et Search Console, 5.3 à 5.5, `check:content` vert, DPA, médias validés par Cat | Tout le reste ; société inscrite (janvier 2027, D38) | Checklist cochée, cercle restreint, ouverture | — |
+| **G · Après l'ouverture** | M+1 à M+3 : guide « Accompagner un parent », bilan Search Console, test SEA en Belgique (D64, n° 11). M+6 : page Belgique, néerlandais, réexamen de Google Business Profile | Données réelles | Revue de Sady | — |
 
 ---
 
@@ -159,14 +178,14 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **2.8 FAQ ⛳ (E2-S3)** — `/fr/faq`, `/en/faq` ; 8 questions de `docs/trust-contact-launch.md` annexe B.1, réponses depuis le CMS ; `<details>`/`<summary>` natifs, **une ancre par question** (ouverte à l'arrivée par l'ancre), ouvertes à l'impression ; la question « délai » masquée tant que Cat ne s'engage pas ; JSON-LD `FAQPage` léger (sans résultat enrichi attendu).
 **CA** : contenu lisible **sans JS** ; accordéon utilisable au clavier et annoncé correctement ; FR/EN ; aucune réponse inventée (`check:content`).
 
-**2.12 Accueil en neuf séquences ⛳ (D25, refondue par D26)** — Premier écran de D25 (« Maison Triona » centré sur la vidéo plein écran) sans ouverture filmée ; bande ivoire : accroche, phrase de présentation, 4 entrées ; passage V01-s (M15) ; promesse ; trois scènes de service (situations, fonctionnement, réassurance, CTA, image collante et vidéo) ; La Maison ; Territoires ; Contact. Avec les médias existants ; ceux du lot 2 arrivent en 2.14.
+**2.12 Accueil en neuf séquences ⛳ (D25, refondue par D26 ; remplacée par l'accueil calme de la V4, D36 et D63)** — Premier écran de D25 (« Maison Triona » centré sur la vidéo plein écran) sans ouverture filmée ; bande ivoire : accroche, phrase de présentation, 4 entrées ; passage V01-s (M15) ; promesse ; trois scènes de service (situations, fonctionnement, réassurance, CTA, image collante et vidéo) ; La Maison ; Territoires ; Contact. Avec les médias existants ; ceux du lot 2 arrivent en 2.14.
 **CA** : neuf séquences dans l'ordre ; passage seulement en desktop, absent en mobile, en mouvement réduit et sans JavaScript, sans hauteur vide ; aucune vidéo en mobile ni en mouvement réduit, bouton pause sur chaque vidéo ; premier choix visible sans défiler en 390 × 844 au-dessus de la barre mobile ; textes nouveaux en brouillon balisé ; axe 0 violation.
 
 **2.13 Pages de service et page Services ⛳ (D26)** — Page type qui répond aux cinq questions de V3, sur la base de `SceneService` : hero (image, vidéo, nom en label, promesse en h1), le besoin (deux phrases, `[CONTENU À FOURNIR PAR CAT]`), pour qui, trois situations, fonctionnement en trois étapes, sélection, réassurance (grand âge : « une présence, pas des soins »), CTA vers le formulaire, liens vers les deux autres services. `/services` : les trois services en lignes numérotées 01 à 03, filets or, puis « Évoquer une demande particulière » vers le formulaire.
 **CA** : les cinq questions dans l'ordre sur chaque page, FR et EN ; aucune affirmation non validée hors brouillon balisé ; aucun tarif, aucune promesse médicale ni de disponibilité ; `/services` n'est plus un cul-de-sac ; axe 0 violation.
 
-**2.14 Médias du lot 2 ⛳ (D26)** — Intégration, après contrôle qualité et validation de Sady, des médias du lot accordé le 16/10/2026 : P04 et V04 (grand âge), P06 et V06 (enfants), P07 (Territoires, pleine largeur), vidéos V01, V01-s, V02, V03 agrandies en 1080p ; journal du manifeste, étalonnage commun, encodages deux passes, textes alternatifs FR et EN.
-**CA** : poids sous les plafonds de `docs/media-pipeline.md` ; poster LCP prioritaire ; aucune vidéo en mobile ni en mouvement réduit ; bouton pause sur chaque vidéo ; écart poster / première image ≤ 2 niveaux ; Lighthouse ≥ 95 sur l'accueil.
+**2.14 Services au cœur du site ⛳ (D58, D60, PR n° 40)** — Page Services en scène plein écran collante (M25), pages de service complètes (scène, trois chapitres, déroulé en six étapes de Cat), gestes filmés V12, G3 et G4 en 4:5 (desktop seulement, une lecture, pause partagée), choix du premier écran menant directement à la page du service ; pages légales en brouillon (4.4, D59, D61). L'**ancienne 2.14 « Médias du lot 2 » est abandonnée** : la directive V4 a arrêté le lot 2 et rien n'en est intégré (`docs/assets-manifest.md`, journal du 16/10/2026).
+**CA** : desktop avec souris seulement pour l'immersion ; mobile, toucher, mouvement réduit et sans JavaScript : services empilés ; aucune vidéo en mobile ; bouton pause ; axe 0 violation.
 
 **2.9 Comment ça se passe + langage simple + PDF ⛳ (E2-S4)** — 5 étapes (annexe B.2), version en langage simple (`/langage-simple`, `/easy-read`), page imprimable et **PDF balisé FR/EN** généré au build (`docs/architecture.md` §6.8).
 **CA** : 4 à 5 étapes ; version simple liée depuis la page et le PDF ; PDF avec texte réel, langue, titres, signets, contrôlé (PAC ou veraPDF) ; **aucun délai non validé** ; PDF absent tant que le texte n'est pas validé.
@@ -228,7 +247,7 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **4.1 i18n FR/EN complète ⛳ (E4-S4)** — Toutes les pages, formulaire, rappel, erreurs, e-mails, PDF, pages légales, métadonnées, `alt`, `aria-label` ; chemins localisés (`docs/architecture.md` §4).
 **CA** : `check-i18n` vert en CI ; `hreflang` + `x-default` corrects ; sélecteur lisible avec `lang` ; e-mails dans la langue du visiteur ; anglais relu par un humain.
 
-**4.2 CMS** — Branchement derrière `lib/cms`, champs `{ fr, en }`, **validation bloquante** si une langue manque, vue « Traductions manquantes », FAQ et blocs « indépendance » éditables, webhook signé, guide d'édition pour Cat. Aucune donnée interne (partenaires, demandes) dans le CMS.
+**4.2 CMS (après l'ouverture, D45)** — Branchement derrière `lib/cms`, champs `{ fr, en }`, **validation bloquante** si une langue manque, vue « Traductions manquantes », FAQ et blocs « indépendance » éditables, webhook signé, guide d'édition pour Cat. Aucune donnée interne (partenaires, demandes) dans le CMS.
 **CA** : Cat publie un texte FR/EN en moins d'une minute sans redéploiement ; impossible de publier une seule langue ; aucun composant modifié.
 
 **4.3 SEO technique (E7-S3)** — Métadonnées par page et par langue, `hreflang` réciproques, sitemap multilingue, `robots.txt`, `canonical`, JSON-LD (`Organization` sans adresse ni personne, `BreadcrumbList`, `FAQPage` et `Service` légers), `noindex` sur confirmation, impression, démo, 404, coffre (`docs/seo-strategy.md` §G).
