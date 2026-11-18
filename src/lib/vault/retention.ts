@@ -30,3 +30,12 @@ export function retentionDeadline(createdAt: Date, months: number): Date {
     ),
   )
 }
+
+// Demande échue : échéance atteinte et pas gelée. Une demande gelée (limitation, RGPD art. 18)
+// n'est jamais effacée par la conservation automatique, même échue. Même règle que la requête de
+// `purgeExpired` (repository.ts : `retention_until <= now AND NOT frozen`), que les tests
+// d'intégration comparent à celle-ci ; la page de lecture du coffre l'affiche.
+export function isExpired(request: { retentionUntil: Date; frozen: boolean }, now: Date): boolean {
+  if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
+  return !request.frozen && request.retentionUntil.getTime() <= now.getTime()
+}

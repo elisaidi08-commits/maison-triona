@@ -483,13 +483,25 @@ describe('authentification du coffre', () => {
       { actor: 'journal@exemple.test', action: 'logout', request_id: null },
     ])
 
-    const { rows: colonnes } = await pool.query<{ column_name: string }>(
-      `SELECT column_name FROM information_schema.columns
+    // Aucune colonne ne peut recevoir un contenu : hors acteur et action (listes fermées, adresse du
+    // compte), des dates, des identifiants et les compteurs entiers de la conservation (partie D).
+    const { rows: colonnes } = await pool.query<{ column_name: string; data_type: string }>(
+      `SELECT column_name, data_type FROM information_schema.columns
        WHERE table_name = 'vault_access_log' ORDER BY ordinal_position`,
     )
     assert.deepEqual(
-      colonnes.map((colonne) => colonne.column_name),
-      ['id', 'at', 'actor', 'action', 'request_id'],
+      colonnes.map((colonne) => `${colonne.column_name}:${colonne.data_type}`),
+      [
+        'id:bigint',
+        'at:timestamp with time zone',
+        'actor:text',
+        'action:text',
+        'request_id:uuid',
+        'purged_requests:integer',
+        'purged_sessions:integer',
+        'purged_rate_limits:integer',
+        'purged_verifications:integer',
+      ],
     )
     const { rows: tout } = await pool.query('SELECT * FROM vault_access_log')
     const brut = JSON.stringify(tout)

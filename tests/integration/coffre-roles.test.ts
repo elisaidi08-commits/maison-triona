@@ -6,12 +6,22 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 import { migrate } from '../../src/lib/db/migrate.ts'
-import { insertRequest, listRequestsLogged } from '../../src/lib/vault/repository.ts'
+import {
+  deleteRequest,
+  insertRequest,
+  listRequestsLogged,
+  logExport,
+  purgeExpired,
+  readRequest,
+  setFrozen,
+} from '../../src/lib/vault/repository.ts'
 import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
 
-// Deux comptes, deux rôles (story 3.2, parties B et C ; docs/coffre-cles.md §3) : `site_public`
+// Deux comptes, deux rôles (story 3.2, parties B, C et D ; docs/coffre-cles.md §3) : `site_public`
 // insère des demandes et ne voit rien d'autre, aucune table de Better Auth comprise ; `coffre` a ce
-// que l'espace /coffre exige, sans pouvoir modifier ni effacer une demande ou le journal.
+// que l'espace /coffre exige : lire, geler (`frozen` seulement) et effacer une demande, écrire et
+// relire le journal, sans pouvoir modifier une autre colonne, insérer une demande, ni modifier ou
+// effacer le journal.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const TABLES_AUTH = [
@@ -98,10 +108,40 @@ describe('rôles de connexion du coffre', () => {
     assert.deepEqual(rows.at(-1), { actor: 'u1@exemple.test', action: 'list' })
   })
 
-  it('coffre ne modifie ni n’efface une demande ou le journal, ni rien d’autre', async () => {
+  it('coffre lit, gèle, exporte et efface une demande, en journalisant chaque geste (partie D)', async () => {
+    const id = await insertRequest(admin, demande())
+    assert.ok(await readRequest(coffre, id, 'u1@exemple.test'))
+    assert.equal(await setFrozen(coffre, id, true, 'u1@exemple.test'), true)
+    assert.equal(await logExport(coffre, id, 'u1@exemple.test'), true)
+    // Gelée : la conservation ne l'efface pas, même échue.
+    await admin.query(
+      `UPDATE vault_requests SET retention_until = now() - interval '1 day' WHERE id = $1`,
+      [id],
+    )
+    assert.deepEqual(await purgeExpired(coffre, new Date()), [])
+    assert.equal(await setFrozen(coffre, id, false, 'u1@exemple.test'), true)
+    assert.deepEqual(await purgeExpired(coffre, new Date()), [id])
+
+    const autre = await insertRequest(admin, demande())
+    assert.equal(await deleteRequest(coffre, autre, 'u1@exemple.test'), true)
+    const { rows } = await admin.query(
+      'SELECT actor, action FROM vault_access_log WHERE request_id = ANY($1) ORDER BY id',
+      [[id, autre]],
+    )
+    assert.deepEqual(
+      rows.map((row) => row.action),
+      ['read', 'freeze', 'export', 'unfreeze', 'purge', 'delete'],
+    )
+  })
+
+  it('coffre ne modifie que le gel d’une demande, et n’efface ni ne modifie le journal', async () => {
     for (const sql of [
       "UPDATE vault_requests SET status = 'closed'",
-      'DELETE FROM vault_requests',
+      'UPDATE vault_requests SET sealed = sealed',
+      "UPDATE vault_requests SET retention_until = now() + interval '10 years'",
+      'UPDATE vault_requests SET created_at = now()',
+      "UPDATE vault_requests SET service = 'enfants'",
+      'UPDATE vault_requests SET frozen = true, status = status',
       'TRUNCATE vault_requests',
       "UPDATE vault_access_log SET actor = 'x'",
       'DELETE FROM vault_access_log',
