@@ -28,15 +28,23 @@ export function cheminAuth(url: string): string | null {
   return chemin.slice(BASE_PATH_AUTH.length)
 }
 
+// Route servie : POST sur une route de la liste fermée. Sinon null (réponse 404).
+export function routeServie(requete: Request): string | null {
+  const chemin = cheminAuth(requete.url)
+  return requete.method === 'POST' && chemin && CHEMINS_AUTORISES.has(chemin) ? chemin : null
+}
+
+export function introuvable(): Response {
+  return new Response('Not Found', { status: 404 })
+}
+
 export async function servirAuth(
   auth: AuthCoffre,
   pool: Pool,
   requete: Request,
 ): Promise<Response> {
-  const chemin = cheminAuth(requete.url)
-  if (requete.method !== 'POST' || !chemin || !CHEMINS_AUTORISES.has(chemin)) {
-    return new Response('Not Found', { status: 404 })
-  }
+  const chemin = routeServie(requete)
+  if (!chemin) return introuvable()
 
   const reponse = await auth.handler(requete)
   if (reponse.status === 429) {

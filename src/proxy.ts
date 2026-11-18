@@ -25,6 +25,8 @@ export default function proxy(request: NextRequest) {
   return reponse
 }
 
+// Second motif : tout /coffre, y compris une adresse avec un point (`/coffre/x.y`), que le premier
+// écarte ; elle reçoit aussi la CSP du coffre.
 export const config = {
-  matcher: '/((?!api|_next|_vercel|.*\\..*).*)',
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', '/coffre/:path*'],
 }

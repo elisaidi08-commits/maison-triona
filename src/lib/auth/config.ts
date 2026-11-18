@@ -56,10 +56,11 @@ export function estPosteLocal(env: Environnement): boolean {
 // `BETTER_AUTH_SECRET` : obligatoire hors poste local (32 caractères au moins). Il signe les cookies
 // et chiffre les secrets TOTP et les codes de secours : le changer les rend illisibles (prévoir la
 // rotation `BETTER_AUTH_SECRETS` de Better Auth avant tout changement). Message sans la valeur.
+// Le repli est aussi refusé sous NODE_ENV=production (`next start`, y compris hors Vercel).
 export function secretAuth(env: Environnement): string {
   const secret = env.BETTER_AUTH_SECRET?.trim()
   if (secret && secret.length >= LONGUEUR_MIN_SECRET) return secret
-  if (!estPosteLocal(env)) {
+  if (!estPosteLocal(env) || env.NODE_ENV === 'production') {
     throw new Error(
       'BETTER_AUTH_SECRET manquant ou trop court (32 caractères au moins) : obligatoire hors poste local',
     )

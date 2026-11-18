@@ -28,6 +28,10 @@ export default async function CoffreLayout({ children }: { children: ReactNode }
     <html lang="fr" className={`${cormorant.variable} ${ebGaramond.variable}`}>
       <body>
         <main id="contenu" className="conteneur flex flex-col gap-48 py-section">
+          {/* La lecture des demandes (partie D) se déchiffre dans le navigateur. */}
+          <noscript>
+            <p className="text-body text-encre">Le coffre demande JavaScript.</p>
+          </noscript>
           {children}
         </main>
       </body>

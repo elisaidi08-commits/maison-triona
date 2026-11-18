@@ -52,10 +52,15 @@ describe('secret de Better Auth', () => {
     )
   })
 
-  it('n’applique un repli que sur le poste local', () => {
+  it('n’applique un repli que sur le poste local, jamais sous NODE_ENV=production', () => {
     const repli = secretAuth({})
     assert.ok(repli.length >= 32)
     assert.equal(secretAuth({ BETTER_AUTH_SECRET: 'court' }), repli)
+    assert.throws(() => secretAuth({ NODE_ENV: 'production' }), /BETTER_AUTH_SECRET/)
+    assert.equal(
+      secretAuth({ NODE_ENV: 'production', BETTER_AUTH_SECRET: SECRET_FACTICE }),
+      SECRET_FACTICE,
+    )
   })
 })
 

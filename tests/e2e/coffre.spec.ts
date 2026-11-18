@@ -90,11 +90,26 @@ test('le coffre n’apparaît ni dans le sitemap, ni dans robots.txt, ni dans le
 test('le gestionnaire d’authentification ne sert que sa liste fermée de routes', async ({
   request,
 }) => {
-  // Le gestionnaire interroge la base du coffre (schéma, limitation de débit).
-  test.skip(!process.env.DATABASE_URL, 'DATABASE_URL absente : base du coffre non configurée')
+  // Hors liste : 404 avant Better Auth, sans secret ni base.
   const response = await request.post('/coffre/api/auth/sign-up/email', {
     data: { name: 'Inconnu', email: 'inscription@exemple.test', password: 'phrase-factice-longue' },
   })
   expect(response.status()).toBe(404)
   expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
+})
+
+test('une adresse du coffre avec un point reçoit aussi la CSP du coffre', async ({ request }) => {
+  const response = await request.get('/coffre/fichier.txt')
+  const csp = response.headers()['content-security-policy'] ?? ''
+  expect(csp).toMatch(NONCE)
+  expect(csp).not.toContain("'unsafe-inline'")
+  expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
+})
+
+test('sans JavaScript, le coffre le dit sobrement', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  const page = await context.newPage()
+  await page.goto('/coffre/connexion')
+  await expect(page.getByText('Le coffre demande JavaScript.')).toBeVisible()
+  await context.close()
 })
