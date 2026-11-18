@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
 import { getAuth } from '@/lib/auth/serveur'
+import { getCoffrePool } from '@/lib/db/pool'
 
 // Formulaires du coffre (story 3.2, partie C), utilisables sans JavaScript (POST natif vers la
 // Server Action). Chaque action appelle la route Better Auth correspondante par `auth.handler`
@@ -23,7 +24,7 @@ export type EtatCode = { erreur: ErreurCode | null; mode: 'totp' | 'secours' }
 export type EtatEnrolement =
   | {
       etape: 'mot-de-passe'
-      erreur: 'saisie' | 'mot-de-passe' | 'trop-de-tentatives' | 'indisponible' | null
+      erreur: 'saisie' | 'mot-de-passe' | 'delai' | 'trop-de-tentatives' | 'indisponible' | null
     }
   | {
       etape: 'code'
@@ -42,7 +43,7 @@ function champ(donnees: FormData, nom: string): string {
 }
 
 async function appeler(chemin: string, corps: Record<string, unknown>): Promise<ReponseAuth> {
-  const reponse = await appelerAuth(getAuth(), chemin, corps, await headers())
+  const reponse = await appelerAuth(getAuth(), getCoffrePool(), chemin, corps, await headers())
   const magasin = await cookies()
   for (const ligne of reponse.cookies) {
     for (const [nom, attributs] of parseSetCookieHeader(ligne)) {
@@ -124,9 +125,11 @@ export async function enrolerTotp(
     erreur:
       reponse.code === 'INVALID_PASSWORD'
         ? 'mot-de-passe'
-        : reponse.statut === 429
-          ? 'trop-de-tentatives'
-          : 'indisponible',
+        : reponse.code === 'ENROLMENT_WINDOW_CLOSED'
+          ? 'delai'
+          : reponse.statut === 429
+            ? 'trop-de-tentatives'
+            : 'indisponible',
   }
 }
 

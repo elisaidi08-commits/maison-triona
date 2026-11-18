@@ -20,11 +20,22 @@ export const DELAI_SECOND_FACTEUR_S = 5 * 60
 
 // Deux comptes nominatifs, créés à la main (scripts/coffre-compte.mjs) : Cat et Sady.
 export const MAX_COMPTES = 2
+// Le TOTP s'enrôle dans les 24 heures qui suivent la création du compte ; au-delà, l'activation est
+// refusée et le compte se recrée avec le script (docs/coffre-cles.md, réenrôlement).
+export const DELAI_ENROLEMENT_S = 24 * 60 * 60
 
-// Mots de passe : 12 caractères au moins (phrase de passe encouragée), 128 au plus (défaut de
-// Better Auth, borne le coût du hachage).
-export const MOT_DE_PASSE_MIN = 12
+// Mots de passe : générés par le script (24 caractères au moins) ; un mot de passe saisi plus court
+// est refusé. 128 au plus (défaut de Better Auth, borne le coût du hachage).
+export const MOT_DE_PASSE_MIN = 24
 export const MOT_DE_PASSE_MAX = 128
+
+// Force brute, en plus de la limite par IP de Better Auth : fenêtre de 15 minutes (la plus longue des
+// règles de débit), sur les échecs du journal d'accès.
+export const FENETRE_FREIN_S = 15 * 60
+// Verrou souple par compte : 10 échecs (mot de passe ou code) en 15 minutes.
+export const VERROU_COMPTE_ECHECS = 10
+// Disjoncteur : 50 échecs en 15 minutes, tous comptes confondus (attaque répartie sur des IP).
+export const DISJONCTEUR_ECHECS = 50
 
 const LONGUEUR_MIN_SECRET = 32
 // Repli du poste local et de la CI seulement (VERCEL_ENV absent) : refusé sur tout déploiement.

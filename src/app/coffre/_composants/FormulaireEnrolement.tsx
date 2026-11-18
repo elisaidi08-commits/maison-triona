@@ -18,6 +18,8 @@ const INITIAL: EtatEnrolement = { etape: 'mot-de-passe', erreur: null }
 const MESSAGES = {
   saisie: 'Erreur : ce champ est à remplir.',
   'mot-de-passe': 'Erreur : mot de passe incorrect.',
+  delai:
+    'Erreur : le TOTP s’enrôle dans les 24 heures qui suivent la création du compte. Le compte est à recréer, en présence des deux personnes.',
   code: 'Erreur : ce code n’est pas valable. Vérifiez l’heure de votre téléphone, puis réessayez.',
   'trop-de-tentatives': 'Erreur : trop de tentatives. Réessayez dans un quart d’heure.',
   indisponible: 'Erreur : l’enrôlement n’a pas abouti. Réessayez dans un instant.',

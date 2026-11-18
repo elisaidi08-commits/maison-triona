@@ -4,8 +4,14 @@ import { describe, it } from 'node:test'
 import pg from 'pg'
 
 import { CHEMINS_AUTORISES, creerAuth } from '../../src/lib/auth/auth.ts'
+import { acteurLimitation, cheminAuth } from '../../src/lib/auth/enveloppe.ts'
 import {
   BASE_PATH_AUTH,
+  DELAI_ENROLEMENT_S,
+  DISJONCTEUR_ECHECS,
+  FENETRE_FREIN_S,
+  MOT_DE_PASSE_MIN,
+  VERROU_COMPTE_ECHECS,
   DUREE_MAX_SESSION_S,
   INACTIVITE_MAX_S,
   MAX_COMPTES,
@@ -218,5 +224,30 @@ describe('évaluation d’une session', () => {
 
   it('refuse des dates illisibles', () => {
     assert.equal(evaluerSession(session({ createdAt: new Date(Number.NaN) }), apres(1)), 'expiree')
+  })
+})
+
+describe('enveloppe du gestionnaire', () => {
+  it('extrait la route Better Auth, et rien hors de /coffre/api/auth', () => {
+    assert.equal(
+      cheminAuth('http://localhost:3000/coffre/api/auth/sign-in/email'),
+      '/sign-in/email',
+    )
+    assert.equal(
+      cheminAuth('http://localhost:3000/coffre/api/auth/sign-in/email?x=1'),
+      '/sign-in/email',
+    )
+    assert.equal(cheminAuth('http://localhost:3000/coffre/api/authx/sign-in/email'), null)
+    assert.equal(cheminAuth('http://localhost:3000/api/auth/sign-in/email'), null)
+    assert.equal(cheminAuth('pas une adresse'), null)
+    assert.equal(acteurLimitation('/sign-in/email'), 'limitation:/sign-in/email')
+  })
+
+  it('freine la force brute au-delà de la limite par IP', () => {
+    assert.equal(MOT_DE_PASSE_MIN, 24)
+    assert.equal(FENETRE_FREIN_S, 15 * 60)
+    assert.equal(VERROU_COMPTE_ECHECS, 10)
+    assert.equal(DISJONCTEUR_ECHECS, 50)
+    assert.equal(DELAI_ENROLEMENT_S, 24 * 60 * 60)
   })
 })

@@ -11,6 +11,8 @@ import type { ReponseAuth } from '../../src/lib/auth/appel.ts'
 import { creerAuth } from '../../src/lib/auth/auth.ts'
 import type { AuthCoffre } from '../../src/lib/auth/auth.ts'
 import { creerCompte } from '../../src/lib/auth/comptes.ts'
+import { servirAuth } from '../../src/lib/auth/enveloppe.ts'
+import { purgerAuth } from '../../src/lib/auth/purge.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { insertRequest } from '../../src/lib/vault/repository.ts'
 import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
@@ -59,7 +61,7 @@ class Navigateur {
   }
 
   async appeler(chemin: string, corps: Record<string, unknown> = {}): Promise<ReponseAuth> {
-    const reponse = await appelerAuth(auth, chemin, corps, this.entetes())
+    const reponse = await appelerAuth(auth, coffre, chemin, corps, this.entetes())
     for (const ligne of reponse.cookies) {
       const [paire = '', ...attributs] = ligne.split(';').map((part) => part.trim())
       const egal = paire.indexOf('=')
@@ -317,6 +319,145 @@ describe('authentification du coffre', () => {
     assert.ok(echecs.every((ligne) => ligne.actor === 'verrou@exemple.test'))
   })
 
+  it('répond 404 à une route ou une méthode hors liste, sans rien écrire', async () => {
+    const navigateur = new Navigateur()
+    for (const chemin of ['/get-session', '/sign-up/email', '/inconnue', '/sign-in/email/']) {
+      assert.equal((await navigateur.appeler(chemin)).statut, 404, chemin)
+    }
+    const get = await servirAuth(
+      auth,
+      coffre,
+      new Request(`${ORIGINE}/coffre/api/auth/sign-in/email`, { headers: navigateur.entetes() }),
+    )
+    assert.equal(get.status, 404)
+    const { rows } = await pool.query('SELECT count(*)::int AS n FROM "rateLimit"')
+    assert.equal(rows[0].n, 0)
+    assert.deepEqual(await journal(), [])
+  })
+
+  it('journalise l’enrôlement, le mot de passe juste et le code de secours à part', async () => {
+    const { secret, codesSecours } = await compteAvecTotp('actions@exemple.test')
+    const totp = new Navigateur()
+    await totp.connexion('actions@exemple.test')
+    await totp.appeler('/two-factor/verify-totp', { code: codeTotp(secret) })
+    const secours = new Navigateur()
+    await secours.connexion('actions@exemple.test')
+    await secours.appeler('/two-factor/verify-backup-code', { code: codesSecours[0] })
+    assert.deepEqual(
+      (await journal()).map((ligne) => ligne.action),
+      ['login', 'totp_enrolled', 'password_ok', 'login', 'password_ok', 'login_backup_code'],
+    )
+  })
+
+  it('garde une seule session par compte, sans adresse IP ni navigateur', async () => {
+    const { navigateur: premier, secret } = await compteAvecTotp('unique@exemple.test')
+    assert.equal((await lireAcces(auth, coffre, premier.entetes())).etat, 'autorise')
+    // Mot de passe seul (second facteur attendu) : ne déconnecte personne.
+    const etape = new Navigateur()
+    await etape.connexion('unique@exemple.test')
+    assert.equal((await lireAcces(auth, coffre, premier.entetes())).etat, 'autorise')
+    // Connexion complète ailleurs : la première session est fermée.
+    await etape.appeler('/two-factor/verify-totp', { code: codeTotp(secret) })
+    assert.equal((await lireAcces(auth, coffre, etape.entetes())).etat, 'autorise')
+    assert.equal((await lireAcces(auth, coffre, premier.entetes())).etat, 'anonyme')
+    const { rows } = await pool.query<{ ipAddress: string | null; userAgent: string | null }>(
+      'SELECT "ipAddress", "userAgent" FROM "session"',
+    )
+    assert.deepEqual(rows, [{ ipAddress: null, userAgent: null }])
+  })
+
+  it('verrou souple : 10 échecs en 15 minutes bloquent le compte, toutes IP confondues', async () => {
+    await compteSansTotp('souple@exemple.test')
+    await compteSansTotp('voisin@exemple.test')
+    for (const navigateur of [new Navigateur(), new Navigateur()]) {
+      for (let essai = 0; essai < 5; essai++) {
+        assert.equal(
+          (await navigateur.connexion('souple@exemple.test', 'faux-factice')).statut,
+          401,
+        )
+      }
+    }
+    // Onzième essai, bon mot de passe, adresse neuve : même 429 que la limite par IP.
+    const bloque = await new Navigateur().connexion('souple@exemple.test')
+    assert.equal(bloque.statut, 429)
+    assert.equal(bloque.code, null)
+    assert.equal((await new Navigateur().connexion('voisin@exemple.test')).statut, 200)
+    const lignes = await journal()
+    assert.equal(lignes.filter((ligne) => ligne.action === 'login_failed').length, 10)
+    assert.deepEqual(
+      lignes.filter((ligne) => ligne.action === 'rate_limited'),
+      [{ actor: 'limitation:/sign-in/email', action: 'rate_limited', request_id: null }],
+    )
+  })
+
+  it('disjoncteur : au-delà de 50 échecs en 15 minutes, plus aucune connexion', async () => {
+    await compteSansTotp('disjoncteur@exemple.test')
+    await pool.query(
+      `INSERT INTO vault_access_log (actor, action)
+       SELECT 'inconnu', 'login_failed' FROM generate_series(1, 50)`,
+    )
+    assert.equal((await new Navigateur().connexion('disjoncteur@exemple.test')).statut, 429)
+    await pool.query(`UPDATE vault_access_log SET at = now() - interval '16 minutes'`)
+    assert.equal((await new Navigateur().connexion('disjoncteur@exemple.test')).statut, 200)
+  })
+
+  it('journalise les 429 une fois par route et par 15 minutes', async () => {
+    await compteSansTotp('rafale@exemple.test')
+    const navigateur = new Navigateur()
+    for (let essai = 0; essai < 5; essai++)
+      await navigateur.connexion('rafale@exemple.test', 'faux')
+    for (let essai = 0; essai < 3; essai++) {
+      assert.equal((await navigateur.connexion('rafale@exemple.test')).statut, 429)
+    }
+    const limites = (await journal()).filter((ligne) => ligne.action === 'rate_limited')
+    assert.deepEqual(limites, [
+      { actor: 'limitation:/sign-in/email', action: 'rate_limited', request_id: null },
+    ])
+  })
+
+  it('refuse l’enrôlement plus de 24 heures après la création du compte', async () => {
+    await compteSansTotp('tardif@exemple.test')
+    await pool.query(
+      `UPDATE "user" SET "createdAt" = now() - interval '25 hours' WHERE email = 'tardif@exemple.test'`,
+    )
+    const navigateur = new Navigateur()
+    assert.equal((await navigateur.connexion('tardif@exemple.test')).statut, 200)
+    const refus = await navigateur.appeler('/two-factor/enable', { password: MOT_DE_PASSE })
+    assert.equal(refus.statut, 403)
+    assert.equal(refus.code, 'ENROLMENT_WINDOW_CLOSED')
+    const { rows } = await pool.query('SELECT count(*)::int AS n FROM "twoFactor"')
+    assert.equal(rows[0].n, 0)
+  })
+
+  it('purge les compteurs, défis et sessions échus, et garde le reste', async () => {
+    const { navigateur } = await compteAvecTotp('purge@exemple.test')
+    const defi = new Navigateur()
+    await defi.connexion('purge@exemple.test')
+    const maintenant = Date.now()
+    await pool.query(
+      `INSERT INTO "rateLimit" (id, key, count, "lastRequest") VALUES ('vieux', 'x|/sign-in/email', 1, $1)`,
+      [maintenant - 16 * 60_000],
+    )
+    const avant = await pool.query('SELECT count(*)::int AS n FROM "rateLimit"')
+    assert.ok(avant.rows[0].n >= 2)
+
+    // Maintenant : seul le vieux compteur part ; session et défi restent.
+    assert.deepEqual(await purgerAuth(coffre, new Date(maintenant)), {
+      limites: 1,
+      verifications: 0,
+      sessions: 0,
+    })
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes())).etat, 'autorise')
+    // Une heure plus tard : compteurs, défi (5 minutes) et session inactive partent.
+    const purge = await purgerAuth(coffre, new Date(maintenant + 60 * 60_000))
+    assert.ok(purge.limites >= 1 && purge.verifications >= 1)
+    assert.equal(purge.sessions, 1)
+    for (const table of ['"rateLimit"', '"verification"', '"session"']) {
+      const { rows } = await pool.query(`SELECT count(*)::int AS n FROM ${table}`)
+      assert.equal(rows[0].n, 0, table)
+    }
+  })
+
   it('remplit le journal d’accès sans aucun contenu', async () => {
     const { secret, codesSecours } = await compteAvecTotp('journal@exemple.test')
     await pool.query('TRUNCATE vault_access_log RESTART IDENTITY')
@@ -336,6 +477,7 @@ describe('authentification du coffre', () => {
     assert.deepEqual(await journal(), [
       { actor: 'inconnu', action: 'login_failed', request_id: null },
       { actor: 'journal@exemple.test', action: 'login_failed', request_id: null },
+      { actor: 'journal@exemple.test', action: 'password_ok', request_id: null },
       { actor: 'journal@exemple.test', action: 'login', request_id: null },
       { actor: 'journal@exemple.test', action: 'list', request_id: null },
       { actor: 'journal@exemple.test', action: 'logout', request_id: null },

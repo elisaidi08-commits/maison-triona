@@ -1,8 +1,12 @@
+import type { Pool } from 'pg'
+
 import type { AuthCoffre } from './auth.ts'
+import { servirAuth } from './enveloppe.ts'
 
 // Appel d'une route Better Auth depuis le serveur (Server Actions du coffre, tests d'intégration).
-// On passe par `auth.handler`, comme une requête HTTP, et non par `auth.api` : la limitation de
-// débit, le contrôle d'origine et la liste fermée de routes ne s'appliquent qu'aux requêtes.
+// On passe par l'enveloppe et `auth.handler`, comme une requête HTTP, et non par `auth.api` : la
+// liste fermée de routes, la limitation de débit, le contrôle d'origine et le journal des 429 ne
+// s'appliquent qu'aux requêtes.
 // Seuls les en-têtes utiles sont transmis : cookies du coffre, origine et métadonnées de la
 // requête (contrôle CSRF), navigateur, adresse IP (limitation de débit).
 
@@ -27,6 +31,7 @@ export interface ReponseAuth {
 
 export async function appelerAuth(
   auth: AuthCoffre,
+  pool: Pool,
   chemin: string,
   corps: Record<string, unknown>,
   entetes: Headers,
@@ -38,7 +43,9 @@ export async function appelerAuth(
     if (valeur) transmis.set(nom, valeur)
   }
 
-  const reponse = await auth.handler(
+  const reponse = await servirAuth(
+    auth,
+    pool,
     new Request(`${contexte.baseURL}${chemin}`, {
       method: 'POST',
       headers: transmis,

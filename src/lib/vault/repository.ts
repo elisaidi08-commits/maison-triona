@@ -12,10 +12,15 @@ import { withTransaction } from '../db/transaction.ts'
 
 export type RequestKind = 'request' | 'urgent'
 export type RequestStatus = 'new' | 'in_progress' | 'closed'
-// `login_failed`, `logout` et `list` (lecture de la liste) : partie C, db/migrations/0003_auth.sql.
+// Actions de connexion et de lecture de la liste : partie C (db/migrations/0003_auth.sql,
+// 0004_journal_coffre.sql).
 export type AccessAction =
   | 'login'
+  | 'login_backup_code'
   | 'login_failed'
+  | 'password_ok'
+  | 'totp_enrolled'
+  | 'rate_limited'
   | 'logout'
   | 'list'
   | 'read'
@@ -352,4 +357,42 @@ export async function listAccessLog(
       requestId: row.request_id,
     }))
   })
+}
+
+// Échecs de connexion depuis `since` : d'un compte (verrou par compte), ou de tous (disjoncteur).
+export async function countRecentFailures(
+  pool: Pool,
+  since: Date,
+  actor: string | null = null,
+): Promise<number> {
+  assertValidDate(since, 'Début de fenêtre')
+  return guard('countRecentFailures', async () => {
+    const { rows } = await pool.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM vault_access_log
+       WHERE action = 'login_failed' AND at > $1 AND ($2::text IS NULL OR actor = $2)`,
+      [since, actor],
+    )
+    return rows[0]?.n ?? 0
+  })
+}
+
+// Réponse 429 journalisée une fois au plus par acteur (la route) depuis `since` : une rafale ne
+// remplit pas le journal. Le verrou consultatif sérialise deux 429 simultanés. Vrai si écrit.
+export async function logRateLimitedOnce(pool: Pool, actor: string, since: Date): Promise<boolean> {
+  assertValidDate(since, 'Début de fenêtre')
+  return guard('logRateLimitedOnce', () =>
+    withTransaction(pool, async (client) => {
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('maison-triona:limite:' || $1))", [
+        actor,
+      ])
+      const { rowCount } = await client.query(
+        `SELECT 1 FROM vault_access_log
+         WHERE action = 'rate_limited' AND actor = $1 AND at > $2 LIMIT 1`,
+        [actor, since],
+      )
+      if (rowCount) return false
+      await client.query(INSERT_LOG, [actor, 'rate_limited', null])
+      return true
+    }),
+  )
 }
