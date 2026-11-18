@@ -33,6 +33,7 @@ cp .env.example .env.local        # puis ajuster si besoin ; jamais de vraie val
 | `npm run test:integration` | Tests contre PostgreSQL (base jetable `maison_triona_test`, vidée à chaque fichier ; `TEST_DATABASE_URL` pour une autre adresse, dont le nom doit finir par `_test`) |
 | `npm run db:migrate` | Applique les migrations de `db/migrations/` à la base de `DATABASE_URL` ; à lancer à la main, jamais pendant le build |
 | `npm run vault:keys -- <paquet.json>` | Génère la paire de clés du coffre, hors ligne : paquet de la clé privée écrit hors du dépôt, clé publique affichée pour `VAULT_PUBLIC_KEY`. `--ajouter <existant.json> <nouveau.json>` : paquet d'une seconde personne, même clé, autre phrase (procédure : `docs/coffre-cles.md`) |
+| `npm run coffre:compte -- --nom "Prénom Nom" --email adresse` | Crée un compte du coffre (deux au plus) dans la base de `DATABASE_URL` ; mot de passe saisi ensuite, masqué, jamais en argument ; puis enrôler le TOTP sur `/coffre/connexion` |
 | `npm run lighthouse` | Lighthouse 13, mobile et desktop, seuils ≥ 95 ; exige `npm run start -- --port 3100` dans un autre terminal |
 | `npm run check:content` | Échoue s'il reste un contenu provisoire (`[CONTENU À FOURNIR PAR CAT]`, `[À VALIDER…]`…) |
 | `npm run check:i18n` | Échoue si une clé existe en FR et pas en EN (ou l'inverse) |
