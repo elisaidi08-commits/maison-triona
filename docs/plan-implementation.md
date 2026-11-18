@@ -203,6 +203,7 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 
 **3.8 Disponibilités** — Tables `booking_settings`, `availability_rules`, `availability_exceptions` ; page `/coffre/disponibilites` (semaine type, durée, pause, délai, horizon, plafond, absences, jours fériés belges) ; fonction pure `computeSlots` (spec §4.3).
 **CA** : réglages par défaut de la spec §3.1 (plafond 4 par jour) ; tests unitaires `node --test` verts (plages, pause, délai, horizon, absences, plafond, changements d'heure de mars et d'octobre) ; bloquer une journée garde et signale les appels existants.
+*Partie A livrée (moteur sans base)* : `src/lib/booking/` (`zoned-time`, `belgian-holidays`, `settings`, `slots`), 41 tests unitaires lancés en CI par `npm run test:unit`. Les appels confirmés gardent la plage enregistrée en base (pause du moment de la réservation). *Partie B* (tables, page `/coffre/disponibilites`, validation Zod des réglages) après la story 3.2.
 
 **3.9 Demande de lien** — Page `/[locale]/contact/appel` (CTA « Convenir d'un appel » `[À VALIDER]`) ; jetons (32 octets, empreinte seule en base, 48 h, un nouveau lien annule l'ancien) ; e-mail d'accès par la boîte d'envoi ; anti-abus de 3.5.
 **CA** : réponse identique quelle que soit l'adresse ; aucun cookie ; jeton jamais en clair en base ni dans les journaux applicatifs ; limites par IP et par adresse prouvées en E2E ; sans JS.

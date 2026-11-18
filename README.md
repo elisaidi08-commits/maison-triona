@@ -29,6 +29,7 @@ cp .env.example .env.local        # puis ajuster si besoin ; jamais de vraie val
 | `npm run format` · `npm run format:check` | Prettier (code seulement ; la documentation n'est pas reformatée) |
 | `npm run test:e2e` | Playwright : la page répond, aucune requête tierce, aucun cookie, noindex hors production |
 | `npm run test:a11y` | axe, WCAG 2.2 AA |
+| `npm run test:unit` | Tests unitaires (testeur intégré de Node) : calcul des créneaux de la réservation d'appel |
 | `npm run lighthouse` | Lighthouse 13, mobile et desktop, seuils ≥ 95 ; exige `npm run start -- --port 3100` dans un autre terminal |
 | `npm run check:content` | Échoue s'il reste un contenu provisoire (`[CONTENU À FOURNIR PAR CAT]`, `[À VALIDER…]`…) |
 | `npm run check:i18n` | Échoue si une clé existe en FR et pas en EN (ou l'inverse) |
