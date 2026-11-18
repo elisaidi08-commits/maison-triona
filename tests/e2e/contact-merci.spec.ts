@@ -27,6 +27,13 @@ for (const [locale, titre, delai] of [
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(titre)
     await expect(page.locator('main')).toContainText(delai)
 
+    // Cachet « K. » de 64 px (story 3.3) : décoratif, dernier élément de la colonne, après le
+    // lien de retour.
+    const dernier = page.locator('main h1').locator('xpath=..').locator(':scope > :last-child')
+    await expect(dernier).toHaveAttribute('aria-hidden', 'true')
+    await expect(dernier).toHaveText('K.')
+    await expect(dernier).toHaveCSS('font-size', '64px')
+
     // Rien de la demande, ni dans la page ni dans son HTML (attributs et données comprises).
     const html = await page.content()
     for (const valeur of Object.values(ECHO)) expect(html).not.toContain(valeur)

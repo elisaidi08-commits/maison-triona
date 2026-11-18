@@ -3,14 +3,16 @@ import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { EffacerBrouillon } from '@/components/forms/EffacerBrouillon'
 import { Rule } from '@/components/ui/Rule'
+import { Stamp } from '@/components/ui/Stamp'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 
 // Remerciement après un envoi (story 3.2, partie B ; docs/architecture.md §6.1, étape 5). Page
 // statique, noindex, hors du sitemap : elle ne reprend rien de la demande (aucun paramètre lu,
 // aucun état reçu), seulement le délai de réponse. Le brouillon du formulaire s'efface à
-// l'affichage. Même colonne que le contact. Texte en brouillon (content/brouillons.json), d'après
-// l'annexe B.4 de docs/trust-contact-launch.md.
+// l'affichage. Même colonne que le contact, close par le cachet « K. » de 64 px (story 3.3),
+// décoratif. Texte en brouillon (content/brouillons.json), d'après l'annexe B.4 de
+// docs/trust-contact-launch.md.
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await rootParams.locale()) as Locale
@@ -32,6 +34,7 @@ export default async function Page() {
         <p>
           <TextLink href={localizedPath('/', locale)}>{t('back')}</TextLink>
         </p>
+        <Stamp size="lg" />
       </div>
       <EffacerBrouillon />
     </div>
