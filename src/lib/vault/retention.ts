@@ -39,3 +39,16 @@ export function isExpired(request: { retentionUntil: Date; frozen: boolean }, no
   if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
   return !request.frozen && request.retentionUntil.getTime() <= now.getTime()
 }
+
+// Au-delà de 48 heures sans passage de la conservation planifiée (quotidienne), l'accueil du coffre
+// le signale : secret absent, tâche coupée, base injoignable… Les demandes échues ne sont alors plus
+// effacées. Deux jours laissent passer un passage manqué (Vercel ne réessaie pas).
+export const RETENTION_RUN_ALERT_HOURS = 48
+
+export function retentionRunStatus(last: Date | null, now: Date): 'never' | 'recent' | 'late' {
+  if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
+  if (last === null) return 'never'
+  return now.getTime() - last.getTime() > RETENTION_RUN_ALERT_HOURS * 3600 * 1000
+    ? 'late'
+    : 'recent'
+}

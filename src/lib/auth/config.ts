@@ -9,12 +9,10 @@ type Environnement = Record<string, string | undefined>
 export const CHEMIN_COFFRE = '/coffre'
 export const BASE_PATH_AUTH = `${CHEMIN_COFFRE}/api/auth`
 
-// Sessions courtes (docs/architecture.md §6.5). Repère : OWASP ASVS 4.0.3, V3.3.2, niveau 3
-// (nouvelle authentification au plus tard après 12 heures, ou 15 minutes d'inactivité). La durée
-// maximale est ramenée à une journée de travail ; l'inactivité suit le niveau 3, le coffre
-// affichera des demandes qui peuvent révéler une situation de santé.
-export const DUREE_MAX_SESSION_S = 8 * 60 * 60
-export const INACTIVITE_MAX_S = 15 * 60
+// Sessions courtes (docs/architecture.md §6.5) : durées dans ./durees.ts, sans aucun secret, pour que
+// le navigateur puisse les lire (verrouillage de la page de lecture après 15 minutes, partie D) ;
+// ce module-ci contient un repli de développement qui ne doit pas y aller.
+export { DUREE_MAX_SESSION_S, INACTIVITE_MAX_S } from './durees.ts'
 // Délai pour saisir le code TOTP après le mot de passe (10 minutes par défaut chez Better Auth).
 export const DELAI_SECOND_FACTEUR_S = 5 * 60
 

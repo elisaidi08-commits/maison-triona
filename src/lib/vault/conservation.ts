@@ -2,7 +2,7 @@ import type { Pool } from 'pg'
 
 import { purgerAuth } from '../auth/purge.ts'
 import { withTransaction } from '../db/transaction.ts'
-import { autorisationCron } from '../security/cron.ts'
+import { autorisationCron, secretCron } from '../security/cron.ts'
 import { logRetention, purgeExpired, VaultError, type RetentionCounts } from './repository.ts'
 
 // Conservation planifiée du coffre (story 3.2, partie D ; docs/architecture.md §6.5), appelée chaque
@@ -52,12 +52,16 @@ export interface RetentionRoute {
 }
 
 // Gestionnaire de la route : 401 sans le bon secret (rien n'est lu ni écrit), 200 et le résumé en
-// nombres, ou 500 sans détail. Le journal du serveur ne reçoit qu'un statut et un code SQL.
+// nombres, ou 500 sans détail. Le journal du serveur ne reçoit qu'un statut et un code SQL ; un
+// secret absent (ou mal formé) y laisse une ligne fixe, `refused:no-secret`, pour qu'une tâche qui
+// ne fait plus rien se voie dans les journaux de Vercel.
 export async function handleRetention(
   request: Request,
   { env, pool, now = () => new Date() }: RetentionRoute,
 ): Promise<Response> {
-  if (!autorisationCron(request.headers.get('authorization'), env)) {
+  const entete = request.headers.get('authorization')
+  if (!secretCron(env)) console.error('[conservation] refused:no-secret')
+  if (!autorisationCron(entete, env)) {
     return new Response('Unauthorized', {
       status: 401,
       headers: { ...SANS_CACHE, 'WWW-Authenticate': 'Bearer' },

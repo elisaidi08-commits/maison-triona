@@ -8,6 +8,7 @@ import {
   creerNonce,
   cspCoffre,
   estCheminCoffre,
+  estCheminLecture,
   PAGE_INTROUVABLE,
 } from './lib/coffre/securite'
 
@@ -23,12 +24,13 @@ const deploye = Boolean(process.env.VERCEL_ENV)
 export default function proxy(request: NextRequest) {
   if (!estCheminCoffre(request.nextUrl.pathname)) return intl(request)
 
-  const csp = cspCoffre(creerNonce(), { dev, deploye })
+  const chemin = request.nextUrl.pathname
+  const csp = cspCoffre(creerNonce(), { dev, deploye, wasm: estCheminLecture(chemin) })
   const entetes = new Headers(request.headers)
   entetes.set('Content-Security-Policy', csp)
   // Adresse de demande mal formée (story 3.2 D) : un vrai 404, décidé ici, avant tout rendu (avec
   // Cache Components, un notFound() de la page partirait en 200). Rien n'est lu, aucune session.
-  if (cheminDemandeMalForme(request.nextUrl.pathname)) {
+  if (cheminDemandeMalForme(chemin)) {
     return new Response(PAGE_INTROUVABLE, {
       status: 404,
       headers: {

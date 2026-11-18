@@ -10,6 +10,12 @@ export function estCheminCoffre(chemin: string): boolean {
 const CHEMIN_DEMANDE = /^\/coffre\/demandes\/([^/]+)\/?$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// Pages de lecture des demandes (/coffre/demandes/…) : les seules qui chargent libsodium, donc les
+// seules dont la CSP admet WebAssembly (`cspCoffre`, option `wasm`).
+export function estCheminLecture(chemin: string): boolean {
+  return chemin.startsWith('/coffre/demandes/')
+}
+
 export function cheminDemandeMalForme(chemin: string): boolean {
   const segment = chemin.match(CHEMIN_DEMANDE)?.[1]
   return segment !== undefined && !UUID.test(segment)
@@ -47,15 +53,19 @@ export function creerNonce(): string {
 // le nonce dans l'en-tête de la requête et l'ajoute à ses scripts et styles en ligne, ce qui exige
 // un rendu à chaque requête (src/app/coffre/layout.tsx). Aucun `'unsafe-inline'` en production.
 // Le coffre affichera du texte saisi par des inconnus : il est toujours rendu comme texte.
-export function cspCoffre(nonce: string, options: { dev: boolean; deploye: boolean }): string {
+export function cspCoffre(
+  nonce: string,
+  options: { dev: boolean; deploye: boolean; wasm: boolean },
+): string {
   return [
     "default-src 'self'",
-    // `'wasm-unsafe-eval'` (partie D) : la lecture déchiffre dans le navigateur avec libsodium,
-    // qui n'existe qu'en WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ; il
-    // autorise la compilation de WebAssembly, pas `eval()` ni `new Function`. Ici seulement : la CSP
-    // du site public (next.config.ts) ne change pas. `'unsafe-eval'` : développement seulement
-    // (React reconstruit les piles d'erreur).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${options.dev ? " 'unsafe-eval'" : ''}`,
+    // `'wasm-unsafe-eval'` (partie D), sur les pages de lecture seulement (`wasm`, voir
+    // estCheminLecture) : elles déchiffrent dans le navigateur avec libsodium, qui n'existe qu'en
+    // WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ; il autorise la compilation
+    // de WebAssembly, pas `eval()` ni `new Function`. Ni la connexion, ni la liste, ni le site public
+    // (next.config.ts) ne l'ont. `'unsafe-eval'` : développement seulement (React reconstruit les
+    // piles d'erreur).
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${options.wasm ? " 'wasm-unsafe-eval'" : ''}${options.dev ? " 'unsafe-eval'" : ''}`,
     // Styles en ligne du serveur de développement seulement ; en production, le nonce suffit.
     `style-src 'self' ${options.dev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
     "img-src 'self'",

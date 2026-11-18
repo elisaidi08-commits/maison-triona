@@ -246,8 +246,15 @@ export async function listRequests(
   return guard('listRequests', () => selectSummaries(pool, limit, offset))
 }
 
+// Fenêtre dans laquelle un même compte n'inscrit qu'une ligne `list` (partie D).
+export const LIST_LOG_WINDOW_S = 2
+
 // Même liste, pour l'accueil du coffre : la lecture est journalisée (`list`, sans identifiant de
 // demande) dans la même transaction. Pas de lecture sans trace.
+// Une ligne par affichage : Next 16 (Cache Components) rend la page deux fois par requête, et
+// l'écriture se fait au rendu. Une ligne `list` du même compte de moins de 2 secondes tient lieu
+// de trace ; le verrou consultatif par compte sérialise deux rendus simultanés (sans lui, chacun
+// pourrait ne pas voir la ligne de l'autre et écrire la sienne).
 export async function listRequestsLogged(
   pool: Pool,
   actor: string,
@@ -257,7 +264,19 @@ export async function listRequestsLogged(
   const offset = pageOffset(options.offset)
   return guard('listRequestsLogged', () =>
     withTransaction(pool, async (client) => {
-      await client.query(INSERT_LOG, [actor, 'list', null])
+      await client.query("SELECT pg_advisory_xact_lock(hashtext('maison-triona:liste:' || $1))", [
+        actor,
+      ])
+      await client.query(
+        `INSERT INTO vault_access_log (actor, action)
+         SELECT $1::text, 'list'
+         WHERE NOT EXISTS (
+           SELECT 1 FROM vault_access_log
+           WHERE action = 'list' AND actor = $1::text
+             AND at > now() - make_interval(secs => $2)
+         )`,
+        [actor, LIST_LOG_WINDOW_S],
+      )
       return selectSummaries(client, limit, offset)
     }),
   )
@@ -385,6 +404,17 @@ export async function logRetention(db: Pool | PoolClient, counts: RetentionCount
       [SYSTEM_ACTOR, counts.requests, counts.sessions, counts.rateLimits, counts.verifications],
     ),
   )
+}
+
+// Date du dernier passage de la conservation planifiée (`retention`), ou null s'il n'y en a aucun :
+// l'accueil du coffre la montre, avec une alerte au-delà de 48 heures (retentionRunStatus).
+export async function lastRetentionRun(pool: Pool): Promise<Date | null> {
+  return guard('lastRetentionRun', async () => {
+    const { rows } = await pool.query<{ at: Date | null }>(
+      `SELECT max(at) AS at FROM vault_access_log WHERE action = 'retention'`,
+    )
+    return rows[0]?.at ?? null
+  })
 }
 
 export async function logAccess(

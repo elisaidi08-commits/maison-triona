@@ -170,6 +170,11 @@ describe('conservation planifiée du coffre', () => {
 
   it('refuse sans secret, sans en-tête ou avec un autre secret, sans ouvrir la base', async () => {
     await insertRequest(admin, demande({ retentionUntil: new Date('2027-01-01T00:00:00Z') }))
+    const lignes: string[] = []
+    const original = console.error
+    console.error = (...args: unknown[]) => {
+      lignes.push(args.map(String).join(' '))
+    }
     let ouvertures = 0
     const pool = () => {
       ouvertures += 1
@@ -183,12 +188,22 @@ describe('conservation planifiée du coffre', () => {
       [ENV, { authorization: SECRET }],
       [{ CRON_SECRET: 'court' }, { authorization: 'Bearer court' }],
     ]
-    for (const [env, entetes] of cas) {
-      const reponse = await handleRetention(requete(entetes), { env, pool, now: () => MAINTENANT })
-      assert.equal(reponse.status, 401, JSON.stringify(entetes))
-      assert.equal(reponse.headers.get('cache-control'), 'no-store')
-      assert.equal(await reponse.text(), 'Unauthorized')
+    try {
+      for (const [env, entetes] of cas) {
+        const reponse = await handleRetention(requete(entetes), {
+          env,
+          pool,
+          now: () => MAINTENANT,
+        })
+        assert.equal(reponse.status, 401, JSON.stringify(entetes))
+        assert.equal(reponse.headers.get('cache-control'), 'no-store')
+        assert.equal(await reponse.text(), 'Unauthorized')
+      }
+    } finally {
+      console.error = original
     }
+    // Secret absent ou mal formé (3 cas sur 6) : une ligne fixe, sans aucune valeur.
+    assert.deepEqual(lignes, Array(3).fill('[conservation] refused:no-secret'))
     assert.equal(ouvertures, 0)
     assert.equal(await compter('vault_requests'), 1)
     assert.equal(await compter('vault_access_log'), 0)

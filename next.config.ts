@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
+import { verifierCronAuBuild } from './src/lib/security/cron'
+
 // Configuration de base. En-têtes de sécurité : story 5.1 ; images : stories 1.3 et 2.5.
+
+// Coffre configuré en production sans CRON_SECRET : le build échoue (story 3.2 D, src/lib/security/cron.ts).
+verifierCronAuBuild(process.env)
 
 const deploye = Boolean(process.env.VERCEL_ENV)
 const dev = process.env.NODE_ENV === 'development'

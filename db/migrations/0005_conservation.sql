@@ -35,3 +35,10 @@ alter table vault_access_log add constraint vault_access_log_retention_check che
         and purged_rate_limits is null and purged_verifications is null
   end
 );
+
+-- Dernier passage de la conservation (accueil du coffre) et dernière lecture de la liste par compte
+-- (une ligne `list` par affichage, src/lib/vault/repository.ts).
+create index vault_access_log_retention_idx
+  on vault_access_log (at desc) where action = 'retention';
+create index vault_access_log_liste_idx
+  on vault_access_log (actor, at desc) where action = 'list';

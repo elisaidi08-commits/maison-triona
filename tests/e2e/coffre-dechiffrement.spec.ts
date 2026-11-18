@@ -142,7 +142,10 @@ test.describe('déchiffrement dans le navigateur', () => {
   test('ouvre la demande sous la CSP du coffre, après une rotation, sans API de Node', async ({
     page,
   }) => {
-    const violations = await servir(page, cspCoffre(NONCE, { dev: false, deploye: false }))
+    const violations = await servir(
+      page,
+      cspCoffre(NONCE, { dev: false, deploye: false, wasm: true }),
+    )
     expect(await page.evaluate(() => (window as unknown as { apiNode: string[] }).apiNode)).toEqual(
       [],
     )
@@ -161,7 +164,7 @@ test.describe('déchiffrement dans le navigateur', () => {
   })
 
   test('une autre phrase n’ouvre rien', async ({ page }) => {
-    await servir(page, cspCoffre(NONCE, { dev: false, deploye: false }))
+    await servir(page, cspCoffre(NONCE, { dev: false, deploye: false, wasm: true }))
     const resultat = await page.evaluate(
       ([paquets, scelle]) =>
         (
@@ -177,7 +180,7 @@ test.describe('déchiffrement dans le navigateur', () => {
   test('le seul nouveau paquet ne suffit pas pour une demande scellée avant la rotation', async ({
     page,
   }) => {
-    await servir(page, cspCoffre(NONCE, { dev: false, deploye: false }))
+    await servir(page, cspCoffre(NONCE, { dev: false, deploye: false, wasm: true }))
     const resultat = await page.evaluate(
       ([paquets, phrase, scelle]) =>
         (
@@ -191,10 +194,7 @@ test.describe('déchiffrement dans le navigateur', () => {
   })
 
   test('sans wasm-unsafe-eval, libsodium ne démarre pas (témoin de la CSP)', async ({ page }) => {
-    const sansWasm = cspCoffre(NONCE, { dev: false, deploye: false }).replace(
-      " 'wasm-unsafe-eval'",
-      '',
-    )
+    const sansWasm = cspCoffre(NONCE, { dev: false, deploye: false, wasm: false })
     await servir(page, sansWasm)
     const resultat = await page.evaluate(
       ([paquets, phrase, scelle]) =>

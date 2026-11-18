@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { FormEvent } from 'react'
+import { flushSync } from 'react-dom'
 
 import { Button } from '@/components/ui/Button'
 import { ErrorSummary } from '@/components/ui/ErrorSummary'
+import { INACTIVITE_MAX_S } from '@/lib/auth/durees'
 import { nomFichierExport, texteExport } from '@/lib/coffre/export'
 import { CHAMPS_SCELLES, valeurScellee } from '@/lib/coffre/libelles'
 import type { Colonne } from '@/lib/coffre/libelles'
@@ -22,9 +24,13 @@ import { journaliserExport, lireScelle } from '../actions'
 // - Ni la clé privée, ni la phrase, ni le texte en clair ne vont au serveur, ni dans localStorage,
 //   sessionStorage, IndexedDB ou un cookie. Les champs du formulaire n'ont pas d'attribut `name`
 //   (un envoi natif, avant le chargement du script, ne transmettrait rien) et sont vidés aussitôt.
-// - Les clés déverrouillées vivent en mémoire, le temps de la page : « Verrouiller », ou quitter la
-//   page, les efface (`memzero`) ; une autre demande les redemande. Le texte déchiffré disparaît
-//   avec elles (JavaScript ne permet pas d'effacer une chaîne : il est seulement oublié).
+// - Les clés déverrouillées vivent en mémoire, le temps de la page. Tout se verrouille (relecture
+//   sécurité de la partie D) : sur « Verrouiller » ; en quittant la page (`pagehide`, y compris vers
+//   le cache arrière du navigateur, d'où une page revenue par « Précédent » arrive verrouillée) ;
+//   après 15 minutes sans interaction (`INACTIVITE_MAX_S`, la même inactivité que la session) ;
+//   au démontage. Verrouiller vide l'état (texte déchiffré, octets scellés, nombre de clés) et
+//   remplit de zéros les octets des clés (`memzero`) ; les octets scellés décodés le sont dès
+//   l'ouverture. JavaScript ne permet pas d'effacer une chaîne : le texte est seulement oublié.
 // - Le contenu est rendu comme texte, jamais comme HTML.
 // - Export : l'action serveur ne reçoit que l'identifiant et inscrit `export` au journal ; le
 //   fichier texte est composé ici (Blob) et téléchargé, sans passer par le serveur.
@@ -71,12 +77,27 @@ const EXPORTS = {
 // inactif jusque-là.
 const abonner = () => () => {}
 
+// Interactions qui comptent comme activité sur la page de lecture.
+const ACTIVITE = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
+const VERIFICATION_MS = 15_000
+
+const VERROUILLAGES = {
+  inactivite: 'Lecture verrouillée après 15 minutes sans activité : les clés ont été effacées.',
+  page: 'Lecture verrouillée en quittant la page : les clés ont été effacées.',
+  bouton: 'Lecture verrouillée : les clés ont été effacées.',
+} as const
+type Verrouillage = keyof typeof VERROUILLAGES
+
+// Remplit de zéros les octets des clés (privée et publique), puis vide le trousseau.
 async function oublier(trousseau: VaultKeys[]): Promise<void> {
   if (trousseau.length === 0) return
   const cles = trousseau.splice(0)
   const { loadSodium } = await import('@/lib/vault/sodium')
   const lib = await loadSodium()
-  for (const cle of cles) lib.memzero(cle.privateKey)
+  for (const cle of cles) {
+    lib.memzero(cle.privateKey)
+    lib.memzero(cle.publicKey)
+  }
 }
 
 export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne[] }) {
@@ -90,6 +111,8 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
   const [champs, setChamps] = useState<SealedFields | null>(null)
   const [nombreCles, setNombreCles] = useState(0)
   const [exportEtat, setExportEtat] = useState<keyof typeof EXPORTS | null>(null)
+  const [verrouillage, setVerrouillage] = useState<Verrouillage | null>(null)
+  const derniereActivite = useRef(0)
   const trousseau = useRef<VaultKeys[]>([])
   // Octets scellés (base64), demandés une seule fois : rien de lisible sans la clé privée.
   const scelle = useRef<string | null>(null)
@@ -97,13 +120,61 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
   const phrase = useRef<HTMLInputElement>(null)
   const titreLu = useRef<HTMLHeadingElement>(null)
 
-  // Page quittée : les clés sont effacées de la mémoire.
+  // Verrouille : état vidé, clés remplies de zéros, champs du formulaire vidés. Stable (références et
+  // setters seulement) : sert aux écouteurs ci-dessous.
+  const verrouiller = useCallback((raison: Verrouillage) => {
+    setChamps(null)
+    setExportEtat(null)
+    setNombreCles(0)
+    scelle.current = null
+    if (phrase.current) phrase.current.value = ''
+    if (fichiers.current) fichiers.current.value = ''
+    if (trousseau.current.length > 0) setVerrouillage(raison)
+    void oublier(trousseau.current)
+  }, [])
+
+  // Démontage (autre page du coffre) : les clés sont effacées de la mémoire.
   useEffect(() => {
     const cles = trousseau.current
     return () => {
       void oublier(cles)
     }
   }, [])
+
+  // Page quittée, y compris vers le cache arrière (bfcache) : verrouillée avant de partir, rendu
+  // compris (flushSync), pour que la page gardée en cache ne contienne plus le texte.
+  useEffect(() => {
+    const quitter = () => flushSync(() => verrouiller('page'))
+    window.addEventListener('pagehide', quitter)
+    return () => window.removeEventListener('pagehide', quitter)
+  }, [verrouiller])
+
+  // 15 minutes sans interaction, clés en mémoire : verrouillée. Vérifié toutes les 15 secondes et au
+  // retour sur l'onglet (les minuteries des onglets cachés sont ralenties).
+  const actif = champs !== null || nombreCles > 0
+  useEffect(() => {
+    if (!actif) return
+    derniereActivite.current = Date.now()
+    const noter = () => {
+      derniereActivite.current = Date.now()
+    }
+    const verifier = () => {
+      if (Date.now() - derniereActivite.current >= INACTIVITE_MAX_S * 1000) {
+        verrouiller('inactivite')
+      }
+    }
+    const visible = () => {
+      if (document.visibilityState === 'visible') verifier()
+    }
+    for (const type of ACTIVITE) window.addEventListener(type, noter, { passive: true })
+    document.addEventListener('visibilitychange', visible)
+    const minuterie = window.setInterval(verifier, VERIFICATION_MS)
+    return () => {
+      for (const type of ACTIVITE) window.removeEventListener(type, noter)
+      document.removeEventListener('visibilitychange', visible)
+      window.clearInterval(minuterie)
+    }
+  }, [actif, verrouiller])
 
   // Demande ouverte : le focus va au contenu, que le lecteur d'écran annonce.
   useEffect(() => {
@@ -120,6 +191,7 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
       return
     }
     setErreur(null)
+    setVerrouillage(null)
     setEnCours(true)
     try {
       // Argon2id (256 Mio) occupe la page quelques secondes : l'état « en cours » s'affiche d'abord.
@@ -176,13 +248,17 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
       }
       const octets = fromBase64(lib, scelle.current)
       if (octets) {
-        for (const cles of trousseau.current) {
-          try {
-            setChamps(await openSealed(octets, cles))
-            return
-          } catch {
-            // Autre paire (avant ou après une rotation) : clé suivante.
+        try {
+          for (const cles of trousseau.current) {
+            try {
+              setChamps(await openSealed(octets, cles))
+              return
+            } catch {
+              // Autre paire (avant ou après une rotation) : clé suivante.
+            }
           }
+        } finally {
+          lib.memzero(octets)
         }
       }
       setErreur(ouverts === 0 ? 'phrase' : 'autre-cle')
@@ -191,13 +267,6 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
     } finally {
       setEnCours(false)
     }
-  }
-
-  function verrouiller() {
-    setChamps(null)
-    setExportEtat(null)
-    setNombreCles(0)
-    void oublier(trousseau.current)
   }
 
   async function exporter() {
@@ -233,7 +302,9 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
       ? 'Demande déchiffrée dans ce navigateur.'
       : nombreCles > 0
         ? `${nombreCles === 1 ? 'Une clé déverrouillée' : `${nombreCles} clés déverrouillées`} en mémoire, le temps de la page.`
-        : ''
+        : verrouillage
+          ? VERROUILLAGES[verrouillage]
+          : ''
 
   return (
     <section aria-labelledby="lecture-titre" className="flex max-w-measure flex-col gap-32">
@@ -272,7 +343,7 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
             >
               Exporter en fichier texte
             </Button>
-            <Button variant="discret" onClick={verrouiller}>
+            <Button variant="discret" onClick={() => verrouiller('bouton')}>
               Verrouiller
             </Button>
           </div>

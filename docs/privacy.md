@@ -151,3 +151,8 @@ Chaque sous-traitant signe un **contrat de traitement (DPA)** avant la mise en l
 8. Garde-malade et promesses médicales : aucune tant que le périmètre n'est pas confirmé (`docs/ux-entry-i18n-a11y.md` §2.6) ; vocabulaire réglementé (`docs/seo-strategy.md` §K).
 9. Politique de confidentialité et mentions légales en FR et en EN, avec des données légales réelles et la liste des sous-traitants retenus.
 10. Partenaires (phase 2) : droit d'usage des noms et logos, information sur la rémunération (`docs/partners-credibility.md` §4).
+11. Coffre (story 3.2 D), questions ouvertes, rien n'est tranché :
+    - **Durée du journal d'accès** : proposition de 12 mois ; purge réservée à l'administrateur de la base (le compte du coffre ne peut pas effacer le journal), avec un délai minimal à fixer. Aujourd'hui, aucun effacement.
+    - **Portabilité** : l'export du coffre est un fichier texte ; faut-il un format structuré (JSON) pour répondre à une demande de portabilité ?
+    - **Effacement d'une demande gelée** : la conservation automatique ne l'efface jamais ; quand et comment l'effacer à la fin de la limitation (dégel puis échéance, ou effacement à la main) ?
+    - **`RETENTION_MONTHS`** : plafond de conservation des demandes sans suite, 12 mois proposés (D05), à confirmer.

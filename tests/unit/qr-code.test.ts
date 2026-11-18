@@ -6,7 +6,13 @@ import net from 'node:net'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { COULEURS_QR, QrCodeError, qrCodeSvg, TAILLE_QR } from '../../src/lib/auth/qr-code.ts'
+import {
+  COULEURS_QR,
+  estSvgQrValide,
+  QrCodeError,
+  qrCodeSvg,
+  TAILLE_QR,
+} from '../../src/lib/auth/qr-code.ts'
 
 // QR code d'enrôlement du TOTP (story 3.2, partie D ; D68) : un SVG valide, produit sur place, sans
 // aucun appel réseau. URI factice, au format de Better Auth.
@@ -86,6 +92,28 @@ describe('QR code d’enrôlement', () => {
       )
       assert.ok(erreur instanceof QrCodeError)
       assert.ok(!String(erreur).includes('secret'))
+    }
+  })
+
+  it('valide strictement un SVG revenu du navigateur avant de l’insérer', async () => {
+    const svg = await qrCodeSvg(URI)
+    assert.equal(estSvgQrValide(svg), true)
+    const fond = svg.match(/<path fill="[^"]+" d="[^"]+"\/>/)?.[0] ?? ''
+    for (const piege of [
+      null,
+      undefined,
+      42,
+      {},
+      '',
+      `${svg}<script>alert(1)</script>`,
+      svg.replace('</svg>', '<script>alert(1)</script></svg>'),
+      svg.replace('shape-rendering="crispEdges"', 'onload="alert(1)"'),
+      svg.replace(fond, '<image href="x" onerror="alert(1)"/>'),
+      svg.replace(/d="M[^"]*"\/><\/svg>$/, 'd="M0 0" onmouseover="alert(1)"/></svg>'),
+      `<div>${svg}</div>`,
+      svg.replace('<svg ', '<svg  '),
+    ]) {
+      assert.equal(estSvgQrValide(piege), false, String(piege).slice(-80))
     }
   })
 

@@ -14,6 +14,7 @@ import {
   listRequestsLogged,
   logAccess,
   logExport,
+  lastRetentionRun,
   logRetention,
   purgeExpired,
   readSealed,
@@ -143,6 +144,37 @@ describe('accès aux données du coffre', () => {
     // Journal impossible (acteur vide) : rien n'est lu.
     await assert.rejects(listRequestsLogged(pool, ''), { code: '23514' })
     assert.equal((await listAccessLog(pool)).length, 1)
+  })
+
+  it('n’inscrit qu’une ligne list par affichage, même rendu deux fois en même temps (partie D)', async () => {
+    await insertRequest(pool, fakeRequest())
+    // Deux rendus simultanés de la même page (Cache Components), puis un troisième aussitôt.
+    await Promise.all([listRequestsLogged(pool, ACTOR), listRequestsLogged(pool, ACTOR)])
+    await listRequestsLogged(pool, ACTOR)
+    // Un autre compte a sa propre ligne.
+    await listRequestsLogged(pool, 'autre-compte-factice')
+    assert.deepEqual(
+      entries(await listAccessLog(pool)).sort((a, b) => a.actor.localeCompare(b.actor)),
+      [
+        { actor: 'autre-compte-factice', action: 'list', requestId: null },
+        { actor: ACTOR, action: 'list', requestId: null },
+      ],
+    )
+    // Au-delà de 2 secondes, un nouvel affichage s'inscrit.
+    await pool.query(`UPDATE vault_access_log SET at = at - interval '3 seconds'`)
+    await listRequestsLogged(pool, ACTOR)
+    const lignes = (await listAccessLog(pool)).filter((entry) => entry.actor === ACTOR)
+    assert.equal(lignes.length, 2)
+  })
+
+  it('rend la date du dernier passage de la conservation, ou null', async () => {
+    assert.equal(await lastRetentionRun(pool), null)
+    await logRetention(pool, { requests: 0, sessions: 0, rateLimits: 0, verifications: 0 })
+    await pool.query(`UPDATE vault_access_log SET at = '2026-01-01T03:00:00Z'`)
+    await logRetention(pool, { requests: 1, sessions: 0, rateLimits: 0, verifications: 0 })
+    await logAccess(pool, { actor: ACTOR, action: 'login' })
+    const dernier = await lastRetentionRun(pool)
+    assert.ok(dernier && dernier.getTime() > new Date('2026-01-01T03:00:00Z').getTime())
   })
 
   it('accepte les actions de connexion de la partie C', async () => {

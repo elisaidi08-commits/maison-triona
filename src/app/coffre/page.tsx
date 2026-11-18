@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/Button'
-import { listeDuCoffre } from '@/lib/auth/acces'
+import { dernierPassageConservation, listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
 import {
@@ -16,6 +16,7 @@ import {
   URGENCES,
 } from '@/lib/coffre/libelles'
 import type { VaultRequestSummary } from '@/lib/vault/repository'
+import { RETENTION_RUN_ALERT_HOURS, retentionRunStatus } from '@/lib/vault/retention'
 
 import { seDeconnecter } from './actions'
 import { EnTete } from './_composants/EnTete'
@@ -24,7 +25,8 @@ import { LienCoffre } from './_composants/LienCoffre'
 // Accueil du coffre (story 3.2, parties C et D) : liste des demandes, colonnes en clair seulement
 // (jamais le contenu chiffré), lue par le repository et journalisée (`list`). La date de chaque
 // demande mène à sa page de lecture (/coffre/demandes/<uuid>, déchiffrement dans le navigateur),
-// par un lien simple, sans préchargement. Toutes les valeurs sont rendues comme texte.
+// par un lien simple, sans préchargement. Toutes les valeurs sont rendues comme texte. La date du
+// dernier passage de la conservation planifiée s'affiche, avec une alerte au-delà de 48 heures.
 
 export const metadata: Metadata = { title: 'Demandes' }
 
@@ -70,6 +72,8 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')
   if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
   const demandes = (await listeDuCoffre(getCoffrePool(), acces)) ?? []
+  const dernierPassage = await dernierPassageConservation(getCoffrePool(), acces)
+  const conservation = retentionRunStatus(dernierPassage, new Date())
 
   return (
     <>
@@ -85,6 +89,25 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
           La demande a été effacée. Le journal d’accès garde la trace de l’effacement, sans contenu.
         </p>
       ) : null}
+
+      {/* Conservation planifiée (partie D) : une date, et une alerte en texte si elle ne passe plus. */}
+      <div className="flex max-w-measure flex-col gap-16">
+        <p className="text-body-s">
+          {dernierPassage
+            ? `Dernier passage de la conservation automatique : ${dateHeure.format(dernierPassage)}.`
+            : 'Aucun passage de la conservation automatique n’est inscrit au journal.'}
+        </p>
+        {conservation === 'recent' ? null : (
+          <p className="border-l-2 border-encre py-8 pl-24">
+            Attention : la conservation automatique{' '}
+            {conservation === 'never'
+              ? 'n’a encore jamais tourné'
+              : `n’a pas tourné depuis plus de ${RETENTION_RUN_ALERT_HOURS} heures`}
+            . Les demandes échues ne sont pas effacées tant qu’elle ne passe pas : vérifier la tâche
+            planifiée (variable CRON_SECRET, journaux de Vercel).
+          </p>
+        )}
+      </div>
 
       {demandes.length === 0 ? (
         <p>Aucune demande pour l’instant.</p>

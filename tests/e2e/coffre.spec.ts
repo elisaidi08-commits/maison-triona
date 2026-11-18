@@ -151,15 +151,28 @@ const CSP_PUBLIQUE = [
   "object-src 'none'",
 ].join('; ')
 
-test('la CSP du coffre autorise WebAssembly, et seulement lui', async ({ request }) => {
-  for (const path of ['/coffre/connexion', '/coffre/demandes/pas-un-identifiant']) {
-    const csp = (await request.get(path)).headers()['content-security-policy'] ?? ''
-    const scriptSrc = csp.split('; ').find((directive) => directive.startsWith('script-src '))
-    expect(scriptSrc, path).toMatch(
+test('WebAssembly n’est admis que sur les pages de lecture du coffre', async ({ request }) => {
+  const scriptSrc = async (path: string) => {
+    const csp = (await request.get(path, { maxRedirects: 0 })).headers()['content-security-policy']
+    return (csp ?? '').split('; ').find((directive) => directive.startsWith('script-src ')) ?? ''
+  }
+  for (const path of [
+    '/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
+    '/coffre/demandes/pas-un-identifiant',
+  ]) {
+    expect(await scriptSrc(path), path).toMatch(
       /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' 'wasm-unsafe-eval'$/,
     )
-    expect(csp.match(/wasm-unsafe-eval/g), path).toHaveLength(1)
-    expect(csp.replace("'wasm-unsafe-eval'", ''), path).not.toContain('unsafe-eval')
+  }
+  for (const path of [
+    '/coffre',
+    '/coffre/connexion',
+    '/coffre/enrolement',
+    '/coffre/verification',
+  ]) {
+    expect(await scriptSrc(path), path).toMatch(
+      /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'$/,
+    )
   }
 })
 

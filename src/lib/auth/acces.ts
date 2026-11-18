@@ -3,6 +3,7 @@ import type { Pool } from 'pg'
 import {
   deleteRequest,
   getRequest,
+  lastRetentionRun,
   listRequestsLogged,
   logExport,
   readSealed,
@@ -135,4 +136,14 @@ export async function effacementDuCoffre(
 ): Promise<boolean> {
   if (acces.etat !== 'autorise') return false
   return deleteRequest(pool, id, acces.compte.email)
+}
+
+// Dernier passage de la conservation planifiée (accueil du coffre), pour un accès autorisé. Une date,
+// rien d'autre : sans journal.
+export async function dernierPassageConservation(
+  pool: Pool,
+  acces: AccesCoffre,
+): Promise<Date | null> {
+  if (acces.etat !== 'autorise') return null
+  return lastRetentionRun(pool)
 }

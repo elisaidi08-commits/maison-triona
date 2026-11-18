@@ -3,7 +3,12 @@ import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { autorisationCron, CRON_SECRET_MIN, secretCron } from '../../src/lib/security/cron.ts'
+import {
+  autorisationCron,
+  CRON_SECRET_MIN,
+  secretCron,
+  verifierCronAuBuild,
+} from '../../src/lib/security/cron.ts'
 
 // Secret de la tâche planifiée (story 3.2, partie D) : `Authorization: Bearer <CRON_SECRET>`,
 // comparé à temps constant, refusé sans secret.
@@ -84,5 +89,38 @@ describe('planification (vercel.json)', () => {
     )
     // Minute et heure fixes, tous les jours (UTC chez Vercel) : une fois par jour exactement.
     assert.match(config.crons?.[0]?.schedule ?? '', /^([0-5]?\d) ([01]?\d|2[0-3]) \* \* \*$/)
+  })
+})
+
+describe('garde du build', () => {
+  const COFFRE = 'postgres://compte:mot-de-passe@exemple.test:5432/base'
+
+  it('échoue en production quand le coffre est configuré sans CRON_SECRET valable', () => {
+    for (const env of [
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE },
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: '' },
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: 'court' },
+    ]) {
+      assert.throws(
+        () => verifierCronAuBuild(env),
+        (error: unknown) =>
+          error instanceof Error &&
+          error.message.includes('CRON_SECRET') &&
+          !error.message.includes('mot-de-passe'),
+      )
+    }
+  })
+
+  it('laisse passer tout le reste : secret valable, aperçu public sans coffre, aperçu, poste local', () => {
+    for (const env of [
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: SECRET },
+      { VERCEL_ENV: 'production' },
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: '  ' },
+      { VERCEL_ENV: 'preview', COFFRE_DATABASE_URL: COFFRE },
+      { COFFRE_DATABASE_URL: COFFRE },
+      {},
+    ]) {
+      assert.doesNotThrow(() => verifierCronAuBuild(env), JSON.stringify(env))
+    }
   })
 })

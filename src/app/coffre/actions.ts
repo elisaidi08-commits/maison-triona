@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import { effacementDuCoffre, exportDuCoffre, gelDuCoffre, scelleDuCoffre } from '@/lib/auth/acces'
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
-import { qrCodeSvg } from '@/lib/auth/qr-code'
+import { estSvgQrValide, qrCodeSvg } from '@/lib/auth/qr-code'
 import { getAuth, lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
 import { isRequestId } from '@/lib/vault/repository'
@@ -143,14 +143,39 @@ export async function enrolerTotp(
   }
 }
 
+// État précédent de l'enrôlement, renvoyé par le navigateur avec le formulaire (useActionState) :
+// rien n'en est repris sans contrôle. Le QR code n'est gardé que s'il passe la validation stricte
+// du SVG (il est inséré tel quel dans la page) ; l'URI et les codes de secours, rendus comme texte,
+// ne sont gardés que s'ils ont leur forme attendue.
+function etatCodeSur(avant: EtatEnrolement): Extract<EtatEnrolement, { etape: 'code' }> {
+  if (typeof avant !== 'object' || avant === null || avant.etape !== 'code') {
+    return { etape: 'code', uri: null, qr: null, codesSecours: [], erreur: null }
+  }
+  const uri =
+    typeof avant.uri === 'string' &&
+    avant.uri.length <= 512 &&
+    avant.uri.startsWith('otpauth://totp/')
+      ? avant.uri
+      : null
+  const codesSecours = Array.isArray(avant.codesSecours)
+    ? avant.codesSecours
+        .filter((code) => typeof code === 'string' && /^[A-Za-z0-9-]{1,32}$/.test(code))
+        .slice(0, 20)
+    : []
+  return {
+    etape: 'code',
+    uri,
+    qr: uri && estSvgQrValide(avant.qr) ? avant.qr : null,
+    codesSecours,
+    erreur: null,
+  }
+}
+
 async function confirmerEnrolement(
   avant: EtatEnrolement,
   donnees: FormData,
 ): Promise<EtatEnrolement> {
-  const suite =
-    avant.etape === 'code'
-      ? avant
-      : { etape: 'code' as const, uri: null, qr: null, codesSecours: [] }
+  const suite = etatCodeSur(avant)
   const code = champ(donnees, 'code').replace(/\s+/g, '')
   if (!code) return { ...suite, erreur: 'saisie' }
 

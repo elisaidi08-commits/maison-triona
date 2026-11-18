@@ -16,9 +16,13 @@ import { LienCoffre } from '../../_composants/LienCoffre'
 import { LectureDemande } from '../../_composants/LectureDemande'
 
 // Lecture d'une demande (story 3.2, partie D ; docs/architecture.md §6.5). Adresse stable,
-// /coffre/demandes/<uuid> : la notification à Cat (story 3.3) y mènera. Un identifiant mal formé ou
-// une demande inconnue répondent 404, sans citer l'identifiant (le format est vérifié avant la
-// session : il ne révèle rien ; src/proxy.ts répond même 404 avant tout rendu). La page ne rend que
+// /coffre/demandes/<uuid> : la notification à Cat (story 3.3) y mènera. Rien ne cite l'identifiant.
+// - Identifiant mal formé : 404, rendu par src/proxy.ts avant tout rendu (le format ne révèle rien).
+// - Demande inconnue mais bien formée : page « Introuvable » (notFound) en **200** avec `noindex`.
+//   Avec Cache Components, l'en-tête est déjà parti quand la page interroge la base ; choix gardé :
+//   aucune fuite, la session (mot de passe et TOTP) est vérifiée avant, et sans session toute
+//   adresse bien formée mène à la connexion, que la demande existe ou non.
+// La page ne rend que
 // les colonnes de tri, celles de la liste, sans journal : Next 16 (Cache Components) peut rendre une
 // page deux fois par requête. La lecture, c'est-à-dire la remise des octets scellés, passe par une
 // Server Action appelée au déverrouillage et journalisée (`read`), une ligne par lecture. Le
@@ -29,6 +33,7 @@ export const metadata: Metadata = { title: 'Demande' }
 
 export default async function PageDemande({ params }: PageProps<'/coffre/demandes/[id]'>) {
   const { id } = await params
+  // Doublon du proxy (404 avant tout rendu), au cas où la page serait atteinte autrement.
   if (!isRequestId(id)) notFound()
   const acces = await lireAccesRequete()
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')

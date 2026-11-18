@@ -6,6 +6,7 @@ import {
   creerNonce,
   cspCoffre,
   estCheminCoffre,
+  estCheminLecture,
   PAGE_INTROUVABLE,
 } from '../../src/lib/coffre/securite.ts'
 
@@ -35,7 +36,7 @@ describe('CSP du coffre', () => {
   })
 
   it('n’autorise que les scripts et styles porteurs du nonce, sans unsafe-inline', () => {
-    const csp = cspCoffre('NONCE', { dev: false, deploye: true })
+    const csp = cspCoffre('NONCE', { dev: false, deploye: true, wasm: true })
     // Partie D : 'wasm-unsafe-eval' pour libsodium (WebAssembly), et rien de plus.
     assert.match(csp, /script-src 'self' 'nonce-NONCE' 'strict-dynamic' 'wasm-unsafe-eval'(;|$)/)
     assert.match(csp, /style-src 'self' 'nonce-NONCE'(;|$)/)
@@ -57,13 +58,34 @@ describe('CSP du coffre', () => {
   })
 
   it('ne relâche la politique qu’en développement, et n’impose https qu’une fois déployé', () => {
-    const local = cspCoffre('NONCE', { dev: true, deploye: false })
+    const local = cspCoffre('NONCE', { dev: true, deploye: false, wasm: true })
     assert.match(
       local,
       /script-src 'self' 'nonce-NONCE' 'strict-dynamic' 'wasm-unsafe-eval' 'unsafe-eval'/,
     )
     assert.match(local, /style-src 'self' 'unsafe-inline'/)
     assert.ok(!local.includes('upgrade-insecure-requests'))
+  })
+})
+
+describe('WebAssembly sur les seules pages de lecture (partie D)', () => {
+  it('reconnaît les pages de lecture, rien d’autre', () => {
+    assert.equal(estCheminLecture('/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b'), true)
+    for (const chemin of [
+      '/coffre',
+      '/coffre/connexion',
+      '/coffre/demandes',
+      '/coffre/enrolement',
+    ]) {
+      assert.equal(estCheminLecture(chemin), false, chemin)
+    }
+  })
+
+  it('n’ajoute wasm-unsafe-eval que sur demande', () => {
+    const sans = cspCoffre('NONCE', { dev: false, deploye: true, wasm: false })
+    assert.match(sans, /script-src 'self' 'nonce-NONCE' 'strict-dynamic'(;|$)/)
+    assert.ok(!sans.includes('wasm-unsafe-eval'))
+    assert.ok(!sans.includes('unsafe-eval'))
   })
 })
 

@@ -32,3 +32,15 @@ export function autorisationCron(entete: string | null | undefined, env: Environ
   if (!secret || typeof entete !== 'string') return false
   return timingSafeEqual(empreinte(entete), empreinte(`Bearer ${secret}`))
 }
+
+// Garde du build (next.config.ts) : en production Vercel, dès que le coffre est configuré
+// (`COFFRE_DATABASE_URL`), un `CRON_SECRET` valable est exigé ; sans lui, la conservation ne
+// passerait jamais. Pas ailleurs : l'aperçu public (D62) est un déploiement de production sans
+// coffre, et un aperçu de branche n'a pas de tâche planifiée. Le message ne cite aucune valeur.
+export function verifierCronAuBuild(env: Environnement): void {
+  if (env.VERCEL_ENV !== 'production' || !env.COFFRE_DATABASE_URL?.trim()) return
+  if (secretCron(env)) return
+  throw new Error(
+    'CRON_SECRET manquant ou mal formé (32 caractères au moins, sans espace) : obligatoire en production dès que le coffre est configuré (COFFRE_DATABASE_URL).',
+  )
+}

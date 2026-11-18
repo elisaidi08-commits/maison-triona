@@ -18,6 +18,14 @@ export const TAILLE_QR = 240
 const SVG_ATTENDU =
   /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="\d+" height="\d+" viewBox="0 0 \d+ \d+" shape-rendering="crispEdges"><path fill="#[0-9a-f]{6}" d="M0 0h\d+v\d+H0z"\/><path stroke="#[0-9a-f]{6}" d="[Mmh0-9. ]+"\/><\/svg>$/
 
+// Le SVG d'un QR code tel que `qrcode` le produit ici, et rien d'autre : une balise `<svg>` (taille,
+// viewBox), un fond et un tracé (chiffres et commandes M, m, h). Appliqué à la production et à tout
+// SVG qui revient du navigateur (état précédent de l'enrôlement, src/app/coffre/actions.ts) avant
+// d'être inséré tel quel dans la page.
+export function estSvgQrValide(svg: unknown): svg is string {
+  return typeof svg === 'string' && svg.length <= 64 * 1024 && SVG_ATTENDU.test(svg)
+}
+
 export class QrCodeError extends Error {
   constructor() {
     super('QR code d’enrôlement impossible à produire')
@@ -42,6 +50,6 @@ export async function qrCodeSvg(uri: string): Promise<string> {
     throw new QrCodeError()
   }
   svg = svg.trim()
-  if (!SVG_ATTENDU.test(svg)) throw new QrCodeError()
+  if (!estSvgQrValide(svg)) throw new QrCodeError()
   return svg
 }
