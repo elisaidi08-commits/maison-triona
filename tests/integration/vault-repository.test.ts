@@ -1,0 +1,262 @@
+import assert from 'node:assert/strict'
+import { randomBytes, randomUUID } from 'node:crypto'
+import { after, before, beforeEach, describe, it } from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { inspect } from 'node:util'
+
+import { migrate } from '../../src/lib/db/migrate.ts'
+import {
+  deleteRequest,
+  insertRequest,
+  listAccessLog,
+  listRequests,
+  logAccess,
+  purgeExpired,
+  readSealed,
+  setFrozen,
+} from '../../src/lib/vault/repository.ts'
+import type {
+  AccessAction,
+  AccessLogEntry,
+  NewVaultRequest,
+  RequestKind,
+} from '../../src/lib/vault/repository.ts'
+import { resetDatabase, testPool } from './helpers.ts'
+
+// Données factices uniquement : des octets aléatoires tiennent lieu de sealed box.
+const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
+const ACTOR = 'compte-factice'
+const pool = testPool()
+
+function fakeSealed(length = 64): Uint8Array {
+  return new Uint8Array(randomBytes(length))
+}
+
+function fakeRequest(overrides: Partial<NewVaultRequest> = {}): NewVaultRequest {
+  return {
+    kind: 'request',
+    service: 'conciergerie',
+    country: 'BE',
+    locale: 'fr',
+    urgency: 'aucune',
+    source: null,
+    sealed: fakeSealed(),
+    retentionUntil: new Date('2028-01-01T00:00:00Z'),
+    ...overrides,
+  }
+}
+
+function entries(log: AccessLogEntry[]) {
+  return log.map(({ actor, action, requestId }) => ({ actor, action, requestId }))
+}
+
+async function rejection(promise: Promise<unknown>): Promise<unknown> {
+  return promise.then(
+    () => assert.fail('une erreur était attendue'),
+    (error: unknown) => error,
+  )
+}
+
+describe('accès aux données du coffre', () => {
+  before(async () => {
+    await resetDatabase(pool)
+    await migrate(pool, MIGRATIONS)
+  })
+  beforeEach(() => pool.query('TRUNCATE vault_requests, vault_access_log RESTART IDENTITY'))
+  after(() => pool.end())
+
+  it('liste les colonnes en clair, du plus récent au plus ancien, sans le contenu chiffré', async () => {
+    const first = await insertRequest(pool, fakeRequest())
+    const retentionUntil = new Date('2027-11-18T09:15:00Z')
+    const second = await insertRequest(
+      pool,
+      fakeRequest({
+        kind: 'urgent',
+        service: 'enfants',
+        country: null,
+        locale: 'en',
+        urgency: null,
+        source: 'carte',
+        retentionUntil,
+      }),
+    )
+
+    const rows = await listRequests(pool)
+    assert.deepEqual(
+      rows.map((row) => row.id),
+      [second, first],
+    )
+    const [latest] = rows
+    assert.ok(latest)
+    assert.equal('sealed' in latest, false)
+    assert.ok(latest.createdAt instanceof Date)
+    assert.deepEqual(
+      { ...latest, id: undefined, createdAt: undefined },
+      {
+        id: undefined,
+        kind: 'urgent',
+        createdAt: undefined,
+        service: 'enfants',
+        country: null,
+        locale: 'en',
+        urgency: null,
+        source: 'carte',
+        status: 'new',
+        frozen: false,
+        retentionUntil,
+      },
+    )
+  })
+
+  it('renvoie 50 demandes par défaut, 200 au plus, avec un décalage', async () => {
+    await pool.query(
+      `INSERT INTO vault_requests (kind, locale, retention_until, sealed)
+       SELECT 'request', 'fr', now() + interval '1 year', decode(repeat('00', 64), 'hex')
+       FROM generate_series(1, 205)`,
+    )
+    assert.equal((await listRequests(pool)).length, 50)
+    assert.equal((await listRequests(pool, { limit: 1000 })).length, 200)
+    assert.equal((await listRequests(pool, { limit: 10, offset: 200 })).length, 5)
+    await assert.rejects(listRequests(pool, { limit: 0 }), RangeError)
+    await assert.rejects(listRequests(pool, { offset: -1 }), RangeError)
+  })
+
+  it('lit les octets exacts et journalise la lecture', async () => {
+    const sealed = fakeSealed(49)
+    const id = await insertRequest(pool, fakeRequest({ sealed }))
+    assert.deepEqual(await readSealed(pool, id, ACTOR), sealed)
+    assert.deepEqual(entries(await listAccessLog(pool)), [
+      { actor: ACTOR, action: 'read', requestId: id },
+    ])
+  })
+
+  it('ne rend pas les octets si la lecture ne peut pas être journalisée', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    await assert.rejects(readSealed(pool, id, ''), { code: '23514' })
+    assert.deepEqual(await listAccessLog(pool), [])
+  })
+
+  it('renvoie null pour une demande inconnue, sans journal', async () => {
+    assert.equal(await readSealed(pool, randomUUID(), ACTOR), null)
+    assert.equal(await readSealed(pool, 'pas-un-identifiant', ACTOR), null)
+    assert.deepEqual(await listAccessLog(pool), [])
+  })
+
+  it('efface une demande et garde sa ligne de journal', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    assert.equal(await deleteRequest(pool, id, ACTOR), true)
+    assert.deepEqual(await listRequests(pool), [])
+    assert.deepEqual(entries(await listAccessLog(pool, { requestId: id })), [
+      { actor: ACTOR, action: 'delete', requestId: id },
+    ])
+
+    assert.equal(await deleteRequest(pool, id, ACTOR), false)
+    assert.equal(await deleteRequest(pool, randomUUID(), ACTOR), false)
+    assert.equal((await listAccessLog(pool)).length, 1)
+  })
+
+  it('n’a aucune clé étrangère sur le journal d’accès', async () => {
+    const { rows } = await pool.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM pg_constraint
+       WHERE conrelid = 'vault_access_log'::regclass AND contype = 'f'`,
+    )
+    assert.equal(rows[0]?.n, 0)
+  })
+
+  it('gèle et dégèle une demande, en journalisant chaque changement', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    assert.equal(await setFrozen(pool, id, true, ACTOR), true)
+    assert.equal((await listRequests(pool))[0]?.frozen, true)
+    assert.equal(await setFrozen(pool, id, false, ACTOR), true)
+    assert.equal((await listRequests(pool))[0]?.frozen, false)
+    assert.equal(await setFrozen(pool, randomUUID(), true, ACTOR), false)
+    assert.deepEqual(entries(await listAccessLog(pool)), [
+      { actor: ACTOR, action: 'unfreeze', requestId: id },
+      { actor: ACTOR, action: 'freeze', requestId: id },
+    ])
+  })
+
+  it('purge les demandes échues non gelées, au nom de system', async () => {
+    const now = new Date('2027-06-01T00:00:00Z')
+    const expired = await insertRequest(
+      pool,
+      fakeRequest({ retentionUntil: new Date('2027-01-01T00:00:00Z') }),
+    )
+    const dueNow = await insertRequest(pool, fakeRequest({ retentionUntil: now }))
+    const frozen = await insertRequest(
+      pool,
+      fakeRequest({ retentionUntil: new Date('2027-01-01T00:00:00Z') }),
+    )
+    await setFrozen(pool, frozen, true, ACTOR)
+    const pending = await insertRequest(
+      pool,
+      fakeRequest({ retentionUntil: new Date('2028-01-01T00:00:00Z') }),
+    )
+
+    assert.deepEqual((await purgeExpired(pool, now)).sort(), [expired, dueNow].sort())
+    assert.deepEqual(
+      (await listRequests(pool)).map((row) => row.id).sort(),
+      [frozen, pending].sort(),
+    )
+    const purges = entries(await listAccessLog(pool)).filter((entry) => entry.action === 'purge')
+    assert.deepEqual(
+      purges.sort((a, b) => String(a.requestId).localeCompare(String(b.requestId))),
+      [expired, dueNow]
+        .sort()
+        .map((requestId) => ({ actor: 'system', action: 'purge', requestId })),
+    )
+    assert.deepEqual(await purgeExpired(pool, now), [])
+  })
+
+  it('journalise une connexion sans demande, du plus récent au plus ancien', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    await logAccess(pool, { actor: ACTOR, action: 'login' })
+    await logAccess(pool, { actor: ACTOR, action: 'export', requestId: id })
+    assert.deepEqual(entries(await listAccessLog(pool)), [
+      { actor: ACTOR, action: 'export', requestId: id },
+      { actor: ACTOR, action: 'login', requestId: null },
+    ])
+    assert.equal((await listAccessLog(pool, { limit: 1 })).length, 1)
+    assert.deepEqual(await listAccessLog(pool, { requestId: randomUUID() }), [])
+  })
+
+  it('refuse un contenu trop court, un type, une langue ou une action inconnus', async () => {
+    const refused = { code: '23514' }
+    await assert.rejects(insertRequest(pool, fakeRequest({ sealed: fakeSealed(48) })), refused)
+    await assert.rejects(
+      insertRequest(pool, fakeRequest({ kind: 'autre' as RequestKind })),
+      refused,
+    )
+    await assert.rejects(
+      insertRequest(pool, fakeRequest({ locale: 'de' as NewVaultRequest['locale'] })),
+      refused,
+    )
+    await assert.rejects(
+      logAccess(pool, { actor: ACTOR, action: 'inconnue' as AccessAction }),
+      refused,
+    )
+    assert.deepEqual(await listRequests(pool), [])
+  })
+
+  it('ne met ni octets chiffrés ni argument dans les erreurs', async () => {
+    const marker = 'valeur-factice-temoin'
+    const id = await insertRequest(pool, fakeRequest())
+    const errors = [
+      await rejection(
+        insertRequest(
+          pool,
+          fakeRequest({ sealed: new Uint8Array(48).fill(0xab), service: marker }),
+        ),
+      ),
+      await rejection(readSealed(pool, id, marker.repeat(10))),
+      await rejection(logAccess(pool, { actor: marker, action: marker as AccessAction })),
+      await rejection(logAccess(pool, { actor: ACTOR, action: 'read', requestId: marker })),
+    ]
+    for (const error of errors) {
+      const text = `${String(error)} ${inspect(error, { depth: Infinity, showHidden: true })}`
+      assert.equal(text.includes(marker), false, 'un argument apparaît dans l’erreur')
+      assert.equal(text.includes('abab'), false, 'des octets chiffrés apparaissent dans l’erreur')
+      assert.equal((error as Error).cause, undefined, 'l’erreur d’origine est chaînée')
+    }
+  })
+})
