@@ -9,7 +9,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
-import { envoyerDemande } from '@/actions/request'
+import { envoyerDemande, obtenirJeton } from '@/actions/request'
 import { Button } from '@/components/ui/Button'
 import { CheckboxField } from '@/components/ui/CheckboxField'
 import { ChoiceRow, choiceInputId, type ChoiceOption } from '@/components/ui/ChoiceRow'
@@ -49,7 +49,8 @@ import { champsDeLEtape, lireValeurs, validerDemande, validerEtape } from '@/lib
 //   Server Action ; la page revient avec le résumé d'erreurs et toutes les valeurs (WCAG 3.3.7).
 // - Avec JavaScript : une partie à la fois (les autres restent dans le formulaire, cachées, et
 //   partent avec lui), titre « Étape 2 sur 4 · … » qui reçoit le focus, filet de progression,
-//   Retour, vérification de l'étape avant de continuer. Rien ne part avant l'envoi final.
+//   Retour, vérification de l'étape avant de continuer. Rien ne part avant l'envoi final, sauf la
+//   demande de l'horodatage signé (sans aucune donnée saisie, story 3.5).
 // - Brouillon : besoin, pays, langue et créneau seulement, dans le stockage de session.
 // - Validation native coupée (`noValidate`) : des champs requis cachés bloqueraient l'envoi sans
 //   rien dire ; les messages sont ceux du site, en tête et près du champ.
@@ -73,10 +74,11 @@ export type TextesFormulaire = {
     message: { label: string; hint: string }
     origine: { legend: string; options: Libelles }
     consentement: { label: string; link: string }
+    site: { label: string }
   }
   buttons: { continue: string; back: string; send: string; sending: string }
   errors: { prefix: string; one: string; many: string; codes: Record<CodeErreur, string> }
-  status: { closed: string }
+  status: { closed: string; tooEarly: string; limit: string; failed: string }
 }
 
 type RequestFormProps = {
@@ -124,6 +126,9 @@ function options(libelles: Libelles, valeurs: readonly string[]): ChoiceOption[]
 // Statuts qui s'affichent en tête du formulaire et y reçoivent le focus.
 const STATUTS: Partial<Record<StatutDemande, keyof TextesFormulaire['status']>> = {
   ferme: 'closed',
+  'trop-tot': 'tooEarly',
+  limite: 'limit',
+  echec: 'failed',
 }
 
 // Faux au rendu serveur et sans JavaScript, vrai une fois le formulaire hydraté.
@@ -143,6 +148,7 @@ export function RequestForm({ locale, textes, confidentialite }: RequestFormProp
   // Chaque vérification qui échoue remonte le résumé, qui reprend alors le focus.
   const [tentative, setTentative] = useState(0)
   const [etatVu, setEtatVu] = useState(etat)
+  const [jeton, setJeton] = useState(etat.jeton)
   const [urgent, setUrgent] = useState(etat.valeurs?.urgence === 'urgent')
   const formulaire = useRef<HTMLFormElement>(null)
   const statut = useRef<HTMLDivElement>(null)
@@ -155,9 +161,25 @@ export function RequestForm({ locale, textes, confidentialite }: RequestFormProp
     setErreurs(etat.erreurs ?? {})
     setTentative((n) => n + 1)
     setUrgent(etat.valeurs?.urgence === 'urgent')
+    if (etat.jeton) setJeton(etat.jeton)
     const fautive = etat.erreurs ? premiereEtapeEnErreur(etat.erreurs) : null
     if (fautive !== null) setEtape(fautive)
   }
+
+  // Horodatage signé (story 3.5), demandé quand le formulaire s'affiche.
+  useEffect(() => {
+    if (jeton) return
+    let actif = true
+    obtenirJeton().then(
+      (valeur) => {
+        if (actif && valeur) setJeton(valeur)
+      },
+      () => {},
+    )
+    return () => {
+      actif = false
+    }
+  }, [jeton])
 
   // Brouillon et présélection : coche les champs retenus ; une valeur inconnue ne coche rien. Relu
   // à chaque affichage : Next.js garde la page quittée en mémoire, et le besoin a pu être choisi
@@ -315,6 +337,13 @@ export function RequestForm({ locale, textes, confidentialite }: RequestFormProp
       />
 
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="jeton" value={jeton ?? ''} />
+      {/* Piège à robots (story 3.5) : hors de l'écran, hors de la tabulation, ignoré des lecteurs
+          d'écran ; un humain ne le remplit jamais. */}
+      <div aria-hidden="true" className="sr-only">
+        <label htmlFor="contact-site">{f.site.label}</label>
+        <input id="contact-site" type="text" name="site" tabIndex={-1} autoComplete="off" />
+      </div>
 
       {partie(
         0,

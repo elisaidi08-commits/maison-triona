@@ -25,7 +25,7 @@
 | **Authentification du coffre** | Better Auth (mot de passe + TOTP obligatoire, passkey) | à vérifier en story E3-S8 | Comptes nominatifs, A2F, données dans notre base | `[À TRANCHER]` |
 | E-mail | Transactionnel européen, **sans suivi** | voir §6.6 | Notification minimale à Cat, confirmation au visiteur | `[À TRANCHER]` (reco : Scaleway TEM) |
 | File d'envoi | Table « boîte d'envoi » + tâche planifiée Vercel (Cron) | — | Reprises sans sous-traitant supplémentaire | Proposé |
-| Anti-abus | Honeypot + piège temporel + limitation de débit (Upstash Redis, région UE) | `@upstash/ratelimit 2.2` | FR4, sans captcha | Proposé |
+| Anti-abus | Honeypot + horodatage signé (HMAC) + limitation de débit (Upstash Redis, région UE) | aucune dépendance : API REST d'Upstash appelée par `fetch` côté serveur (`src/lib/rate-limit.ts`) | FR4, sans captcha. `@upstash/ratelimit` écarté : deux paquets de plus pour une fenêtre fixe de quatre lignes | **Installé (3.5)**, limitation inactive tant que le compte Upstash n'existe pas |
 | Analytics | **Plausible**, servi via notre domaine (proxy) | — | Sans cookie, hébergé dans l'UE, aucun appel tiers vu du navigateur | Proposé |
 | Hébergement | **Vercel Pro**, fonctions en région **`cdg1`** (Paris) | 20 $/mois | Hobby interdit l'usage commercial ; région UE pour les demandes | Proposé |
 | PDF | **Playwright** au build (`page.pdf({ tagged: true, outline: true })`) | ≥ 1.42 (`1.64.1` prévu pour les tests) | PDF balisé « Comment ça se passe » FR/EN, même source que la page imprimable | Proposé |
@@ -313,7 +313,8 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 ### 6.7 Sécurité des envois
 - **Limitation de débit** : 3 envois par 10 minutes et par empreinte d'IP (hachée avec un sel quotidien, jamais stockée en clair), plus un plafond global quotidien et une limite par adresse de confirmation. Upstash Redis région UE (gratuit à ce volume) ; alternative : règle Vercel WAF, à placer alors sur une Route Handler.
 - Une Server Action est un point d'entrée POST public : Next vérifie l'en-tête `Origin` mais **laisse passer les requêtes sans `Origin`** ; d'où la limitation de débit et la validation stricte.
-- `bodySizeLimit` des Server Actions abaissé (64 ko).
+- `bodySizeLimit` des Server Actions abaissé (64 ko, `next.config.ts`).
+- **Mise en œuvre (3.5)** : `src/actions/request.ts` vérifie dans l'ordre le piège (rejet silencieux, réponse identique à un envoi), l'horodatage signé (`FORM_SIGNING_SECRET`, repli de développement hors `VERCEL_ENV=production` ; falsifié : rejet silencieux ; moins de 3 s : « trop tôt »), la demande entière (Zod), puis le débit des envois valides (3 par 10 minutes par empreinte d'IP, 3 par jour par empreinte d'adresse, 100 par jour au total). La page étant statique, l'horodatage est demandé par le formulaire à son affichage (Server Action sans donnée saisie) ; sans JavaScript, le premier envoi n'en porte pas et n'est pas contrôlé sur le délai, la page d'erreurs en délivre un pour le suivant. Upstash injoignable : on laisse passer et le statut le dit.
 - **Garde « tout statique » (§2)** : gardée telle quelle. `/fr/contact` et `/en/contact` restent prérendues (`○` au build) ; la Server Action, y compris son POST sans JavaScript qui réaffiche la page avec la saisie, s'exécute à la requête sans rien changer au prérendu.
 - **Aucune donnée des demandes dans les journaux** (Vercel, base, fournisseur e-mail) : seuls un identifiant d'événement et un statut (`stored`, `rejected:honeypot`, `rejected:rate`, `failed:vault`, `queued`, `sent`, `failed:provider`) sont journalisés.
 - La **seule copie complète** d'une demande est la ligne chiffrée du coffre (et ses sauvegardes, dans leur fenêtre). L'e-mail ne la contient pas.

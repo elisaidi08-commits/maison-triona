@@ -924,6 +924,9 @@
         "consentement": {
           "label": "I agree that Maison Triona may use this information to respond to my request, as described in the privacy policy.",
           "link": "Read the privacy policy (opens in a new tab)"
+        },
+        "site": {
+          "label": "Website"
         }
       },
       "buttons": {
@@ -955,7 +958,10 @@
         }
       },
       "status": {
-        "closed": "Sending requests will open soon; nothing has been saved or sent."
+        "closed": "Sending requests will open soon; nothing has been saved or sent.",
+        "tooEarly": "Your request could not be sent. Please wait a few seconds, then send it again; what you wrote is still in the form.",
+        "limit": "Too many requests have arrived in a short time. Please try again in a few minutes; what you wrote is still in the form.",
+        "failed": "Your message could not be sent. It is still in the form."
       }
     }
   }

@@ -23,6 +23,12 @@ async function ouvrirEnEtapes(page: Page, adresse = '/fr/contact') {
   await expect(continuer(page)).toBeVisible()
 }
 
+// L'envoi n'est accepté qu'au moins 3 secondes après l'horodatage signé (story 3.5).
+async function attendreHorodatage(page: Page) {
+  await expect(page.locator('input[name="jeton"]')).not.toHaveValue('')
+  await page.waitForTimeout(3200)
+}
+
 async function lireBrouillon(page: Page) {
   return page.evaluate(() => Object.fromEntries(Object.entries(window.sessionStorage)))
 }
@@ -74,6 +80,7 @@ test.describe('avec JavaScript', () => {
     await expect(page.getByText('Inutile de nous donner des détails médicaux')).toBeVisible()
 
     await page.locator('#contact-consentement').check()
+    await attendreHorodatage(page)
     await envoyer(page).click()
     await expect(statut(page)).toBeFocused()
     await expect(statut(page)).toHaveText(
@@ -144,6 +151,7 @@ test.describe('avec JavaScript', () => {
     await page.locator('#contact-email').fill('camille@example.com')
     await continuer(page).click()
     await page.locator('#contact-consentement').check()
+    await attendreHorodatage(page)
     await envoyer(page).click()
     await expect(statut(page)).toBeFocused()
     const apres = await lireBrouillon(page)
@@ -239,11 +247,12 @@ test.describe('sans JavaScript', () => {
     await expect(page.locator('#contact-langue-fr')).toBeChecked()
     await expect(page.locator('#contact-message')).toHaveValue(MOT_LIBRE)
 
-    // Corrigé, puis envoyé : envoi fermé.
+    // Corrigé, puis envoyé plus de 3 secondes après la page d'erreurs : envoi fermé.
     await page.locator('#contact-besoin-enfants').check()
     await page.locator('#contact-urgence-aucune').check()
     await page.locator('#contact-email').fill('camille@example.com')
     await page.locator('#contact-consentement').check()
+    await page.waitForTimeout(3200)
     await envoyer(page).click()
     await expect(statut(page)).toHaveText(
       'L’envoi des demandes ouvrira bientôt ; rien n’a été enregistré ni envoyé.',

@@ -930,6 +930,9 @@
         "consentement": {
           "label": "J’accepte que Maison Triona utilise ces informations pour répondre à ma demande, comme décrit dans la politique de confidentialité.",
           "link": "Lire la politique de confidentialité (nouvel onglet)"
+        },
+        "site": {
+          "label": "Site internet"
         }
       },
       "buttons": {
@@ -961,7 +964,10 @@
         }
       },
       "status": {
-        "closed": "L’envoi des demandes ouvrira bientôt ; rien n’a été enregistré ni envoyé."
+        "closed": "L’envoi des demandes ouvrira bientôt ; rien n’a été enregistré ni envoyé.",
+        "tooEarly": "Votre demande n’a pas pu partir. Patientez quelques secondes, puis envoyez-la de nouveau ; votre texte est resté dans le formulaire.",
+        "limit": "Trop de demandes sont arrivées en peu de temps. Réessayez dans quelques minutes ; votre texte est resté dans le formulaire.",
+        "failed": "L’envoi n’a pas abouti. Votre message est resté dans le formulaire."
       }
     }
   }

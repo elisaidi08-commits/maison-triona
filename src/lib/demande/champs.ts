@@ -68,14 +68,17 @@ export type CodeErreur = (typeof CODES_ERREUR)[number]
 export type Erreurs = Partial<Record<Champ, CodeErreur>>
 
 // Réponse de la Server Action. `ferme` : tout est valide, mais l'envoi n'est pas encore ouvert
-// (le coffre arrive au lot E) ; rien n'est enregistré ni envoyé.
-export type StatutDemande = 'initial' | 'erreurs' | 'ferme'
+// (le coffre arrive au lot E) ; rien n'est enregistré ni envoyé. `trop-tot`, `limite`, `echec` :
+// rien n'est parti, la saisie reste dans le formulaire.
+export type StatutDemande = 'initial' | 'erreurs' | 'trop-tot' | 'limite' | 'echec' | 'ferme'
 
 export type EtatDemande = {
   statut: StatutDemande
   erreurs?: Erreurs
   // Saisie renvoyée telle quelle : la page se réaffiche sans rien perdre (WCAG 3.3.7).
   valeurs?: Valeurs
+  // Horodatage signé délivré par le serveur quand l'envoi n'en portait pas (sans JavaScript).
+  jeton?: string
 }
 
 export const ETAT_INITIAL: EtatDemande = { statut: 'initial' }
