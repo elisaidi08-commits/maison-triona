@@ -9,6 +9,7 @@
 ## 1. Domaine, redirections, indexation
 - [ ] Redirections : `www` ↔ domaine nu, `/` → `/fr` (stratégie retenue : `/fr` en `x-default`), anciennes URL éventuelles.
 - [ ] `robots.txt` et `sitemap.xml` de **production** (multilingue, alternances FR/EN).
+- [ ] Variables de production : `SITE_URL=https://maisontriona.com` (le build échoue sans elle) puis `SITE_INDEXABLE=true` ; vérifier que `maison-triona.vercel.app` redirige en 308 vers le domaine (story 4.3) et que `check:content` passe (il bloque ce build).
 - [ ] `noindex` retiré **uniquement** à l'ouverture ; toujours présent sur `/fr/demo`, `/contact/merci`, la 404 et le coffre.
 - [ ] + Search Console : domaine vérifié, sitemap soumis (`docs/seo-strategy.md`).
 - [ ] + Métadonnées, `canonical`, `hreflang` + `x-default` contrôlés sur chaque page ; données structurées valides (Organization, Service, FAQPage), sans le nom de Cat.

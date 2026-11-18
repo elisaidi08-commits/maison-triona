@@ -1,6 +1,48 @@
 {
   "Meta": {
-    "siteName": "Maison Triona"
+    "siteName": "Maison Triona",
+    "pages": {
+      "home": {
+        "title": "Concierge, childcare, later-life companions",
+        "description": "The house introduces you to people chosen one by one, in Belgium, France, Luxembourg, Monaco and Switzerland. We reply within 48 working hours."
+      },
+      "services": {
+        "title": "Three services, one point of contact",
+        "description": "Luxury concierge, companionship in later life and childcare. The house introduces, the professional signs, the house stays close. No prices published."
+      },
+      "concierge": {
+        "title": "Luxury private concierge for families",
+        "description": "A residence to prepare, a craftsman to find, a trusted presence during a stay: one point of contact for every request, in complete discretion."
+      },
+      "senior": {
+        "title": "Companionship in later life, at home",
+        "description": "A chosen companion for a parent: conversation, outings, days that keep their rhythm. One point of contact, and a reply within 48 working hours."
+      },
+      "children": {
+        "title": "Childcare and nannies, chosen one by one",
+        "description": "A few hours, a regular presence after school or a whole season: the house introduces you to someone we have met and vetted ourselves, before you do."
+      },
+      "house": {
+        "title": "The house: our story and five principles",
+        "description": "A house born of a lifetime alongside families, which lives by recommendation. Its five principles: discretion, selection, loyalty, respect, measure."
+      },
+      "territories": {
+        "title": "Where we work, from Brussels to Monaco",
+        "description": "Five countries. From Brussels to Monaco, from Paris to Lausanne and Geneva, by way of Luxembourg: the house replies to families in French or in English."
+      },
+      "contact": {
+        "title": "Contact: write to us in complete confidence",
+        "description": "A few lines are enough, for yourself or for someone close to you. Every enquiry is read in person and kept confidential. Reply within 48 working hours."
+      },
+      "legal": {
+        "title": "Legal notice",
+        "description": "Site publisher, hosting, intellectual property and a note on the images created with artificial intelligence: the legal information for Maison Triona."
+      },
+      "privacy": {
+        "title": "Privacy: how your enquiries are protected",
+        "description": "No cookies and no third-party trackers. Your enquiries are stored encrypted, in the European Union, then deleted. What we keep, why, and for how long."
+      }
+    }
   },
   "SkipLink": {
     "label": "Skip to content"

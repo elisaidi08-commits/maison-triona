@@ -8,6 +8,7 @@ import '@/styles/tokens.css'
 
 export const metadata: Metadata = {
   title: 'Maison Triona',
+  robots: { index: false, follow: false },
 }
 
 export default function GlobalNotFound() {

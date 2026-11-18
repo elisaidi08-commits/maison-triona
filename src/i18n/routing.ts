@@ -9,6 +9,9 @@ export const routing = defineRouting({
   localePrefix: 'always',
   localeDetection: false,
   localeCookie: false,
+  // Alternances dans le HTML et le sitemap seulement (D64, n° 7) : pas d'en-tête HTTP `Link`, dont
+  // le x-default pointait vers une adresse qui redirige.
+  alternateLinks: false,
   pathnames: PATHNAMES,
 })
 
