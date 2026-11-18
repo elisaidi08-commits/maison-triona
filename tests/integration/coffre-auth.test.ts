@@ -13,11 +13,13 @@ import type { AuthCoffre } from '../../src/lib/auth/auth.ts'
 import { creerCompte } from '../../src/lib/auth/comptes.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { insertRequest } from '../../src/lib/vault/repository.ts'
-import { resetDatabase, testPool } from './helpers.ts'
+import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
 import { codeFaux, codeTotp, secretDeLUri } from './totp.ts'
 
 // Authentification du coffre de bout en bout (story 3.2, partie C), sur la base de test, par le
 // même chemin que les Server Actions : `appelerAuth` → `auth.handler`. Comptes et contenus factices.
+// Better Auth et l'accès au coffre passent par le rôle `coffre` (db/roles/coffre.sql), comme en
+// production ; `pool` (administrateur) prépare et relit la base.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const ORIGINE = 'http://localhost:3000'
@@ -27,6 +29,7 @@ const ENV = {
 }
 const MOT_DE_PASSE = 'phrase-factice-tres-longue'
 const pool = testPool()
+const coffre = coffrePool()
 let auth: AuthCoffre
 
 let ipSuivante = 1
@@ -74,7 +77,7 @@ class Navigateur {
 }
 
 async function compteSansTotp(email: string): Promise<void> {
-  await creerCompte(auth, pool, { nom: 'Compte factice', email, motDePasse: MOT_DE_PASSE })
+  await creerCompte(auth, coffre, { nom: 'Compte factice', email, motDePasse: MOT_DE_PASSE })
 }
 
 // Compte créé, connecté par mot de passe, TOTP enrôlé et confirmé (session autorisée).
@@ -105,14 +108,18 @@ describe('authentification du coffre', () => {
   before(async () => {
     await resetDatabase(pool)
     await migrate(pool, MIGRATIONS)
-    auth = creerAuth(pool, ENV)
+    await applyRoles(pool)
+    auth = creerAuth(coffre, ENV)
   })
   beforeEach(() =>
     pool.query(
       'TRUNCATE "user", "verification", "rateLimit", vault_access_log, vault_requests RESTART IDENTITY CASCADE',
     ),
   )
-  after(() => pool.end())
+  after(async () => {
+    await coffre.end()
+    await pool.end()
+  })
 
   it('a un schéma conforme à la configuration de Better Auth', async () => {
     const { toBeCreated, toBeAdded } = await getMigrations(auth.options)
@@ -167,9 +174,9 @@ describe('authentification du coffre', () => {
       undefined,
     )
 
-    const acces = await lireAcces(auth, pool, navigateur.entetes())
+    const acces = await lireAcces(auth, coffre, navigateur.entetes())
     assert.equal(acces.etat, 'enrolement')
-    assert.equal(await listeDuCoffre(pool, acces), null)
+    assert.equal(await listeDuCoffre(coffre, acces), null)
     assert.deepEqual(await journal(), [
       { actor: 'sans-totp@exemple.test', action: 'login', request_id: null },
     ])
@@ -185,7 +192,7 @@ describe('authentification du coffre', () => {
     assert.deepEqual(connexion.donnees, { twoFactorRedirect: true, twoFactorMethods: ['totp'] })
     // Mot de passe seul : aucun cookie de session, seulement le défi du second facteur.
     assert.deepEqual([...navigateur.cookies.keys()], ['coffre.two_factor'])
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes())).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes())).etat, 'anonyme')
 
     const verification = await navigateur.appeler('/two-factor/verify-totp', {
       code: codeTotp(secret),
@@ -200,10 +207,10 @@ describe('authentification du coffre', () => {
     assert.match(cookieSession, /; SameSite=Strict(;|$)/)
     assert.doesNotMatch(cookieSession, /; Secure/)
 
-    const acces = await lireAcces(auth, pool, navigateur.entetes())
+    const acces = await lireAcces(auth, coffre, navigateur.entetes())
     assert.equal(acces.etat, 'autorise')
     assert.equal(acces.etat === 'autorise' && acces.compte.email, 'avec-totp@exemple.test')
-    const liste = await listeDuCoffre(pool, acces)
+    const liste = await listeDuCoffre(coffre, acces)
     assert.ok(liste)
     assert.deepEqual(
       liste.map((demande) => demande.id),
@@ -220,7 +227,7 @@ describe('authentification du coffre', () => {
     const premier = new Navigateur()
     await premier.connexion('secours@exemple.test')
     assert.equal((await premier.appeler('/two-factor/verify-backup-code', { code })).statut, 200)
-    assert.equal((await lireAcces(auth, pool, premier.entetes())).etat, 'autorise')
+    assert.equal((await lireAcces(auth, coffre, premier.entetes())).etat, 'autorise')
 
     const second = new Navigateur()
     await second.connexion('secours@exemple.test')
@@ -240,8 +247,8 @@ describe('authentification du coffre', () => {
       .donnees as { totpURI: string }
     await nouvelle.appeler('/two-factor/verify-totp', { code: codeTotp(secretDeLUri(totpURI)) })
 
-    assert.equal((await lireAcces(auth, pool, nouvelle.entetes())).etat, 'autorise')
-    assert.equal((await lireAcces(auth, pool, ancienne.entetes())).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, nouvelle.entetes())).etat, 'autorise')
+    assert.equal((await lireAcces(auth, coffre, ancienne.entetes())).etat, 'anonyme')
     // Refusée, l'ancienne session est supprimée.
     const { rows } = await pool.query('SELECT count(*)::int AS n FROM "session"')
     assert.equal(rows[0].n, 1)
@@ -253,19 +260,19 @@ describe('authentification du coffre', () => {
     const dans = (minutes: number) => new Date(depart + minutes * 60_000)
 
     // Chaque page servie repousse l'inactivité ; 16 minutes sans page ferment la session.
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes(), dans(10))).etat, 'autorise')
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes(), dans(20))).etat, 'autorise')
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes(), dans(36))).etat, 'anonyme')
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes(), dans(0))).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes(), dans(10))).etat, 'autorise')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes(), dans(20))).etat, 'autorise')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes(), dans(36))).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes(), dans(0))).etat, 'anonyme')
 
     // Active toutes les 10 minutes : ouverte jusqu'à 8 heures, fermée au-delà.
     const actif = new Navigateur()
     await actif.connexion('duree@exemple.test')
     await actif.appeler('/two-factor/verify-totp', { code: codeTotp(secret) })
     for (let minute = 10; minute <= 8 * 60; minute += 10) {
-      assert.equal((await lireAcces(auth, pool, actif.entetes(), dans(minute))).etat, 'autorise')
+      assert.equal((await lireAcces(auth, coffre, actif.entetes(), dans(minute))).etat, 'autorise')
     }
-    assert.equal((await lireAcces(auth, pool, actif.entetes(), dans(8 * 60 + 5))).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, actif.entetes(), dans(8 * 60 + 5))).etat, 'anonyme')
   })
 
   it('échecs de mot de passe répétés : blocage de l’adresse IP', async () => {
@@ -303,7 +310,7 @@ describe('authentification du coffre', () => {
     await autre.connexion('verrou@exemple.test')
     const encore = await autre.appeler('/two-factor/verify-totp', { code: codeTotp(secret) })
     assert.equal(encore.code, 'ACCOUNT_TEMPORARILY_LOCKED')
-    assert.equal((await lireAcces(auth, pool, autre.entetes())).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, autre.entetes())).etat, 'anonyme')
 
     const echecs = (await journal()).filter((ligne) => ligne.action === 'login_failed')
     assert.equal(echecs.length, 7)
@@ -322,9 +329,9 @@ describe('authentification du coffre', () => {
     await navigateur.connexion('journal@exemple.test')
     const code = codeTotp(secret)
     await navigateur.appeler('/two-factor/verify-totp', { code })
-    await listeDuCoffre(pool, await lireAcces(auth, pool, navigateur.entetes()))
+    await listeDuCoffre(coffre, await lireAcces(auth, coffre, navigateur.entetes()))
     assert.equal((await navigateur.appeler('/sign-out')).statut, 200)
-    assert.equal((await lireAcces(auth, pool, navigateur.entetes())).etat, 'anonyme')
+    assert.equal((await lireAcces(auth, coffre, navigateur.entetes())).etat, 'anonyme')
 
     assert.deepEqual(await journal(), [
       { actor: 'inconnu', action: 'login_failed', request_id: null },

@@ -7,13 +7,20 @@ import { creerAuth } from '../../src/lib/auth/auth.ts'
 import type { AuthCoffre } from '../../src/lib/auth/auth.ts'
 import { CompteRefuse, compterComptes, creerCompte } from '../../src/lib/auth/comptes.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
-import { resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import {
+  applyRoles,
+  COFFRE_TEST_DATABASE_URL,
+  coffrePool,
+  resetDatabase,
+  testPool,
+} from './helpers.ts'
 
 // Comptes du coffre (story 3.2, partie C) : deux au plus, créés à la main. Comptes factices.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const MOT_DE_PASSE = 'phrase-factice-tres-longue'
 const pool = testPool()
+const coffre = coffrePool()
 const scriptPool = testPool()
 let auth: AuthCoffre
 
@@ -25,30 +32,34 @@ describe('comptes du coffre', () => {
   before(async () => {
     await resetDatabase(pool)
     await migrate(pool, MIGRATIONS)
-    auth = creerAuth(pool, { BETTER_AUTH_SECRET: 'secret-factice-comptes-0123456789-abcdefgh' })
+    await applyRoles(pool)
+    auth = creerAuth(coffre, { BETTER_AUTH_SECRET: 'secret-factice-comptes-0123456789-abcdefgh' })
   })
   beforeEach(() => pool.query('TRUNCATE "user" CASCADE'))
-  after(() => pool.end())
+  after(async () => {
+    await coffre.end()
+    await pool.end()
+  })
 
   it('crée deux comptes au plus', async () => {
-    const premier = await creerCompte(auth, pool, compte('Un@Exemple.test'))
+    const premier = await creerCompte(auth, coffre, compte('Un@Exemple.test'))
     assert.deepEqual(
       { email: premier.email, rang: premier.rang },
       { email: 'un@exemple.test', rang: 1 },
     )
-    assert.equal((await creerCompte(auth, pool, compte('deux@exemple.test'))).rang, 2)
-    await assert.rejects(creerCompte(auth, pool, compte('trois@exemple.test')), {
+    assert.equal((await creerCompte(auth, coffre, compte('deux@exemple.test'))).rang, 2)
+    await assert.rejects(creerCompte(auth, coffre, compte('trois@exemple.test')), {
       name: 'CompteRefuse',
       message: 'Deux comptes au plus : création refusée',
     })
-    assert.equal(await compterComptes(pool), 2)
+    assert.equal(await compterComptes(coffre), 2)
   })
 
   it('refuse un troisième compte au niveau de la base, quel que soit le chemin', async () => {
-    await creerCompte(auth, pool, compte('un@exemple.test'))
-    await creerCompte(auth, pool, compte('deux@exemple.test'))
+    await creerCompte(auth, coffre, compte('un@exemple.test'))
+    await creerCompte(auth, coffre, compte('deux@exemple.test'))
     await assert.rejects(
-      pool.query(
+      coffre.query(
         `INSERT INTO "user" (id, name, email, "emailVerified") VALUES ('x', 'X', 'x@exemple.test', false)`,
       ),
       { code: '23514', message: 'Coffre : deux comptes au plus' },
@@ -56,7 +67,7 @@ describe('comptes du coffre', () => {
   })
 
   it('stocke une empreinte du mot de passe, jamais le mot de passe', async () => {
-    await creerCompte(auth, pool, compte('empreinte@exemple.test'))
+    await creerCompte(auth, coffre, compte('empreinte@exemple.test'))
     const { rows } = await pool.query<{ password: string; providerId: string }>(
       'SELECT password, "providerId" FROM account',
     )
@@ -67,19 +78,19 @@ describe('comptes du coffre', () => {
 
   it('refuse un mot de passe trop court, une adresse invalide ou déjà prise', async () => {
     await assert.rejects(
-      creerCompte(auth, pool, compte('court@exemple.test', 'court')),
+      creerCompte(auth, coffre, compte('court@exemple.test', 'court')),
       (error) => {
         assert.ok(error instanceof CompteRefuse)
         assert.ok(!error.message.includes('court@'))
         return true
       },
     )
-    await assert.rejects(creerCompte(auth, pool, compte('pas-une-adresse')), CompteRefuse)
-    await creerCompte(auth, pool, compte('pris@exemple.test'))
-    await assert.rejects(creerCompte(auth, pool, compte('PRIS@exemple.test')), {
+    await assert.rejects(creerCompte(auth, coffre, compte('pas-une-adresse')), CompteRefuse)
+    await creerCompte(auth, coffre, compte('pris@exemple.test'))
+    await assert.rejects(creerCompte(auth, coffre, compte('PRIS@exemple.test')), {
       message: 'Un compte existe déjà pour cette adresse',
     })
-    assert.equal(await compterComptes(pool), 1)
+    assert.equal(await compterComptes(coffre), 1)
   })
 })
 
@@ -94,7 +105,7 @@ describe('scripts/coffre-compte.mjs', () => {
       {
         input: entree,
         encoding: 'utf8',
-        env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
+        env: { ...process.env, COFFRE_DATABASE_URL: COFFRE_TEST_DATABASE_URL },
       },
     )
     return { code: resultat.status, sortie: resultat.stdout, erreur: resultat.stderr }
@@ -103,6 +114,7 @@ describe('scripts/coffre-compte.mjs', () => {
   before(async () => {
     await resetDatabase(scriptPool)
     await migrate(scriptPool, MIGRATIONS)
+    await applyRoles(scriptPool)
   })
   after(() => scriptPool.end())
 

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
-import { getPool } from '@/lib/db/pool'
+import { getCoffrePool } from '@/lib/db/pool'
 import type { VaultRequestSummary } from '@/lib/vault/repository'
 
 import { seDeconnecter } from './actions'
@@ -82,7 +82,7 @@ export default async function AccueilCoffre() {
   const acces = await lireAccesRequete()
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')
   if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
-  const demandes = (await listeDuCoffre(getPool(), acces)) ?? []
+  const demandes = (await listeDuCoffre(getCoffrePool(), acces)) ?? []
 
   return (
     <>

@@ -52,17 +52,27 @@ Le site public écrit des demandes, il n'a jamais besoin d'en lire une. Son comp
 2. Créer le compte de connexion du site (sur Scaleway : console de l'instance, utilisateur sans aucun droit donné par la console) et lui donner le rôle : `GRANT site_public TO <compte du site>;`. Mot de passe long et aléatoire, jamais dans le dépôt. La façon exacte de créer un compte sans droit sur l'offre gérée de Scaleway reste **à vérifier sur l'instance**.
 3. Vérifier, connecté avec ce compte : `SELECT count(*) FROM vault_requests;` doit être **refusé** (`permission denied`).
 
-### 3.2 Deux URL de connexion
+### 3.2 Un second rôle pour l'espace du coffre : `coffre` (partie C)
+
+L'espace `/coffre` et le script des comptes (`npm run coffre:compte`) se connectent avec **un autre compte**, qui a le rôle **`coffre`** (`db/roles/coffre.sql`) : `USAGE` sur le schéma ; lecture, écriture et effacement sur les six tables de Better Auth (`"user"`, `"session"`, `"account"`, `"verification"`, `"twoFactor"`, `"rateLimit"`) ; **lecture seule** de `vault_requests` ; **`INSERT` et `SELECT` seulement** sur `vault_access_log` (le journal ne se modifie ni ne s'efface). Ni la table des migrations, ni la création d'objet. Le gel et l'effacement des demandes viendront en partie D, qui étendra ce fichier. Prouvé par `tests/integration/coffre-roles.test.ts`, qui vérifie aussi que `site_public` ne lit, n'écrit ni n'efface **aucune** table de Better Auth ; toute l'authentification y est testée sous ce rôle.
+
+1. Avec le compte administrateur, **après** `npm run db:migrate` : `psql "<URL administrateur>" -f db/roles/site_public.sql -f db/roles/coffre.sql`. Les deux fichiers sont rejouables ; les rejouer après chaque migration qui ajoute une table.
+2. Créer le compte de connexion du coffre, distinct de celui du site, et lui donner le rôle : `GRANT coffre TO <compte du coffre>;`. Mot de passe long et aléatoire, jamais dans le dépôt.
+3. Vérifier, connecté avec ce compte : `UPDATE vault_requests SET status = status;` et `DELETE FROM vault_access_log;` doivent être **refusés**.
+
+### 3.3 Deux URL de connexion
 
 | Variable | Compte | Utilisé par | Droits |
 |---|---|---|---|
 | `DATABASE_URL` | compte du site (`site_public`) | Server Action du formulaire | Insertion seule |
-| URL distincte pour `/coffre` (nom à fixer en partie C, par exemple `VAULT_ADMIN_DATABASE_URL`) | compte du coffre | Espace `/coffre` : liste, lecture, effacement, gel, journal d'accès | Ce que le coffre exige, défini en partie C |
+| `COFFRE_DATABASE_URL` | compte du coffre (`coffre`) | Espace `/coffre` (connexion, sessions, liste) et `npm run coffre:compte` | Tables de Better Auth ; lecture des demandes ; journal en insertion et lecture |
 | URL administrateur | propriétaire du schéma | `npm run db:migrate` et `db/roles/*.sql`, à la main | Tous ; **jamais** dans une variable de Vercel |
+
+Deux pools distincts dans le code (`getPool`, `getCoffrePool`, `src/lib/db/pool.ts`) : le site public ne peut pas emprunter le compte du coffre. Sur un déploiement, une `COFFRE_DATABASE_URL` identique à `DATABASE_URL` est refusée au démarrage du coffre.
 
 TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches) : sans `DATABASE_CA_CERT`, la connexion est refusée. Délais : 5 s pour se connecter, 5 s par requête ; au-delà, l'envoi échoue (« L'envoi n'a pas abouti ») et le visiteur garde sa saisie.
 
-### 3.3 Poser `VAULT_PUBLIC_KEY`
+### 3.4 Poser `VAULT_PUBLIC_KEY`
 
 1. Vercel → projet → *Settings* → *Environment Variables* : `VAULT_PUBLIC_KEY` = la clé publique affichée, environnement **Production** seulement. Vérifier qu'elle est identique au champ `publicKey` des paquets.
 2. Le formulaire n'enregistre une demande que si **`DATABASE_URL` et `VAULT_PUBLIC_KEY`** sont posées. Sans l'une des deux, il garde l'état « L'envoi des demandes ouvrira bientôt » et n'écrit rien.

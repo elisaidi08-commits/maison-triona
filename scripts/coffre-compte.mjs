@@ -3,14 +3,14 @@
 // Le mot de passe est lu sur l'entrée standard : saisie masquée et confirmée au terminal, ou
 // première ligne d'un tube. Jamais en argument : il resterait dans l'historique du shell et dans la
 // liste des processus. Deux comptes au plus (la base le refuse aussi).
-// Base visée : DATABASE_URL (et DATABASE_CA_CERT en production). Ensuite, sans attendre : se
-// connecter sur /coffre/connexion et enrôler le TOTP (une session sans TOTP ne sert qu'à cela).
+// Base visée : COFFRE_DATABASE_URL, compte du coffre (et DATABASE_CA_CERT sur Vercel). Ensuite,
+// sans attendre : se connecter sur /coffre/connexion et enrôler le TOTP.
 import { parseArgs } from 'node:util'
 
 import { creerAuth } from '../src/lib/auth/auth.ts'
 import { CompteRefuse, creerCompte } from '../src/lib/auth/comptes.ts'
 import { MAX_COMPTES, MOT_DE_PASSE_MIN } from '../src/lib/auth/config.ts'
-import { getPool } from '../src/lib/db/pool.ts'
+import { getCoffrePool } from '../src/lib/db/pool.ts'
 
 const USAGE = 'Usage : npm run coffre:compte -- --nom "Prénom Nom" --email adresse@exemple.be'
 
@@ -82,7 +82,7 @@ let pool
 try {
   const { nom, email } = lireArguments()
   const motDePasse = await lireMotDePasse()
-  pool = getPool()
+  pool = getCoffrePool()
   const auth = creerAuth(pool)
   const compte = await creerCompte(auth, pool, { nom, email, motDePasse })
   console.log(

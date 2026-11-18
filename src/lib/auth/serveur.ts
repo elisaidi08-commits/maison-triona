@@ -1,7 +1,7 @@
 import { getSessionCookie } from 'better-auth/cookies'
 import { headers } from 'next/headers'
 
-import { getPool } from '../db/pool.ts'
+import { getCoffrePool } from '../db/pool.ts'
 import { lireAcces } from './acces.ts'
 import type { AccesCoffre } from './acces.ts'
 import { creerAuth } from './auth.ts'
@@ -14,7 +14,7 @@ import type { AuthCoffre } from './auth.ts'
 const globalForAuth = globalThis as unknown as { __maisonTrionaAuth?: AuthCoffre }
 
 export function getAuth(): AuthCoffre {
-  globalForAuth.__maisonTrionaAuth ??= creerAuth(getPool())
+  globalForAuth.__maisonTrionaAuth ??= creerAuth(getCoffrePool())
   return globalForAuth.__maisonTrionaAuth
 }
 
@@ -23,7 +23,7 @@ export function getAuth(): AuthCoffre {
 export async function lireAccesRequete(): Promise<AccesCoffre> {
   const entetes = await headers()
   if (!getSessionCookie(entetes, { cookiePrefix: 'coffre' })) return { etat: 'anonyme' }
-  return lireAcces(getAuth(), getPool(), entetes)
+  return lireAcces(getAuth(), getCoffrePool(), entetes)
 }
 
 export async function defiEnCours(): Promise<boolean> {

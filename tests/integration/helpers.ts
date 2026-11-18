@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+
 import pg from 'pg'
 import type { Pool } from 'pg'
 
@@ -28,3 +31,23 @@ export async function resetDatabase(pool: Pool): Promise<void> {
   await pool.query('DROP SCHEMA public CASCADE')
   await pool.query('CREATE SCHEMA public')
 }
+
+// Rôles de connexion (db/roles/*.sql, partie B et partie C), créés dans le serveur de test (les
+// rôles PostgreSQL sont communs à toutes les bases) et appliqués après les migrations.
+const ROLES = ['site_public', 'coffre'] as const
+
+export async function applyRoles(pool: Pool): Promise<void> {
+  for (const role of ROLES) {
+    await pool.query(
+      await readFile(fileURLToPath(new URL(`../../db/roles/${role}.sql`, import.meta.url)), 'utf8'),
+    )
+  }
+}
+
+// Connexion qui prend le rôle dès l'ouverture, comme le compte de l'espace /coffre.
+export function coffrePool(): Pool {
+  return new PgPool({ connectionString: TEST_DATABASE_URL, options: '-c role=coffre', max: 5 })
+}
+
+// Même chose, sous forme d'URL (sous-processus : scripts/coffre-compte.mjs).
+export const COFFRE_TEST_DATABASE_URL = `${TEST_DATABASE_URL}${TEST_DATABASE_URL.includes('?') ? '&' : '?'}options=-c%20role%3Dcoffre`

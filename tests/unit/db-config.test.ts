@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { poolConfigFromEnv } from '../../src/lib/db/config.ts'
+import { coffrePoolConfigFromEnv, poolConfigFromEnv } from '../../src/lib/db/config.ts'
 
 const URL_WITH_SECRET = 'postgres://user:motdepasse-factice@localhost:5432/base'
 
@@ -51,5 +51,45 @@ describe('poolConfigFromEnv', () => {
       VERCEL_ENV: 'production',
     })
     assert.deepEqual(config.ssl, { ca: 'CERT', rejectUnauthorized: true })
+  })
+})
+
+describe('coffrePoolConfigFromEnv', () => {
+  const COFFRE = 'postgres://coffre:motdepasse-coffre-factice@localhost:5432/base'
+
+  it('lit COFFRE_DATABASE_URL, jamais DATABASE_URL', () => {
+    assert.throws(() => coffrePoolConfigFromEnv({ DATABASE_URL: URL_WITH_SECRET }), {
+      message: 'COFFRE_DATABASE_URL manquante',
+    })
+    const config = coffrePoolConfigFromEnv({
+      COFFRE_DATABASE_URL: COFFRE,
+      DATABASE_URL: URL_WITH_SECRET,
+    })
+    assert.equal(config.connectionString, COFFRE)
+    assert.equal(config.application_name, 'maison-triona-coffre')
+    assert.equal(config.statement_timeout, 5_000)
+  })
+
+  it('exige TLS sur Vercel et refuse le compte du site public, sans citer les URL', () => {
+    assert.throws(
+      () => coffrePoolConfigFromEnv({ COFFRE_DATABASE_URL: COFFRE, VERCEL_ENV: 'preview' }),
+      {
+        message: 'TLS obligatoire sur Vercel : DATABASE_CA_CERT manquant',
+      },
+    )
+    assert.throws(
+      () =>
+        coffrePoolConfigFromEnv({
+          COFFRE_DATABASE_URL: URL_WITH_SECRET,
+          DATABASE_URL: URL_WITH_SECRET,
+          DATABASE_CA_CERT: 'CERT',
+          VERCEL_ENV: 'production',
+        }),
+      (error: Error) => {
+        assert.match(error.message, /doit différer de DATABASE_URL/)
+        assert.ok(!error.message.includes('motdepasse-factice'))
+        return true
+      },
+    )
   })
 })
