@@ -16,6 +16,8 @@ const PAGES = [
   '/en/how-it-works/easy-read',
   '/fr/notre-independance',
   '/en/our-independence',
+  '/fr/accessibilite',
+  '/en/accessibility',
   '/fr/services',
   '/en/services',
   '/fr/services/conciergerie',

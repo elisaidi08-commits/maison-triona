@@ -129,6 +129,11 @@ export async function Footer({ locale }: { locale: Locale }) {
               <li>
                 <NavLink href={localizedPath('/confidentialite', locale)}>{t('privacy')}</NavLink>
               </li>
+              <li>
+                <NavLink href={localizedPath('/accessibilite', locale)}>
+                  {t('accessibility')}
+                </NavLink>
+              </li>
             </ul>
             <LanguageSwitcher label={lang('label')} active={locale} names={names} />
           </div>

@@ -57,8 +57,13 @@
       "independence": {
         "title": "Our independence",
         "description": "How the house is paid, what you sign and with whom: the house introduces, the professional signs with you, and you pay nothing to the house."
+      },
+      "accessibility": {
+        "title": "Accessibility",
+        "description": "The level of accessibility the Maison Triona site aims for, what has been checked so far, what remains to be done and how to tell us about a difficulty."
       }
-    }
+    },
+    "ogAlt": "The Maison Triona seal, champagne on fir green"
   },
   "SkipLink": {
     "label": "Skip to content"
@@ -94,7 +99,8 @@
     "privacy": "Privacy",
     "contact": "Contact",
     "ai": "Images created with artificial intelligence.",
-    "copyright": "© Maison Triona"
+    "copyright": "© Maison Triona",
+    "accessibility": "Accessibility"
   },
   "Pages": {
     "home": "Maison Triona",
@@ -107,7 +113,8 @@
     "faq": "Common questions",
     "howItWorks": "How it works",
     "easyRead": "How it works, in plain English",
-    "independence": "Our independence"
+    "independence": "Our independence",
+    "accessibility": "Accessibility"
   },
   "NotFound": {
     "title": "This page does not exist.",
@@ -771,5 +778,46 @@
     "copied": "Link copied.",
     "subject": "{title} · Maison Triona",
     "body": "This page from Maison Triona may interest you: {url}"
+  },
+  "Accessibility": {
+    "title": "Accessibility",
+    "intro": "We want everyone to be able to read this site and write to us, however they browse.",
+    "updated": "Last assessed: 18 November 2026",
+    "sections": [
+      {
+        "id": "objectif",
+        "title": "Our aim",
+        "paragraphs": [
+          "This site aims for level AA of the Web Content Accessibility Guidelines (WCAG 2.2), and level AAA for the contrast of body text."
+        ]
+      },
+      {
+        "id": "etat",
+        "title": "Where we stand",
+        "paragraphs": [
+          "The site is being prepared. To date, every page has been checked with automated tests and with the keyboard:"
+        ],
+        "items": [
+          "no errors reported by the axe tool, in French and in English;",
+          "a visible marker on the element reached with the keyboard, and touch targets of at least 48 pixels;",
+          "every page can be read without JavaScript and without animation;",
+          "every video can be paused."
+        ]
+      },
+      {
+        "id": "a-venir",
+        "title": "What remains to be done",
+        "paragraphs": [
+          "Before opening, the site will be tried with the VoiceOver and NVDA screen readers, and by people outside the house. The contact form, still being built, will be checked in the same way."
+        ]
+      },
+      {
+        "id": "signaler",
+        "title": "Tell us about a difficulty",
+        "paragraphs": [
+          "If a page is difficult for you to read or use, write to us at [CONTENU À FOURNIR PAR CAT]. We will give you the information in another form."
+        ]
+      }
+    ]
   }
 }

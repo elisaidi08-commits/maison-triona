@@ -27,7 +27,7 @@ export async function LegalDocument({
   namespace,
   locale,
 }: {
-  namespace: 'Legal' | 'Privacy'
+  namespace: 'Legal' | 'Privacy' | 'Accessibility'
   locale: Locale
 }) {
   const t = await getTranslations(namespace)

@@ -57,8 +57,13 @@
       "independence": {
         "title": "Notre indépendance",
         "description": "Comment la maison est rémunérée, ce que vous signez et avec qui : la maison présente, le professionnel signe avec vous, et vous ne payez rien à la maison."
+      },
+      "accessibility": {
+        "title": "Accessibilité",
+        "description": "Le niveau d’accessibilité visé par le site de Maison Triona, ce qui est vérifié à ce jour, ce qui reste à faire et comment nous signaler une difficulté."
       }
-    }
+    },
+    "ogAlt": "Le sceau de Maison Triona, champagne sur vert sapin"
   },
   "SkipLink": {
     "label": "Aller au contenu"
@@ -94,7 +99,8 @@
     "privacy": "Confidentialité",
     "contact": "Contact",
     "ai": "Images créées par intelligence artificielle.",
-    "copyright": "© Maison Triona"
+    "copyright": "© Maison Triona",
+    "accessibility": "Accessibilité"
   },
   "Pages": {
     "home": "Maison Triona",
@@ -107,7 +113,8 @@
     "faq": "Questions fréquentes",
     "howItWorks": "Comment ça se passe",
     "easyRead": "Comment ça se passe, en langage simple",
-    "independence": "Notre indépendance"
+    "independence": "Notre indépendance",
+    "accessibility": "Accessibilité"
   },
   "NotFound": {
     "title": "Cette page n’existe pas.",
@@ -777,5 +784,46 @@
     "copied": "Lien copié.",
     "subject": "{title} · Maison Triona",
     "body": "Cette page de Maison Triona peut vous intéresser : {url}"
+  },
+  "Accessibility": {
+    "title": "Accessibilité",
+    "intro": "Nous voulons que chacun puisse lire ce site et nous écrire, quelle que soit sa façon de naviguer.",
+    "updated": "Dernière évaluation : 18 novembre 2026",
+    "sections": [
+      {
+        "id": "objectif",
+        "title": "Notre objectif",
+        "paragraphs": [
+          "Ce site vise le niveau AA des règles pour l’accessibilité des contenus web (WCAG 2.2), et le niveau AAA pour le contraste du texte courant."
+        ]
+      },
+      {
+        "id": "etat",
+        "title": "Où nous en sommes",
+        "paragraphs": [
+          "Le site est en préparation. À ce jour, chaque page a été vérifiée par des tests automatisés et au clavier :"
+        ],
+        "items": [
+          "aucune erreur relevée par l’outil axe, en français et en anglais ;",
+          "un repère visible sur l’élément atteint au clavier, et des zones à toucher d’au moins 48 pixels ;",
+          "chaque page se lit sans JavaScript et sans animation ;",
+          "chaque vidéo peut être mise en pause."
+        ]
+      },
+      {
+        "id": "a-venir",
+        "title": "Ce qui reste à faire",
+        "paragraphs": [
+          "Avant l’ouverture, le site sera essayé avec les lecteurs d’écran VoiceOver et NVDA, et par des personnes extérieures à la maison. Le formulaire de contact, en construction, sera vérifié de la même façon."
+        ]
+      },
+      {
+        "id": "signaler",
+        "title": "Nous signaler une difficulté",
+        "paragraphs": [
+          "Si une page vous est difficile à lire ou à utiliser, écrivez-nous à [CONTENU À FOURNIR PAR CAT]. Nous vous donnerons l’information sous une autre forme."
+        ]
+      }
+    ]
   }
 }

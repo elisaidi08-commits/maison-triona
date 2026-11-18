@@ -23,6 +23,7 @@ export const PUBLIC_PAGES = [
   '/contact',
   '/mentions-legales',
   '/confidentialite',
+  '/accessibilite',
 ] as const satisfies readonly InternalPath[]
 
 export type PublicPage = (typeof PUBLIC_PAGES)[number]
@@ -52,6 +53,7 @@ const PAGES: Record<PublicPage, { meta: string; crumb: string; parent?: PublicPa
   '/contact': { meta: 'contact', crumb: 'Pages.contact', parent: '/' },
   '/mentions-legales': { meta: 'legal', crumb: 'Pages.legal', parent: '/' },
   '/confidentialite': { meta: 'privacy', crumb: 'Pages.privacy', parent: '/' },
+  '/accessibilite': { meta: 'accessibility', crumb: 'Pages.accessibility', parent: '/' },
 }
 
 /** Clé des textes d'une page dans `Meta.pages` (titre et description). */
@@ -67,12 +69,12 @@ export function languageAlternates(page: InternalPath) {
 }
 
 /** Open Graph commun (le layout et chaque page : Next.js ne fusionne pas `openGraph` en profondeur). */
-export function openGraphBase(locale: Locale) {
+export function openGraphBase(locale: Locale, alt = 'Maison Triona') {
   return {
     siteName: 'Maison Triona',
     locale: locale === 'fr' ? 'fr_FR' : 'en_GB',
     type: 'website' as const,
-    images: [{ url: '/brand/og.png', width: 1200, height: 630, alt: 'Maison Triona' }],
+    images: [{ url: '/brand/og.png', width: 1200, height: 630, alt }],
   }
 }
 
@@ -80,6 +82,8 @@ export function openGraphBase(locale: Locale) {
 export async function pageMetadata(page: PublicPage): Promise<Metadata> {
   const locale = (await rootParams.locale()) as Locale
   const t = await getTranslations({ locale, namespace: 'Meta.pages' })
+  // Le sceau, sans texte, sert aux deux langues ; son texte alternatif suit la page.
+  const ogAlt = (await getTranslations({ locale, namespace: 'Meta' }))('ogAlt')
   const { meta } = PAGES[page]
   const title = t(`${meta}.title`)
   const description = t(`${meta}.description`)
@@ -88,7 +92,7 @@ export async function pageMetadata(page: PublicPage): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: path, languages: languageAlternates(page) },
-    openGraph: { ...openGraphBase(locale), title, description, url: path },
+    openGraph: { ...openGraphBase(locale, ogAlt), title, description, url: path },
   }
 }
 
