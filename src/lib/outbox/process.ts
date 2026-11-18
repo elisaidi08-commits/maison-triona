@@ -57,6 +57,8 @@ export interface OutboxRunSummary {
   delivered: number
   undelivered: number
   purged: number
+  /** Erreurs de la base (ou du marquage) sur un message, dans l'une ou l'autre boucle. */
+  errors: number
 }
 
 export interface OutboxRunOptions {
@@ -66,7 +68,11 @@ export interface OutboxRunOptions {
   maxChecks?: number
 }
 
-const DEFAULT_BUDGET_MS = 45_000
+// Marge sous `maxDuration = 60` de la route : le dernier envoi ou suivi commence avant 40 s ; il
+// attend TEM au plus 10 s (délai du transport), puis chaque appel à la base (marquage, purge) au
+// plus 5 s (`statement_timeout`, src/lib/db/config.ts) et en pratique quelques millisecondes.
+// 40 s + 10 s + appels à la base < 60 s.
+const DEFAULT_BUDGET_MS = 40_000
 const DEFAULT_MAX_SENDS = 20
 const DEFAULT_MAX_CHECKS = 20
 
@@ -81,6 +87,16 @@ const UNDELIVERED_FLAGS: readonly string[] = [
 // Identifiant de l'alerte à écrire si le message échoue : aucune pour une alerte.
 function alertIdFor(deps: OutboxDeps, template: OutboxTemplate): string | null {
   return template === 'technical_alert' ? null : deps.newId()
+}
+
+// Journalise sans jamais lever : dans un bloc d'erreur, un journal en panne ne doit pas arrêter
+// la passe ni faire lever le premier essai.
+function logSafely(deps: OutboxDeps, status: OutboxLogStatus, id: string): void {
+  try {
+    deps.log(status, id)
+  } catch {
+    // Journal indisponible : rien de plus à faire, le message reste en base.
+  }
 }
 
 function failedStatus(item: OutboxItem): OutboxLogStatus {
@@ -195,11 +211,7 @@ export async function sendNow(deps: OutboxDeps, id: string): Promise<void> {
     if (item === null) return
     await sendItem(deps, item)
   } catch {
-    try {
-      deps.log('failed:db', id)
-    } catch {
-      // Journal indisponible : rien de plus à faire, le message reste en base.
-    }
+    logSafely(deps, 'failed:db', id)
   }
 }
 
@@ -259,6 +271,7 @@ export async function runOutbox(
     delivered: 0,
     undelivered: 0,
     purged: 0,
+    errors: 0,
   }
 
   summary.exhausted = await failExhausted(deps.pool, deps.now(), deps.newId)
@@ -275,19 +288,22 @@ export async function runOutbox(
       else summary.failed += 1
     } catch {
       // Le message reste sous bail : il sera repris à l'échéance, pas dans cette passe.
-      deps.log('failed:db', item.id)
-      summary.failed += 1
+      logSafely(deps, 'failed:db', item.id)
+      summary.errors += 1
     }
   }
 
-  for (const item of await listAccepted(deps.pool, maxChecks)) {
+  // Budget déjà épuisé : aucun suivi, pas même la liste ; la passe suivante s'en charge.
+  const accepted = withinBudget() ? await listAccepted(deps.pool, maxChecks) : []
+  for (const item of accepted) {
     if (!withinBudget()) break
     try {
       const outcome = await track(deps, item)
       if (outcome === 'delivered') summary.delivered += 1
       else if (outcome === 'undelivered') summary.undelivered += 1
     } catch {
-      deps.log('failed:db', item.id)
+      logSafely(deps, 'failed:db', item.id)
+      summary.errors += 1
     }
   }
 

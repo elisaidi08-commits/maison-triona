@@ -78,6 +78,17 @@ const brokenPool = {
   },
 } as unknown as Pool
 
+// Note le texte de chaque requête passée directement au pool, puis la transmet.
+function spiedPool(queries: string[]): Pool {
+  return {
+    query: (text: string, values?: unknown[]) => {
+      queries.push(text)
+      return pool.query(text, values)
+    },
+    connect: () => pool.connect(),
+  } as unknown as Pool
+}
+
 type Scripted<T> = T | 'throw'
 
 interface Harness {
@@ -96,6 +107,8 @@ function harness(
     statuses?: Record<string, Scripted<StatusResult>>
     sendDelayMs?: number
     sendCostMs?: number
+    statusCostMs?: number
+    failingLog?: OutboxLogStatus[]
     pool?: Pool
   } = {},
 ): Harness {
@@ -117,6 +130,7 @@ function harness(
     },
     async status(providerId) {
       checked.push(providerId)
+      current += options.statusCostMs ?? 0
       const next = options.statuses?.[providerId] ?? { ok: true, state: 'pending', flags: [] }
       if (next === 'throw') throw new Error('panne inattendue du transport')
       return next
@@ -131,6 +145,7 @@ function harness(
       newId: () => randomUUID(),
       log: (status, id) => {
         logs.push([status, id])
+        if (options.failingLog?.includes(status)) throw new Error('journal indisponible')
       },
     },
     sent,
@@ -495,12 +510,13 @@ describe('boîte d’envoi : passe de la tâche planifiée (runOutbox)', () => {
     assert.equal((await row(alerts[0]!.id))?.status, 'accepted')
   })
 
-  it('une erreur sur un message est journalisée et comptée en échec, et la passe continue', async () => {
+  it('une erreur sur un message est journalisée et comptée à part, et la passe continue', async () => {
     const first = await insertNotification({ nextAt: at(-2 * MINUTE) })
     const second = await insertNotification({ nextAt: at(-MINUTE) })
     const h = harness({ sends: [{ ok: true, providerId: 'identifiant refusé' }] })
     const summary = await runOutbox(h.deps)
-    assert.equal(summary.failed, 1)
+    assert.equal(summary.errors, 1)
+    assert.equal(summary.failed, 0)
     assert.equal(summary.sent, 1)
     assert.deepEqual(h.logs, [
       ['failed:db', first],
@@ -513,11 +529,14 @@ describe('boîte d’envoi : passe de la tâche planifiée (runOutbox)', () => {
   it('s’arrête au budget : 2 envois de 30 s pour 45 s, les autres lignes intactes', async () => {
     const ids: string[] = []
     for (let i = 4; i >= 1; i -= 1) ids.push(await insertNotification({ nextAt: at(-i * MINUTE) }))
-    const h = harness({ sendCostMs: 30_000 })
+    const queries: string[] = []
+    const h = harness({ sendCostMs: 30_000, pool: spiedPool(queries) })
     const summary = await runOutbox(h.deps, { budgetMs: 45_000 })
     assert.equal(summary.sent, 2)
     assert.equal(h.sent.length, 2)
+    // Budget épuisé : aucun suivi, pas même la liste des messages acceptés.
     assert.deepEqual(h.checked, [])
+    assert.ok(!queries.some((text) => text.includes("WHERE status = 'accepted'")))
     for (const id of ids.slice(0, 2)) assert.equal((await row(id))?.status, 'accepted')
     for (const id of ids.slice(2)) {
       const written = await row(id)
@@ -525,6 +544,44 @@ describe('boîte d’envoi : passe de la tâche planifiée (runOutbox)', () => {
       assert.equal(written?.attempts, 0)
       assert.equal(written?.lease_until, null)
     }
+  })
+
+  it('budget par défaut de 40 s : 2 envois de 20 s', async () => {
+    for (let i = 0; i < 4; i += 1) await insertNotification()
+    const h = harness({ sendCostMs: 20_000 })
+    assert.equal((await runOutbox(h.deps)).sent, 2)
+  })
+
+  it('le suivi s’arrête en route quand l’horloge dépasse le budget', async () => {
+    for (let i = 3; i >= 1; i -= 1) await insertAccepted({ acceptedAt: at(-i * HOUR) })
+    const h = harness({ statusCostMs: 30_000 })
+    await runOutbox(h.deps, { budgetMs: 45_000 })
+    assert.equal(h.checked.length, 2)
+  })
+
+  it('un journal qui lève dans une erreur n’interrompt pas la passe', async () => {
+    const first = await insertNotification({ nextAt: at(-2 * MINUTE) })
+    const second = await insertNotification({ nextAt: at(-MINUTE) })
+    const tracked = await insertAccepted({
+      acceptedAt: at(-HOUR),
+    })
+    const h = harness({
+      sends: [{ ok: true, providerId: 'identifiant refusé' }],
+      statuses: { [tracked.providerId]: { ok: true, state: 'delivered', flags: ['REFUSÉ'] } },
+      failingLog: ['failed:db'],
+    })
+    const summary = await runOutbox(h.deps)
+    assert.equal(summary.errors, 2)
+    assert.equal(summary.sent, 1)
+    assert.deepEqual(h.logs, [
+      ['failed:db', first],
+      ['sent', second],
+      ['failed:db', tracked.id],
+    ])
+  })
+
+  it('base injoignable : la passe échoue (la route répondra 500)', async () => {
+    await assert.rejects(runOutbox(harness({ pool: brokenPool }).deps))
   })
 
   it('respecte maxSends et maxChecks', async () => {
@@ -640,6 +697,16 @@ describe('boîte d’envoi : suivi de la livraison', () => {
     assert.deepEqual(h.logs, [['undelivered', old.id]])
   })
 
+  it('un indicateur répété n’est noté qu’une fois', async () => {
+    const { id, providerId } = await insertAccepted()
+    const flags = Array.from({ length: 25 }, () => 'soft_bounce')
+    const h = harness({ statuses: { [providerId]: { ok: true, state: 'delivered', flags } } })
+    assert.equal((await runOutbox(h.deps)).delivered, 1)
+    const written = await row(id)
+    assert.equal(written?.status, 'delivered')
+    assert.deepEqual(written?.provider_flags, ['soft_bounce'])
+  })
+
   it('une alerte non délivrée ne crée pas d’alerte', async () => {
     const alert = await insertAccepted({ alert: true })
     const h = harness({
@@ -662,6 +729,7 @@ describe('boîte d’envoi : suivi de la livraison', () => {
     })
     const summary = await runOutbox(h.deps)
     assert.equal(summary.delivered, 1)
+    assert.equal(summary.errors, 1)
     assert.deepEqual(h.logs, [
       ['failed:db', first.id],
       ['delivered', second.id],
