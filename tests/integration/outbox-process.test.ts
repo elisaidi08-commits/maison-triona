@@ -546,9 +546,9 @@ describe('boîte d’envoi : passe de la tâche planifiée (runOutbox)', () => {
     }
   })
 
-  it('budget par défaut de 40 s : 2 envois de 20 s', async () => {
+  it('budget par défaut de 30 s : 2 envois de 15 s (3 avec 40 s)', async () => {
     for (let i = 0; i < 4; i += 1) await insertNotification()
-    const h = harness({ sendCostMs: 20_000 })
+    const h = harness({ sendCostMs: 15_000 })
     assert.equal((await runOutbox(h.deps)).sent, 2)
   })
 

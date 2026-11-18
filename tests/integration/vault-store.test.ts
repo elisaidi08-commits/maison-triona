@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import sodium from 'libsodium-wrappers-sumo'
 
 import pg from 'pg'
+import type { PoolClient } from 'pg'
 
 import { migrate } from '../../src/lib/db/migrate.ts'
 import type { Demande } from '../../src/lib/validation/demande.ts'
@@ -387,6 +388,50 @@ describe('enregistrement chiffré dans le coffre', () => {
     const octets = await readSealed(pool, demande.id, 'compte-factice')
     assert.ok(octets)
     assert.deepEqual(await openSealed(octets, cles), splitRequest(DEMANDE).sealed)
+  })
+
+  it('retour au point de sauvegarde impossible : tout est annulé, erreur réduite', async () => {
+    // Pool à part, dont le client refuse `ROLLBACK TO SAVEPOINT` : il n'est jamais rendu au pool
+    // des autres tests, et il est fermé à la fin.
+    const espion = new pg.Pool({ connectionString: TEST_DATABASE_URL, max: 1 })
+    const instructions: string[] = []
+    const connecter = espion.connect.bind(espion) as () => Promise<PoolClient>
+    ;(espion as unknown as { connect: () => Promise<PoolClient> }).connect = async () => {
+      const client = await connecter()
+      const query = client.query.bind(client) as (...args: unknown[]) => Promise<unknown>
+      ;(client as unknown as { query: (...args: unknown[]) => Promise<unknown> }).query = (
+        ...args: unknown[]
+      ) => {
+        const texte = typeof args[0] === 'string' ? args[0] : ''
+        instructions.push(texte.split('\n')[0] ?? '')
+        if (texte.startsWith('ROLLBACK TO SAVEPOINT')) {
+          return Promise.reject(
+            Object.assign(new Error('retour refusé par le test : Hortense'), { code: '08006' }),
+          )
+        }
+        return query(...args)
+      }
+      return client
+    }
+    await refuserInsertions('outbox')
+    try {
+      await assert.rejects(enregistrer(DEMANDE, {}, espion), (error: unknown) => {
+        assert.ok(error instanceof VaultError)
+        assert.equal(error.message, 'Coffre : storeRequest a échoué (08006)')
+        assert.equal(error.cause, undefined)
+        return true
+      })
+    } finally {
+      await accepterInsertions('outbox')
+      await espion.end()
+    }
+    // Le chemin attendu : point de sauvegarde, notification refusée, retour refusé, annulation.
+    assert.deepEqual(
+      instructions.filter((texte) => /^(BEGIN|SAVEPOINT|ROLLBACK|COMMIT)/.test(texte)),
+      ['BEGIN', 'SAVEPOINT notification', 'ROLLBACK TO SAVEPOINT notification', 'ROLLBACK'],
+    )
+    assert.deepEqual(await listRequests(pool), [])
+    assert.deepEqual(await boiteEnvoi(), [])
   })
 
   it('une demande qui ne s’écrit pas lève toujours, sans notification orpheline', async () => {

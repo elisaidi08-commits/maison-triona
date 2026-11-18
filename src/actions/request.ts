@@ -6,8 +6,12 @@ import { after } from 'next/server'
 import { localizedPath } from '@/i18n/pathnames'
 import { getPool } from '@/lib/db/pool'
 import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
-import { emailConfigFromEnv, type EmailConfig } from '@/lib/email/config'
 import { createOutboxDeps } from '@/lib/outbox/deps'
+import {
+  notificationSetup,
+  scheduleFirstAttempts,
+  storedStatuses,
+} from '@/lib/outbox/notify-request'
 import { sendNow } from '@/lib/outbox/process'
 import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
@@ -50,11 +54,13 @@ import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 //    demande (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a
 //    pas abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé) ;
 //    rien n'est écrit, ni la demande ni la notification.
-// E-mails (story 3.3) : la configuration est lue juste avant l'écriture. Vide, l'envoi est coupé
-// (`mail:disabled`) ; à moitié posée, `failed:config`, une fois par instance l'un et l'autre :
-// la demande s'enregistre quand même, sans notification. Le premier essai d'envoi part avec
-// `after()`, après la réponse (redirection comprise) ; tout étant déjà en base, la tâche Vercel
-// Cron `/api/cron/envoi` reprend le message si cet essai n'aboutit pas. La notification ne porte
+// E-mails (story 3.3, logique dans src/lib/outbox/notify-request.ts, testée sans Next) : la
+// configuration est lue juste avant l'écriture. Vide, l'envoi est coupé (`mail:disabled`) ; à
+// moitié posée, `failed:config`, une fois par instance l'un et l'autre : la demande s'enregistre
+// quand même, sans notification. Le premier essai d'envoi part avec `after()`, après la réponse
+// (redirection comprise) ; un `after` qui lève est journalisé `failed:after` et n'empêche jamais
+// le remerciement. Tout étant déjà en base, la tâche Vercel Cron `/api/cron/envoi` reprend le
+// message si cet essai n'aboutit pas. La notification ne porte
 // que la date et le lien vers le coffre, « Prioritaire » au sujet si l'urgence est « urgent » :
 // rien de la demande (D06).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
@@ -80,6 +86,7 @@ type Statut =
   | 'stored'
   | 'queued'
   | 'failed:outbox'
+  | 'failed:after'
   | 'mail:disabled'
 
 function journaliser(statut: Statut) {
@@ -96,32 +103,6 @@ function configurationManquante(
   if (signalees.has(element)) return
   signalees.add(element)
   journaliser(statut)
-}
-
-// Configuration des e-mails, ou `null` si l'envoi est coupé. Jamais l'erreur elle-même (elle
-// nomme des variables) : un statut seulement.
-function configurationEmails(): EmailConfig | null {
-  try {
-    const config = emailConfigFromEnv(process.env)
-    if (config === null) configurationManquante('e-mails', 'mail:disabled')
-    return config
-  } catch {
-    configurationManquante('e-mails')
-    return null
-  }
-}
-
-// Premier essai d'envoi, après la réponse. Rien ne sort du rappel : `sendNow` ne lève jamais, et
-// `createOutboxDeps` ne lève que sur un compte de l'envoi absent ou refusé (ENVOI_DATABASE_URL).
-// Le message reste alors en base : la tâche planifiée le reprend.
-function premierEssai(config: EmailConfig, id: string) {
-  after(async () => {
-    try {
-      await sendNow(createOutboxDeps(config), id)
-    } catch {
-      configurationManquante('envoi')
-    }
-  })
 }
 
 async function adresseIp(): Promise<string> {
@@ -256,26 +237,31 @@ export async function envoyerDemande(
   if (!clePublique) return fermee
 
   // E-mails coupés ou mal configurés : la demande s'enregistre quand même, sans notification.
-  const emails = configurationEmails()
+  const envoi = notificationSetup(process.env, configurationManquante)
   let enregistree: StoredRequest
   try {
     enregistree = await storeRequest(getPool(), resultat.demande, {
       publicKey: clePublique,
       privacyVersion: PRIVACY_POLICY_VERSION,
       now: new Date(maintenant),
-      notify: emails !== null,
+      notify: envoi.notify,
     })
   } catch (error) {
     // Jamais l'erreur elle-même : un statut seulement.
     journaliser(error instanceof VaultKeyError ? 'failed:config' : 'failed:vault')
     return { statut: 'echec', valeurs, jeton: signerHorodatage(Date.now(), secret) }
   }
-  journaliser('stored')
-  // À chaque fois, pas une fois par instance : une demande enregistrée dont Cat n'est pas prévenue.
-  if (enregistree.notifyFailed) journaliser('failed:outbox')
-  if (emails && enregistree.outbox.length > 0) {
-    journaliser('queued')
-    for (const id of enregistree.outbox) premierEssai(emails, id)
+  // `stored`, puis `failed:outbox` à chaque demande dont Cat n'est pas prévenue, ou `queued`.
+  for (const statut of storedStatuses(enregistree)) journaliser(statut)
+  // Ne lève jamais : la demande est enregistrée, le visiteur doit atteindre le remerciement.
+  if (envoi.notify) {
+    scheduleFirstAttempts(enregistree.outbox, envoi.config, {
+      after,
+      createDeps: createOutboxDeps,
+      sendNow,
+      log: journaliser,
+      logOnce: configurationManquante,
+    })
   }
   // En dernier, hors du try : `redirect` lève une exception de contrôle (doc Next.js) ; les
   // rappels `after()` déjà posés s'exécutent quand même.

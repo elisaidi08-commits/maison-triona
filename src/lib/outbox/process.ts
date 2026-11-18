@@ -68,11 +68,11 @@ export interface OutboxRunOptions {
   maxChecks?: number
 }
 
-// Marge sous `maxDuration = 60` de la route : le dernier envoi ou suivi commence avant 40 s ; il
-// attend TEM au plus 10 s (délai du transport), puis chaque appel à la base (marquage, purge) au
-// plus 5 s (`statement_timeout`, src/lib/db/config.ts) et en pratique quelques millisecondes.
-// 40 s + 10 s + appels à la base < 60 s.
-const DEFAULT_BUDGET_MS = 40_000
+// Marge sous `maxDuration = 60` de la route : le dernier envoi ou suivi commence avant 30 s. Au
+// pire, il attend la réservation 5 s (`statement_timeout`, src/lib/db/config.ts), TEM 10 s (délai
+// du transport), le marquage 5 s, puis la purge 5 s ; en pratique, quelques millisecondes pour
+// chaque appel à la base. 30 s + 5 s + 10 s + 5 s + 5 s ≈ 55 s < 60 s.
+const DEFAULT_BUDGET_MS = 30_000
 const DEFAULT_MAX_SENDS = 20
 const DEFAULT_MAX_CHECKS = 20
 

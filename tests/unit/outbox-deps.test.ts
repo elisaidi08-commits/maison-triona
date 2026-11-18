@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { after, describe, it } from 'node:test'
 
+import type { Pool } from 'pg'
+
 import type { EmailConfig } from '../../src/lib/email/config.ts'
 import { createOutboxDeps } from '../../src/lib/outbox/deps.ts'
 
@@ -21,8 +23,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const fetchOriginal = globalThis.fetch
 const urlOriginale = process.env.ENVOI_DATABASE_URL
 
+// Pool gardé pour le processus par `getEnvoiPool` (src/lib/db/pool.ts) : fermé ET oublié, pour
+// qu'aucun test suivant ne reçoive un pool déjà fermé.
+const cache = globalThis as unknown as { __maisonTrionaEnvoiPool?: Pool }
+async function oublierPoolEnvoi(): Promise<void> {
+  const pool = cache.__maisonTrionaEnvoiPool
+  delete cache.__maisonTrionaEnvoiPool
+  await pool?.end()
+}
+
 describe('createOutboxDeps', () => {
   after(async () => {
+    await oublierPoolEnvoi()
     globalThis.fetch = fetchOriginal
     if (urlOriginale === undefined) delete process.env.ENVOI_DATABASE_URL
     else process.env.ENVOI_DATABASE_URL = urlOriginale
@@ -62,8 +74,10 @@ describe('createOutboxDeps', () => {
       assert.match(b, UUID)
       assert.notEqual(a, b)
     } finally {
-      await deps.pool.end()
+      await oublierPoolEnvoi()
     }
+    // Pool fermé puis oublié : l'appel suivant en reçoit un neuf, jamais le pool fermé.
+    assert.notEqual(createOutboxDeps(CONFIG).pool, deps.pool)
   })
 
   it('crée le transport TEM avec la clé et le projet de la configuration', async () => {
