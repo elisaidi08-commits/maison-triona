@@ -11,6 +11,7 @@ import {
   claimDue,
   claimOne,
   enqueueNotification,
+  failExhausted,
   listAccepted,
   markAccepted,
   markFailed,
@@ -132,6 +133,35 @@ async function insertWithStatus(status: 'failed' | 'delivered'): Promise<string>
      VALUES ($1, 'request_notification', $2, $3, 'tem-1', $4, 'http_400')`,
     [id, randomUUID(), status, T0],
   )
+  return id
+}
+
+async function insertAlert(status: 'pending' | 'accepted'): Promise<string> {
+  const id = randomUUID()
+  await pool.query(
+    `INSERT INTO outbox (id, template, alert_event, alert_subject, status, provider_id, accepted_at)
+     VALUES ($1, 'technical_alert', 'send_failed', $2, $3, $4, $5)`,
+    [
+      id,
+      randomUUID(),
+      status,
+      status === 'accepted' ? `tem-${id}` : null,
+      status === 'accepted' ? T0 : null,
+    ],
+  )
+  return id
+}
+
+// Message en attente arrivé au plafond (ou juste en dessous) de tentatives.
+async function insertStuck(
+  options: { alert?: boolean; attempts?: number; leaseUntil?: Date | null } = {},
+): Promise<string> {
+  const id = options.alert ? await insertAlert('pending') : await insertPending({ nextAt: at(-1) })
+  await pool.query('UPDATE outbox SET attempts = $2, lease_until = $3 WHERE id = $1', [
+    id,
+    options.attempts ?? 10,
+    options.leaseUntil ?? null,
+  ])
   return id
 }
 
@@ -433,11 +463,26 @@ describe('boîte d’envoi : statuts', () => {
     assert.equal(await count(), 1)
   })
 
-  it('markFailed n’écrit pas l’échec si l’alerte est refusée', async () => {
+  it('markFailed n’écrit pas l’échec si l’alerte est refusée, sans citer de valeur', async () => {
     const id = await insertPending()
     const taken = await insertPending()
-    await assert.rejects(markFailed(pool, id, 'http_400', taken), VaultError)
+    await assert.rejects(markFailed(pool, id, 'http_400', taken), (error: unknown) => {
+      assert.ok(error instanceof VaultError)
+      assert.equal(error.message, 'Coffre : markFailed a échoué (23505)')
+      assert.ok(!error.message.includes(id))
+      assert.ok(!error.message.includes(taken))
+      assert.equal(error.cause, undefined)
+      return true
+    })
     assert.equal((await row(id))?.status, 'pending')
+  })
+
+  it('markFailed sur une alerte n’en crée pas une autre, même avec un alertId', async () => {
+    const id = await insertAlert('pending')
+    await markFailed(pool, id, 'http_400', randomUUID())
+    assert.equal((await row(id))?.status, 'failed')
+    assert.deepEqual(await alertsFor(id), [])
+    assert.equal(await count(), 1)
   })
 
   it('les trois marquages ne touchent qu’un message en attente', async () => {
@@ -499,11 +544,95 @@ describe('boîte d’envoi : statuts', () => {
     )
   })
 
+  it('recordDelivery sur une alerte n’en crée pas une autre, même avec un alertId', async () => {
+    const id = await insertAlert('accepted')
+    await recordDelivery(pool, id, 'undelivered', ['hard_bounce'], randomUUID(), 'undelivered')
+    assert.equal((await row(id))?.status, 'undelivered')
+    assert.deepEqual(await alertsFor(id), [])
+    assert.equal(await count(), 1)
+  })
+
+  it('recordDelivery n’écrit pas la livraison si l’alerte est refusée', async () => {
+    const id = await insertAccepted(T0)
+    const taken = await insertPending()
+    await assert.rejects(
+      recordDelivery(pool, id, 'undelivered', ['hard_bounce'], taken, 'undelivered'),
+      (error: unknown) => {
+        assert.ok(error instanceof VaultError)
+        assert.equal(error.message, 'Coffre : recordDelivery a échoué (23505)')
+        return true
+      },
+    )
+    const written = await row(id)
+    assert.equal(written?.status, 'accepted')
+    assert.deepEqual(written?.provider_flags, [])
+  })
+
+  it('recordDelivery accepte jusqu’à 20 indicateurs', async () => {
+    const id = await insertAccepted(T0)
+    const flags = Array.from({ length: 20 }, () => 'soft_bounce')
+    await recordDelivery(pool, id, 'delivered', flags, null, null)
+    assert.equal((await row(id))?.provider_flags.length, 20)
+  })
+
   it('recordDelivery ne touche qu’un message accepté', async () => {
     const id = await insertPending()
     await recordDelivery(pool, id, 'undelivered', [], randomUUID(), 'tracking_expired')
     assert.equal((await row(id))?.status, 'pending')
     assert.deepEqual(await alertsFor(id), [])
+  })
+
+  it('failExhausted passe en échec un message à bout de tentatives et crée une alerte', async () => {
+    const stuck = await insertStuck()
+    const expired = await insertStuck({ leaseUntil: T0 })
+    const alertIds: string[] = [randomUUID(), randomUUID()]
+    const given = [...alertIds]
+    assert.equal(await failExhausted(pool, T0, () => given.shift()!), 2)
+    for (const id of [stuck, expired]) {
+      const written = await row(id)
+      assert.equal(written?.status, 'failed')
+      assert.equal(written?.last_error, 'exhausted')
+      assert.equal(written?.lease_until, null)
+      const alerts = await alertsFor(id)
+      assert.equal(alerts.length, 1)
+      assert.equal(alerts[0]?.template, 'technical_alert')
+      assert.equal(alerts[0]?.alert_event, 'send_failed')
+      assert.equal(alerts[0]?.status, 'pending')
+      assert.ok(alertIds.includes(alerts[0]?.id ?? ''))
+    }
+    assert.equal(given.length, 0)
+    assert.equal(await count(), 4)
+  })
+
+  it('failExhausted passe en échec une alerte à bout de tentatives, sans alerte', async () => {
+    const id = await insertStuck({ alert: true })
+    let calls = 0
+    const newId = (): string => {
+      calls += 1
+      return randomUUID()
+    }
+    assert.equal(await failExhausted(pool, T0, newId), 1)
+    assert.equal((await row(id))?.status, 'failed')
+    assert.equal((await row(id))?.last_error, 'exhausted')
+    assert.deepEqual(await alertsFor(id), [])
+    assert.equal(calls, 0)
+    assert.equal(await count(), 1)
+  })
+
+  it('failExhausted ne touche ni un message sous bail ni un message sous 10 tentatives', async () => {
+    const leased = await insertStuck({ leaseUntil: at(1) })
+    const below = await insertStuck({ attempts: 9 })
+    const done = await insertWithStatus('failed')
+    await pool.query('UPDATE outbox SET attempts = 10 WHERE id = $1', [done])
+    assert.equal(await failExhausted(pool, T0, () => randomUUID()), 0)
+    for (const id of [leased, below]) {
+      const written = await row(id)
+      assert.equal(written?.status, 'pending')
+      assert.equal(written?.last_error, null)
+    }
+    assert.deepEqual((await row(leased))?.lease_until, at(1))
+    assert.equal((await row(done))?.last_error, 'http_400')
+    assert.equal(await count(), 3)
   })
 
   it('purgeOutbox n’efface que les lignes antérieures à la date', async () => {
@@ -539,6 +668,15 @@ describe('boîte d’envoi : validation avant toute requête', () => {
       'enqueue demande',
       () => enqueueNotification(noDb, { id: ID, requestId: TEMOIN, priority: false }),
     ],
+    [
+      'enqueue priorité',
+      () =>
+        enqueueNotification(noDb, {
+          id: ID,
+          requestId: ID,
+          priority: TEMOIN as unknown as boolean,
+        }),
+    ],
     ['claimDue date', () => claimDue(noDb, new Date(Number.NaN), 10)],
     ['claimDue limite 0', () => claimDue(noDb, T0, 0)],
     ['claimDue limite 101', () => claimDue(noDb, T0, 101)],
@@ -547,6 +685,7 @@ describe('boîte d’envoi : validation avant toute requête', () => {
     ['claimOne date', () => claimOne(noDb, ID, new Date(Number.NaN))],
     ['markAccepted id', () => markAccepted(noDb, TEMOIN, 'tem-1', T0)],
     ['markAccepted prestataire', () => markAccepted(noDb, ID, TEMOIN, T0)],
+    ['markAccepted prestataire long', () => markAccepted(noDb, ID, 'a'.repeat(101), T0)],
     ['markAccepted date', () => markAccepted(noDb, ID, 'tem-1', new Date(Number.NaN))],
     ['markRetry id', () => markRetry(noDb, TEMOIN, 'http_503', T0)],
     ['markRetry code', () => markRetry(noDb, ID, TEMOIN, T0)],
@@ -556,11 +695,28 @@ describe('boîte d’envoi : validation avant toute requête', () => {
     ['markFailed code', () => markFailed(noDb, ID, TEMOIN, null)],
     ['markFailed alerte', () => markFailed(noDb, ID, 'http_400', TEMOIN)],
     ['listAccepted limite', () => listAccepted(noDb, 0)],
+    ['listAccepted limite 101', () => listAccepted(noDb, 101)],
     ['recordDelivery id', () => recordDelivery(noDb, TEMOIN, 'delivered', [], null, null)],
     ['recordDelivery issue', () => recordDelivery(noDb, ID, TEMOIN as 'delivered', [], null, null)],
     [
       'recordDelivery indicateur',
       () => recordDelivery(noDb, ID, 'delivered', [TEMOIN], null, null),
+    ],
+    [
+      'recordDelivery indicateurs hors tableau',
+      () => recordDelivery(noDb, ID, 'delivered', TEMOIN as unknown as string[], null, null),
+    ],
+    [
+      'recordDelivery 21 indicateurs',
+      () =>
+        recordDelivery(
+          noDb,
+          ID,
+          'delivered',
+          Array.from({ length: 21 }, () => 'soft_bounce'),
+          null,
+          null,
+        ),
     ],
     [
       'recordDelivery alerte',
@@ -575,6 +731,8 @@ describe('boîte d’envoi : validation avant toute requête', () => {
       () => recordDelivery(noDb, ID, 'undelivered', [], ID, TEMOIN as 'undelivered'),
     ],
     ['purgeOutbox date', () => purgeOutbox(noDb, new Date(Number.NaN))],
+    ['failExhausted date', () => failExhausted(noDb, new Date(Number.NaN), () => ID)],
+    ['failExhausted générateur', () => failExhausted(noDb, T0, TEMOIN as unknown as () => string)],
   ]
 
   for (const [label, run] of cases) {

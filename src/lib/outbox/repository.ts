@@ -38,6 +38,7 @@ const MAX_LIMIT = 100
 const ERROR_CODE = /^[a-z0-9_]{1,60}$/
 const PROVIDER_ID = /^[A-Za-z0-9._:-]{1,100}$/
 const FLAG = /^[a-z_]{1,40}$/
+const MAX_FLAGS = 20
 const OUTCOMES: readonly string[] = ['delivered', 'undelivered']
 const ALERT_EVENTS: readonly string[] = ['send_failed', 'undelivered', 'tracking_expired']
 
@@ -99,6 +100,12 @@ function toItem(row: ItemRow): OutboxItem {
     attempts: Number(row.attempts),
     createdAt: row.created_at,
   }
+}
+
+// Une alerte n'est due que si la ligne a bien changé (gabarit rendu par l'UPDATE) et n'est pas
+// elle-même une alerte technique : jamais d'alerte sur une alerte.
+function needsAlert(template: OutboxTemplate | undefined): boolean {
+  return template !== undefined && template !== 'technical_alert'
 }
 
 // Validation avant toute requête : RangeError, sans jamais citer la valeur refusée.
@@ -203,8 +210,8 @@ export async function markRetry(pool: Pool, id: string, code: string, nextAt: Da
 }
 
 // Échec définitif. `alertId` non nul : l'alerte `send_failed` est écrite dans la même transaction,
-// seulement si le message était encore en attente (pas d'alerte en double). Ne jamais en passer
-// une pour un message qui est lui-même une alerte : c'est à l'appelant d'y veiller.
+// seulement si le message était encore en attente (pas d'alerte en double) et n'est pas lui-même
+// une alerte (jamais d'alerte sur une alerte, même si l'appelant en demande une).
 export async function markFailed(
   pool: Pool,
   id: string,
@@ -216,15 +223,41 @@ export async function markFailed(
   if (alertId !== null) assertId(alertId, 'Identifiant de l’alerte')
   await guard('markFailed', () =>
     withTransaction(pool, async (client) => {
-      const { rowCount } = await client.query(
+      const { rows } = await client.query<{ template: OutboxTemplate }>(
         `UPDATE outbox
             SET status = 'failed', lease_until = NULL, last_error = $2
-          WHERE id = $1 AND status = 'pending'`,
+          WHERE id = $1 AND status = 'pending'
+        RETURNING template`,
         [id, code],
       )
-      if (rowCount && alertId !== null) {
+      if (alertId !== null && needsAlert(rows[0]?.template)) {
         await client.query(INSERT_ALERT, [alertId, 'send_failed', id])
       }
+    }),
+  )
+}
+
+// Messages à bout de tentatives (10, plafond de la table : envois interrompus à répétition, que la
+// réservation ne reprend plus) : échec `exhausted` hors bail, et une alerte `send_failed` pour
+// chacun, sauf pour une alerte. Une seule transaction ; renvoie le nombre de messages passés en échec.
+export async function failExhausted(pool: Pool, now: Date, newId: () => string): Promise<number> {
+  assertDate(now, 'Date de contrôle')
+  if (typeof newId !== 'function') throw new RangeError('Générateur d’identifiants invalide')
+  return guard('failExhausted', () =>
+    withTransaction(pool, async (client) => {
+      const { rows } = await client.query<{ id: string; template: OutboxTemplate }>(
+        `UPDATE outbox
+            SET status = 'failed', lease_until = NULL, last_error = 'exhausted'
+          WHERE status = 'pending' AND attempts >= 10
+            AND (lease_until IS NULL OR lease_until <= $1)
+        RETURNING id, template`,
+        [now],
+      )
+      for (const row of rows) {
+        if (row.template === 'technical_alert') continue
+        await client.query(INSERT_ALERT, [newId(), 'send_failed', row.id])
+      }
+      return rows.length
     }),
   )
 }
@@ -250,7 +283,8 @@ export async function listAccepted(pool: Pool, limit: number): Promise<AcceptedI
 }
 
 // Issue de la livraison d'un message accepté. `alertId` non nul : l'alerte (`alertEvent`) est
-// écrite dans la même transaction, seulement si le message était encore accepté.
+// écrite dans la même transaction, seulement si le message était encore accepté et n'est pas
+// lui-même une alerte.
 export async function recordDelivery(
   pool: Pool,
   id: string,
@@ -263,6 +297,7 @@ export async function recordDelivery(
   if (!OUTCOMES.includes(outcome)) throw new RangeError('Issue de livraison invalide')
   if (
     !Array.isArray(flags) ||
+    flags.length > MAX_FLAGS ||
     !flags.every((flag) => typeof flag === 'string' && FLAG.test(flag))
   ) {
     throw new RangeError('Indicateur du prestataire invalide')
@@ -276,12 +311,13 @@ export async function recordDelivery(
   }
   await guard('recordDelivery', () =>
     withTransaction(pool, async (client) => {
-      const { rowCount } = await client.query(
+      const { rows } = await client.query<{ template: OutboxTemplate }>(
         `UPDATE outbox SET status = $2, provider_flags = $3
-          WHERE id = $1 AND status = 'accepted'`,
+          WHERE id = $1 AND status = 'accepted'
+        RETURNING template`,
         [id, outcome, flags],
       )
-      if (rowCount && alertId !== null) {
+      if (alertId !== null && needsAlert(rows[0]?.template)) {
         await client.query(INSERT_ALERT, [alertId, alertEvent, id])
       }
     }),
