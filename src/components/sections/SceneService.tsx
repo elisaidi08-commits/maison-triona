@@ -7,7 +7,7 @@ import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath } from '@/i18n/pathnames'
 import type { Locale } from '@/i18n/routing'
-import { SERVICE_MEDIA, SERVICE_PATHS, type Service } from '@/lib/services'
+import { SERVICE_MEDIA, type Service } from '@/lib/services'
 
 // Scène de service, structure identique × 3 (docs/art-direction.md §7.8, refonte V3 D26). Desktop :
 // média à hauteur d'écran, collant pendant que le texte défile, côté alterné d'une scène à l'autre ;
@@ -28,8 +28,6 @@ type SceneServiceProps = {
   locale: Locale
   heading?: 'h1' | 'h2'
   mediaRight?: boolean
-  // Sur l'accueil : lien vers la page du service, sous le CTA.
-  pageLink?: boolean
   // Second temps de la scène ; par défaut, la version courte de l'accueil. Les pages de service y
   // placent leurs réponses aux cinq questions (ServiceDetails).
   children?: ReactNode
@@ -40,7 +38,6 @@ export async function SceneService({
   locale,
   heading = 'h2',
   mediaRight = false,
-  pageLink = false,
   children,
 }: SceneServiceProps) {
   const t = await getTranslations('Services')
@@ -91,11 +88,6 @@ export async function SceneService({
 
       <div className="flex flex-col items-start gap-8">
         <TextLink href={localizedPath('/contact', locale)}>{t('cta')}</TextLink>
-        {pageLink ? (
-          <TextLink href={localizedPath(SERVICE_PATHS[service.id], locale)}>
-            {t(`${service.key}.link`)}
-          </TextLink>
-        ) : null}
       </div>
     </>
   )
