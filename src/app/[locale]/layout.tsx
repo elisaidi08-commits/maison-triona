@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
+import { PreselectionBesoin } from '@/components/forms/PreselectionBesoin'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { LanguageSuggestion } from '@/components/layout/LanguageSuggestion'
@@ -65,6 +66,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
           closeLabel={suggestion('close')}
         />
         <MobileBar href={localizedPath('/contact', locale)} label={bar('label')} />
+        <PreselectionBesoin />
       </body>
     </html>
   )

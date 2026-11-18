@@ -19,13 +19,13 @@
 | Mouvement | **Motion** (`motion`, ex-Framer Motion) | `14.x` | `LazyMotion` + `m`, ~30 ko ; peut tomber à 0 selon Q4 (`docs/motion-spec.md`) | Proposé |
 | i18n | **next-intl** | `4.14.9` | FR/EN, chemins localisés, prêt pour d'autres langues | Proposé |
 | Contenu | **CMS headless** | voir §5 | Cat édite elle-même les textes publics | `[À TRANCHER]` (reco : Sanity) |
-| Validation | **Zod** | `4.6.x` | Schéma unique des demandes, côté serveur | Proposé |
+| Validation | **Zod** | `4.6.7` (dernière version, publiée le 12/10/2026, vérifiée sur le registre npm le 18/11/2026 ; aucune dépendance) | Un seul schéma pour la demande : la Server Action valide tout, le formulaire valide l'étape en cours avant de continuer, avec les mêmes règles et les mêmes codes d'erreur. L'écrire à la main dupliquerait les règles (deux listes à tenir d'accord) ; le poids côté navigateur reste sur la seule page Contact | **Installé (3.1)** |
 | **Coffre des demandes** | Base PostgreSQL **hébergée dans l'UE** | voir §6.5 | Une panne d'e-mail ne fait jamais perdre une demande | `[À TRANCHER]` (reco : Scaleway Managed PostgreSQL) |
 | **Chiffrement applicatif** | libsodium, « sealed box » | à vérifier en story E3-S8 | Une fuite de base, de sauvegarde ou de variables d'environnement ne révèle rien | Proposé |
 | **Authentification du coffre** | Better Auth (mot de passe + TOTP obligatoire, passkey) | à vérifier en story E3-S8 | Comptes nominatifs, A2F, données dans notre base | `[À TRANCHER]` |
 | E-mail | Transactionnel européen, **sans suivi** | voir §6.6 | Notification minimale à Cat, confirmation au visiteur | `[À TRANCHER]` (reco : Scaleway TEM) |
 | File d'envoi | Table « boîte d'envoi » + tâche planifiée Vercel (Cron) | — | Reprises sans sous-traitant supplémentaire | Proposé |
-| Anti-abus | Honeypot + piège temporel + limitation de débit (Upstash Redis, région UE) | `@upstash/ratelimit 2.2` | FR4, sans captcha | Proposé |
+| Anti-abus | Honeypot + horodatage signé (HMAC) + limitation de débit (Upstash Redis, région UE) | aucune dépendance : API REST d'Upstash appelée par `fetch` côté serveur (`src/lib/rate-limit.ts`) | FR4, sans captcha. `@upstash/ratelimit` écarté : deux paquets de plus pour une fenêtre fixe de quatre lignes | **Installé (3.5)**, limitation inactive tant que le compte Upstash n'existe pas |
 | Analytics | **Plausible**, servi via notre domaine (proxy) | — | Sans cookie, hébergé dans l'UE, aucun appel tiers vu du navigateur | Proposé |
 | Hébergement | **Vercel Pro**, fonctions en région **`cdg1`** (Paris) | 20 $/mois | Hobby interdit l'usage commercial ; région UE pour les demandes | Proposé |
 | PDF | **Playwright** au build (`page.pdf({ tagged: true, outline: true })`) | ≥ 1.42 (`1.64.1` prévu pour les tests) | PDF balisé « Comment ça se passe » FR/EN, même source que la page imprimable | Proposé |
@@ -169,7 +169,7 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 | … en langage simple | `/fr/comment-ca-se-passe/langage-simple` | `/en/how-it-works/easy-read` |
 | Notre indépendance | `/fr/notre-independance` | `/en/our-independence` |
 | Comment nous choisissons (phase 2) | `/fr/comment-nous-choisissons` | `/en/how-we-choose` |
-| Contact (`?service=…`, `?s=…`) | `/fr/contact` | `/en/contact` |
+| Contact (présélection par `sessionStorage`, rien dans l'URL, D26) | `/fr/contact` | `/en/contact` |
 | Convenir d'un appel (D57, remplace le rappel) | `/fr/contact/appel` | `/en/contact/call` |
 | … réservation (lien personnel, noindex) | `/fr/contact/appel/[jeton]` | `/en/contact/call/[token]` |
 | … déplacer, annuler (noindex) | `/fr/contact/appel/gerer/[jeton]` | `/en/contact/call/manage/[token]` |
@@ -180,9 +180,9 @@ Les versions de libsodium, Better Auth et du pilote PostgreSQL ne sont **pas** f
 | Accessibilité | `/fr/accessibilite` | `/en/accessibility` |
 | PDF | `/documents/comment-ca-se-passe.pdf` | `/documents/how-it-works.pdf` |
 
-**Choix d'entrée** : vrais liens vers l'ancre de la scène sur l'accueil ; la page dédiée existe pour le partage et le SEO (`docs/ux-entry-i18n-a11y.md` Annexe A). La valeur de `?service=` est un identifiant neutre et stable (`conciergerie`, `grand-age`, `enfants`), identique dans les deux langues.
+**Choix d'entrée** : vrais liens vers l'ancre de la scène sur l'accueil ; la page dédiée existe pour le partage et le SEO (`docs/ux-entry-i18n-a11y.md` Annexe A). Le besoin choisi est transmis au formulaire par le stockage de session, jamais par l'URL (D26) : les liens portent `data-besoin`, un identifiant neutre et stable (`conciergerie`, `grand-age`, `enfants`, `indecis`), identique dans les deux langues ; sans JavaScript, aucune présélection (§6.1).
 
-**Source anonyme `?s=`** : liste fermée de codes (`carte`, `salon`, `ami`… `[À DÉFINIR avec Cat]`), toute autre valeur est ignorée ; transmise par un champ caché jusqu'au coffre, **jamais** associée à une personne dans l'outil de mesure.
+**Origine** (remplace la source `?s=`, D26 et D41) : champ facultatif du formulaire, « Comment avez-vous connu la maison ? », liste fermée sans texte libre (`carte`, `prospectus`, `boite-aux-lettres`, `recommandation`, `bouche-a-oreille`, `salon`), toute autre valeur refusée ; envoyée avec la demande jusqu'au coffre, **jamais** associée à une personne dans l'outil de mesure.
 
 **Pages pays** (`/fr/territoires/suisse`…) : **pas avant la phase 2**, et seulement avec un contenu local réel fourni par Cat. Si elles existent, chacune a son propre `canonical` et ses alternates FR/EN ; ce ne sont pas des variantes `hreflang` de la page Territoires (`docs/seo-strategy.md` §E et §G).
 
@@ -249,7 +249,8 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 ### 6.1 Formulaire en étapes : parcours
 1. Page `/contact` : **un seul formulaire HTML en 4 `fieldset`** (Besoin · Pour qui, où, quand · Comment vous joindre · Un mot libre). Rendu côté serveur, **fonctionnel sans JavaScript** : les 4 parties s'affichent à la suite et l'envoi (POST natif vers la Server Action) fonctionne.
 2. Avec JavaScript : une partie à la fois, titre « Étape 2 sur 4 · … » qui reçoit le focus à chaque changement, filet de progression, bouton Retour. Validation locale de l'étape avant de continuer. **Rien n'est envoyé au serveur avant l'envoi final.**
-3. Brouillon : `sessionStorage`, clés `mt-draft-*`, **seulement** besoin, pays, langue, créneau ; effacé à l'envoi. Jamais le nom, le contact, « pour qui », l'urgence ni le message.
+3. Brouillon : `sessionStorage`, clés `mt-draft-*`, **seulement** besoin, pays, langue, créneau ; effacé à l'envoi. Jamais le nom, le contact, « pour qui », l'urgence, l'origine ni le message.
+3 bis. **Présélection du besoin (D26)** : rien dans l'URL. Les liens vers le contact des pages de service, du bloc Contact de ces pages et des choix de l'accueil portent `data-besoin` ; un écouteur client global (`PreselectionBesoin`, monté dans le layout de langue) écrit `mt-draft-besoin` au clic, et le formulaire coche ce besoin à son affichage (valeur inconnue ignorée). Sans JavaScript, pas de présélection (accepté). La FAQ et « Comment ça se passe » n'ont pas de besoin propre : leurs liens ne posent rien, le besoin déjà choisi reste.
 4. Validation serveur Zod. En cas d'erreur : la page se réaffiche **avec les valeurs conservées**, à l'étape fautive, résumé d'erreurs en tête qui reçoit le focus (maquette `110:7`).
 5. Succès : écriture dans le coffre, puis redirection vers `/contact/merci` (`noindex`) ; e-mails par la boîte d'envoi (§6.6).
 6. Échec d'écriture dans le coffre : état « L'envoi n'a pas abouti » (maquette `111:107`) **sans perte de la saisie** ; aucun e-mail ne part.
@@ -258,19 +259,20 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 
 | Étape | Champ | Règle | Remarque |
 |---|---|---|---|
-| 1 | Nature de la demande | requis, liste fermée : `conciergerie`, `grand-age`, `enfants`, `indecis` | **Présélectionnée** par `?service=`, modifiable |
-| 2 | Pour qui ? | facultatif : pour moi · pour un proche · autre | Hors brouillon |
-| 2 | Pays | requis : `BE · FR · LU · MC · CH` + `autre` `[À VALIDER]` | — |
+| 1 | Nature de la demande | requis, liste fermée : `conciergerie`, `grand-age`, `enfants`, `indecis` | **Présélectionnée** par le stockage de session (D26), modifiable |
+| 2 | Pour qui ? | facultatif : pour moi · pour un proche · je préfère ne pas le dire (spec d'entrée, annexe C.3, prioritaire sur l'annexe B.4) | Hors brouillon |
+| 2 | Pays | requis : `BE · FR · LU · MC · CH · ailleurs · non-dit` (D41 : « Ailleurs », « Je préfère ne pas le dire ») | — |
 | 2 | Urgence | requis : aucune · dans les semaines à venir · urgent | « Urgent » affiche la mention des services d'urgence (annexe D.5) ; hors brouillon |
 | 3 | Nom | requis, 2-120 caractères | `autocomplete="name"` |
 | 3 | E-mail | e-mail valide | `autocomplete="email"` ; **au moins un des deux** (e-mail ou téléphone) |
 | 3 | Téléphone | téléphone international valide | `autocomplete="tel"` ; deux champs plutôt qu'un seul mixte (WCAG 1.3.5) |
-| 3 | Créneau | facultatif : matin · après-midi · soir | — |
+| 3 | Créneau | facultatif : matin · après-midi · soir | Préférence pour être joint, pas un rendez-vous (D57) |
 | 3 | Langue de réponse | requis : français · English | Préremplie par la langue de la page |
 | 4 | Un mot libre | **facultatif**, 0-2 000 caractères | Aide visible : « Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. » **Aucun champ santé** ; jamais sauvegardé en brouillon |
-| 4 | Consentement | case requise, non cochée par défaut | Lien vers la politique de confidentialité ; base légale à trancher par le juriste (`docs/privacy.md`) |
+| 4 | Origine | facultatif, liste fermée sans texte libre : `carte · prospectus · boite-aux-lettres · recommandation · bouche-a-oreille · salon` (D41) | « Comment avez-vous connu la maison ? » ; la recommandation ne nomme aucune clinique |
+| 4 | Consentement | case requise, non cochée par défaut | Lien vers la politique de confidentialité (nouvel onglet, la saisie reste ouverte), sans base légale écrite (D61) |
 | — | `locale` | caché, `fr` ou `en` | Langue de l'interface |
-| — | `source` | caché, code de la liste fermée `?s=` ou vide | Jamais lié à un identifiant de mesure |
+| — | ~~`source`~~ | ~~caché, `?s=`~~ | Retiré (D26 : rien dans l'URL) ; remplacé par le champ « Origine » |
 | — | Honeypot | caché aux humains (hors écran, `tabindex=-1`, `autocomplete=off`, `aria-hidden`) | Rempli = rejet silencieux |
 | — | Horodatage signé | caché, HMAC | Envoi en moins de 3 s = rejet |
 
@@ -311,7 +313,9 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 ### 6.7 Sécurité des envois
 - **Limitation de débit** : 3 envois par 10 minutes et par empreinte d'IP (hachée avec un sel quotidien, jamais stockée en clair), plus un plafond global quotidien et une limite par adresse de confirmation. Upstash Redis région UE (gratuit à ce volume) ; alternative : règle Vercel WAF, à placer alors sur une Route Handler.
 - Une Server Action est un point d'entrée POST public : Next vérifie l'en-tête `Origin` mais **laisse passer les requêtes sans `Origin`** ; d'où la limitation de débit et la validation stricte.
-- `bodySizeLimit` des Server Actions abaissé (64 ko).
+- `bodySizeLimit` des Server Actions abaissé (64 ko, `next.config.ts`).
+- **Mise en œuvre (3.5, revue sécurité)** : `src/actions/request.ts` vérifie dans l'ordre le piège (rejet silencieux, réponse identique à un envoi) ; le secret `FORM_SIGNING_SECRET` (repli de développement seulement sans `VERCEL_ENV` ; sur un déploiement Vercel sans lui, aucun jeton n'est délivré et l'envoi répond « ouvrira bientôt », aperçu public D62 compris) ; l'horodatage signé (falsifié : rejet silencieux ; absent, page statique sans JavaScript, ou de plus de 2 h : « trop tôt » avec un horodatage neuf et la saisie ; moins de 3 s : « trop tôt ») ; la demande entière (Zod, sans compilation à la volée : `jitless`, la CSP refuse `eval`) ; le débit des envois valides (3 par 10 minutes par empreinte d'IP, préfixe /64 en IPv6 ; 3 par jour par empreinte d'adresse ; plafond global de 100 par jour qui journalise `alert:global-cap` sans bloquer) ; enfin l'usage unique de l'horodatage (`SET NX`, seulement si Upstash est configuré ; rejoué : rejet silencieux). Upstash : panne réseau, on laisse passer ; 401 ou 403, ou variables absentes sur un déploiement Vercel (une fois par instance), `failed:config` puis on laisse passer ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
+- **Garde « tout statique » (§2)** : gardée telle quelle. `/fr/contact` et `/en/contact` restent prérendues (`○` au build) ; la Server Action, y compris son POST sans JavaScript qui réaffiche la page avec la saisie, s'exécute à la requête sans rien changer au prérendu.
 - **Aucune donnée des demandes dans les journaux** (Vercel, base, fournisseur e-mail) : seuls un identifiant d'événement et un statut (`stored`, `rejected:honeypot`, `rejected:rate`, `failed:vault`, `queued`, `sent`, `failed:provider`) sont journalisés.
 - La **seule copie complète** d'une demande est la ligne chiffrée du coffre (et ses sauvegardes, dans leur fenêtre). L'e-mail ne la contient pas.
 - Routes `/api/cron/*` protégées par le secret Vercel Cron ; webhook e-mail vérifié par signature.
@@ -390,7 +394,7 @@ Version détaillée et à jour : **`docs/privacy.md`** (coffre, consentement, co
 
 | Traitement | Données | Base légale | Destinataire / sous-traitants | Conservation |
 |---|---|---|---|---|
-| Demande et rappel | Nom, e-mail ou téléphone, pays, besoin, pour qui, urgence, créneau, langue, message facultatif, source anonyme | Mesures précontractuelles (art. 6.1.b) ; consentement explicite (art. 9.2.a) si le message révèle malgré tout une information de santé `[À VALIDER par le juriste]` | Cat et Sady (coffre) ; base UE ; hébergeur (Vercel) ; fournisseur e-mail (notification sans contenu) | `[À DÉFINIR avec Cat]` + fenêtre de sauvegarde (7 jours) |
+| Demande et rappel | Nom, e-mail ou téléphone, pays, besoin, pour qui, urgence, créneau, langue, message facultatif, origine (liste fermée, facultative) | Mesures précontractuelles (art. 6.1.b) ; consentement explicite (art. 9.2.a) si le message révèle malgré tout une information de santé `[À VALIDER par le juriste]` | Cat et Sady (coffre) ; base UE ; hébergeur (Vercel) ; fournisseur e-mail (notification sans contenu) | `[À DÉFINIR avec Cat]` + fenêtre de sauvegarde (7 jours) |
 | Confirmation au visiteur | Adresse e-mail | Mesures précontractuelles | Fournisseur e-mail | Selon les journaux du fournisseur `[À VÉRIFIER]` |
 | Journal d'accès au coffre | Compte, date, action, identifiant de demande | Intérêt légitime (sécurité) | Base UE | `[À DÉFINIR]` |
 | Limitation de débit | Empreinte d'IP salée, empreinte d'adresse | Intérêt légitime (sécurité) | Upstash (UE) | 24 h |
@@ -442,7 +446,7 @@ Le dossier actuel (`/Volumes/DISQUE SADY/06_CLIENTS/MAMAN /MAISON TRIONA `) a de
 | ~~Choix d'entrée : ancre ou page~~ | **Les deux** (ancre depuis l'accueil, page dédiée pour le partage) |
 | Options « Nature de la demande » et « Pays » | 3 services + « Je ne sais pas encore » ; 5 pays + Autre `[À VALIDER]` |
 | E-mail et téléphone : un champ ou deux | Deux champs, au moins un requis (autocomplétion, WCAG 1.3.5) |
-| `?service=` et `?s=` dans les journaux de l'hébergeur | Les garder (fonctionnent sans JS), rétention minimale, aucun export de logs (`docs/privacy.md` §2) |
+| ~~`?service=` et `?s=` dans les journaux de l'hébergeur~~ | **Tranché (D26)** : rien dans l'URL ; présélection par `sessionStorage` (aucune sans JavaScript), origine en champ du formulaire (`docs/privacy.md` §2) |
 | ~~`navigator.share`~~ | **Tranché (D09)** : accepté, interface la plus épurée possible |
 | Lien « Situation urgente » | D04 : Cat répond sous 24 à 48 h dans tous les cas ; proposition : pas de lien d'en-tête `[À CONFIRMER]` |
 | Dépôt des sorties Higgsfield | `media-incoming/` à la racine plutôt que `public/media/_incoming/` |

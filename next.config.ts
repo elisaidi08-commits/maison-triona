@@ -82,6 +82,11 @@ const nextConfig: NextConfig = {
   experimental: {
     // Page 404 unique pour les adresses qui ne passent par aucune langue (fichiers inconnus).
     globalNotFound: true,
+    // Envoi du formulaire de contact (story 3.5, docs/architecture.md §6.7) : 64 ko au plus, le
+    // mot libre plafonné à 2 000 caractères compris (1 Mo par défaut).
+    serverActions: {
+      bodySizeLimit: '64kb',
+    },
   },
   turbopack: {
     rules: {

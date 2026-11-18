@@ -87,7 +87,9 @@ export async function SceneService({
       <p>{service.key === 'senior' ? t('senior.precision') : t('model')}</p>
 
       <div className="flex flex-col items-start gap-8">
-        <TextLink href={localizedPath('/contact', locale)}>{t('cta')}</TextLink>
+        <TextLink href={localizedPath('/contact', locale)} besoin={service.id}>
+          {t('cta')}
+        </TextLink>
       </div>
     </>
   )

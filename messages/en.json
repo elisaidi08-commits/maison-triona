@@ -819,5 +819,150 @@
         ]
       }
     ]
+  },
+  "Contact": {
+    "label": "Contact",
+    "title": "Let’s talk, in complete discretion.",
+    "intro": "Four short steps, for yourself or for someone close to you. We reply within 48 working hours, Monday to Friday.",
+    "form": {
+      "step": "Step {current} of {total}",
+      "steps": ["Your need", "Who, where, when", "How to reach you", "A few words"],
+      "fields": {
+        "besoin": {
+          "legend": "What is it about?",
+          "options": {
+            "conciergerie": {
+              "label": "Arrange everyday life",
+              "category": "Luxury concierge"
+            },
+            "grand-age": {
+              "label": "For a loved one, or for yourself",
+              "category": "Companionship in later life"
+            },
+            "enfants": {
+              "label": "Look after the children",
+              "category": "Childcare"
+            },
+            "indecis": {
+              "label": "Discuss a particular request"
+            }
+          }
+        },
+        "pourQui": {
+          "legend": "Who is it for? (optional)",
+          "options": {
+            "moi": "For myself",
+            "proche": "For someone close to me",
+            "non-dit": "I’d rather not say"
+          }
+        },
+        "pays": {
+          "legend": "Which country?",
+          "options": {
+            "BE": "Belgium",
+            "FR": "France",
+            "LU": "Luxembourg",
+            "MC": "Monaco",
+            "CH": "Switzerland",
+            "ailleurs": "Elsewhere",
+            "non-dit": "I’d rather not say"
+          }
+        },
+        "urgence": {
+          "legend": "How urgent is it?",
+          "options": {
+            "aucune": "Not urgent",
+            "semaines": "In the coming weeks",
+            "urgent": "Urgent"
+          },
+          "notice": "The house is not an emergency service. In a medical emergency, call 112, or 15 in France, 144 in Switzerland."
+        },
+        "nom": {
+          "label": "Your name"
+        },
+        "joindre": {
+          "legend": "Where should we reply?",
+          "hint": "An email address or a phone number is enough."
+        },
+        "email": {
+          "label": "Email"
+        },
+        "telephone": {
+          "label": "Phone"
+        },
+        "creneau": {
+          "legend": "When is best to reach you? (optional)",
+          "hint": "A preference, not an appointment.",
+          "options": {
+            "matin": "In the morning",
+            "apres-midi": "In the afternoon",
+            "soir": "In the evening"
+          }
+        },
+        "langue": {
+          "legend": "Which language should we reply in?",
+          "options": {
+            "fr": "Français",
+            "en": "English"
+          }
+        },
+        "message": {
+          "label": "A few words (optional)",
+          "hint": "There’s no need to share any medical details; we’ll talk about it in person. 2,000 characters at most."
+        },
+        "origine": {
+          "legend": "How did you hear about the house? (optional)",
+          "options": {
+            "carte": "From a business card",
+            "prospectus": "From a leaflet",
+            "boite-aux-lettres": "Through your letterbox",
+            "recommandation": "On the recommendation of a professional",
+            "bouche-a-oreille": "By word of mouth",
+            "salon": "At a fair"
+          }
+        },
+        "consentement": {
+          "label": "I agree that Maison Triona may use this information to respond to my request, as described in the privacy policy.",
+          "link": "Read the privacy policy (opens in a new tab)"
+        },
+        "site": {
+          "label": "Website"
+        }
+      },
+      "buttons": {
+        "continue": "Continue",
+        "back": "Back",
+        "send": "Send",
+        "sending": "Sending"
+      },
+      "errors": {
+        "prefix": "Error:",
+        "one": "One thing to check",
+        "many": "{count} things to check",
+        "codes": {
+          "besoin": "Please tell us what your request is about.",
+          "pourQui": "Please choose one of the answers offered.",
+          "pays": "Please tell us which country is concerned.",
+          "urgence": "Please tell us how urgent your request is.",
+          "nomRequis": "Please enter your name.",
+          "nomCourt": "Your name must be at least 2 characters long.",
+          "nomLong": "Your name must be 120 characters or fewer.",
+          "emailFormat": "Please enter a valid email address.",
+          "telephoneFormat": "Please enter a valid phone number, with the country code if needed.",
+          "contactRequis": "Please enter an email address or a phone number.",
+          "creneau": "Please choose one of the answers offered.",
+          "langue": "Please choose the language of our reply.",
+          "messageLong": "Your message must be 2,000 characters or fewer.",
+          "origine": "Please choose one of the answers offered.",
+          "consentement": "Please tick the box so that we can reply to you."
+        }
+      },
+      "status": {
+        "closed": "Sending requests will open soon; nothing has been saved or sent.",
+        "tooEarly": "Your request could not be sent. Please wait a few seconds, then send it again; what you wrote is still in the form.",
+        "limit": "Too many requests have arrived in a short time. Please try again in a few minutes; what you wrote is still in the form.",
+        "failed": "Your message could not be sent. It is still in the form."
+      }
+    }
   }
 }

@@ -19,7 +19,8 @@ import { SERVICES, SERVICE_PATHS, type Service } from '@/lib/services'
 // 3. nous écrire : le bloc Contact sapin.
 // Faits : réponses de Cat du 26/10/2026 (D40, D42). Aucun tarif, aucune promesse médicale, aucun
 // âge ni langue pour la garde d'enfants tant que Cat ne les a pas donnés. Le formulaire est
-// atteint sans `?service=` : la présélection passera par le stockage de session (D26, story 3.4).
+// atteint sans `?service=` : les liens vers le contact portent `data-besoin`, et la présélection
+// passe par le stockage de session (D26, story 3.4).
 
 async function ServiceLead({ service, locale }: { service: Service; locale: Locale }) {
   const t = await getTranslations('Services')
@@ -27,7 +28,9 @@ async function ServiceLead({ service, locale }: { service: Service; locale: Loca
     <div className="flex flex-col gap-24">
       <p className="text-body-l">{t(`${service.key}.need`)}</p>
       <p>
-        <TextLink href={localizedPath('/contact', locale)}>{t('cta')}</TextLink>
+        <TextLink href={localizedPath('/contact', locale)} besoin={service.id}>
+          {t('cta')}
+        </TextLink>
       </p>
     </div>
   )
@@ -85,7 +88,7 @@ export async function PageService({ service, locale }: { service: Service; local
       </SceneService>
       <ServiceDetails service={service} locale={locale} />
       <ShareLinks page={SERVICE_PATHS[service.id] as PublicPage} locale={locale} />
-      <ContactBlock locale={locale} />
+      <ContactBlock locale={locale} besoin={service.id} />
     </>
   )
 }

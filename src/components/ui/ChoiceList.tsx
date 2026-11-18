@@ -15,6 +15,8 @@ export type Choice = {
   number?: string
   category?: string
   note?: string
+  // Besoin présélectionné dans le formulaire de contact (D26, story 3.4) : `data-besoin`.
+  besoin?: string
 }
 
 type ChoiceListProps = {
@@ -26,19 +28,21 @@ type ChoiceListProps = {
 
 function ChoiceLink({
   href,
+  besoin,
   className,
   children,
 }: {
   href: string
+  besoin?: string
   className: string
   children: ReactNode
 }) {
   return href.startsWith('#') ? (
-    <a href={href} className={className}>
+    <a href={href} data-besoin={besoin} className={className}>
       {children}
     </a>
   ) : (
-    <Link href={href} className={className}>
+    <Link href={href} data-besoin={besoin} className={className}>
       {children}
     </Link>
   )
@@ -56,6 +60,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
         >
           <ChoiceLink
             href={choice.href}
+            besoin={choice.besoin}
             className={`group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre ${
               rowOnDesktop
                 ? `lg:h-full lg:flex-col lg:gap-8 lg:px-24 lg:py-16 ${index === 0 ? 'lg:pl-0' : ''}`

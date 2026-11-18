@@ -5,8 +5,9 @@ import { Rule } from '@/components/ui/Rule'
 // Bloc Contact de fin de page (docs/art-direction.md §7.5) : aplat sapin, label champagne, titre
 // ivoire, une phrase de réassurance et le bouton « Nous écrire ». Partagé par l'accueil, la page
 // Services et les pages de service (un seul par page : l'identifiant du titre est fixe).
+// `besoin` (pages de service) : le bouton présélectionne ce service dans le formulaire (D26).
 
-export async function ContactBlock({ locale }: { locale: string }) {
+export async function ContactBlock({ locale, besoin }: { locale: string; besoin?: string }) {
   const t = await getTranslations('Scenes.contact')
   return (
     <section
@@ -21,7 +22,9 @@ export async function ContactBlock({ locale }: { locale: string }) {
           {t('title')}
         </h2>
         <p className="text-ivoire-80">{t('reassurance')}</p>
-        <Button href={`/${locale}/contact`}>{t('button')}</Button>
+        <Button href={`/${locale}/contact`} besoin={besoin}>
+          {t('button')}
+        </Button>
       </div>
     </section>
   )
