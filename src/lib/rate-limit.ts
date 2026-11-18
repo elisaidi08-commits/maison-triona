@@ -9,9 +9,10 @@
  * 18/11/2026) :
  * - fenêtre fixe par clé : `SET clé 0 EX fenêtre NX` puis `INCR clé` ;
  * - usage unique : `SET clé 1 EX durée NX` (déjà posée : jeton rejoué).
- * Issues : seule une panne réseau (Upstash injoignable, délai dépassé) laisse passer sans rien dire
- * d'autre ; 401 ou 403 (identifiants refusés) laisse passer en signalant la configuration ; toute
- * autre réponse inattendue refuse. Les clés ne portent que des empreintes, jamais une adresse en
+ * Issues : une panne (Upstash injoignable, délai dépassé, erreur 5xx du service) laisse passer sans
+ * rien dire d'autre : une panne chez Upstash ne doit pas fermer le formulaire à tous ; 401 ou 403
+ * (identifiants refusés) laisse passer en signalant la configuration ; toute autre réponse
+ * inattendue (4xx, réponse mal formée) refuse. Les clés ne portent que des empreintes, jamais une adresse en
  * clair. Imports relatifs seulement : testé par node --test.
  */
 
@@ -69,6 +70,8 @@ async function executer(
     return { statut: 'reseau' }
   }
   if (reponse.status === 401 || reponse.status === 403) return { statut: 'config' }
+  // Erreur du service lui-même : traitée comme une panne réseau (arbitrage de Claude, 18/11/2026).
+  if (reponse.status >= 500) return { statut: 'reseau' }
   if (!reponse.ok) return { statut: 'reponse' }
   try {
     const resultats: unknown = await reponse.json()

@@ -212,9 +212,18 @@ describe('adaptateur Upstash', () => {
     }
   })
 
+  test('erreur 5xx du service : traitée comme une panne (« reseau », on laisse passer)', async () => {
+    for (const status of [500, 502, 503]) {
+      assert.deepEqual(
+        await limiterDebit(limites, { env, fetch: faux({ error: 'ERR' }, [], status) }),
+        { statut: 'reseau' },
+      )
+    }
+  })
+
   test('toute autre réponse inattendue : « reponse » (on refuse)', async () => {
     for (const [corps, status] of [
-      [{ error: 'ERR' }, 500],
+      [{ error: 'ERR' }, 400],
       [{ error: 'ERR' }, 200],
       [[{ result: 'OK' }], 200],
       [[{ result: 'OK' }, { error: 'ERR' }, { result: null }, { result: 1 }], 200],
