@@ -169,7 +169,7 @@ describe('authentification du coffre', () => {
 
     const acces = await lireAcces(auth, pool, navigateur.entetes())
     assert.equal(acces.etat, 'enrolement')
-    assert.equal(await listeDuCoffre(auth, pool, navigateur.entetes()), null)
+    assert.equal(await listeDuCoffre(pool, acces), null)
     assert.deepEqual(await journal(), [
       { actor: 'sans-totp@exemple.test', action: 'login', request_id: null },
     ])
@@ -200,14 +200,16 @@ describe('authentification du coffre', () => {
     assert.match(cookieSession, /; SameSite=Strict(;|$)/)
     assert.doesNotMatch(cookieSession, /; Secure/)
 
-    const liste = await listeDuCoffre(auth, pool, navigateur.entetes())
+    const acces = await lireAcces(auth, pool, navigateur.entetes())
+    assert.equal(acces.etat, 'autorise')
+    assert.equal(acces.etat === 'autorise' && acces.compte.email, 'avec-totp@exemple.test')
+    const liste = await listeDuCoffre(pool, acces)
     assert.ok(liste)
-    assert.equal(liste.compte.email, 'avec-totp@exemple.test')
     assert.deepEqual(
-      liste.demandes.map((demande) => demande.id),
+      liste.map((demande) => demande.id),
       [id],
     )
-    assert.equal('sealed' in (liste.demandes[0] ?? {}), false)
+    assert.equal('sealed' in (liste[0] ?? {}), false)
   })
 
   it('code de secours : accès, une seule fois', async () => {
@@ -320,7 +322,7 @@ describe('authentification du coffre', () => {
     await navigateur.connexion('journal@exemple.test')
     const code = codeTotp(secret)
     await navigateur.appeler('/two-factor/verify-totp', { code })
-    await listeDuCoffre(auth, pool, navigateur.entetes())
+    await listeDuCoffre(pool, await lireAcces(auth, pool, navigateur.entetes()))
     assert.equal((await navigateur.appeler('/sign-out')).statut, 200)
     assert.equal((await lireAcces(auth, pool, navigateur.entetes())).etat, 'anonyme')
 

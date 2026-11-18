@@ -68,15 +68,12 @@ export async function lireAcces(
   return etat === 'enrolement' ? { etat: 'enrolement', compte } : { etat: 'autorise', compte }
 }
 
-// Liste des demandes (colonnes en clair seulement), pour une session autorisée ; la lecture est
+// Liste des demandes (colonnes en clair seulement), pour un accès autorisé ; la lecture est
 // journalisée au nom du compte dans la même transaction. Sinon : null, rien n'est lu.
 export async function listeDuCoffre(
-  auth: AuthCoffre,
   pool: Pool,
-  entetes: Headers,
-  maintenant: Date = new Date(),
-): Promise<{ compte: CompteCoffre; demandes: VaultRequestSummary[] } | null> {
-  const acces = await lireAcces(auth, pool, entetes, maintenant)
+  acces: AccesCoffre,
+): Promise<VaultRequestSummary[] | null> {
   if (acces.etat !== 'autorise') return null
-  return { compte: acces.compte, demandes: await listRequestsLogged(pool, acces.compte.email) }
+  return listRequestsLogged(pool, acces.compte.email)
 }

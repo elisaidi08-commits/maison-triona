@@ -5,13 +5,18 @@
 // `multiline` : zone de texte (« Un mot libre »), encadrée d'un filet pour qu'on voie où écrire,
 // redimensionnable en hauteur seulement. `defaultValue` : valeur conservée après une erreur
 // serveur (WCAG 3.3.7, aucune ressaisie). `maxLength` : limite native, annoncée dans l'aide.
+// `password`, `inputMode`, `autoCapitalize`, `spellCheck` : formulaires du coffre (story 3.2 C),
+// mot de passe et codes du second facteur.
 
 type TextFieldProps = {
   id: string
   name: string
   label: string
-  type?: 'text' | 'email' | 'tel'
+  type?: 'text' | 'email' | 'tel' | 'password'
   autoComplete?: string
+  inputMode?: 'numeric' | 'text'
+  autoCapitalize?: 'off' | 'none'
+  spellCheck?: boolean
   required?: boolean
   hint?: string
   error?: string
@@ -27,6 +32,9 @@ export function TextField({
   label,
   type = 'text',
   autoComplete,
+  inputMode,
+  autoCapitalize,
+  spellCheck,
   required = false,
   hint,
   error,
@@ -43,6 +51,9 @@ export function TextField({
     id,
     name,
     autoComplete,
+    inputMode,
+    autoCapitalize,
+    spellCheck,
     required,
     defaultValue,
     maxLength,
