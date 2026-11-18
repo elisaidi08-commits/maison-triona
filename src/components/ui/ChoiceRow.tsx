@@ -13,6 +13,9 @@ export type ChoiceOption = {
   label: string
   category?: string
   note?: string
+  // En trois colonnes, l'option occupe toute la ligne (« Je préfère ne pas le dire », septième
+  // pays : seule sur sa ligne, elle passait sur deux lignes dans un tiers de la largeur).
+  wide?: boolean
 }
 
 type ChoiceRowProps = {
@@ -73,7 +76,10 @@ export function ChoiceRow({
           {options.map((option) => {
             const inputId = choiceInputId(id, option.value)
             return (
-              <div key={option.value} className="border-b border-or">
+              <div
+                key={option.value}
+                className={`border-b border-or ${option.wide && columns === 3 ? 'md:col-span-3' : ''}`}
+              >
                 <label
                   htmlFor={inputId}
                   className={`group flex min-h-touch-lg cursor-pointer items-start gap-24 py-16 ${

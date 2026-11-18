@@ -19,7 +19,7 @@
 | Mouvement | **Motion** (`motion`, ex-Framer Motion) | `14.x` | `LazyMotion` + `m`, ~30 ko ; peut tomber à 0 selon Q4 (`docs/motion-spec.md`) | Proposé |
 | i18n | **next-intl** | `4.14.9` | FR/EN, chemins localisés, prêt pour d'autres langues | Proposé |
 | Contenu | **CMS headless** | voir §5 | Cat édite elle-même les textes publics | `[À TRANCHER]` (reco : Sanity) |
-| Validation | **Zod** | `4.6.x` | Schéma unique des demandes, côté serveur | Proposé |
+| Validation | **Zod** | `4.6.7` (dernière version, publiée le 12/10/2026, vérifiée sur le registre npm le 18/11/2026 ; aucune dépendance) | Un seul schéma pour la demande : la Server Action valide tout, le formulaire valide l'étape en cours avant de continuer, avec les mêmes règles et les mêmes codes d'erreur. L'écrire à la main dupliquerait les règles (deux listes à tenir d'accord) ; le poids côté navigateur reste sur la seule page Contact | **Installé (3.1)** |
 | **Coffre des demandes** | Base PostgreSQL **hébergée dans l'UE** | voir §6.5 | Une panne d'e-mail ne fait jamais perdre une demande | `[À TRANCHER]` (reco : Scaleway Managed PostgreSQL) |
 | **Chiffrement applicatif** | libsodium, « sealed box » | à vérifier en story E3-S8 | Une fuite de base, de sauvegarde ou de variables d'environnement ne révèle rien | Proposé |
 | **Authentification du coffre** | Better Auth (mot de passe + TOTP obligatoire, passkey) | à vérifier en story E3-S8 | Comptes nominatifs, A2F, données dans notre base | `[À TRANCHER]` |
@@ -249,7 +249,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 ### 6.1 Formulaire en étapes : parcours
 1. Page `/contact` : **un seul formulaire HTML en 4 `fieldset`** (Besoin · Pour qui, où, quand · Comment vous joindre · Un mot libre). Rendu côté serveur, **fonctionnel sans JavaScript** : les 4 parties s'affichent à la suite et l'envoi (POST natif vers la Server Action) fonctionne.
 2. Avec JavaScript : une partie à la fois, titre « Étape 2 sur 4 · … » qui reçoit le focus à chaque changement, filet de progression, bouton Retour. Validation locale de l'étape avant de continuer. **Rien n'est envoyé au serveur avant l'envoi final.**
-3. Brouillon : `sessionStorage`, clés `mt-draft-*`, **seulement** besoin, pays, langue, créneau ; effacé à l'envoi. Jamais le nom, le contact, « pour qui », l'urgence ni le message.
+3. Brouillon : `sessionStorage`, clés `mt-draft-*`, **seulement** besoin, pays, langue, créneau ; effacé à l'envoi. Jamais le nom, le contact, « pour qui », l'urgence, l'origine ni le message.
 4. Validation serveur Zod. En cas d'erreur : la page se réaffiche **avec les valeurs conservées**, à l'étape fautive, résumé d'erreurs en tête qui reçoit le focus (maquette `110:7`).
 5. Succès : écriture dans le coffre, puis redirection vers `/contact/merci` (`noindex`) ; e-mails par la boîte d'envoi (§6.6).
 6. Échec d'écriture dans le coffre : état « L'envoi n'a pas abouti » (maquette `111:107`) **sans perte de la saisie** ; aucun e-mail ne part.
@@ -259,16 +259,17 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 | Étape | Champ | Règle | Remarque |
 |---|---|---|---|
 | 1 | Nature de la demande | requis, liste fermée : `conciergerie`, `grand-age`, `enfants`, `indecis` | **Présélectionnée** par `?service=`, modifiable |
-| 2 | Pour qui ? | facultatif : pour moi · pour un proche · autre | Hors brouillon |
-| 2 | Pays | requis : `BE · FR · LU · MC · CH` + `autre` `[À VALIDER]` | — |
+| 2 | Pour qui ? | facultatif : pour moi · pour un proche · je préfère ne pas le dire (spec d'entrée, annexe C.3, prioritaire sur l'annexe B.4) | Hors brouillon |
+| 2 | Pays | requis : `BE · FR · LU · MC · CH · ailleurs · non-dit` (D41 : « Ailleurs », « Je préfère ne pas le dire ») | — |
 | 2 | Urgence | requis : aucune · dans les semaines à venir · urgent | « Urgent » affiche la mention des services d'urgence (annexe D.5) ; hors brouillon |
 | 3 | Nom | requis, 2-120 caractères | `autocomplete="name"` |
 | 3 | E-mail | e-mail valide | `autocomplete="email"` ; **au moins un des deux** (e-mail ou téléphone) |
 | 3 | Téléphone | téléphone international valide | `autocomplete="tel"` ; deux champs plutôt qu'un seul mixte (WCAG 1.3.5) |
-| 3 | Créneau | facultatif : matin · après-midi · soir | — |
+| 3 | Créneau | facultatif : matin · après-midi · soir | Préférence pour être joint, pas un rendez-vous (D57) |
 | 3 | Langue de réponse | requis : français · English | Préremplie par la langue de la page |
 | 4 | Un mot libre | **facultatif**, 0-2 000 caractères | Aide visible : « Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. » **Aucun champ santé** ; jamais sauvegardé en brouillon |
-| 4 | Consentement | case requise, non cochée par défaut | Lien vers la politique de confidentialité ; base légale à trancher par le juriste (`docs/privacy.md`) |
+| 4 | Origine | facultatif, liste fermée sans texte libre : `carte · prospectus · boite-aux-lettres · recommandation · bouche-a-oreille · salon` (D41) | « Comment avez-vous connu la maison ? » ; la recommandation ne nomme aucune clinique |
+| 4 | Consentement | case requise, non cochée par défaut | Lien vers la politique de confidentialité (nouvel onglet, la saisie reste ouverte), sans base légale écrite (D61) |
 | — | `locale` | caché, `fr` ou `en` | Langue de l'interface |
 | — | `source` | caché, code de la liste fermée `?s=` ou vide | Jamais lié à un identifiant de mesure |
 | — | Honeypot | caché aux humains (hors écran, `tabindex=-1`, `autocomplete=off`, `aria-hidden`) | Rempli = rejet silencieux |
@@ -312,6 +313,7 @@ Spec : `docs/trust-contact-launch.md` §3 et §4, annexes A à D. Textes : annex
 - **Limitation de débit** : 3 envois par 10 minutes et par empreinte d'IP (hachée avec un sel quotidien, jamais stockée en clair), plus un plafond global quotidien et une limite par adresse de confirmation. Upstash Redis région UE (gratuit à ce volume) ; alternative : règle Vercel WAF, à placer alors sur une Route Handler.
 - Une Server Action est un point d'entrée POST public : Next vérifie l'en-tête `Origin` mais **laisse passer les requêtes sans `Origin`** ; d'où la limitation de débit et la validation stricte.
 - `bodySizeLimit` des Server Actions abaissé (64 ko).
+- **Garde « tout statique » (§2)** : gardée telle quelle. `/fr/contact` et `/en/contact` restent prérendues (`○` au build) ; la Server Action, y compris son POST sans JavaScript qui réaffiche la page avec la saisie, s'exécute à la requête sans rien changer au prérendu.
 - **Aucune donnée des demandes dans les journaux** (Vercel, base, fournisseur e-mail) : seuls un identifiant d'événement et un statut (`stored`, `rejected:honeypot`, `rejected:rate`, `failed:vault`, `queued`, `sent`, `failed:provider`) sont journalisés.
 - La **seule copie complète** d'une demande est la ligne chiffrée du coffre (et ses sauvegardes, dans leur fenêtre). L'e-mail ne la contient pas.
 - Routes `/api/cron/*` protégées par le secret Vercel Cron ; webhook e-mail vérifié par signature.

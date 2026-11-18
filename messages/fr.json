@@ -825,5 +825,144 @@
         ]
       }
     ]
+  },
+  "Contact": {
+    "label": "Contact",
+    "title": "Parlons-en, en toute discrétion.",
+    "intro": "Quatre étapes courtes, pour vous ou pour l’un de vos proches. Nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
+    "form": {
+      "step": "Étape {current} sur {total}",
+      "steps": ["Votre besoin", "Pour qui, où, quand", "Comment vous joindre", "Un mot libre"],
+      "fields": {
+        "besoin": {
+          "legend": "De quoi s’agit-il ?",
+          "options": {
+            "conciergerie": {
+              "label": "Organiser le quotidien",
+              "category": "Conciergerie de luxe"
+            },
+            "grand-age": {
+              "label": "Accompagner un proche, ou vous‑même",
+              "category": "Accompagnement du grand âge"
+            },
+            "enfants": {
+              "label": "Veiller sur les enfants",
+              "category": "Garde d’enfants"
+            },
+            "indecis": {
+              "label": "Évoquer une demande particulière"
+            }
+          }
+        },
+        "pourQui": {
+          "legend": "Pour qui ? (facultatif)",
+          "options": {
+            "moi": "Pour moi",
+            "proche": "Pour un proche",
+            "non-dit": "Je préfère ne pas le dire"
+          }
+        },
+        "pays": {
+          "legend": "Dans quel pays ?",
+          "options": {
+            "BE": "Belgique",
+            "FR": "France",
+            "LU": "Luxembourg",
+            "MC": "Monaco",
+            "CH": "Suisse",
+            "ailleurs": "Ailleurs",
+            "non-dit": "Je préfère ne pas le dire"
+          }
+        },
+        "urgence": {
+          "legend": "Quelle urgence ?",
+          "options": {
+            "aucune": "Aucune",
+            "semaines": "Dans les semaines à venir",
+            "urgent": "Urgent"
+          },
+          "notice": "La maison n’est pas un service d’urgence. En cas d’urgence médicale, appelez le 112, ou le 15 en France, le 144 en Suisse."
+        },
+        "nom": {
+          "label": "Votre nom"
+        },
+        "joindre": {
+          "legend": "Où vous répondre ?",
+          "hint": "Une adresse e‑mail ou un numéro de téléphone suffit."
+        },
+        "email": {
+          "label": "E‑mail"
+        },
+        "telephone": {
+          "label": "Téléphone"
+        },
+        "creneau": {
+          "legend": "À quel moment vous joindre ? (facultatif)",
+          "hint": "Une préférence, pas un rendez-vous.",
+          "options": {
+            "matin": "Le matin",
+            "apres-midi": "L’après-midi",
+            "soir": "Le soir"
+          }
+        },
+        "langue": {
+          "legend": "Dans quelle langue vous répondre ?",
+          "options": {
+            "fr": "Français",
+            "en": "English"
+          }
+        },
+        "message": {
+          "label": "Un mot libre (facultatif)",
+          "hint": "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. 2 000 caractères au plus."
+        },
+        "origine": {
+          "legend": "Comment avez-vous connu la maison ? (facultatif)",
+          "options": {
+            "carte": "Par une carte de visite",
+            "prospectus": "Par un prospectus",
+            "boite-aux-lettres": "Par votre boîte aux lettres",
+            "recommandation": "Sur la recommandation d’un professionnel",
+            "bouche-a-oreille": "Par le bouche-à-oreille",
+            "salon": "Lors d’un salon"
+          }
+        },
+        "consentement": {
+          "label": "J’accepte que Maison Triona utilise ces informations pour répondre à ma demande, comme décrit dans la politique de confidentialité.",
+          "link": "Lire la politique de confidentialité (nouvel onglet)"
+        }
+      },
+      "buttons": {
+        "continue": "Continuer",
+        "back": "Retour",
+        "send": "Envoyer",
+        "sending": "Envoi en cours"
+      },
+      "errors": {
+        "prefix": "Erreur :",
+        "one": "Un point à revoir",
+        "many": "{count} points à revoir",
+        "codes": {
+          "besoin": "Merci d’indiquer l’objet de votre demande.",
+          "pourQui": "Merci de choisir l’une des réponses proposées.",
+          "pays": "Merci d’indiquer le pays concerné.",
+          "urgence": "Merci d’indiquer si votre demande est urgente.",
+          "nomRequis": "Merci d’indiquer votre nom.",
+          "nomCourt": "Votre nom doit compter au moins 2 caractères.",
+          "nomLong": "Votre nom doit compter 120 caractères au plus.",
+          "emailFormat": "Merci d’indiquer une adresse e‑mail valide.",
+          "telephoneFormat": "Merci d’indiquer un numéro de téléphone valide, avec l’indicatif du pays si besoin.",
+          "contactRequis": "Merci d’indiquer une adresse e‑mail ou un numéro de téléphone.",
+          "creneau": "Merci de choisir l’une des réponses proposées.",
+          "langue": "Merci de choisir la langue de notre réponse.",
+          "messageLong": "Votre message doit compter 2 000 caractères au plus.",
+          "origine": "Merci de choisir l’une des réponses proposées.",
+          "consentement": "Merci de cocher la case pour que nous puissions vous répondre."
+        }
+      },
+      "status": {
+        "closed": "L’envoi des demandes ouvrira bientôt ; rien n’a été enregistré ni envoyé."
+      }
+    }
   }
 }

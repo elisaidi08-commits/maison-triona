@@ -505,6 +505,13 @@
   }
   /* Noms placés par `translate` en unités du cadre (--x et --y en centièmes, CarteTerritoires.tsx),
      jamais par left/top : la vue s'anime à chaque image, sans décalage de mise en page (CLS). */
+  /* Formulaire de contact (story 3.1) : la mention des numéros d'urgence n'apparaît que si
+     « Urgent » est coché, même sans JavaScript. Navigateur sans `:has()` : la règle est ignorée et
+     la mention reste visible, ce qui vaut mieux que l'inverse. */
+  [data-urgence]:not(:has(input[value='urgent']:checked)) [data-mention-urgence] {
+    display: none;
+  }
+
   /* FAQ (story 2.8) : <details> natifs. Le marqueur du navigateur laisse place à un glyphe (aucune
      icône) : « + » fermé, « − » ouvert, en sapin, sans texte pour les lecteurs d'écran (l'état
      ouvert ou fermé est déjà annoncé par <details>). À l'impression, toutes les réponses s'ouvrent. */
