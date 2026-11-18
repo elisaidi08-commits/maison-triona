@@ -26,8 +26,9 @@ import { PRIVACY_POLICY_VERSION } from '../../src/lib/privacy.ts'
 import { applyRoles, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
 
 // Enregistrement chiffré d'une demande (story 3.2, partie B) et de sa notification dans la boîte
-// d'envoi, dans la même transaction (story 3.3). Fuite simulée : la base entière, boîte d'envoi
-// comprise, relue en texte, ne contient aucun nom, aucune coordonnée ni aucun mot libre.
+// d'envoi, dans la même transaction (story 3.3) : une notification qui ne s'écrit pas n'empêche
+// jamais la demande de s'enregistrer (point de sauvegarde). Fuite simulée : la base entière, boîte
+// d'envoi comprise, relue en texte, ne contient aucun nom, aucune coordonnée ni aucun mot libre.
 // Données factices.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
@@ -155,6 +156,23 @@ function enregistrer(demande: Demande, options: Partial<StoreOptions> = {}, base
     notify: true,
     ...options,
   })
+}
+
+// Insertion refusée par un déclencheur (code P0001), le temps d'un test.
+async function refuserInsertions(table: 'outbox' | 'vault_requests'): Promise<void> {
+  await pool.query(`
+    CREATE FUNCTION refuser_insertion() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      RAISE EXCEPTION 'insertion refusée par le test';
+    END
+    $$;
+    CREATE TRIGGER refuser_insertion BEFORE INSERT ON ${table}
+      FOR EACH ROW EXECUTE FUNCTION refuser_insertion();
+  `)
+}
+
+async function accepterInsertions(table: 'outbox' | 'vault_requests'): Promise<void> {
+  await pool.query(`DROP TRIGGER refuser_insertion ON ${table}; DROP FUNCTION refuser_insertion()`)
 }
 
 interface LigneEnvoi {
@@ -310,7 +328,7 @@ describe('enregistrement chiffré dans le coffre', () => {
     assert.equal(lignes.length, 1)
     const [ligne] = lignes
     assert.ok(ligne)
-    assert.deepEqual(resultat, { id: demande.id, outbox: [ligne.id] })
+    assert.deepEqual(resultat, { id: demande.id, outbox: [ligne.id], notifyFailed: false })
     assert.deepEqual(
       {
         template: ligne.template,
@@ -349,20 +367,30 @@ describe('enregistrement chiffré dans le coffre', () => {
     const resultat = await enregistrer(DEMANDE, { notify: false })
     const [demande] = await listRequests(pool)
     assert.ok(demande)
-    assert.deepEqual(resultat, { id: demande.id, outbox: [] })
+    assert.deepEqual(resultat, { id: demande.id, outbox: [], notifyFailed: false })
     assert.deepEqual(await boiteEnvoi(), [])
   })
 
-  it('si la notification ne s’écrit pas, la demande ne s’écrit pas non plus', async () => {
-    await pool.query(`
-      CREATE FUNCTION refuser_envoi() RETURNS trigger LANGUAGE plpgsql AS $$
-      BEGIN
-        RAISE EXCEPTION 'boîte d''envoi refusée par le test';
-      END
-      $$;
-      CREATE TRIGGER refuser_envoi BEFORE INSERT ON outbox
-        FOR EACH ROW EXECUTE FUNCTION refuser_envoi();
-    `)
+  it('si la notification ne s’écrit pas, la demande est gardée, sans notification', async () => {
+    await refuserInsertions('outbox')
+    let resultat
+    try {
+      resultat = await enregistrer(DEMANDE)
+    } finally {
+      await accepterInsertions('outbox')
+    }
+    const [demande] = await listRequests(pool)
+    assert.ok(demande)
+    assert.deepEqual(resultat, { id: demande.id, outbox: [], notifyFailed: true })
+    assert.deepEqual(await boiteEnvoi(), [])
+    // La demande gardée est complète : elle se rouvre avec la clé privée.
+    const octets = await readSealed(pool, demande.id, 'compte-factice')
+    assert.ok(octets)
+    assert.deepEqual(await openSealed(octets, cles), splitRequest(DEMANDE).sealed)
+  })
+
+  it('une demande qui ne s’écrit pas lève toujours, sans notification orpheline', async () => {
+    await refuserInsertions('vault_requests')
     try {
       await assert.rejects(enregistrer(DEMANDE), (error: unknown) => {
         assert.ok(error instanceof VaultError)
@@ -371,16 +399,35 @@ describe('enregistrement chiffré dans le coffre', () => {
         return true
       })
     } finally {
-      await pool.query('DROP TRIGGER refuser_envoi ON outbox; DROP FUNCTION refuser_envoi()')
+      await accepterInsertions('vault_requests')
     }
     assert.deepEqual(await listRequests(pool), [])
+    assert.deepEqual(await boiteEnvoi(), [])
+  })
+
+  it('site_public sans droit sur la boîte d’envoi : la demande est gardée quand même', async () => {
+    await pool.query('REVOKE INSERT ON outbox FROM site_public')
+    let resultat
+    try {
+      resultat = await enregistrer(DEMANDE, {}, sitePublic)
+    } finally {
+      await pool.query('GRANT INSERT ON outbox TO site_public')
+    }
+    const [demande] = await listRequests(pool)
+    assert.ok(demande)
+    assert.deepEqual(resultat, { id: demande.id, outbox: [], notifyFailed: true })
     assert.deepEqual(await boiteEnvoi(), [])
   })
 
   it('suffit au rôle site_public : demande et notification, sans relecture', async () => {
     const { rows } = await sitePublic.query<{ role: string }>('SELECT current_user AS role')
     assert.equal(rows[0]?.role, 'site_public')
-    const { id, outbox } = await enregistrer({ ...DEMANDE, urgence: 'urgent' }, {}, sitePublic)
+    const { id, outbox, notifyFailed } = await enregistrer(
+      { ...DEMANDE, urgence: 'urgent' },
+      {},
+      sitePublic,
+    )
+    assert.equal(notifyFailed, false)
     assert.deepEqual(
       (await listRequests(pool)).map((ligne) => ligne.id),
       [id],

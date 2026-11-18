@@ -43,10 +43,13 @@ import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 //    Configuré : la demande est scellée avec la clé publique puis écrite dans le coffre avec la
 //    version de la politique de confidentialité acceptée (`stored`) et, e-mails configurés, avec
 //    la notification à Cat dans la boîte d'envoi, dans la même transaction (`queued`) ; le
-//    visiteur part vers /contact/merci (303 sans JavaScript). Échec d'écriture
-//    (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a pas
-//    abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé) ; ni
-//    la demande ni la notification ne sont écrites.
+//    visiteur part vers /contact/merci (303 sans JavaScript). Une notification qui ne peut pas
+//    s'écrire (droit manquant, contrainte) n'empêche pas la demande de s'enregistrer : elle est
+//    gardée seule, `failed:outbox` à chaque fois (Cat n'est pas prévenue de cette demande, elle la
+//    trouvera dans le coffre), et le visiteur part vers le remerciement. Échec d'écriture de la
+//    demande (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a
+//    pas abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé) ;
+//    rien n'est écrit, ni la demande ni la notification.
 // E-mails (story 3.3) : la configuration est lue juste avant l'écriture. Vide, l'envoi est coupé
 // (`mail:disabled`) ; à moitié posée, `failed:config`, une fois par instance l'un et l'autre :
 // la demande s'enregistre quand même, sans notification. Le premier essai d'envoi part avec
@@ -76,6 +79,7 @@ type Statut =
   | 'failed:vault'
   | 'stored'
   | 'queued'
+  | 'failed:outbox'
   | 'mail:disabled'
 
 function journaliser(statut: Statut) {
@@ -267,6 +271,8 @@ export async function envoyerDemande(
     return { statut: 'echec', valeurs, jeton: signerHorodatage(Date.now(), secret) }
   }
   journaliser('stored')
+  // À chaque fois, pas une fois par instance : une demande enregistrée dont Cat n'est pas prévenue.
+  if (enregistree.notifyFailed) journaliser('failed:outbox')
   if (emails && enregistree.outbox.length > 0) {
     journaliser('queued')
     for (const id of enregistree.outbox) premierEssai(emails, id)

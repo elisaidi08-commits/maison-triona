@@ -14,9 +14,12 @@ import { sealRequest, VaultKeyError, type SealedFields } from './seal.ts'
 // réponse, urgence, origine. Tout le reste (nom, e-mail, téléphone, « pour qui », créneau, mot
 // libre) est scellé avec la clé publique avant d'atteindre la base.
 // Notification (story 3.3) : avec `notify`, la ligne de la boîte d'envoi (un gabarit, des
-// identifiants, la priorité) est écrite dans la MÊME transaction que la demande : les deux, ou
-// aucune. Identifiants tirés ici (`randomUUID`) : le rôle `site_public` insère sans RETURNING.
-// Prioritaire seulement pour l'urgence « urgent ».
+// identifiants, la priorité) est écrite dans la MÊME transaction que la demande, derrière un point
+// de sauvegarde : une demande s'enregistre même si sa notification ne peut pas s'écrire (droit
+// manquant, contrainte) ; on revient alors au point de sauvegarde, la demande est validée seule et
+// `notifyFailed` le signale à l'appelant. Une erreur sur la demande elle-même lève toujours et
+// annule tout. Identifiants tirés ici (`randomUUID`) : le rôle `site_public` insère sans
+// RETURNING. Prioritaire seulement pour l'urgence « urgent ».
 // Consentement : la version de la politique acceptée (`privacy_version`) et la date (`created_at`).
 // La langue de l'interface n'est pas gardée. Aucune erreur levée ne cite un champ (VaultKeyError,
 // VaultError, RangeError si le texte dépasse 16 Kio).
@@ -60,6 +63,8 @@ export interface StoredRequest {
   id: string
   /** Identifiants des messages écrits dans la boîte d'envoi (vide sans notification). */
   outbox: string[]
+  /** Vrai si la notification demandée n'a pas pu s'écrire : la demande est gardée sans elle. */
+  notifyFailed: boolean
 }
 
 /** Scelle puis enregistre la demande, et sa notification si `notify`, dans une transaction. */
@@ -79,14 +84,23 @@ export async function storeRequest(
         retentionUntil,
         privacyVersion,
       })
-      if (!notify) return { id, outbox: [] }
+      if (!notify) return { id, outbox: [], notifyFailed: false }
       const outboxId = randomUUID()
-      await enqueueNotification(client, {
-        id: outboxId,
-        requestId: id,
-        priority: demande.urgence === 'urgent',
-      })
-      return { id, outbox: [outboxId] }
+      await client.query('SAVEPOINT notification')
+      try {
+        await enqueueNotification(client, {
+          id: outboxId,
+          requestId: id,
+          priority: demande.urgence === 'urgent',
+        })
+      } catch {
+        // Notification seule abandonnée, jamais citée : la demande reste dans la transaction. Si
+        // le retour au point de sauvegarde échoue à son tour, l'erreur remonte et annule tout.
+        await client.query('ROLLBACK TO SAVEPOINT notification')
+        return { id, outbox: [], notifyFailed: true }
+      }
+      await client.query('RELEASE SAVEPOINT notification')
+      return { id, outbox: [outboxId], notifyFailed: false }
     })
   } catch (error) {
     // Connexion refusée, transaction annulée : on ne garde que le code, jamais le message brut.
