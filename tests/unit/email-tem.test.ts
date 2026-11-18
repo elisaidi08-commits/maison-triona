@@ -210,3 +210,86 @@ describe('TEM status', () => {
     }
   })
 })
+
+describe('TEM durcissement', () => {
+  it('refuse les redirections', async () => {
+    const send = fakeFetch(() => json({ emails: [{ id: 'a1' }] }))
+    await transport(send.fetch).send(message)
+    assert.equal(send.calls[0]?.init.redirect, 'error')
+    const status = fakeFetch(() => json({ status: 'sent' }))
+    await transport(status.fetch).status('a1')
+    assert.equal(status.calls[0]?.init.redirect, 'error')
+    const redirected = fakeFetch(() => {
+      throw new TypeError('redirect mode is set to error')
+    })
+    assert.deepEqual(await transport(redirected.fetch).send(message), {
+      ok: false,
+      retryable: true,
+      code: 'network',
+    })
+  })
+
+  it('ne lit pas le prototype pour le statut', async () => {
+    for (const status of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+      const { fetch } = fakeFetch(() => json({ status }))
+      assert.deepEqual(await transport(fetch).status('a1'), {
+        ok: true,
+        state: 'pending',
+        flags: [],
+      })
+    }
+  })
+
+  it('libère le corps des réponses en erreur', async () => {
+    for (const status of [400, 500]) {
+      let cancelled = 0
+      const body = new ReadableStream({
+        cancel() {
+          cancelled += 1
+        },
+      })
+      const { fetch } = fakeFetch(() => new Response(body, { status }))
+      await transport(fetch).send(message)
+      assert.equal(cancelled, 1)
+      const again = new ReadableStream({
+        cancel() {
+          cancelled += 1
+        },
+      })
+      const second = fakeFetch(() => new Response(again, { status }))
+      await transport(second.fetch).status('a1')
+      assert.equal(cancelled, 2)
+    }
+  })
+
+  it("garde bad_response non repris si la lecture d'un 2xx échoue", async () => {
+    const { fetch } = fakeFetch(
+      () =>
+        ({
+          ok: true,
+          status: 200,
+          body: null,
+          json: () => Promise.reject(new DOMException('délai', 'TimeoutError')),
+        }) as unknown as Response,
+    )
+    assert.deepEqual(await transport(fetch).send(message), {
+      ok: false,
+      retryable: false,
+      code: 'bad_response',
+    })
+  })
+
+  it('refuse un tableau comme corps', async () => {
+    const send = fakeFetch(() => json([{ id: 'a1' }]))
+    assert.deepEqual(await transport(send.fetch).send(message), {
+      ok: false,
+      retryable: false,
+      code: 'bad_response',
+    })
+    const status = fakeFetch(() => json([{ status: 'sent' }]))
+    assert.deepEqual(await transport(status.fetch).status('a1'), {
+      ok: false,
+      code: 'bad_response',
+    })
+  })
+})

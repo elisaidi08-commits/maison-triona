@@ -32,7 +32,7 @@ const SENDING_VARIABLES = [
 
 const emailSchema = z.email()
 const uuidSchema = z.uuid()
-const FORBIDDEN_IN_NAME = /[<>"\r\n]/
+const FORBIDDEN_IN_NAME = /[<>"\p{Cc}\u2028\u2029]/u
 const NAMED_MAILBOX = /^([\s\S]*)<([^<>]*)>\s*$/
 
 function read(env: Record<string, string | undefined>, name: string): string | undefined {
@@ -61,6 +61,7 @@ function parseSiteUrl(value: string, env: Record<string, string | undefined>): s
   } catch {
     throw new Error('SITE_URL invalide')
   }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('SITE_URL invalide')
   if (env.VERCEL_ENV === 'production' && url.protocol !== 'https:') {
     throw new Error('SITE_URL doit être en https en production')
   }

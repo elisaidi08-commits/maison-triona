@@ -56,7 +56,7 @@ const STATE_BY_STATUS: Record<string, DeliveryState> = {
 type Failure = { kind: 'http'; status: number } | { kind: 'timeout' | 'network' | 'bad_response' }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /** Appelle TEM et renvoie le JSON, ou la cause de l'échec (jamais le corps). */
@@ -68,12 +68,24 @@ async function call(
 ): Promise<{ ok: true; body: unknown } | { ok: false; failure: Failure }> {
   let response: Response
   try {
-    response = await fetchImpl(url, { ...init, signal: AbortSignal.timeout(timeoutMs) })
+    response = await fetchImpl(url, {
+      ...init,
+      redirect: 'error',
+      signal: AbortSignal.timeout(timeoutMs),
+    })
   } catch (error) {
+    // Une redirection refusée (`redirect: 'error'`) est une erreur réseau : le jeton ne part jamais ailleurs.
     const timedOut = error instanceof Error && error.name === 'TimeoutError'
     return { ok: false, failure: { kind: timedOut ? 'timeout' : 'network' } }
   }
-  if (!response.ok) return { ok: false, failure: { kind: 'http', status: response.status } }
+  if (!response.ok) {
+    // Corps jamais lu : on le libère pour ne pas garder la connexion ouverte.
+    await response.body?.cancel().catch(() => {})
+    return { ok: false, failure: { kind: 'http', status: response.status } }
+  }
+  // Un échec ou un délai dépassé pendant la lecture du corps d'un 2xx reste `bad_response`, non
+  // repris : TEM a déjà accepté le message, une reprise serait un doublon certain. Sady reçoit
+  // une alerte à la place.
   try {
     return { ok: true, body: await response.json() }
   } catch {
@@ -141,7 +153,10 @@ export function createTemTransport(options: {
       if (!result.ok) return { ok: false, code: codeOf(result.failure) }
       if (!isRecord(result.body)) return { ok: false, code: 'bad_response' }
       const status = result.body.status
-      const state = (typeof status === 'string' ? STATE_BY_STATUS[status] : undefined) ?? 'pending'
+      const state =
+        typeof status === 'string' && Object.hasOwn(STATE_BY_STATUS, status)
+          ? STATE_BY_STATUS[status]
+          : undefined
       const rawFlags: unknown = result.body.flags
       const known: readonly string[] = TEM_FLAGS
       const flags = Array.isArray(rawFlags)
@@ -149,7 +164,7 @@ export function createTemTransport(options: {
             (flag): flag is string => typeof flag === 'string' && known.includes(flag),
           )
         : []
-      return { ok: true, state, flags }
+      return { ok: true, state: state ?? 'pending', flags }
     },
   }
 }

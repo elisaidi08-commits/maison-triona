@@ -59,7 +59,7 @@ describe('emailConfigFromEnv', () => {
   })
 
   it('refuse un nom contenant des caractères dangereux', () => {
-    for (const name of ['A<B', 'A>B', 'A"B', 'A\rB', 'A\nB']) {
+    for (const name of ['A<B', 'A>B', 'A"B', 'A\rB', 'A\nB', 'A\0B', 'A\tB', 'A\u2028B']) {
       assert.throws(
         () => emailConfigFromEnv({ ...FULL, EMAIL_FROM: `${name} <a@b.com>` }),
         /Adresse e-mail invalide : EMAIL_FROM/,
@@ -98,6 +98,8 @@ describe('emailConfigFromEnv', () => {
       'http://localhost:3000',
     )
     assert.throws(() => emailConfigFromEnv({ ...FULL, SITE_URL: 'pas une url' }), /SITE_URL/)
+    assert.equal(messageOf({ ...FULL, SITE_URL: 'ftp://maisontriona.com' }), 'SITE_URL invalide')
+    assert.equal(messageOf({ ...FULL, SITE_URL: 'javascript:alert(1)' }), 'SITE_URL invalide')
   })
 
   it('ne met aucune valeur dans les messages', () => {
