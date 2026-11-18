@@ -14,6 +14,11 @@ export const PATHNAMES = {
   '/services/enfants': { fr: '/services/enfants', en: '/services/childcare' },
   '/territoires': { fr: '/territoires', en: '/where-we-work' },
   '/faq': '/faq',
+  '/comment-ca-se-passe': { fr: '/comment-ca-se-passe', en: '/how-it-works' },
+  '/comment-ca-se-passe/langage-simple': {
+    fr: '/comment-ca-se-passe/langage-simple',
+    en: '/how-it-works/easy-read',
+  },
   '/contact': '/contact',
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
