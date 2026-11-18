@@ -27,6 +27,7 @@
     "check:third-party": "node scripts/check-third-party.mjs"
   },
   "dependencies": {
+    "better-auth": "1.7.25",
     "libsodium-wrappers-sumo": "0.8.4",
     "next": "16.4.6",
     "next-intl": "4.15.1",
