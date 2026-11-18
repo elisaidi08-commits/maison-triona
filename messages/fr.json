@@ -41,6 +41,10 @@
       "privacy": {
         "title": "Confidentialité : vos demandes protégées",
         "description": "Aucun cookie, aucun traceur tiers. Vos demandes sont conservées chiffrées, en Europe, puis effacées. Ce que nous gardons, et pour combien de temps."
+      },
+      "faq": {
+        "title": "Questions fréquentes",
+        "description": "Confidentialité, rémunération, choix des personnes, délai de réponse : les réponses aux questions que l’on se pose avant d’écrire à la maison."
       }
     }
   },
@@ -57,7 +61,8 @@
     "house": "La Maison",
     "services": "Services",
     "territories": "Territoires",
-    "contact": "Contact"
+    "contact": "Contact",
+    "faq": "Questions fréquentes"
   },
   "Locale": {
     "label": "Langue",
@@ -86,7 +91,8 @@
     "territories": "Territoires",
     "contact": "Contact",
     "legal": "Mentions légales",
-    "privacy": "Confidentialité"
+    "privacy": "Confidentialité",
+    "faq": "Questions fréquentes"
   },
   "NotFound": {
     "title": "Cette page n’existe pas.",
@@ -335,7 +341,7 @@
       "title": "Qui rémunère la maison",
       "paragraphs": [
         "Vous ne payez rien à la maison. Vous réglez directement le professionnel que vous avez choisi.",
-        "La maison est rémunérée par lui, et nous vous le disons dès le premier échange."
+        "La maison est rémunérée par lui."
       ]
     },
     "limits": {
@@ -650,6 +656,52 @@
         "id": "modifications",
         "title": "Si cette politique change",
         "paragraphs": ["La nouvelle version est publiée sur cette page, avec sa date."]
+      }
+    ]
+  },
+  "Faq": {
+    "title": "Questions fréquentes",
+    "intro": "Ce que vous vous demandez peut-être avant de nous écrire, et nos réponses.",
+    "items": [
+      {
+        "id": "confidentialite",
+        "question": "Mes informations restent-elles confidentielles ?",
+        "answer": "Oui. Tout ce que vous nous confiez reste dans la maison ; nous ne transmettons au professionnel que vous choisissez que ce qui lui est utile, avec votre accord. Vos demandes sont conservées dans un coffre chiffré, dans l’Union européenne, puis effacées."
+      },
+      {
+        "id": "qui-paie",
+        "question": "Qui paie qui ? Combien cela me coûte-t-il ?",
+        "answer": "Vous ne payez rien à la maison. Vous réglez directement le professionnel que vous avez choisi. La maison est rémunérée par lui."
+      },
+      {
+        "id": "selection",
+        "question": "Comment choisissez-vous les personnes que vous présentez ?",
+        "answer": "Nous rencontrons et vérifions chaque personne avant de vous la présenter. Nous regardons son savoir-faire, mais aussi sa tenue, sa discrétion et sa justesse. Nous ne recommandons personne que nous ne confierions à l’un des nôtres."
+      },
+      {
+        "id": "si-cela-ne-convient-pas",
+        "question": "Que se passe-t-il si la personne ne me convient pas ?",
+        "answer": "Dites-le-nous. Nous ajustons, ou nous vous présentons une autre personne, sans que vous ayez à vous justifier."
+      },
+      {
+        "id": "pays",
+        "question": "Dans quels pays travaillez-vous ?",
+        "answer": "En Belgique, en France, au Luxembourg, à Monaco et en Suisse. Nous vous répondons en français comme en anglais."
+      },
+      {
+        "id": "delai",
+        "question": "En combien de temps recevrai-je une réponse ?",
+        "answer": "Sous 48 heures ouvrées, du lundi au vendredi. Nous vous répondons personnellement."
+      },
+      {
+        "id": "informations-medicales",
+        "question": "Dois-je donner des informations médicales ?",
+        "answer": "Non. Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. Pour tout besoin médical, nous vous orientons vers les professionnels de santé adaptés."
+      },
+      {
+        "id": "pour-un-proche",
+        "question": "Puis-je faire la demande pour un proche ?",
+        "answer": "Oui. Vous pouvez nous écrire pour vous ou pour l’un de vos proches. Quelques lignes suffisent ; nous faisons ensuite connaissance lors d’un premier échange."
       }
     ]
   }

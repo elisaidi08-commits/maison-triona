@@ -15,6 +15,7 @@ const PAGES: InternalPath[] = [
   '/services/enfants',
   '/la-maison',
   '/territoires',
+  '/faq',
   '/contact',
   '/mentions-legales',
   '/confidentialite',
@@ -63,9 +64,11 @@ test('les données structurées ne balisent que ce que la page montre', async ({
     const expected =
       internal === '/'
         ? ['Organization', 'WebSite']
-        : internal.startsWith('/services/')
-          ? ['Organization', 'Service']
-          : []
+        : internal === '/faq'
+          ? ['FAQPage']
+          : internal.startsWith('/services/')
+            ? ['Organization', 'Service']
+            : []
     if (expected.length === 0) {
       expect(blocks, path).toHaveLength(0)
       continue
@@ -74,7 +77,7 @@ test('les données structurées ne balisent que ce que la page montre', async ({
     const data = JSON.parse(blocks[0] ?? '{}')
     const graph = data['@graph'] as { '@type': string; url?: string }[]
     expect(graph.map((node) => node['@type'])).toEqual(expected)
-    expect(graph[0]?.url, path).toBe(`${ORIGIN}/`)
+    if (expected[0] === 'Organization') expect(graph[0]?.url, path).toBe(`${ORIGIN}/`)
     for (const banned of [
       'LocalBusiness',
       'EmploymentAgency',
