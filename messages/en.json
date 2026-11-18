@@ -245,8 +245,8 @@
           "text": "A conversation, by telephone or in person, to understand the situation, the daily habits and what is expected."
         },
         {
-          "title": "We introduce you to the right person.",
-          "text": "One or more people, chosen for you. You decide with us; we never choose for you."
+          "title": "We introduce you to one or more people.",
+          "text": "Selected for your situation. You decide with us; we never decide for you."
         },
         {
           "title": "You sign directly with the professional you choose.",
@@ -451,7 +451,7 @@
           "How you heard of the house, if you would like to say."
         ],
         "after": [
-          "This information is used to reply to you and, if you wish, to introduce you to the right person. How you heard of the house is used only to know where enquiries come from.",
+          "This information is used to reply to you and, if you wish, to introduce you to one or more people. How you heard of the house is used only to know where enquiries come from.",
           "The service, the country, the urgency, your name, an email address or a telephone number, the language and your consent are needed to reply to you; everything else is optional.",
           "There is no need to share any medical details; we will talk about it in person.",
           "If you choose to meet a professional, we pass on to them, with your consent, your name, your contact details and what is useful to them about your situation.",
