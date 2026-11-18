@@ -8,6 +8,8 @@ const PAGES = [
   '/fr/la-maison',
   '/en/the-house',
   '/fr/contact',
+  '/fr/faq',
+  '/en/faq',
   '/fr/services',
   '/en/services',
   '/fr/services/conciergerie',

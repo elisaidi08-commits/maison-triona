@@ -16,6 +16,7 @@ export const PUBLIC_PAGES = [
   '/services/enfants',
   '/la-maison',
   '/territoires',
+  '/faq',
   '/contact',
   '/mentions-legales',
   '/confidentialite',
@@ -37,6 +38,7 @@ const PAGES: Record<PublicPage, { meta: string; crumb: string; parent?: PublicPa
   '/services/enfants': { meta: 'children', crumb: 'Services.children.name', parent: '/services' },
   '/la-maison': { meta: 'house', crumb: 'Pages.house', parent: '/' },
   '/territoires': { meta: 'territories', crumb: 'Pages.territories', parent: '/' },
+  '/faq': { meta: 'faq', crumb: 'Pages.faq', parent: '/' },
   '/contact': { meta: 'contact', crumb: 'Pages.contact', parent: '/' },
   '/mentions-legales': { meta: 'legal', crumb: 'Pages.legal', parent: '/' },
   '/confidentialite': { meta: 'privacy', crumb: 'Pages.privacy', parent: '/' },
@@ -78,7 +80,8 @@ export async function pageMetadata(page: PublicPage): Promise<Metadata> {
 }
 
 // Données structurées (JSON-LD), seulement ce que la page montre (règles de Google, consultées le
-// 18/11/2026) : Organization et WebSite sur l'accueil, Service sur les pages de service. Organization :
+// 18/11/2026) : Organization et WebSite sur l'accueil, FAQPage sur la FAQ, Service sur les pages de
+// service. Organization :
 // nom, URL (racine du domaine), logo ; ni adresse, ni personne, ni `sameAs`, ni description (la meta
 // description n'est pas affichée). Ni `areaServed` (pays encore en brouillon, Suisse en attente du
 // juriste), ni BreadcrumbList tant qu'aucun fil d'Ariane n'est visible. Jamais LocalBusiness ni
@@ -110,6 +113,20 @@ export async function pageJsonLd(page: PublicPage): Promise<JsonLd | null> {
       url: `${base}/`,
       inLanguage: locale,
       publisher: { '@id': organisationId() },
+    })
+  }
+
+  // FAQ : les questions et réponses affichées sur la page, telles quelles (pas de résultat enrichi
+  // Google depuis mai 2026 ; utile aux autres moteurs, docs/seo-strategy.md §G).
+  if (page === '/faq') {
+    const items = t.raw('Faq.items') as { question: string; answer: string }[]
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: items.map(({ question, answer }) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
     })
   }
 

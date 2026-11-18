@@ -41,6 +41,10 @@
       "privacy": {
         "title": "Privacy: how your enquiries are protected",
         "description": "No cookies and no third-party trackers. Your enquiries are stored encrypted, in the European Union, then deleted. What we keep, why, and for how long."
+      },
+      "faq": {
+        "title": "Frequently asked questions",
+        "description": "Confidentiality, who pays, how we choose, how quickly we reply: answers to the questions you may have before writing to the house."
       }
     }
   },
@@ -57,7 +61,8 @@
     "house": "The House",
     "services": "Services",
     "territories": "Where we work",
-    "contact": "Contact"
+    "contact": "Contact",
+    "faq": "Frequently asked questions"
   },
   "Locale": {
     "label": "Language",
@@ -86,7 +91,8 @@
     "territories": "Where we work",
     "contact": "Contact",
     "legal": "Legal notice",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "faq": "Common questions"
   },
   "NotFound": {
     "title": "This page does not exist.",
@@ -331,7 +337,7 @@
       "title": "How the house is paid",
       "paragraphs": [
         "You pay nothing to the house. You pay the professional you have chosen directly.",
-        "The house is paid by them, and we tell you so from our very first conversation."
+        "The house is paid by them."
       ]
     },
     "limits": {
@@ -644,6 +650,52 @@
         "id": "changes",
         "title": "If this policy changes",
         "paragraphs": ["The new version is published on this page, with its date."]
+      }
+    ]
+  },
+  "Faq": {
+    "title": "Common questions",
+    "intro": "What you may be wondering before you write to us, and our answers.",
+    "items": [
+      {
+        "id": "confidentiality",
+        "question": "Will my information remain confidential?",
+        "answer": "Yes. Everything you entrust to us stays within the house; we pass on to the professional you choose only what is useful to them, with your consent. Your enquiries are kept in an encrypted vault in the European Union, then erased."
+      },
+      {
+        "id": "who-pays",
+        "question": "Who pays whom? What will it cost me?",
+        "answer": "You pay nothing to the house. You pay the professional you have chosen directly. The house is paid by them."
+      },
+      {
+        "id": "selection",
+        "question": "How do you choose the people you introduce?",
+        "answer": "We meet and vet every person before introducing them to you. We look at their skill, but also at their bearing, their discretion and their judgement. We recommend no one we would not trust with our own family."
+      },
+      {
+        "id": "if-it-is-not-right",
+        "question": "What happens if the person is not right for me?",
+        "answer": "Tell us. We adjust, or we introduce you to someone else, without you having to give a reason."
+      },
+      {
+        "id": "countries",
+        "question": "Which countries do you work in?",
+        "answer": "In Belgium, France, Luxembourg, Monaco and Switzerland. We reply in French or in English."
+      },
+      {
+        "id": "reply-time",
+        "question": "How quickly will I hear back?",
+        "answer": "Within 48 working hours, Monday to Friday. We reply to you personally."
+      },
+      {
+        "id": "medical-information",
+        "question": "Do I need to share medical information?",
+        "answer": "No. There’s no need to share any medical details; we’ll talk about it in person. For any medical need, we will refer you to the appropriate health professionals."
+      },
+      {
+        "id": "for-someone-close",
+        "question": "Can I make an enquiry for someone close to me?",
+        "answer": "Yes. You can write to us for yourself or for someone close to you. A few lines are enough; we then get to know each other in a first conversation."
       }
     ]
   }

@@ -38,6 +38,7 @@ export async function Footer({ locale }: { locale: Locale }) {
     { href: '/la-maison', label: nav('house') },
     { href: '/services', label: nav('services') },
     { href: '/territoires', label: nav('territories') },
+    { href: '/faq', label: nav('faq') },
     { href: '/contact', label: nav('contact') },
   ] as const
 

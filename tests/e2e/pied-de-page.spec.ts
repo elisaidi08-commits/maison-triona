@@ -39,9 +39,11 @@ test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page })
   await expect(stamp).toHaveCSS('font-size', '48px')
 })
 
+// Avant D64 : 1 071, 1 070 et 1 446 px. Le lien de la FAQ (story 2.8) ajoute une ligne à la
+// navigation (957 px à 834).
 for (const [width, height, max] of [
   [1440, 900, 800],
-  [834, 1112, 950],
+  [834, 1112, 1000],
   [390, 844, 1200],
 ] as const) {
   test(`${width} px : nettement plus court qu’avant (moins de ${max} px), mention IA seule sur sa ligne`, async ({

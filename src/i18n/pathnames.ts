@@ -13,6 +13,7 @@ export const PATHNAMES = {
   '/services/grand-age': { fr: '/services/grand-age', en: '/services/later-life' },
   '/services/enfants': { fr: '/services/enfants', en: '/services/childcare' },
   '/territoires': { fr: '/territoires', en: '/where-we-work' },
+  '/faq': '/faq',
   '/contact': '/contact',
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
