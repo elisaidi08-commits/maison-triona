@@ -17,7 +17,7 @@ export async function ContactBlock({ locale }: { locale: string }) {
       <div className="mx-auto flex max-w-measure flex-col items-center gap-24 text-center">
         <Rule short />
         <p className="text-label text-champagne uppercase">{t('label')}</p>
-        <h2 id="contact-titre" className="font-display text-title-h2 text-ivoire">
+        <h2 id="contact-titre" className="font-display text-title-h2 text-balance text-ivoire">
           {t('title')}
         </h2>
         <p className="text-ivoire-80">{t('reassurance')}</p>

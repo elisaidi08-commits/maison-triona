@@ -4,14 +4,14 @@ import * as rootParams from 'next/root-params'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ContactBlock } from '@/components/sections/ContactBlock'
 import { ShareLinks } from '@/components/share/ShareLinks'
-import { CommentCaSePasse, Modele } from '@/components/sections/Fonctionnement'
+import { CommentCaSePasse } from '@/components/sections/Fonctionnement'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { pageMetadata } from '@/lib/seo'
 
 // « Comment ça se passe » (story 2.9, docs/trust-contact-launch.md §2.2 et annexe B.2) : le déroulé
-// en six étapes de Cat (D40), le modèle en trois temps et ce qu'il faut savoir, avec un lien vers la
+// en six étapes de Cat (D40), la phrase du modèle et ce qu'il faut savoir, avec un lien vers la
 // version en langage simple. Pas de PDF tant que le texte n'est pas validé par Cat (critère de 2.9).
 
 export function generateMetadata(): Promise<Metadata> {
@@ -40,9 +40,6 @@ export default async function HowItWorksPage() {
         </header>
         <div className="conteneur">
           <CommentCaSePasse locale={locale} title={t('stepsTitle')} pageLink={false} />
-        </div>
-        <div className="conteneur">
-          <Modele />
         </div>
       </article>
       <ShareLinks page="/comment-ca-se-passe" locale={locale} />

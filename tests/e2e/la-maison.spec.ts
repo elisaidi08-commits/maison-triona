@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 test('cinq chapitres et un sommaire qui y mène', async ({ page }) => {
   for (const path of ['/fr/la-maison', '/en/the-house']) {
     await page.goto(path)
-    const chapters = page.locator('main article > section')
+    const chapters = page.locator('main section[id]')
     await expect(chapters).toHaveCount(5)
     await expect(page.locator('main nav ol > li a')).toHaveCount(5)
     await expect(page.locator('main')).not.toContainText('CONTENU À FOURNIR')
