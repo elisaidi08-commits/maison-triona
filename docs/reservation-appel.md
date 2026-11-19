@@ -77,7 +77,7 @@ Bloquer une journée qui contient déjà des appels ne les annule pas : le coffr
 |---|---|---|
 | Nouvelle réservation | E-mail + invitation | Objet « Nouvel appel · Maison Triona » ; jour, heure, lien vers l'appel dans le coffre. Invitation « Appel · Maison Triona », description = lien vers le coffre |
 | Déplacement, annulation | Invitation mise à jour ou retirée | Idem |
-| Nouvelle réservation (option) | SMS à Cat | « Nouvel appel mardi 10 h 30 » |
+| Nouvelle réservation (option) | SMS à Cat | « Maison Triona : nouvel appel mardi 24/11 à 10 h 30. » (`renderCatSms`, `src/lib/sms/templates.ts` : en Belgique, l'expéditeur est un numéro court) |
 | Récapitulatif du matin (option) | E-mail, 8 h les jours ouvrés | « Vos appels du jour : 10 h 30, 16 h » |
 
 **Google Agenda** : Gmail reconnaît les invitations ; chaque appel apparaît dans l'agenda de Cat sans configuration. Google ne reçoit que le titre neutre, l'heure et le lien vers le coffre.
