@@ -105,6 +105,28 @@ describe('renderAlert', () => {
     })
   }
 
+  it('écrit l’alerte notify_cap, sans identifiant de message', () => {
+    const mail = renderAlert({ event: 'notify_cap', subjectId: null, createdAt })
+    assert.equal(mail.subject, 'Alerte technique · Maison Triona')
+    assert.equal(
+      mail.text,
+      [
+        `Plafond de notifications atteint${N}: les demandes suivantes de la journée sont enregistrées dans le coffre, sans e-mail.`,
+        '',
+        `Date${N}: mercredi 18 novembre 2026 à 22${N}h${N}14`,
+        '',
+        'Aucune donnée de demande dans ce message.',
+      ].join('\n'),
+    )
+  })
+
+  it('exige un identifiant pour une alerte sur un message, aucun pour notify_cap', () => {
+    for (const event of ['send_failed', 'undelivered', 'tracking_expired'] as const) {
+      assert.throws(() => renderAlert({ event, subjectId: null, createdAt }), RangeError, event)
+    }
+    assert.throws(() => renderAlert({ event: 'notify_cap', subjectId: ID, createdAt }), RangeError)
+  })
+
   it('refuse un identifiant invalide et un événement inconnu', () => {
     assert.throws(
       () => renderAlert({ event: 'send_failed', subjectId: 'x', createdAt }),
@@ -134,6 +156,7 @@ describe('aucune fuite de la demande', () => {
       renderAlert({ event: 'send_failed', subjectId: ID, createdAt }),
       renderAlert({ event: 'undelivered', subjectId: ID, createdAt }),
       renderAlert({ event: 'tracking_expired', subjectId: ID, createdAt }),
+      renderAlert({ event: 'notify_cap', subjectId: null, createdAt }),
     ]
     for (const mail of mails) {
       for (const value of Object.values(request)) {

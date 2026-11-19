@@ -3,14 +3,19 @@ import { describe, it } from 'node:test'
 
 import { emailConfigFromEnv } from '../../src/lib/email/config.ts'
 import type { EmailConfig } from '../../src/lib/email/config.ts'
+import type { Pool } from 'pg'
+
 import {
   applyNotificationCap,
+  CAP_ALERT_TTL_SECONDS,
+  capAlertKey,
   NOTIFICATIONS_PAR_JOUR,
   notificationSetup,
+  scheduleCapAlert,
   scheduleFirstAttempts,
   storedStatuses,
 } from '../../src/lib/outbox/notify-request.ts'
-import type { FirstAttemptDeps } from '../../src/lib/outbox/notify-request.ts'
+import type { CapAlertDeps, FirstAttemptDeps } from '../../src/lib/outbox/notify-request.ts'
 import type { OutboxDeps } from '../../src/lib/outbox/process.ts'
 
 // Branchement de l'envoi sur la demande (story 3.3), sans Next : configuration lue avant
@@ -264,6 +269,196 @@ describe('applyNotificationCap', () => {
   it("ne change rien quand il n'y a pas de notification", () => {
     for (const quota of ['autorise', 'depasse', 'indisponible'] as const) {
       assert.deepEqual(applyNotificationCap(false, quota), { notify: false, status: null })
+    }
+  })
+})
+
+// Alerte à Sady au premier dépassement du jour (3.3, suites, décision de Sady du 19/11/2026) : la
+// Server Action pose une clé d'usage unique du jour ; seul `nouveau` (clé posée par cet appel)
+// déclenche l'alerte, écrite par le rôle `envoi` dans un `after`, puis envoyée tout de suite.
+const ALERTE_ID = '2d2e8cab-3f4b-4c5d-8e6f-7a8b9c0d1e2f'
+// Identifiant d'une demande : il ne doit jamais apparaître dans un journal de l'alerte.
+const DEMANDE_ID = IDS[0]!
+
+function alertePlafond(
+  options: {
+    afterThrows?: boolean
+    createDeps?: () => OutboxDeps
+    enqueue?: (pool: Pool, id: string) => Promise<void>
+  } = {},
+) {
+  const taches: (() => Promise<void>)[] = []
+  const ecrites: [Pool, string][] = []
+  const envois: [OutboxDeps, string][] = []
+  const crees: EmailConfig[] = []
+  const journal: string[] = []
+  const once = journalUneFois()
+  const pool = { marque: 'pool-envoi' } as unknown as Pool
+  const outboxDeps = { pool, newId: () => ALERTE_ID } as unknown as OutboxDeps
+  const deps: CapAlertDeps = {
+    after: (tache) => {
+      if (options.afterThrows) throw new Error(`after hors requête : ${ADRESSES[2]} ${SECRET}`)
+      taches.push(tache)
+    },
+    createDeps: (config) => {
+      crees.push(config)
+      return options.createDeps ? options.createDeps() : outboxDeps
+    },
+    enqueue:
+      options.enqueue ??
+      (async (p, id) => {
+        ecrites.push([p, id])
+      }),
+    sendNow: async (d, id) => {
+      envois.push([d, id])
+    },
+    log: (statut) => {
+      journal.push(statut)
+    },
+    logOnce: once.logOnce,
+  }
+  return { deps, taches, ecrites, envois, crees, journal, once, pool, outboxDeps }
+}
+
+describe('alerte du plafond : clé du jour', () => {
+  it('une clé par jour UTC, sans autre donnée que la date', () => {
+    assert.equal(capAlertKey(new Date('2026-11-19T00:00:00Z')), 'notif-plafond:2026-11-19')
+    assert.equal(capAlertKey(new Date('2026-11-19T23:59:59Z')), 'notif-plafond:2026-11-19')
+    assert.equal(capAlertKey(new Date('2026-11-20T00:00:00Z')), 'notif-plafond:2026-11-20')
+  })
+  it('gardée deux jours', () => {
+    assert.equal(CAP_ALERT_TTL_SECONDS, 2 * 24 * 60 * 60)
+  })
+})
+
+describe('scheduleCapAlert', () => {
+  it('premier dépassement : un `after`, puis l’alerte écrite par l’envoi et envoyée aussitôt', async () => {
+    const t = alertePlafond()
+    scheduleCapAlert('nouveau', CONFIG, t.deps)
+    assert.equal(t.taches.length, 1)
+    assert.deepEqual(t.journal, ['alert:notify-cap-sent'])
+    // Rien ne s'écrit ni ne part avant la fin de la réponse.
+    assert.deepEqual(t.ecrites, [])
+    await t.taches[0]!()
+    assert.deepEqual(t.crees, [CONFIG])
+    assert.deepEqual(t.ecrites, [[t.pool, ALERTE_ID]])
+    assert.deepEqual(t.envois, [[t.outboxDeps, ALERTE_ID]])
+    assert.deepEqual(t.journal, ['alert:notify-cap-sent'])
+    assert.deepEqual(t.once.appels, [])
+  })
+
+  it('tout autre résultat de la clé : aucune alerte (échec fermé, jamais de rafale)', () => {
+    for (const statut of ['deja-vu', 'inactif', 'reseau', 'config', 'reponse', '']) {
+      const t = alertePlafond()
+      scheduleCapAlert(statut, CONFIG, t.deps)
+      assert.equal(t.taches.length, 0, statut)
+      assert.deepEqual(t.journal, [], statut)
+    }
+  })
+
+  it('`after` qui lève : rien ne remonte, `failed:after`', () => {
+    const t = alertePlafond({ afterThrows: true })
+    assert.doesNotThrow(() => scheduleCapAlert('nouveau', CONFIG, t.deps))
+    assert.deepEqual(t.journal, ['failed:after'])
+  })
+
+  it('dépendances impossibles à créer : rien ne s’écrit, `failed:config` une fois', async () => {
+    const t = alertePlafond({
+      createDeps: () => {
+        throw new Error(`ENVOI_DATABASE_URL manquante ${SECRET}`)
+      },
+    })
+    scheduleCapAlert('nouveau', CONFIG, t.deps)
+    await assert.doesNotReject(t.taches[0]!())
+    assert.deepEqual(t.ecrites, [])
+    assert.deepEqual(t.envois, [])
+    assert.deepEqual(t.once.appels, [['envoi', 'failed:config']])
+    assert.deepEqual(t.once.lignes, ['failed:config'])
+  })
+
+  it('écriture refusée : rien ne part ni ne remonte, `failed:notify-cap-alert`', async () => {
+    const t = alertePlafond({
+      enqueue: async () => {
+        throw new Error(`permission refusée ${ADRESSES[2]}`)
+      },
+    })
+    scheduleCapAlert('nouveau', CONFIG, t.deps)
+    await assert.doesNotReject(t.taches[0]!())
+    assert.deepEqual(t.envois, [])
+    assert.deepEqual(t.journal, ['alert:notify-cap-sent', 'failed:notify-cap-alert'])
+  })
+
+  it('un envoi ou un journal qui lèvent ne font rien remonter', async () => {
+    const t = alertePlafond()
+    t.deps.sendNow = async () => {
+      throw new Error('contrat rompu')
+    }
+    t.deps.log = () => {
+      throw new Error('journal en panne')
+    }
+    assert.doesNotThrow(() => scheduleCapAlert('nouveau', CONFIG, t.deps))
+    await assert.doesNotReject(t.taches[0]!())
+
+    const panne = alertePlafond({
+      afterThrows: true,
+      createDeps: () => {
+        throw new Error('dépendances absentes')
+      },
+    })
+    panne.deps.log = () => {
+      throw new Error('journal en panne')
+    }
+    assert.doesNotThrow(() => scheduleCapAlert('nouveau', CONFIG, panne.deps))
+
+    const sansDeps = alertePlafond({
+      createDeps: () => {
+        throw new Error('dépendances absentes')
+      },
+    })
+    sansDeps.deps.logOnce = () => {
+      throw new Error('journal en panne')
+    }
+    scheduleCapAlert('nouveau', CONFIG, sansDeps.deps)
+    await assert.doesNotReject(sansDeps.taches[0]!())
+  })
+
+  it('journaux : des statuts fixes, jamais une demande, une adresse ni un secret', async () => {
+    const vus: unknown[] = []
+    const cas = [
+      alertePlafond(),
+      alertePlafond({ afterThrows: true }),
+      alertePlafond({
+        createDeps: () => {
+          throw new Error(`échec ${SECRET} ${ADRESSES[1]} ${DEMANDE_ID}`)
+        },
+      }),
+      alertePlafond({
+        enqueue: async () => {
+          throw new Error(`refus ${SECRET} ${ADRESSES[2]} ${DEMANDE_ID}`)
+        },
+      }),
+    ]
+    for (const t of cas) {
+      t.deps.log = (...args: unknown[]) => {
+        vus.push(args)
+      }
+      t.deps.logOnce = (...args: unknown[]) => {
+        vus.push(args)
+      }
+      scheduleCapAlert('nouveau', CONFIG, t.deps)
+      for (const tache of t.taches) await tache()
+    }
+    const texte = JSON.stringify(vus)
+    for (const attendu of [
+      'alert:notify-cap-sent',
+      'failed:after',
+      'failed:config',
+      'failed:notify-cap-alert',
+    ]) {
+      assert.ok(texte.includes(attendu), attendu)
+    }
+    for (const interdit of [SECRET, ...ADRESSES, DEMANDE_ID, ALERTE_ID, '@', 'manquante']) {
+      assert.ok(!texte.includes(interdit), interdit)
     }
   })
 })

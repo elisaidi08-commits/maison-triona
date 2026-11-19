@@ -10,6 +10,7 @@ import { withTransaction } from '../../src/lib/db/transaction.ts'
 import {
   claimDue,
   claimOne,
+  enqueueCapAlert,
   enqueueNotification,
   failExhausted,
   listAccepted,
@@ -20,7 +21,7 @@ import {
   recordDelivery,
 } from '../../src/lib/outbox/repository.ts'
 import { VaultError } from '../../src/lib/vault/repository.ts'
-import { applyRoles, resetDatabase, testPool } from './helpers.ts'
+import { applyRoles, envoiPool, resetDatabase, testPool } from './helpers.ts'
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const pool = testPool()
@@ -63,6 +64,65 @@ describe('boîte d’envoi : schéma', () => {
       ]),
       { constraint: 'outbox_alert_shape' },
     )
+  })
+
+  // Alerte du plafond de notifications (migration 0009) : elle ne concerne aucun message.
+  it('accepte une alerte notify_cap sans identifiant de message', async () => {
+    await pool.query(
+      `INSERT INTO outbox (id, template, alert_event) VALUES ($1, 'technical_alert', 'notify_cap')`,
+      [randomUUID()],
+    )
+  })
+
+  it('refuse une alerte notify_cap qui porte un identifiant de message', async () => {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO outbox (id, template, alert_event, alert_subject)
+         VALUES ($1, 'technical_alert', 'notify_cap', $2)`,
+        [randomUUID(), randomUUID()],
+      ),
+      { constraint: 'outbox_alert_shape' },
+    )
+  })
+
+  it('refuse toujours une alerte sur un message sans son identifiant', async () => {
+    for (const event of ['send_failed', 'undelivered', 'tracking_expired']) {
+      await assert.rejects(
+        pool.query(
+          `INSERT INTO outbox (id, template, alert_event) VALUES ($1, 'technical_alert', $2)`,
+          [randomUUID(), event],
+        ),
+        { constraint: 'outbox_alert_shape' },
+        event,
+      )
+    }
+  })
+
+  it('refuse un événement d’alerte inconnu', async () => {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO outbox (id, template, alert_event) VALUES ($1, 'technical_alert', 'autre')`,
+        [randomUUID()],
+      ),
+      { constraint: 'outbox_alert_event_check' },
+    )
+  })
+
+  it('refuse une notification qui porte un événement ou un identifiant d’alerte', async () => {
+    for (const [colonne, valeur] of [
+      ['alert_event', 'notify_cap'],
+      ['alert_subject', randomUUID()],
+    ]) {
+      await assert.rejects(
+        pool.query(
+          `INSERT INTO outbox (id, template, request_id, ${colonne})
+           VALUES ($1, 'request_notification', $2, $3)`,
+          [randomUUID(), randomUUID(), valeur],
+        ),
+        { constraint: 'outbox_alert_shape' },
+        colonne,
+      )
+    }
   })
 
   it('refuse un envoi accepté sans identifiant du prestataire', async () => {
@@ -215,6 +275,38 @@ describe('boîte d’envoi : écriture', () => {
       [id],
     )
     assert.equal(rows[0]?.priority, true)
+  })
+
+  it('écrit l’alerte du plafond en attente, sous le rôle envoi, sans identifiant', async () => {
+    const envoi = envoiPool()
+    const id = randomUUID()
+    try {
+      await enqueueCapAlert(envoi, id)
+    } finally {
+      await envoi.end()
+    }
+    const written = await row(id)
+    assert.ok(written)
+    assert.equal(written.template, 'technical_alert')
+    assert.equal(written.alert_event, 'notify_cap')
+    assert.equal(written.alert_subject, null)
+    assert.equal(written.request_id, null)
+    assert.equal(written.status, 'pending')
+    assert.equal(written.attempts, 0)
+    // Due tout de suite : `sendNow` peut la réserver dans la foulée.
+    assert.ok(await claimOne(pool, id, new Date(Date.now() + MINUTE)))
+  })
+
+  it('l’alerte du plafond : une erreur de PostgreSQL devient une VaultError sans valeur', async () => {
+    const id = randomUUID()
+    await enqueueCapAlert(pool, id)
+    await assert.rejects(enqueueCapAlert(pool, id), (error: unknown) => {
+      assert.ok(error instanceof VaultError)
+      assert.equal(error.constraint, 'outbox_pkey')
+      assert.equal(error.message, 'Coffre : enqueueCapAlert a échoué (23505)')
+      assert.ok(!error.message.includes(id))
+      return true
+    })
   })
 
   it('n’écrit rien si la transaction de la demande est annulée', async () => {
@@ -677,6 +769,7 @@ describe('boîte d’envoi : validation avant toute requête', () => {
           priority: TEMOIN as unknown as boolean,
         }),
     ],
+    ['enqueueCapAlert id', () => enqueueCapAlert(noDb, TEMOIN)],
     ['claimDue date', () => claimDue(noDb, new Date(Number.NaN), 10)],
     ['claimDue limite 0', () => claimDue(noDb, T0, 0)],
     ['claimDue limite 101', () => claimDue(noDb, T0, 101)],
@@ -729,6 +822,11 @@ describe('boîte d’envoi : validation avant toute requête', () => {
     [
       'recordDelivery événement inconnu',
       () => recordDelivery(noDb, ID, 'undelivered', [], ID, TEMOIN as 'undelivered'),
+    ],
+    [
+      // L'alerte du plafond ne porte sur aucun message : jamais écrite par le suivi.
+      'recordDelivery événement notify_cap',
+      () => recordDelivery(noDb, ID, 'undelivered', [], ID, 'notify_cap' as 'undelivered'),
     ],
     ['purgeOutbox date', () => purgeOutbox(noDb, new Date(Number.NaN))],
     ['failExhausted date', () => failExhausted(noDb, new Date(Number.NaN), () => ID)],
