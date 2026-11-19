@@ -31,6 +31,9 @@ export type AccessAction =
   | 'freeze'
   | 'unfreeze'
   | 'retention'
+  // Disponibilités (story 3.8 B, 0007) et création d'un lien de réservation (story 3.10, 0008).
+  | 'availability'
+  | 'booking_link'
 
 export interface NewVaultRequest {
   kind: RequestKind

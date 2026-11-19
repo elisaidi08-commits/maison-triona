@@ -13,6 +13,7 @@ import {
   readBookingLink,
   readConfirmation,
 } from '../../src/lib/booking/bookings.ts'
+import { lienDeReservationDuCoffre } from '../../src/lib/auth/acces.ts'
 import { listConfirmedCalls } from '../../src/lib/booking/repository.ts'
 import { generateToken, hashToken } from '../../src/lib/booking/tokens.ts'
 import { zonedTimeToUtc } from '../../src/lib/booking/zoned-time.ts'
@@ -200,6 +201,20 @@ describe('réservation d’appel', () => {
     for (const forme of [...formes(token), rows[0].token_hash.toString('hex')]) {
       assert.equal(ligne.includes(forme), false)
     }
+  })
+
+  it('le coffre ne crée un lien que pour une session ouverte par le TOTP', async () => {
+    const compte = { id: 'u1', email: CAT, nom: 'Cat Factice' }
+    for (const acces of [{ etat: 'anonyme' as const }, { etat: 'enrolement' as const, compte }]) {
+      assert.equal(await lienDeReservationDuCoffre(coffre, acces, MAINTENANT), null)
+    }
+    assert.equal(await compter('booking_tokens'), 0)
+    assert.equal(await compter('vault_access_log'), 0)
+    const cree = await lienDeReservationDuCoffre(coffre, { etat: 'autorise', compte }, MAINTENANT)
+    assert.match(cree?.token ?? '', /^[A-Za-z0-9_-]{43}$/)
+    assert.equal(await compter('booking_tokens'), 1)
+    const { rows } = await admin.query('SELECT actor, action FROM vault_access_log')
+    assert.deepEqual(rows, [{ actor: CAT, action: 'booking_link' }])
   })
 
   it('le jeton n’est jamais en clair, ni en base ni dans les requêtes envoyées', async () => {

@@ -4,12 +4,20 @@ import { parseSetCookieHeader, toCookieOptions } from 'better-auth/cookies'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { effacementDuCoffre, exportDuCoffre, gelDuCoffre, scelleDuCoffre } from '@/lib/auth/acces'
+import { bookingPath } from '@/i18n/pathnames'
+import {
+  effacementDuCoffre,
+  exportDuCoffre,
+  gelDuCoffre,
+  lienDeReservationDuCoffre,
+  scelleDuCoffre,
+} from '@/lib/auth/acces'
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
 import { estSvgQrValide, qrCodeSvg } from '@/lib/auth/qr-code'
 import { getAuth, lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import { siteUrl } from '@/lib/site'
 import { isRequestId } from '@/lib/vault/repository'
 
 // Formulaires du coffre (story 3.2, parties C et D), utilisables sans JavaScript (POST natif vers la
@@ -250,5 +258,30 @@ export async function journaliserExport(id: unknown): Promise<{ ok: boolean }> {
     return { ok: await exportDuCoffre(getCoffrePool(), acces, id) }
   } catch {
     return { ok: false }
+  }
+}
+
+// Lien de réservation d'un appel (story 3.10 ; pont en attendant l'e-mail de la story 3.9) : appelée
+// par le navigateur (« Créer un lien de réservation »), après vérification de l'accès (session ouverte
+// par le TOTP). Elle ne reçoit que la langue de la page visée, inscrit `booking_link` au journal (sans
+// valeur) et rend le lien, à afficher une fois : ni le coffre ni la base ne le gardent (empreinte
+// seule). Rien n'est journalisé ici. Le composant ne renvoie jamais l'état précédent : le lien d'un
+// premier envoi ne repart pas avec le suivant.
+export type EtatLienReservation =
+  { etat: 'vide' } | { etat: 'cree'; lien: string; expire: string } | { etat: 'erreur' }
+
+export async function creerLienReservation(donnees: FormData): Promise<EtatLienReservation> {
+  const acces = await accesAutorise()
+  const langue = champ(donnees, 'langue') === 'en' ? 'en' : 'fr'
+  try {
+    const cree = await lienDeReservationDuCoffre(getCoffrePool(), acces)
+    if (!cree) return { etat: 'erreur' }
+    return {
+      etat: 'cree',
+      lien: `${siteUrl()}${bookingPath(langue, cree.token)}`,
+      expire: cree.expiresAt.toISOString(),
+    }
+  } catch {
+    return { etat: 'erreur' }
   }
 }
