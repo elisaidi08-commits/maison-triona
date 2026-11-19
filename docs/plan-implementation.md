@@ -45,7 +45,7 @@ Les **réponses de Cat** (FAQ, déroulé, indépendance, délais, conservation) 
 | 19 | **3.3 Envoi, e-mails, confirmation, échec** | **E3-S9** | 3.2 | ⛳ | 1½ j | Domaine, fournisseur e-mail, contenu de la notification |
 | 20 | **3.4 Formulaire prérempli** | **E3-S4** | — | ⛳ | ½ j | — |
 | 21 | 3.5 Anti-abus | — | 3.3 | — | ½ j | — |
-| 22 | **3.8 à 3.13 Réservation d'appel** (D57, remplace 3.6) | **E3-S6** | — | ⛳ | 6½ j | Libellé du CTA, fournisseur SMS, heures exactes des plages |
+| 22 | **3.8 à 3.13 Réservation d'appel** (D57, remplace 3.6) | **E3-S6** | — | ⛳ | 6½ j | Libellé du CTA, heures exactes des plages (fournisseur SMS : seven, D71) |
 | 23 | **3.7 Situation urgente** *(conditionnelle)* | **E3-S7** | — | ⛳ | ½ j | D04 : sans doute close sans code `[À CONFIRMER]` |
 | 24 | **4.1 i18n FR/EN complète** | **E4-S4** | 4.1 | ⛳ | 1 j | Traduction relue |
 | 25 | 4.2 CMS | — | PRD §8 | — | 1½ j | **Après l'ouverture** (D45) ; choix du CMS |
@@ -238,8 +238,8 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 **3.11 Déplacer et annuler** — Page de gestion `/[locale]/contact/appel/gerer/[token]` ; déplacement et annulation par la personne et par Cat depuis le coffre ; invitations mises à jour (`SEQUENCE`) ou retirées (`METHOD:CANCEL`).
 **CA** : l'ancien créneau n'est libéré qu'une fois le nouveau pris ; aucune invitation en double dans Google Agenda, Apple Calendrier, Outlook ; message courtois avec lien quand Cat annule.
 
-**3.12 Rappels et SMS** — Adaptateur `lib/sms` et fournisseur SMS `[À TRANCHER]` après vérification (contrat, UE, expéditeur par pays, prix) ; messages programmés (`send_at`) : e-mail la veille, SMS deux heures avant ; coordonnées chiffrées avec la clé serveur (Scaleway Key Manager) puis effacées.
-**CA** : rappels envoyés à l'heure (± 5 min) ; `contact_kms` effacé après le dernier message ; SMS ≤ 160 caractères GSM-7, sans service nommé ; un SMS en échec n'empêche pas l'e-mail ; contrat de traitement du fournisseur SMS signé avant l'ouverture.
+**3.12 Rappels et SMS** — Adaptateur `lib/sms` et fournisseur **seven** (D71, `docs/sms-fournisseur.md` : expéditeur « Triona », numéro court en Belgique, SMS sans lien) ; messages programmés (`send_at`) : e-mail la veille, SMS deux heures avant ; coordonnées chiffrées avec la clé serveur (Scaleway Key Manager) puis effacées.
+**CA** : rappels envoyés à l'heure (± 5 min) ; `contact_kms` effacé après le dernier message ; SMS de 145 caractères GSM-7 au plus, sans service nommé ni lien, vérifiés au pire cas par un test unitaire ; un SMS en échec n'empêche pas l'e-mail ; contrat de traitement du fournisseur SMS signé avant l'ouverture.
 
 **3.13 Agenda de Cat** — `/coffre/appels` : vues « Aujourd'hui » et « Cette semaine », lien `tel:`, statuts (« à qualifier », fait, pas de réponse, annulé), rattachement à une demande ; options : SMS à Cat, récapitulatif du matin.
 **CA** : chaque lecture et action au journal d'accès ; notifications sans nom (D06) ; revue `security-privacy-reviewer`.
