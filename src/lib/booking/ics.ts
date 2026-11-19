@@ -1,0 +1,104 @@
+/**
+ * Invitations d'agenda (story 3.10 ; docs/reservation-appel.md §4.5) : sous-ensemble de RFC 5545,
+ * écrit à la main, sans dépendance. Ici, le fichier « Ajouter à mon agenda » de la personne, produit
+ * sur le serveur après la réservation : `METHOD:PUBLISH` (un fichier importé, pas une invitation
+ * envoyée), heures en UTC (lues par tous les agendas, sans bloc VTIMEZONE), `UID` stable par
+ * réservation et par destinataire (`<id>-guest@`, `<id>-host@` pour Cat), `SEQUENCE` pour les
+ * déplacements (story 3.11). Contenu neutre : un titre et une phrase fixes, tirés de messages/*.json ;
+ * ni nom de service, ni nom, ni numéro, ni lien (le lien porte un jeton).
+ * Les invitations envoyées par e-mail (`METHOD:REQUEST`, `CANCEL`, VTIMEZONE Europe/Brussels) viendront
+ * avec l'envoi (stories 3.3 et 3.11).
+ * Imports relatifs seulement : testé par node --test.
+ */
+
+/** Domaine des UID (D65). */
+export const ICS_DOMAIN = 'maisontriona.com'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const LIGNE_MAX = 75
+
+export interface IcsEvent {
+  uid: string
+  start: Date
+  end: Date
+  /** Date de production du fichier (DTSTAMP). */
+  stamp: Date
+  summary: string
+  description: string
+  sequence?: number
+}
+
+/** UID stable : une réservation, un destinataire. */
+export function bookingUid(bookingId: string, recipient: 'guest' | 'host'): string {
+  if (!UUID.test(bookingId)) throw new RangeError('Identifiant de réservation invalide')
+  return `${bookingId.toLowerCase()}-${recipient}@${ICS_DOMAIN}`
+}
+
+function horodatage(date: Date): string {
+  if (Number.isNaN(date.getTime())) throw new RangeError('Date invalide')
+  return date
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/[-:]/g, '')
+}
+
+// TEXT (RFC 5545 §3.3.11) : antislash, point-virgule, virgule échappés ; retours à la ligne en « \n ».
+function texte(valeur: string): string {
+  return valeur
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r\n|\r|\n/g, '\\n')
+}
+
+// Repliement (§3.1) : 75 octets au plus par ligne, suite précédée d'une espace ; jamais au milieu
+// d'un caractère UTF-8.
+function replier(ligne: string): string {
+  const morceaux: string[] = []
+  let courant = ''
+  let octets = 0
+  for (const caractere of ligne) {
+    const taille = Buffer.byteLength(caractere, 'utf8')
+    const max = morceaux.length === 0 ? LIGNE_MAX : LIGNE_MAX - 1
+    if (octets + taille > max) {
+      morceaux.push(courant)
+      courant = ''
+      octets = 0
+    }
+    courant += caractere
+    octets += taille
+  }
+  morceaux.push(courant)
+  return morceaux.join('\r\n ')
+}
+
+/** Le fichier .ics d'un appel, lignes terminées par CRLF. */
+export function buildIcs(event: IcsEvent): string {
+  const debut = horodatage(event.start)
+  const fin = horodatage(event.end)
+  if (event.end.getTime() <= event.start.getTime()) {
+    throw new RangeError('La fin d’un appel suit son début')
+  }
+  const sequence = event.sequence ?? 0
+  if (!Number.isInteger(sequence) || sequence < 0) throw new RangeError('Séquence invalide')
+  const lignes = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Maison Triona//Appel//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${event.uid}`,
+    `DTSTAMP:${horodatage(event.stamp)}`,
+    `DTSTART:${debut}`,
+    `DTEND:${fin}`,
+    `SEQUENCE:${sequence}`,
+    'STATUS:CONFIRMED',
+    'TRANSP:OPAQUE',
+    `SUMMARY:${texte(event.summary)}`,
+    `DESCRIPTION:${texte(event.description)}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+  return `${lignes.map(replier).join('\r\n')}\r\n`
+}

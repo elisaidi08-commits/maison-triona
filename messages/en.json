@@ -970,5 +970,91 @@
     "title": "Thank you, your request has arrived safely.",
     "body": "We reply within 48 working hours, Monday to Friday.",
     "back": "Back to the home page"
+  },
+  "Booking": {
+    "metaTitle": "Arrange a call",
+    "title": "Let us arrange a call.",
+    "intro": "Choose the time that suits you: we will call you at that time. Times are Brussels and Paris time.",
+    "slots": {
+      "legend": "Which time suits you?",
+      "next": "The next available times",
+      "nearby": "The closest available times",
+      "week": "Week of {date}",
+      "none": "No time is available in the coming weeks. Write to us: we reply within 48 working hours, Monday to Friday.",
+      "write": "Write to us"
+    },
+    "form": {
+      "fields": {
+        "nom": {
+          "label": "Your name"
+        },
+        "telephone": {
+          "label": "Your number",
+          "hint": "With the country code, for example +32 for Belgium."
+        },
+        "voicemail": "We never leave a voicemail.",
+        "langue": {
+          "legend": "In which language?",
+          "options": {
+            "fr": "Français",
+            "en": "English"
+          }
+        },
+        "sms": {
+          "label": "Also let me know by text message",
+          "hint": "A confirmation, then a reminder two hours before the call."
+        },
+        "consentement": {
+          "label": "I agree that Maison Triona may use this information to arrange this call, as described in the privacy policy.",
+          "link": "Read the privacy policy (opens in a new tab)"
+        }
+      },
+      "buttons": {
+        "send": "Arrange this call",
+        "sending": "Sending"
+      },
+      "errors": {
+        "prefix": "Error:",
+        "one": "One thing to check",
+        "many": "{count} things to check",
+        "codes": {
+          "creneau": "Please choose a time.",
+          "nomRequis": "Please enter your name.",
+          "nomCourt": "Your name must be at least 2 characters long.",
+          "nomLong": "Your name must be 120 characters or fewer.",
+          "telephoneRequis": "Please enter your number.",
+          "telephoneFormat": "Please enter a valid phone number, with the country code if needed.",
+          "langue": "Please choose the language of the call.",
+          "origine": "Please choose one of the answers offered.",
+          "consentement": "Please tick the box so that we can arrange this call."
+        }
+      },
+      "status": {
+        "taken": "This time has just been taken. The closest times are listed first; what you entered is still in the form.",
+        "failed": "Your booking could not be sent. What you entered is still in the form."
+      }
+    },
+    "invalid": {
+      "title": "This link is no longer valid.",
+      "body": "To arrange a call, write to us: we reply within 48 working hours, Monday to Friday.",
+      "write": "Write to us"
+    },
+    "unavailable": {
+      "title": "Booking is temporarily unavailable.",
+      "body": "Please try again in a few minutes, or write to us: we reply within 48 working hours."
+    },
+    "confirmation": {
+      "metaTitle": "Call arranged",
+      "title": "Your call is arranged.",
+      "when": "{jour}, at {heure}, Brussels and Paris time.",
+      "body": "We will call you on the number you gave. We never leave a voicemail.",
+      "calendar": "Add to my calendar",
+      "calendarHint": "A file to open with your calendar (.ics).",
+      "back": "Back to the home page"
+    },
+    "ics": {
+      "summary": "Call · Maison Triona",
+      "description": "Maison Triona will call you on the number you gave."
+    }
   }
 }

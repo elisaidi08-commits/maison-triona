@@ -976,5 +976,91 @@
     "title": "Merci, votre demande est bien arrivée.",
     "body": "Nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
     "back": "Revenir à l’accueil"
+  },
+  "Booking": {
+    "metaTitle": "Convenir d’un appel",
+    "title": "Convenons d’un appel.",
+    "intro": "Choisissez le moment qui vous convient : nous vous appelons à l’heure dite. Les heures sont celles de Bruxelles et de Paris.",
+    "slots": {
+      "legend": "Quel moment vous convient ?",
+      "next": "Les prochains moments libres",
+      "nearby": "Les moments les plus proches",
+      "week": "Semaine du {date}",
+      "none": "Aucun moment n’est libre dans les semaines à venir. Écrivez-nous : nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
+      "write": "Nous écrire"
+    },
+    "form": {
+      "fields": {
+        "nom": {
+          "label": "Votre nom"
+        },
+        "telephone": {
+          "label": "Votre numéro",
+          "hint": "Avec l’indicatif du pays, par exemple +32 pour la Belgique."
+        },
+        "voicemail": "Nous ne laissons jamais de message vocal.",
+        "langue": {
+          "legend": "En quelle langue ?",
+          "options": {
+            "fr": "Français",
+            "en": "English"
+          }
+        },
+        "sms": {
+          "label": "Me prévenir aussi par SMS",
+          "hint": "Une confirmation, puis un rappel deux heures avant l’appel."
+        },
+        "consentement": {
+          "label": "J’accepte que Maison Triona utilise ces informations pour convenir de cet appel, comme décrit dans la politique de confidentialité.",
+          "link": "Lire la politique de confidentialité (nouvel onglet)"
+        }
+      },
+      "buttons": {
+        "send": "Convenir de cet appel",
+        "sending": "Envoi en cours"
+      },
+      "errors": {
+        "prefix": "Erreur :",
+        "one": "Un point à revoir",
+        "many": "{count} points à revoir",
+        "codes": {
+          "creneau": "Merci de choisir un moment.",
+          "nomRequis": "Merci d’indiquer votre nom.",
+          "nomCourt": "Votre nom doit compter au moins 2 caractères.",
+          "nomLong": "Votre nom doit compter 120 caractères au plus.",
+          "telephoneRequis": "Merci d’indiquer votre numéro.",
+          "telephoneFormat": "Merci d’indiquer un numéro de téléphone valide, avec l’indicatif du pays si besoin.",
+          "langue": "Merci de choisir la langue de l’appel.",
+          "origine": "Merci de choisir l’une des réponses proposées.",
+          "consentement": "Merci de cocher la case pour que nous puissions convenir de cet appel."
+        }
+      },
+      "status": {
+        "taken": "Ce créneau vient d’être pris. Les moments les plus proches sont en tête ; votre saisie est restée dans le formulaire.",
+        "failed": "L’envoi n’a pas abouti. Votre saisie est restée dans le formulaire."
+      }
+    },
+    "invalid": {
+      "title": "Ce lien n’est plus valable.",
+      "body": "Pour convenir d’un appel, écrivez-nous : nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
+      "write": "Nous écrire"
+    },
+    "unavailable": {
+      "title": "La réservation est momentanément indisponible.",
+      "body": "Réessayez dans quelques minutes, ou écrivez-nous : nous vous répondons sous 48 heures ouvrées."
+    },
+    "confirmation": {
+      "metaTitle": "Appel convenu",
+      "title": "Votre appel est convenu.",
+      "when": "{jour}, à {heure}, heure de Bruxelles et de Paris.",
+      "body": "Nous vous appelons au numéro indiqué. Nous ne laissons jamais de message vocal.",
+      "calendar": "Ajouter à mon agenda",
+      "calendarHint": "Un fichier à ouvrir avec votre agenda (.ics).",
+      "back": "Revenir à l’accueil"
+    },
+    "ics": {
+      "summary": "Appel · Maison Triona",
+      "description": "Maison Triona vous appelle au numéro indiqué."
+    }
   }
 }
