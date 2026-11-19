@@ -1054,5 +1054,9 @@
       "summary": "Appel · Maison Triona",
       "description": "Maison Triona vous appelle au numéro indiqué."
     }
+  },
+  "Sms": {
+    "confirmation": "Maison Triona : votre appel est confirmé le {date} à {time}. Pour le déplacer ou l'annuler, voyez notre e-mail.",
+    "reminder": "Maison Triona : rappel, nous vous appelons aujourd'hui à {time}."
   }
 }
