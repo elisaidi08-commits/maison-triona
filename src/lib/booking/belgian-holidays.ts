@@ -33,7 +33,7 @@ export function easterSunday(year: number): string {
 export function belgianHolidays(year: number): Holiday[] {
   const easter = easterSunday(year)
   const holidays: Holiday[] = [
-    { date: `${year}-01-01`, name: "Jour de l'An" },
+    { date: `${year}-01-01`, name: 'Jour de l’An' },
     { date: addDays(easter, 1), name: 'Lundi de Pâques' },
     { date: `${year}-05-01`, name: 'Fête du Travail' },
     { date: addDays(easter, 39), name: 'Ascension' },

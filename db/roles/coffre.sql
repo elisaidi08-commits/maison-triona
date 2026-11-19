@@ -1,6 +1,6 @@
 -- Rôle de l'espace /coffre (story 3.2 C et D, docs/coffre-cles.md §3) : comptes et sessions de Better
 -- Auth, lecture des demandes, gel et effacement des demandes (partie D), journal d'accès en écriture et
--- en lecture, rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
+-- en lecture, disponibilités de Cat (story 3.8 B), rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
 -- `frozen` (ni le contenu scellé, ni l'échéance, ni le statut), ni modification ni effacement du
 -- journal, ni table de migrations, ni création d'objet. La tâche planifiée de conservation
 -- (/api/cron/retention) passe par ce même rôle.
@@ -36,3 +36,14 @@ grant update (frozen) on vault_requests to coffre;
 
 -- Journal d'accès : écrire et relire, jamais modifier ni effacer.
 grant select, insert on vault_access_log to coffre;
+
+-- Disponibilités (story 3.8 B, db/migrations/0007_disponibilites.sql) : réglages, une seule ligne,
+-- modifiables colonne par colonne (ni le fuseau, ni la ligne elle-même : ni insertion ni effacement) ;
+-- semaine type, ajout et retrait de plages (une plage ne se modifie pas : on la retire, on en ajoute
+-- une) ; absences, ajout et retrait, et pour un jour férié seulement `active` (décocher, recocher).
+grant select on booking_settings to coffre;
+grant update (duration_minutes, buffer_minutes, min_notice_minutes, horizon_days, daily_cap, updated_at)
+  on booking_settings to coffre;
+grant select, insert, delete on availability_rules to coffre;
+grant select, insert, delete on availability_exceptions to coffre;
+grant update (active) on availability_exceptions to coffre;
