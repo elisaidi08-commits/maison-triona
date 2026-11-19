@@ -330,6 +330,14 @@ describe('boîte d’envoi : premier essai (sendNow)', () => {
     assert.equal(written?.status, 'pending')
     assert.deepEqual(written?.lease_until, at(2 * MINUTE))
   })
+
+  it('un journal en panne après l’envoi n’est pas pris pour une erreur de la base', async () => {
+    const id = await insertNotification()
+    const h = harness({ failingLog: ['sent'] })
+    await assert.doesNotReject(sendNow(h.deps, id))
+    assert.deepEqual(h.logs, [['sent', id]])
+    assert.equal((await row(id))?.status, 'accepted')
+  })
 })
 
 describe('boîte d’envoi : envoi d’un message (sendItem)', () => {
@@ -578,6 +586,42 @@ describe('boîte d’envoi : passe de la tâche planifiée (runOutbox)', () => {
       ['sent', second],
       ['failed:db', tracked.id],
     ])
+  })
+
+  it('un journal en panne ne change aucune issue et ne compte aucune erreur', async () => {
+    const accepted = await insertNotification({ nextAt: at(-3 * MINUTE) })
+    const retried = await insertNotification({ nextAt: at(-2 * MINUTE) })
+    const refused = await insertNotification({ nextAt: at(-MINUTE) })
+    const delivered = await insertAccepted({ acceptedAt: at(-2 * HOUR) })
+    const bounced = await insertAccepted({ acceptedAt: at(-HOUR) })
+    const h = harness({
+      sends: [{ ok: true, providerId: 'tem-journal' }, UNAVAILABLE, REFUSED],
+      statuses: {
+        [delivered.providerId]: { ok: true, state: 'delivered', flags: [] },
+        [bounced.providerId]: { ok: true, state: 'undelivered', flags: ['hard_bounce'] },
+      },
+      failingLog: LOG_STATUSES as OutboxLogStatus[],
+    })
+    // Trois envois au plus : l'alerte de l'échec reste pour la passe suivante.
+    const summary = await runOutbox(h.deps, { maxSends: 3 })
+    assert.equal(summary.sent, 1)
+    assert.equal(summary.retried, 1)
+    assert.equal(summary.failed, 1)
+    assert.equal(summary.delivered, 1)
+    assert.equal(summary.undelivered, 1)
+    assert.equal(summary.errors, 0)
+    assert.deepEqual(h.logs, [
+      ['sent', accepted],
+      ['retry', retried],
+      ['failed:provider', refused],
+      ['delivered', delivered.id],
+      ['undelivered', bounced.id],
+    ])
+    assert.equal((await row(accepted))?.status, 'accepted')
+    assert.equal((await row(retried))?.last_error, 'http_503')
+    assert.equal((await row(refused))?.status, 'failed')
+    assert.equal((await row(delivered.id))?.status, 'delivered')
+    assert.equal((await row(bounced.id))?.status, 'undelivered')
   })
 
   it('base injoignable : la passe échoue (la route répondra 500)', async () => {

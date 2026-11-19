@@ -70,6 +70,8 @@ async function call(
   try {
     response = await fetchImpl(url, {
       ...init,
+      // Jamais de cache, pour l'envoi comme pour la lecture de l'état : chaque appel part vraiment.
+      cache: 'no-store',
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),
     })

@@ -44,6 +44,42 @@ describe('boîte d’envoi : rôles', () => {
     }
   })
 
+  it('site_public n’écrit que les colonnes d’une notification', async () => {
+    const client = await pool.connect()
+    try {
+      await client.query('SET ROLE site_public')
+      // L'insertion de `enqueueNotification`, colonne pour colonne, passe toujours.
+      await client.query(
+        `INSERT INTO outbox (id, template, request_id, priority)
+         VALUES ($1, 'request_notification', $2, true)`,
+        [randomUUID(), randomUUID()],
+      )
+      // Tout le reste est réservé à l'envoi : un état, un identifiant du prestataire, une alerte.
+      for (const [colonne, valeur] of [
+        ['status', 'accepted'],
+        ['provider_id', 'tem-forge'],
+        ['alert_event', 'send_failed'],
+        ['alert_subject', randomUUID()],
+        ['attempts', '10'],
+        ['next_attempt_at', '2000-01-01T00:00:00Z'],
+        ['created_at', '2000-01-01T00:00:00Z'],
+      ]) {
+        await assert.rejects(
+          client.query(
+            `INSERT INTO outbox (id, template, request_id, ${colonne})
+             VALUES ($1, 'request_notification', $2, $3)`,
+            [randomUUID(), randomUUID(), valeur],
+          ),
+          REFUS,
+          colonne,
+        )
+      }
+    } finally {
+      await client.query('RESET ROLE')
+      client.release()
+    }
+  })
+
   it('envoi gère la boîte d’envoi, sans accès aux demandes ni à l’authentification', async () => {
     await pool.query(
       "INSERT INTO outbox (id, template, request_id) VALUES ($1, 'request_notification', $2)",

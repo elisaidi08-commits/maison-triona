@@ -92,8 +92,9 @@ function alertIdFor(deps: OutboxDeps, template: OutboxTemplate): string | null {
   return template === 'technical_alert' ? null : deps.newId()
 }
 
-// Journalise sans jamais lever : dans un bloc d'erreur, un journal en panne ne doit pas arrêter
-// la passe ni faire lever le premier essai.
+// Journalise sans jamais lever, pour tous les statuts : un journal en panne ne doit ni changer
+// l'issue d'un message (un envoi accepté compté comme une erreur de la base), ni arrêter la passe,
+// ni faire lever le premier essai.
 function logSafely(deps: OutboxDeps, status: OutboxLogStatus, id: string): void {
   try {
     deps.log(status, id)
@@ -168,7 +169,7 @@ export async function sendItem(
   // Envois interrompus à répétition (bail échu sans marquage) : on renonce sans renvoyer.
   if (item.attempts > MAX_ATTEMPTS) {
     await markFailed(pool, item.id, 'exhausted', alertIdFor(deps, item.template))
-    deps.log(isAlert ? 'failed:alert' : 'failed:exhausted', item.id)
+    logSafely(deps, isAlert ? 'failed:alert' : 'failed:exhausted', item.id)
     return 'failed'
   }
 
@@ -177,7 +178,7 @@ export async function sendItem(
     rendered = render(item, config)
   } catch {
     await markFailed(pool, item.id, 'render', alertIdFor(deps, item.template))
-    deps.log(failedStatus(item), item.id)
+    logSafely(deps, failedStatus(item), item.id)
     return 'failed'
   }
 
@@ -189,18 +190,18 @@ export async function sendItem(
   })
   if (result.ok) {
     await markAccepted(pool, item.id, result.providerId, deps.now())
-    deps.log('sent', item.id)
+    logSafely(deps, 'sent', item.id)
     return 'accepted'
   }
 
   const next = result.retryable ? nextAttemptAt(item.attempts, deps.now()) : null
   if (next !== null) {
     await markRetry(pool, item.id, result.code, next)
-    deps.log('retry', item.id)
+    logSafely(deps, 'retry', item.id)
     return 'retry'
   }
   await markFailed(pool, item.id, result.code, alertIdFor(deps, item.template))
-  deps.log(failedStatus(item), item.id)
+  logSafely(deps, failedStatus(item), item.id)
   return 'failed'
 }
 
@@ -231,12 +232,12 @@ async function track(
     if (status.state === 'undelivered' || flags.some((flag) => UNDELIVERED_FLAGS.includes(flag))) {
       const alertId = alertIdFor(deps, item.template)
       await recordDelivery(pool, item.id, 'undelivered', flags, alertId, 'undelivered')
-      deps.log('undelivered', item.id)
+      logSafely(deps, 'undelivered', item.id)
       return 'undelivered'
     }
     if (status.state === 'delivered') {
       await recordDelivery(pool, item.id, 'delivered', flags, null, null)
-      deps.log('delivered', item.id)
+      logSafely(deps, 'delivered', item.id)
       return 'delivered'
     }
   }
@@ -244,7 +245,7 @@ async function track(
   if (trackingExpired(item.acceptedAt, deps.now())) {
     const alertId = alertIdFor(deps, item.template)
     await recordDelivery(pool, item.id, 'undelivered', [], alertId, 'tracking_expired')
-    deps.log('undelivered', item.id)
+    logSafely(deps, 'undelivered', item.id)
     return 'undelivered'
   }
   return 'pending'

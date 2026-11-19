@@ -47,6 +47,8 @@ describe('TEM send', () => {
     assert.equal(headers['X-Auth-Token'], SECRET)
     assert.equal(headers['Content-Type'], 'application/json')
     assert.ok(calls[0]?.init.signal)
+    // Jamais de cache : chaque envoi part, chaque état est relu (Next.js peut mettre fetch en cache).
+    assert.equal(calls[0]?.init.cache, 'no-store')
     assert.deepEqual(JSON.parse(calls[0]?.init.body as string), {
       from: { email: 'no-reply@maisontriona.com', name: 'Maison Triona' },
       to: [{ email: 'cat@example.com' }],
@@ -146,6 +148,7 @@ describe('TEM status', () => {
     assert.equal(calls[0]?.url, `${ENDPOINT}/abc-123`)
     assert.equal(calls[0]?.init.method ?? 'GET', 'GET')
     assert.equal((calls[0]?.init.headers as Record<string, string>)['X-Auth-Token'], SECRET)
+    assert.equal(calls[0]?.init.cache, 'no-store')
   })
 
   it("encode l'identifiant dans l'URL", async () => {

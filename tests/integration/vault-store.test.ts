@@ -456,7 +456,8 @@ describe('enregistrement chiffré dans le coffre', () => {
     try {
       resultat = await enregistrer(DEMANDE, {}, sitePublic)
     } finally {
-      await pool.query('GRANT INSERT ON outbox TO site_public')
+      // Les droits d'origine, colonne pour colonne (db/roles/site_public.sql).
+      await pool.query('GRANT INSERT (id, template, request_id, priority) ON outbox TO site_public')
     }
     const [demande] = await listRequests(pool)
     assert.ok(demande)
