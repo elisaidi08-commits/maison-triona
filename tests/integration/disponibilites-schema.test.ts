@@ -14,7 +14,7 @@ import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } fr
 
 // Tables des disponibilités (story 3.8 B, db/migrations/0007_disponibilites.sql) : valeurs par défaut
 // de la spec §3.1 à l'installation, jours fériés belges préremplis, contraintes de la base, droits
-// des deux rôles (`coffre` : le strict nécessaire ; `site_public` : rien).
+// des deux rôles (`coffre` : le strict nécessaire ; `site_public` : lecture seule depuis la story 3.10).
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const TABLES = ['booking_settings', 'availability_rules', 'availability_exceptions']
@@ -163,11 +163,11 @@ describe('tables des disponibilités', () => {
     await admin.query("DELETE FROM availability_exceptions WHERE kind = 'blocked'")
   })
 
-  it('site_public ne lit, n’écrit ni n’efface aucune table des disponibilités', async () => {
+  it('site_public lit les disponibilités (story 3.10), sans rien écrire ni effacer', async () => {
     for (const table of TABLES) {
+      // Lecture : la page publique de réservation calcule les créneaux (story 3.10).
+      await site.query(`SELECT * FROM ${table}`)
       for (const sql of [
-        `SELECT * FROM ${table}`,
-        `SELECT count(*) FROM ${table}`,
         `UPDATE ${table} SET id = id`,
         `DELETE FROM ${table}`,
         `TRUNCATE ${table}`,
