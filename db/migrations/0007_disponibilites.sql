@@ -70,7 +70,13 @@ create table availability_exceptions (
   kind text not null check (kind in ('leave', 'holiday', 'blocked')),
   start_date date not null,
   end_date date not null,
-  label text check (length(label) between 1 and 40),
+  -- Liste fermée (relecture sécurité) : seuls les noms de src/lib/booking/belgian-holidays.ts.
+  label text check (
+    label in (
+      'Jour de l’An', 'Lundi de Pâques', 'Fête du Travail', 'Ascension', 'Lundi de Pentecôte',
+      'Fête nationale', 'Assomption', 'Toussaint', 'Armistice', 'Noël'
+    )
+  ),
   active boolean not null default true,
   created_at timestamptz not null default now(),
   constraint availability_exceptions_order_check check (start_date <= end_date),
