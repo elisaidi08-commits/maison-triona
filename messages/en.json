@@ -1049,7 +1049,7 @@
     }
   },
   "Sms": {
-    "confirmation": "Maison Triona: your call is confirmed for {date} at {time}. To move or cancel it, see our email.",
-    "reminder": "Maison Triona: reminder, we will call you today at {time}."
+    "confirmation": "Maison Triona: your call is arranged for {date} at {time}. To rearrange or cancel, please use the link in our email.",
+    "reminder": "Maison Triona: as arranged, we will call you today at {time}. To rearrange or cancel, please use the link in our email."
   }
 }

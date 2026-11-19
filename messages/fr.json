@@ -1056,7 +1056,7 @@
     }
   },
   "Sms": {
-    "confirmation": "Maison Triona : votre appel est confirmé le {date} à {time}. Pour le déplacer ou l'annuler, voyez notre e-mail.",
-    "reminder": "Maison Triona : rappel, nous vous appelons aujourd'hui à {time}."
+    "confirmation": "Maison Triona : votre appel est convenu pour le {date} à {time}. Pour le déplacer ou l'annuler, suivez le lien de notre e-mail.",
+    "reminder": "Maison Triona : comme convenu, nous vous appelons aujourd'hui à {time}. Pour déplacer ou annuler l'appel, suivez le lien de notre e-mail."
   }
 }

@@ -25,7 +25,7 @@ describe('renderBookingSms : rendu', () => {
         locale: 'fr',
         startsAt: WEDNESDAY_1630,
       }),
-      "Maison Triona : votre appel est confirmé le mercredi 25/11 à 16 h 30. Pour le déplacer ou l'annuler, voyez notre e-mail.",
+      "Maison Triona : votre appel est convenu pour le mercredi 25/11 à 16 h 30. Pour le déplacer ou l'annuler, suivez le lien de notre e-mail.",
     )
   })
 
@@ -36,7 +36,7 @@ describe('renderBookingSms : rendu', () => {
         locale: 'en',
         startsAt: WEDNESDAY_1630,
       }),
-      'Maison Triona: your call is confirmed for Wednesday 25/11 at 16:30. To move or cancel it, see our email.',
+      'Maison Triona: your call is arranged for Wednesday 25/11 at 16:30. To rearrange or cancel, please use the link in our email.',
     )
   })
 
@@ -47,7 +47,7 @@ describe('renderBookingSms : rendu', () => {
         locale: 'fr',
         startsAt: WEDNESDAY_1630,
       }),
-      "Maison Triona : rappel, nous vous appelons aujourd'hui à 16 h 30.",
+      "Maison Triona : comme convenu, nous vous appelons aujourd'hui à 16 h 30. Pour déplacer ou annuler l'appel, suivez le lien de notre e-mail.",
     )
     assert.equal(
       renderBookingSms({
@@ -55,7 +55,7 @@ describe('renderBookingSms : rendu', () => {
         locale: 'en',
         startsAt: WEDNESDAY_1630,
       }),
-      'Maison Triona: reminder, we will call you today at 16:30.',
+      'Maison Triona: as arranged, we will call you today at 16:30. To rearrange or cancel, please use the link in our email.',
     )
   })
 

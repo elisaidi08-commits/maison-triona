@@ -146,15 +146,15 @@ Un seul caractère hors GSM-7 fait passer **tout le message** en Unicode, et la 
 
 **Garder 145 caractères au plus**, au cas où un fournisseur ajouterait « STOP » en France. Le test unitaire de la 3.12 vérifie chaque gabarit dans le pire cas : « mercredi » ou « Wednesday », et une heure à deux chiffres.
 
-**Exemples** à relire par `i18n-copy-editor` et à valider par Cat ; les longueurs sont calculées sur la table GSM 03.38 (3GPP TS 23.038) :
+**Textes** relus par `i18n-copy-editor` le 19/11/2026, en brouillon jusqu'à la validation de Cat. Ils vivent dans `messages/*.json` (`Sms.*`), qui font foi. Les longueurs sont calculées au pire cas par `src/lib/sms` (table GSM 03.38, 3GPP TS 23.038) :
 
 | Message | Texte | Longueur |
 |---|---|---|
-| Confirmation FR | Maison Triona : votre appel est confirmé le mercredi 24/11 à 16 h 30. Pour le déplacer ou l'annuler, voyez notre e-mail. | 120 |
-| Rappel FR | Maison Triona : rappel, nous vous appelons aujourd'hui à 16 h 30. | 65 |
-| Confirmation EN | Maison Triona: your call is confirmed for Wednesday 24/11 at 16:30. To move or cancel it, see our email. | 104 |
-| Rappel EN | Maison Triona: reminder, we will call you today at 16:30. | 57 |
-| À Cat (3.13) | Nouvel appel mercredi 24/11 à 16 h 30. | 38 |
+| Confirmation FR | Maison Triona : votre appel est convenu pour le mercredi 25/11 à 16 h 30. Pour le déplacer ou l'annuler, suivez le lien de notre e-mail. | 136 |
+| Rappel FR | Maison Triona : comme convenu, nous vous appelons aujourd'hui à 16 h 30. Pour déplacer ou annuler l'appel, suivez le lien de notre e-mail. | 138 |
+| Confirmation EN | Maison Triona: your call is arranged for Wednesday 25/11 at 16:30. To rearrange or cancel, please use the link in our email. | 124 |
+| Rappel EN | Maison Triona: as arranged, we will call you today at 16:30. To rearrange or cancel, please use the link in our email. | 118 |
+| À Cat (3.13) | Nouvel appel mercredi 25/11 à 16 h 30. | 38 |
 
 ### 6.4 STOP, retours, réglages
 
