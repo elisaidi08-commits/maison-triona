@@ -2,11 +2,12 @@
 -- Auth, lecture des demandes, gel et effacement des demandes (partie D), journal d'accès en écriture et
 -- en lecture, disponibilités de Cat (story 3.8 B), réservations en lecture et création d'un lien de
 -- réservation (story 3.10), effacement des réservations échues et des jetons expirés par la
--- conservation (0010), rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
--- `frozen` (ni le contenu scellé, ni l'échéance, ni le statut), ni modification ni effacement du
--- journal, ni table de migrations, ni création d'objet. La tâche planifiée de conservation
--- (/api/cron/retention) passe par ce même rôle. Depuis la story 3.3 (suites C), il lit aussi cinq
--- colonnes de la boîte d'envoi, pour l'état de l'envoi des e-mails sur l'accueil (des comptes).
+-- conservation (0010), statut et rattachement des appels par l'agenda (story 3.13), rien d'autre.
+-- Ni insertion d'une demande, ni modification d'une autre colonne que `frozen` (ni le contenu scellé,
+-- ni l'échéance, ni le statut), ni modification ni effacement du journal, ni table de migrations, ni
+-- création d'objet. La tâche planifiée de conservation (/api/cron/retention) passe par ce même rôle.
+-- Depuis la story 3.3 (suites C), il lit aussi cinq colonnes de la boîte d'envoi, pour l'état de
+-- l'envoi des e-mails sur l'accueil (des comptes).
 -- Hors des migrations automatiques : appliqué à la main, par l'administrateur de la base, APRÈS
 -- `npm run db:migrate` (les droits portent sur des tables existantes). Rejouable.
 -- Aucun mot de passe ici : le compte qui se connecte (COFFRE_DATABASE_URL) reçoit ce rôle à part.
@@ -62,7 +63,8 @@ grant update (active) on availability_exceptions to coffre;
 -- (créneaux de l'aperçu, appels gardés d'une journée bloquée ; l'agenda de la story 3.13 y lira le
 -- contenu scellé, ouvert dans le navigateur). Création d'un lien de réservation (pont en attendant
 -- l'e-mail de la story 3.9) : insertion d'un jeton, empreinte seule, sans cible. Ni lecture, ni
--- modification, ni effacement des jetons ; ni écriture des réservations (stories 3.11 et 3.13).
+-- modification, ni effacement des jetons ; ni écriture des réservations (story 3.11 ; l'agenda de la
+-- 3.13 n'écrit que deux colonnes, plus bas).
 grant select on bookings to coffre;
 grant insert (id, token_hash, purpose, created_at, expires_at) on booking_tokens to coffre;
 
@@ -72,3 +74,9 @@ grant insert (id, token_hash, purpose, created_at, expires_at) on booking_tokens
 -- l'empreinte ni les dates d'usage.
 grant delete on bookings to coffre;
 grant select (id, expires_at), delete on booking_tokens to coffre;
+
+-- Agenda des appels (story 3.13, db/migrations/0011_agenda.sql) : modification des deux seules colonnes
+-- que l'agenda écrit, le statut (« fait », « pas de réponse » : le déclencheur de 0011 refuse tout
+-- autre changement, sous tout rôle) et le rattachement à une demande (`request_id`). Ni le créneau, ni
+-- le contenu scellé, ni l'échéance, ni le lien ; ni insertion de réservation.
+grant update (status, request_id) on bookings to coffre;

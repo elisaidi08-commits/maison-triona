@@ -507,7 +507,8 @@ describe('authentification du coffre', () => {
     ])
 
     // Aucune colonne ne peut recevoir un contenu : hors acteur et action (listes fermées, adresse du
-    // compte), des dates, des identifiants et les compteurs entiers de la conservation (partie D).
+    // compte), des dates, des identifiants (demande, appel) et les compteurs entiers de la
+    // conservation (partie D).
     const { rows: colonnes } = await pool.query<{ column_name: string; data_type: string }>(
       `SELECT column_name, data_type FROM information_schema.columns
        WHERE table_name = 'vault_access_log' ORDER BY ordinal_position`,
@@ -526,6 +527,8 @@ describe('authentification du coffre', () => {
         'purged_verifications:integer',
         'purged_bookings:integer',
         'purged_tokens:integer',
+        // Agenda des appels (story 3.13, 0011) : l'identifiant de l'appel visé, rien d'autre.
+        'booking_id:uuid',
       ],
     )
     const { rows: tout } = await pool.query('SELECT * FROM vault_access_log')
