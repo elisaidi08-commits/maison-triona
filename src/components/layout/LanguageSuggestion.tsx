@@ -47,13 +47,26 @@ export function LanguageSuggestion({
   }, [current, target])
 
   // La page réserve la hauteur du bandeau : rien n'est masqué en bas, ni le focus (WCAG 2.4.11).
+  // --suggestion-langue-height sert aussi là où le défilement ne dégage rien : bouton pause des
+  // médias collants, hauteur des sommaires collants (tokens.css). Suivie si le bandeau change de
+  // hauteur (passage à deux lignes quand la fenêtre rétrécit).
   useEffect(() => {
     const root = document.documentElement
-    const height = visible ? (bar.current?.offsetHeight ?? 0) : 0
-    const reserved = height ? `calc(${height}px + var(--barre-mobile-height))` : ''
-    document.body.style.paddingBottom = reserved
-    root.style.scrollPaddingBottom = reserved
+    const element = bar.current
+    if (!visible || !element) return
+    const reserve = () => {
+      const height = element.offsetHeight
+      const reserved = `calc(${height}px + var(--barre-mobile-height))`
+      root.style.setProperty('--suggestion-langue-height', `${height}px`)
+      document.body.style.paddingBottom = reserved
+      root.style.scrollPaddingBottom = reserved
+    }
+    reserve()
+    const observer = new ResizeObserver(reserve)
+    observer.observe(element)
     return () => {
+      observer.disconnect()
+      root.style.removeProperty('--suggestion-langue-height')
       document.body.style.paddingBottom = ''
       root.style.scrollPaddingBottom = ''
     }
@@ -88,7 +101,7 @@ export function LanguageSuggestion({
       <button
         type="button"
         onClick={close}
-        className="inline-flex min-h-touch cursor-pointer items-center underline decoration-sapin-20 decoration-1 underline-offset-8"
+        className="inline-flex min-h-touch min-w-touch cursor-pointer items-center justify-center underline decoration-sapin-20 decoration-1 underline-offset-8"
       >
         {closeLabel}
       </button>
