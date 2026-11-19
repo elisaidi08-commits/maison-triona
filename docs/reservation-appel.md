@@ -1,6 +1,6 @@
 # Réservation d'appel — spec
 
-> **Statut** : conception validée par Sady le 06/11/2026 (D57), à relire avant le plan d'implémentation. Rien n'est installé.
+> **Statut** : conception validée par Sady le 06/11/2026 (D57). **Story 3.8 livrée** : moteur de calcul (partie A, #44) et disponibilités dans le coffre (partie B, 19/11/2026 : `docs/architecture.md` §6.3). Le reste (3.9 à 3.14) n'est pas installé.
 > **Dépend de** : stories 3.2 (coffre), 3.3 (envoi et boîte d'envoi), 3.5 (anti-abus). **Remplace** la story 3.6 (rappel à la demande).
 > **Priorité** : cette spec précise `docs/architecture.md` §6 et `docs/trust-contact-launch.md` §3 pour la réservation ; en cas de conflit sur un point de confidentialité, `docs/privacy.md` et les règles de discrétion de `CLAUDE.md` priment.
 
@@ -56,7 +56,7 @@ Le site garde **deux entrées** : écrire (formulaire en étapes, 3.1) ou conven
 | Horizon de réservation | 3 semaines | Validé par Sady (06/11) |
 | Plafond d'appels par jour | **4** | Validé par Sady (06/11 : « 4 appels par jour, c'est parfait ») |
 
-Toutes ces valeurs restent réglables par Cat dans le coffre.
+Toutes ces valeurs restent réglables par Cat dans le coffre, dans des bornes proposées `[À CONFIRMER par Sady]` (3.8 B, `SETTINGS_LIMITS`, doublées par la base) : durée de 15 à 120 min et pause de 0 à 60 min, par pas de 5 ; délai d'une heure à une semaine, à l'heure près ; horizon de 1 à 90 jours ; plafond de 1 à 12 appels par jour.
 | Absences | Congés (plages de dates) ; jours fériés belges préremplis, décochables ; « bloquer cette journée » en un clic | — |
 
 Jours fériés belges préremplis : 1er janvier, lundi de Pâques, 1er mai, Ascension, lundi de Pentecôte, 21 juillet, 15 août, 1er novembre, 11 novembre, 25 décembre.
@@ -212,3 +212,5 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 ## 10. Documents mis à jour (06/11/2026, après relecture de Sady)
 
 `docs/architecture.md` (§3 arborescence, §6.3 rappel remplacé, §6.6 boîte d'envoi étendue, §6.5 exception de chiffrement) · `docs/privacy.md` (§1, §7, §8) · `docs/plan-implementation.md` (epic 3) · `docs/email-deliverability.md` (§1 liste des messages) · `docs/trust-contact-launch.md` (§3.1 deux entrées) · `CLAUDE.md` (table des documents).
+
+**19/11/2026, story 3.8 B** (disponibilités dans le coffre) : `docs/architecture.md` §6.3 (tables, page, droits, journal, point d'accroche de la 3.10) et §6.5 (journal d'accès : `availability`) · `docs/coffre-cles.md` §3.2 (droits du rôle `coffre`) · `docs/plan-implementation.md` (3.8, lot E). Écarts avec cette spec : le fuseau est **figé** sur Bruxelles par la base (en changer demande une migration) ; jours fériés préremplis de **2026 à 2035** par la migration, années suivantes par un bouton de la page ; bornes des réglages proposées `[À CONFIRMER par Sady]` (§3.1, ci-dessous).

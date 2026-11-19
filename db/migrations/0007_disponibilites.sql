@@ -123,7 +123,9 @@ from paques,
 
 -- Journal d'accès : `availability`, une ligne par modification des disponibilités (réglages, semaine
 -- type, absences, jours fériés, journée bloquée), au nom du compte, sans demande visée et sans
--- aucune valeur (ni heure, ni date, ni nombre).
+-- aucune valeur (ni heure, ni date, ni nombre). Liste complète, recopiée de 0005 : une autre
+-- migration qui redéfinit cette contrainte (0006, boîte d'envoi) doit garder `availability`, et
+-- celle-ci les actions de 0006 si elle en ajoute ; à réconcilier par la seconde fusionnée.
 alter table vault_access_log drop constraint vault_access_log_action_check;
 alter table vault_access_log add constraint vault_access_log_action_check check (
   action in (
