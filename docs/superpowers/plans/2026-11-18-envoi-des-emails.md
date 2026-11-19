@@ -263,7 +263,7 @@ RETURNING id, template, request_id, priority, alert_event, alert_subject, attemp
 - [ ] **Step 1 (TDD)** : `tests/unit/email-templates.test.ts`.
   - `renderNotification({ requestId, priority, createdAt, siteUrl })` :
     - sujet `Nouvelle demande · Maison Triona`, ou `Nouvelle demande · Maison Triona · Prioritaire` ;
-    - texte : « Une demande est arrivée le mardi 18 novembre 2026 à 22 h 14. », une ligne vide, « Pour la lire, ouvrez le coffre : », puis `${siteUrl}/coffre/demandes/${requestId}`, une ligne vide, puis « Ce message ne contient rien de la demande. » ;
+    - texte : « Une demande est arrivée le mercredi 18 novembre 2026 à 22 h 14. », une ligne vide, « Pour la lire, ouvrez le coffre : », puis `${siteUrl}/coffre/demandes/${requestId}`, une ligne vide, puis « Ce message ne contient rien de la demande. » ;
     - date en `Europe/Brussels`, avec `Intl.DateTimeFormat('fr-BE')`.
   - `renderAlert({ event, subjectId, createdAt })` : sujet `Alerte technique · Maison Triona` ; texte : l'événement en clair (« Échec de l'envoi après quatre essais », « Message non délivré », « Livraison non confirmée après 72 heures »), l'identifiant, la date, puis « Aucune donnée de demande dans ce message. ».
   - **Test de fuite** : une `Demande` factice remplie de témoins (« Hortense Fuite-Simulée », son e-mail, son téléphone, « grand-age », « BE ») passe par `splitRequest`, puis la notification est rendue. Aucun témoin n'apparaît dans le sujet ni dans le texte.
@@ -293,7 +293,7 @@ export function runOutbox(deps: OutboxDeps): Promise<{ sent: number; retried: nu
   - accepté → `markAccepted` ;
   - reprise possible et `nextAttemptAt` non nul → `markRetry` ;
   - sinon → `markFailed`, avec une alerte `send_failed`, **sauf si le message est lui-même une alerte** : jamais d'alerte sur une alerte ; on journalise alors `failed:alert`.
-- `runOutbox` : `claimDue(now, 20)` puis `sendItem` un par un. Ensuite le suivi : `listAccepted(20)` puis `transport.status` :
+- `runOutbox` : `claimDue(now, 1)` puis `sendItem`, un message à la fois, 20 au plus, dans un **budget de 30 s** (la route a `maxDuration = 60` : le dernier envoi ou suivi commence avant 30 s). Ensuite le suivi : `listAccepted(20)` puis `transport.status` :
   - `delivered` → `recordDelivery` ;
   - `undelivered`, ou flag `hard_bounce`, `spam` ou `blocklisted` → `recordDelivery` avec une alerte `undelivered` (pas d'alerte pour une alerte) ;
   - toujours `pending` au-delà de 72 heures → `undelivered`, avec une alerte `tracking_expired`.
@@ -317,7 +317,7 @@ export function runOutbox(deps: OutboxDeps): Promise<{ sent: number; retried: nu
 - [ ] **Step 1 (TDD)** : `tests/integration/vault-store.test.ts`. `storeRequest(pool, demande, { …, notify: boolean })` renvoie `{ id, outbox: string[] }`.
   - Avec `notify: true`, la demande et sa notification sont écrites dans la même transaction (même `created_at`).
   - `priority` est vrai seulement si `urgence === 'urgent'`.
-  - Si l'insertion dans `outbox` échoue (contrainte forcée par le test), la demande n'est pas écrite non plus.
+  - Si l'insertion dans `outbox` échoue (contrainte forcée par le test), **la demande est gardée seule** : retour au point de sauvegarde, `notifyFailed: true`, et la Server Action journalise `[demande] failed:outbox` (corrigé le 18/11/2026 : une notification impossible ne doit jamais faire perdre une demande).
   - Avec `notify: false`, aucune ligne dans `outbox`.
   - Le test de fuite existant couvre aussi `outbox` (toutes les colonnes de toutes les tables, relues en texte et en hexadécimal).
   - Adapter `tests/unit/vault-store.test.ts` au nouveau retour.

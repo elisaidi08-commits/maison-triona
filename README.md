@@ -44,6 +44,12 @@ Les tests E2E et axe lancent eux-mêmes un build de production (port 3100), ou r
 
 Base locale (coffre) : `brew install postgresql@17`, `brew link --force postgresql@17` (formule keg-only : sans lien, `createdb` n'est pas dans le `PATH`), `brew services start postgresql@17`, `createdb maison_triona_dev`, `createdb maison_triona_test`.
 
+## Envoi des e-mails (story 3.3)
+
+- **Coupé** tant que `TEM_SECRET_KEY`, `TEM_PROJECT_ID`, `EMAIL_FROM`, `EMAIL_NOTIFY_TO` et `EMAIL_ALERT_TO` sont vides (poste local, CI) : les demandes s'enregistrent dans le coffre, sans notification. Variables décrites dans `.env.example` ; il faut aussi `ENVOI_DATABASE_URL` (compte de l'envoi) et `CRON_SECRET`.
+- Le premier essai part juste après la demande. La tâche planifiée Vercel Cron `/api/cron/envoi` (`vercel.json`, toutes les 5 minutes, **production seulement**) reprend les échecs, suit la livraison et purge la boîte d'envoi ; Vercel l'appelle avec `Authorization: Bearer <CRON_SECRET>`. En local, elle ne tourne pas d'elle-même : `curl -H "Authorization: Bearer <CRON_SECRET>" http://localhost:3000/api/cron/envoi`.
+- **Rôles de la base**, après `npm run db:migrate`, avec l'URL administrateur : `psql "<URL administrateur>" -f db/roles/site_public.sql -f db/roles/coffre.sql -f db/roles/envoi.sql`. `site_public.sql` est à **rejouer** après la migration `0006` : sans lui, chaque demande est gardée sans notification (`[demande] failed:outbox`). Procédure complète : `docs/coffre-cles.md` §3.
+
 ## Règles à connaître avant de coder
 
 - Une story par branche, commits en français à l'impératif.
