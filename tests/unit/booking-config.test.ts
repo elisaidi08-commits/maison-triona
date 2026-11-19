@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
 import {
+  bookingWindow,
   callsDuring,
   toAvailabilityState,
   toSlotConfig,
@@ -188,5 +189,35 @@ describe('appels pendant une absence (journée bloquée qui a déjà des appels)
       callsDuring([], { startDate: '2027-02-01', endDate: '2027-02-01' }, 'Europe/Brussels'),
       [],
     )
+  })
+})
+
+describe('période des appels à lire (story 3.10)', () => {
+  test('du début du jour local au lendemain du dernier jour de l’horizon, heure d’été comprise', () => {
+    const periode = bookingWindow(
+      { timeZone: 'Europe/Brussels', horizonDays: 21 },
+      new Date('2027-03-15T23:30:00Z'),
+    )
+    // 16 mars à 0 h 30 à Bruxelles : le jour local est le 16.
+    assert.equal(periode.from.toISOString(), '2027-03-15T23:00:00.000Z')
+    // 16 + 22 jours = 7 avril, à minuit, heure d'été (UTC+2).
+    assert.equal(periode.to.toISOString(), '2027-04-06T22:00:00.000Z')
+    assert.throws(() => bookingWindow(DEFAULT_BOOKING_SETTINGS, new Date(Number.NaN)), RangeError)
+  })
+
+  test('un appel déjà passé aujourd’hui compte dans le plafond du jour', () => {
+    const now = new Date('2027-03-02T11:00:00Z')
+    const { from } = bookingWindow(DEFAULT_BOOKING_SETTINGS, now)
+    const matin = new Date('2027-03-02T09:30:00Z')
+    assert.ok(from.getTime() <= matin.getTime())
+    const slots = computeSlots({
+      settings: { ...DEFAULT_BOOKING_SETTINGS, minNoticeMinutes: 60, dailyCap: 1 },
+      rules: DEFAULT_AVAILABILITY_RULES,
+      exceptions: [],
+      bookings: [{ start: matin, occupiedUntil: new Date('2027-03-02T10:15:00Z') }],
+      busy: [],
+      now,
+    })
+    assert.ok(slots.every((slot) => slot.localDate !== '2027-03-02'))
   })
 })

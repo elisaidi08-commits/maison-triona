@@ -18,7 +18,7 @@ import type { BookedCall } from './slots.ts'
 // Disponibilités de Cat (story 3.8, partie B ; db/migrations/0007_disponibilites.sql), sans ORM, dans
 // le style de src/lib/vault/repository.ts : requêtes paramétrées, erreurs réduites à leur code
 // (VaultError, jamais la valeur refusée). Tables en clair : rien de personnel.
-// Lecture : rôle `coffre` (la réservation publique, story 3.10, recevra son propre droit de lecture).
+// Lecture : rôles `coffre` et, depuis la story 3.10, `site_public` (page publique de réservation).
 // Écriture : rôle `coffre` seulement, chaque modification dans une transaction avec sa ligne
 // `availability` au journal d'accès (au nom du compte, sans demande ni valeur). Ce qui ne change
 // rien (même réglages, journée déjà bloquée, plage inconnue) n'écrit rien, journal compris.
@@ -96,18 +96,25 @@ export async function loadSlotConfig(db: Db, options: LoadOptions = {}): Promise
 }
 
 /**
- * Appels confirmés entre deux instants, au format de `computeSlots` (`occupiedUntil` = borne haute
- * de `slot`). Point d'accroche de la story 3.10 : la table `bookings` n'existe pas encore, il ne rend
- * rien. Il servira deux fois : retirer les créneaux pris de l'aperçu (et de la page publique), et
- * signaler les appels gardés d'une journée bloquée (spec §3.1).
- * 3.10 : `SELECT lower(slot), upper(slot) FROM bookings WHERE status = 'confirmed'
- * AND slot && tstzrange($1, $2)`, droit de lecture du rôle `coffre` sur ces colonnes.
+ * Appels confirmés dont la plage occupée (début → fin + pause) touche la période, au format de
+ * `computeSlots` (`occupiedUntil` = borne haute de `slot`), du plus tôt au plus tard. Branché sur
+ * `bookings` par la story 3.10 : lu par la page publique de réservation (rôle `site_public`, colonnes
+ * `slot` et `status` seulement) et par le coffre (aperçu des créneaux, appels gardés d'une journée
+ * bloquée, spec §3.1). Rien de personnel : des instants.
  */
-export async function listConfirmedCalls(_db: Db, from: Date, to: Date): Promise<BookedCall[]> {
+export async function listConfirmedCalls(db: Db, from: Date, to: Date): Promise<BookedCall[]> {
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
     throw new RangeError('Période invalide')
   }
-  return []
+  const { rows } = await guard('listConfirmedCalls', () =>
+    db.query<{ debut: Date; fin: Date }>(
+      `SELECT lower(slot) AS debut, upper(slot) AS fin FROM bookings
+       WHERE status = 'confirmed' AND slot && tstzrange($1::timestamptz, $2::timestamptz)
+       ORDER BY lower(slot)`,
+      [from, to],
+    ),
+  )
+  return rows.map((row) => ({ start: row.debut, occupiedUntil: row.fin }))
 }
 
 /** Réglages des appels ; vrai s'ils ont changé. */

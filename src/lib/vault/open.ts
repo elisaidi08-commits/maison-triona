@@ -6,10 +6,16 @@ import {
   type KeyPacket,
 } from './key-packet.ts'
 import {
+  BOOKING_SEALED_BYTES,
+  BOOKING_SEALED_PLAINTEXT_BYTES,
+  BOOKING_SEALED_TYPE,
+  BOOKING_SEALED_VERSION,
+  SEALED_BOOKING_KEYS,
   SEALED_BYTES,
   SEALED_KEYS,
   SEALED_PLAINTEXT_BYTES,
   SEALED_VERSION,
+  type SealedBookingFields,
   type SealedFields,
 } from './seal.ts'
 import { loadSodium } from './sodium.ts'
@@ -114,4 +120,52 @@ export async function openSealed(octets: Uint8Array, cles: VaultKeys): Promise<S
   const champs = {} as SealedFields
   for (const key of SEALED_KEYS) (champs as unknown as Record<string, unknown>)[key] = payload[key]
   return champs
+}
+
+function isSealedBooking(value: unknown): value is SealedBookingFields {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Record<string, unknown>
+  return (
+    record.v === BOOKING_SEALED_VERSION &&
+    record.t === BOOKING_SEALED_TYPE &&
+    typeof record.nom === 'string' &&
+    typeof record.telephone === 'string' &&
+    (record.langue === 'fr' || record.langue === 'en') &&
+    typeof record.sms === 'boolean' &&
+    (record.origine === null || typeof record.origine === 'string')
+  )
+}
+
+/**
+ * Ouvre une réservation d'appel (story 3.10 ; lue par l'agenda de Cat, story 3.13), dans le
+ * navigateur, avec la clé privée du coffre. Même règles que `openSealed` : erreurs sans contenu.
+ */
+export async function openSealedBooking(
+  octets: Uint8Array,
+  cles: VaultKeys,
+): Promise<SealedBookingFields> {
+  const lib = await loadSodium()
+  if (octets.length !== BOOKING_SEALED_BYTES) {
+    throw new VaultOpenError('Réservation illisible : taille inconnue')
+  }
+  let clair: Uint8Array
+  try {
+    clair = lib.crypto_box_seal_open(octets, cles.publicKey, cles.privateKey)
+  } catch {
+    throw new VaultOpenError('Réservation illisible : autre clé ou octets altérés')
+  }
+
+  let payload: unknown
+  try {
+    payload = JSON.parse(lib.to_string(lib.unpad(clair, BOOKING_SEALED_PLAINTEXT_BYTES)))
+  } catch {
+    payload = null
+  } finally {
+    lib.memzero(clair)
+  }
+  if (!isSealedBooking(payload)) throw new VaultOpenError('Réservation illisible : format inconnu')
+
+  const champs = {} as Record<string, unknown>
+  for (const key of SEALED_BOOKING_KEYS) champs[key] = payload[key]
+  return champs as unknown as SealedBookingFields
 }

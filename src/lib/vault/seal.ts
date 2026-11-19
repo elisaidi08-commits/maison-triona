@@ -48,24 +48,84 @@ export function decodePublicKey(lib: Sodium, base64: string): Uint8Array {
   return key
 }
 
-/** Scelle les champs d'une demande pour la clé publique du coffre (base64 standard). */
-export async function sealRequest(
-  champs: SealedFields,
+// JSON complété à `taille` octets puis scellé ; au-delà, refus sans citer le texte.
+async function sealJson(
+  payload: Record<string, unknown>,
   publicKeyBase64: string,
+  taille: number,
+  tropLong: string,
 ): Promise<Uint8Array> {
   const lib = await loadSodium()
   const publicKey = decodePublicKey(lib, publicKeyBase64)
-  const payload: Record<string, unknown> = { v: SEALED_VERSION }
-  for (const key of SEALED_KEYS) payload[key] = champs[key] ?? null
   const texte = lib.from_string(JSON.stringify(payload))
-  if (texte.length >= SEALED_PLAINTEXT_BYTES) {
+  if (texte.length >= taille) {
     lib.memzero(texte)
-    throw new RangeError('Demande trop longue pour le coffre : 16 Kio au plus')
+    throw new RangeError(tropLong)
   }
-  const clair = lib.pad(texte, SEALED_PLAINTEXT_BYTES)
+  const clair = lib.pad(texte, taille)
   try {
     return lib.crypto_box_seal(clair, publicKey)
   } finally {
     lib.memzero(clair)
   }
+}
+
+/** Scelle les champs d'une demande pour la clé publique du coffre (base64 standard). */
+export async function sealRequest(
+  champs: SealedFields,
+  publicKeyBase64: string,
+): Promise<Uint8Array> {
+  const payload: Record<string, unknown> = { v: SEALED_VERSION }
+  for (const key of SEALED_KEYS) payload[key] = champs[key] ?? null
+  return sealJson(
+    payload,
+    publicKeyBase64,
+    SEALED_PLAINTEXT_BYTES,
+    'Demande trop longue pour le coffre : 16 Kio au plus',
+  )
+}
+
+// Réservation d'appel (story 3.10, db/migrations/0008_reservations.sql) : même sealed box, même clé
+// publique, taille fixe plus petite. Restent en clair le créneau, le statut et la version de la
+// politique acceptée ; tout ce qui touche à la personne est scellé ici. Le plus long contenu accepté
+// par la validation (nom de 120 caractères échappés chacun en 6 octets, numéro de 30) tient en moins
+// d'1 Kio : toute réservation scellée fait 2 096 octets. `t: 'appel'` distingue ce format de celui
+// d'une demande : l'un ne s'ouvre jamais comme l'autre.
+export const BOOKING_SEALED_VERSION = 1
+export const BOOKING_SEALED_PLAINTEXT_BYTES = 2 * 1024
+export const BOOKING_SEALED_BYTES = BOOKING_SEALED_PLAINTEXT_BYTES + 48
+export const BOOKING_SEALED_TYPE = 'appel'
+
+/** La personne qui convient d'un appel : nom, numéro, langue de l'appel, choix SMS, origine. */
+export interface SealedBookingFields {
+  nom: string
+  telephone: string
+  langue: 'fr' | 'en'
+  /** Préférence « me prévenir aussi par SMS » (aucun envoi avant la story 3.12). */
+  sms: boolean
+  /** « Comment avez-vous connu la maison ? » (liste fermée de D41), facultatif. */
+  origine: string | null
+}
+
+export const SEALED_BOOKING_KEYS = [
+  'nom',
+  'telephone',
+  'langue',
+  'sms',
+  'origine',
+] as const satisfies readonly (keyof SealedBookingFields)[]
+
+/** Scelle la personne d'une réservation pour la clé publique du coffre (base64 standard). */
+export async function sealBooking(
+  champs: SealedBookingFields,
+  publicKeyBase64: string,
+): Promise<Uint8Array> {
+  const payload: Record<string, unknown> = { v: BOOKING_SEALED_VERSION, t: BOOKING_SEALED_TYPE }
+  for (const key of SEALED_BOOKING_KEYS) payload[key] = champs[key] ?? null
+  return sealJson(
+    payload,
+    publicKeyBase64,
+    BOOKING_SEALED_PLAINTEXT_BYTES,
+    'Réservation trop longue pour le coffre : 2 Kio au plus',
+  )
 }

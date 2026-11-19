@@ -443,15 +443,16 @@ export default async function PageDisponibilites({
     (absence) => absence.kind === 'holiday' && Number(absence.startDate.slice(0, 4)) <= annee + 1,
   )
 
-  // Appels confirmés jusqu'au bout de l'horizon et de la dernière absence affichée (aucun avant la
-  // story 3.10) : retirés de l'aperçu, signalés sur les absences.
+  // Appels confirmés (story 3.10), du début de la journée (ceux déjà passés comptent dans le plafond
+  // du jour) jusqu'au bout de l'horizon et de la dernière absence affichée : retirés de l'aperçu,
+  // signalés sur les absences.
   const dernierJour = [...absences, ...feries].reduce(
     (dernier, absence) => (absence.endDate > dernier ? absence.endDate : dernier),
     addDays(aujourdhui, etat.settings.horizonDays),
   )
   const appels = await listConfirmedCalls(
     pool,
-    maintenant,
+    zonedTimeToUtc(aujourdhui, '00:00', FUSEAU),
     zonedTimeToUtc(addDays(dernierJour, 1), '00:00', FUSEAU),
   )
   const creneaux = computeSlots({
