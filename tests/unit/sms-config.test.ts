@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { readSmsConfig } from '../../src/lib/sms/config.ts'
 
-const KEY = 'clé-secrète-de-test-0123456789'
+const KEY = 'cle-secrete-de-test-0123456789'
 
 describe('readSmsConfig', () => {
   it('renvoie null quand aucune variable n’est posée : les SMS sont coupés', () => {
@@ -50,8 +50,15 @@ describe('readSmsConfig', () => {
     })
   }
 
-  it('refuse une clé qui contient un espace ou un caractère de contrôle', () => {
-    for (const apiKey of ['abc def', 'abc\ndef', 'abc\u0000def']) {
+  it('refuse une clé hors ASCII visible (espace, contrôle, accent, caractère invisible)', () => {
+    for (const apiKey of [
+      'abc def',
+      'abc\ndef',
+      'abc\u0000def',
+      'clé',
+      'abc\u200bdef',
+      'abc\u2060def',
+    ]) {
       assert.throws(
         () => readSmsConfig({ SEVEN_API_KEY: apiKey, SMS_SENDER: 'Triona' }),
         /SEVEN_API_KEY/,

@@ -1047,9 +1047,5 @@
       "summary": "Call · Maison Triona",
       "description": "Maison Triona will call you on the number you gave."
     }
-  },
-  "Sms": {
-    "confirmation": "Maison Triona: your call is arranged for {date} at {time}. To rearrange or cancel, please use the link in our email.",
-    "reminder": "Maison Triona: as arranged, we will call you today at {time}. To rearrange or cancel, please use the link in our email."
   }
 }

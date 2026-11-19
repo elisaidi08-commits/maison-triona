@@ -17,7 +17,8 @@ const VARIABLES = ['SEVEN_API_KEY', 'SMS_SENDER'] as const
 // Charte af2m (France) : lettres latines et chiffres, 11 au plus, sans espace ni caractère spécial ;
 // au moins une lettre et 3 caractères (règle courante des fournisseurs, docs/sms-fournisseur.md §3).
 const SENDER = /^(?=.*[A-Za-z])[A-Za-z0-9]{3,11}$/
-const API_KEY = /^[^\s\p{Cc}]+$/u
+// ASCII visible seulement : ni espace, ni contrôle, ni caractère invisible (U+200B…) ou accentué.
+const API_KEY = /^[\x21-\x7E]+$/
 
 function read(env: Record<string, string | undefined>, name: string): string | undefined {
   const value = env[name]?.trim()

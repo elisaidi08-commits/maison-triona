@@ -30,8 +30,7 @@
     "Meta.ogAlt",
     "Contact",
     "ContactThanks",
-    "Booking",
-    "Sms"
+    "Booking"
   ],
   "en": [
     "Home.title",
@@ -64,7 +63,6 @@
     "Meta.ogAlt",
     "Contact",
     "ContactThanks",
-    "Booking",
-    "Sms"
+    "Booking"
   ]
 }
