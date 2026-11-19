@@ -5,7 +5,7 @@ import { createSevenTransport } from '../../src/lib/sms/seven.ts'
 const ENDPOINT = 'https://gateway.seven.io/api/sms'
 const KEY = 'cle-de-bac-a-sable-0123456789'
 const NUMBER = '+32470123456'
-const TEXT = 'Maison Triona : rappel, nous vous appelons aujourd’hui à 16 h 30.'
+const TEXT = "Maison Triona : rappel, nous vous appelons aujourd'hui à 16 h 30."
 const FOREIGN_ID = '3f2b8c1e-5a4d-4e6f-9b7a-1c2d3e4f5a6b'
 
 interface Call {
@@ -104,6 +104,15 @@ describe('seven send : requête', () => {
   })
 })
 
+describe('seven send : durée de validité', () => {
+  it('passe la durée de validité en minutes quand elle est donnée (rappel du jour)', async () => {
+    const { fetch, calls } = fakeFetch(() => accepted())
+    await transport(fetch).send({ ...message, validForMinutes: 120 })
+    const body = JSON.parse(String(calls[0]?.init.body)) as Record<string, unknown>
+    assert.equal(body.ttl, 120)
+  })
+})
+
 describe('seven send : réponse', () => {
   it('renvoie l’identifiant de seven et le nombre de segments', async () => {
     const { fetch } = fakeFetch(() => accepted())
@@ -144,7 +153,7 @@ describe('seven send : réponse', () => {
     ['201', false, 'seven_201'], // expéditeur invalide
     ['202', false, 'seven_202'], // destinataire invalide
     ['401', false, 'seven_401'], // texte trop long
-    ['402', false, 'seven_402'], // même SMS déjà envoyé dans les 180 s
+    ['402', false, 'duplicate'], // même SMS déjà envoyé dans les 180 s : il est parti
     ['403', false, 'seven_403'], // limite du jour pour ce destinataire
     ['407004', false, 'unsubscribed'], // la personne a répondu STOP
     ['101', false, 'seven_101'], // échec pour le destinataire
@@ -161,6 +170,15 @@ describe('seven send : réponse', () => {
       ok: false,
       retryable: false,
       code: 'seven_101',
+    })
+  })
+
+  it('lit le STOP (407004) placé dans le message d’une réponse « 100 »', async () => {
+    const { fetch } = fakeFetch(() => accepted({ success: false, error: '407004', id: null }))
+    assert.deepEqual(await transport(fetch).send(message), {
+      ok: false,
+      retryable: false,
+      code: 'unsubscribed',
     })
   })
 
@@ -203,13 +221,13 @@ describe('seven send : pannes', () => {
     })
   })
 
-  it('délai dépassé : à reprendre', async () => {
+  it('délai dépassé : pas de reprise (seven a peut-être reçu le SMS : pas de doublon)', async () => {
     const fetch = (async () => {
       throw new DOMException('The operation timed out.', 'TimeoutError')
     }) as typeof globalThis.fetch
     assert.deepEqual(await transport(fetch).send(message), {
       ok: false,
-      retryable: true,
+      retryable: false,
       code: 'timeout',
     })
   })
@@ -233,6 +251,13 @@ describe('seven send : entrées refusées avant tout appel', () => {
     ['identifiant avec un caractère interdit', { foreignId: 'id avec espace' }, 'bad_foreign_id'],
     ['identifiant trop long', { foreignId: 'a'.repeat(65) }, 'bad_foreign_id'],
     ['texte vide', { text: '' }, 'bad_text'],
+    ['texte fait d’espaces', { text: '   ' }, 'bad_text'],
+    ['texte hors GSM-7', { text: 'Maison Triona : aujourd’hui.' }, 'bad_text'],
+    ['texte de deux segments', { text: 'a'.repeat(161) }, 'bad_text'],
+    ['validité nulle', { validForMinutes: 0 }, 'bad_validity'],
+    ['validité de 4 minutes', { validForMinutes: 4 }, 'bad_validity'],
+    ['validité au-delà de 48 heures', { validForMinutes: 2881 }, 'bad_validity'],
+    ['validité non entière', { validForMinutes: 1.5 }, 'bad_validity'],
   ] as const) {
     it(`${name} : ${code}`, async () => {
       const { fetch, calls } = fakeFetch(() => accepted())

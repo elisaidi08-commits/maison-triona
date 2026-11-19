@@ -5,16 +5,26 @@
 // - Pas de SDK : un `fetch` suffit, et aucune dépendance de plus à auditer.
 // - Un destinataire par appel. Aucune option : ni `performance_tracking` (suivi des liens, D71), ni
 //   `debug` (il n'évite plus l'envoi depuis décembre 2023 : les essais se font avec une clé de bac à
-//   sable), ni `delay` (la boîte d'envoi programme elle-même les messages).
+//   sable), ni `delay` (la boîte d'envoi programme elle-même les messages). Seule `ttl` passe, quand
+//   l'appelant la donne : un rappel « aujourd'hui à 16 h 30 » ne doit pas arriver le lendemain
+//   (48 heures par défaut chez seven).
+// - Texte revérifié : un seul segment GSM-7, jamais vide. Les gabarits (`templates.ts`) le
+//   garantissent déjà ; l'appelant ne transmet que leurs rendus.
 // - `foreign_id` : l'identifiant de notre message dans la boîte d'envoi, jamais une donnée de la
-//   personne. seven bloque le même SMS renvoyé dans les 180 s (code 402) : une reprise rapide
-//   ne crée pas de doublon.
+//   personne.
+// - Doublons : seven n'a pas de clé d'idempotence. Un délai dépassé n'est PAS repris : seven a
+//   peut-être reçu le SMS, et une reprise 5 minutes plus tard (boîte d'envoi) en enverrait un second,
+//   au-delà de son blocage des doublons (180 s, code 402, désactivable dans le compte). Une erreur
+//   réseau est reprise : la requête n'est très probablement pas partie (risque résiduel de doublon
+//   accepté, comme pour TEM, D69). Le code 402 devient `duplicate` : le SMS est parti, la partie B
+//   le traite comme un envoi réussi.
 // - Belgique : l'opérateur remplace le nom d'expéditeur par un numéro court, ou bloque le message
 //   `[À VÉRIFIER : question 5 à seven, docs/sms-fournisseur.md §9]`.
 // - Aucune journalisation, et rien du corps de la réponse n'est renvoyé, hors l'identifiant validé,
 //   le nombre de segments et un code d'une liste fermée : ni numéro, ni texte, ni secret.
 // Imports relatifs seulement : testé par node --test.
 import { SENDER } from './config.ts'
+import { measureSms } from './gsm7.ts'
 
 export interface OutgoingSms {
   /** Numéro au format E.164 (« +32470123456 »). */
@@ -23,6 +33,8 @@ export interface OutgoingSms {
   from: string
   /** Identifiant du message dans notre boîte d'envoi. */
   foreignId: string
+  /** Durée de validité (de 5 minutes à 48 heures) : passé ce délai, l'opérateur abandonne le SMS. */
+  validForMinutes?: number
 }
 
 export type SmsSendResult =
@@ -114,7 +126,7 @@ function fromFailure(failure: Failure): SmsSendResult {
     const retryable = failure.status === 429 || failure.status >= 500
     return { ok: false, retryable, code: `http_${failure.status}` }
   }
-  return { ok: false, retryable: failure.kind !== 'bad_response', code: failure.kind }
+  return { ok: false, retryable: failure.kind === 'network', code: failure.kind }
 }
 
 function fromBody(body: unknown): SmsSendResult {
@@ -123,13 +135,17 @@ function fromBody(body: unknown): SmsSendResult {
     typeof body.success === 'string' || typeof body.success === 'number' ? String(body.success) : ''
   if (code !== '100') {
     if (code === '407004') return refuse('unsubscribed')
+    if (code === '402') return refuse('duplicate')
     if (!KNOWN_CODES.has(code)) return refuse('seven_unknown')
     return { ok: false, retryable: RETRYABLE_CODES.has(code), code: `seven_${code}` }
   }
   const messages = body.messages
   const first: unknown = Array.isArray(messages) ? messages[0] : undefined
   if (!isRecord(first)) return refuse('bad_response')
-  if (first.success !== true) return refuse('seven_101')
+  if (first.success !== true) {
+    // Le STOP peut aussi venir dans le message : il ne doit jamais se perdre.
+    return refuse(String(first.error) === '407004' ? 'unsubscribed' : 'seven_101')
+  }
   const id = typeof first.id === 'string' || typeof first.id === 'number' ? String(first.id) : ''
   const parts = first.parts
   if (!PROVIDER_ID.test(id) || typeof parts !== 'number' || !Number.isInteger(parts) || parts < 1) {
@@ -154,7 +170,13 @@ export function createSevenTransport(options: {
       if (typeof message.foreignId !== 'string' || !FOREIGN_ID.test(message.foreignId)) {
         return refuse('bad_foreign_id')
       }
-      if (typeof message.text !== 'string' || message.text === '') return refuse('bad_text')
+      if (typeof message.text !== 'string' || message.text.trim() === '') return refuse('bad_text')
+      const measure = measureSms(message.text)
+      if (measure.encoding !== 'gsm7' || measure.segments !== 1) return refuse('bad_text')
+      const ttl = message.validForMinutes
+      if (ttl !== undefined && (!Number.isInteger(ttl) || ttl < 5 || ttl > 2880)) {
+        return refuse('bad_validity')
+      }
 
       const result = await call(
         fetchImpl,
@@ -171,6 +193,7 @@ export function createSevenTransport(options: {
             text: message.text,
             from: message.from,
             foreign_id: message.foreignId,
+            ...(ttl === undefined ? {} : { ttl }),
           }),
         },
         timeoutMs,
