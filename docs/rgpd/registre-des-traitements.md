@@ -63,6 +63,7 @@ Les mesures de sécurité sont décrites dans `analyse-impact.md` §5 ; les pres
 | **Transferts hors UE** | Vercel et Google (sociétés américaines). |
 | **Conservation** | Comme T1. E-mail et numéro chiffrés avec la clé serveur : **effacés 24 h après l'appel**. Jetons : supprimés 7 jours après leur expiration. Lien d'accès valable 48 h. |
 | **Sécurité (résumé)** | Sealed box comme T1 ; e-mail et numéro aussi chiffrés avec une **clé serveur** (Scaleway Key Manager) le temps des envois : exception à la sealed box, validée (D57). Aucun cookie : le lien sert de clé. |
+| **Installé (story 3.10, 19/11/2026)** | Réservation par lien personnel : nom, numéro, langue de l'appel, choix SMS et origine **scellés** à taille fixe ; en clair le créneau, le statut, la version de la politique acceptée. Jeton : empreinte seule. « Pas de message vocal » : une mention, rien n'est recueilli. Pas encore d'e-mail, d'empreinte d'adresse, d'invitation à Cat ni de purge (stories 3.3, 3.9, 3.12) ; les liens sont créés à la main dans le coffre, journalisés sans valeur. |
 
 ## T3 · Échanges et suivi de la relation
 
