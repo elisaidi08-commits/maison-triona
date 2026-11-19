@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { RETENTION_MONTHS, retentionDeadline } from '../../src/lib/vault/retention.ts'
+import {
+  isExpired,
+  RETENTION_MONTHS,
+  RETENTION_RUN_ALERT_HOURS,
+  retentionDeadline,
+  retentionRunStatus,
+} from '../../src/lib/vault/retention.ts'
 
 describe('retentionDeadline', () => {
   it('garde le plafond proposé de 12 mois', () => {
@@ -35,5 +41,50 @@ describe('retentionDeadline', () => {
     assert.throws(() => retentionDeadline(date, -1), RangeError)
     assert.throws(() => retentionDeadline(date, Number.NaN), RangeError)
     assert.throws(() => retentionDeadline(new Date('pas une date'), 12), RangeError)
+  })
+})
+
+describe('isExpired (conservation automatique, partie D)', () => {
+  const now = new Date('2027-06-01T12:00:00Z')
+
+  it('désigne une demande dont l’échéance est atteinte ou passée', () => {
+    assert.equal(
+      isExpired({ retentionUntil: new Date('2027-01-01T00:00:00Z'), frozen: false }, now),
+      true,
+    )
+    assert.equal(isExpired({ retentionUntil: now, frozen: false }, now), true)
+    assert.equal(
+      isExpired({ retentionUntil: new Date(now.getTime() + 1), frozen: false }, now),
+      false,
+    )
+  })
+
+  it('exclut toujours une demande gelée, même échue depuis longtemps', () => {
+    assert.equal(
+      isExpired({ retentionUntil: new Date('2000-01-01T00:00:00Z'), frozen: true }, now),
+      false,
+    )
+    assert.equal(isExpired({ retentionUntil: now, frozen: true }, now), false)
+  })
+
+  it('refuse une date invalide plutôt que de deviner', () => {
+    assert.throws(
+      () => isExpired({ retentionUntil: now, frozen: false }, new Date('invalide')),
+      RangeError,
+    )
+  })
+})
+
+describe('retentionRunStatus (accueil du coffre, partie D)', () => {
+  const now = new Date('2027-06-03T12:00:00Z')
+  const heures = (n: number) => new Date(now.getTime() - n * 3600 * 1000)
+
+  it('signale l’absence de passage et un passage de plus de 48 heures', () => {
+    assert.equal(RETENTION_RUN_ALERT_HOURS, 48)
+    assert.equal(retentionRunStatus(null, now), 'never')
+    assert.equal(retentionRunStatus(heures(1), now), 'recent')
+    assert.equal(retentionRunStatus(heures(48), now), 'recent')
+    assert.equal(retentionRunStatus(new Date(heures(48).getTime() - 1), now), 'late')
+    assert.equal(retentionRunStatus(heures(24 * 7), now), 'late')
   })
 })

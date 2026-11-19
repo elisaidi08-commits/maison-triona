@@ -7,11 +7,15 @@ import { inspect } from 'node:util'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import {
   deleteRequest,
+  getRequest,
   insertRequest,
   listAccessLog,
   listRequests,
   listRequestsLogged,
   logAccess,
+  logExport,
+  lastRetentionRun,
+  logRetention,
   purgeExpired,
   readSealed,
   setFrozen,
@@ -22,6 +26,7 @@ import type {
   NewVaultRequest,
   RequestKind,
 } from '../../src/lib/vault/repository.ts'
+import { isExpired } from '../../src/lib/vault/retention.ts'
 import { resetDatabase, testPool } from './helpers.ts'
 
 // Données factices uniquement : des octets aléatoires tiennent lieu de sealed box.
@@ -141,6 +146,37 @@ describe('accès aux données du coffre', () => {
     assert.equal((await listAccessLog(pool)).length, 1)
   })
 
+  it('n’inscrit qu’une ligne list par affichage, même rendu deux fois en même temps (partie D)', async () => {
+    await insertRequest(pool, fakeRequest())
+    // Deux rendus simultanés de la même page (Cache Components), puis un troisième aussitôt.
+    await Promise.all([listRequestsLogged(pool, ACTOR), listRequestsLogged(pool, ACTOR)])
+    await listRequestsLogged(pool, ACTOR)
+    // Un autre compte a sa propre ligne.
+    await listRequestsLogged(pool, 'autre-compte-factice')
+    assert.deepEqual(
+      entries(await listAccessLog(pool)).sort((a, b) => a.actor.localeCompare(b.actor)),
+      [
+        { actor: 'autre-compte-factice', action: 'list', requestId: null },
+        { actor: ACTOR, action: 'list', requestId: null },
+      ],
+    )
+    // Au-delà de 2 secondes, un nouvel affichage s'inscrit.
+    await pool.query(`UPDATE vault_access_log SET at = at - interval '3 seconds'`)
+    await listRequestsLogged(pool, ACTOR)
+    const lignes = (await listAccessLog(pool)).filter((entry) => entry.actor === ACTOR)
+    assert.equal(lignes.length, 2)
+  })
+
+  it('rend la date du dernier passage de la conservation, ou null', async () => {
+    assert.equal(await lastRetentionRun(pool), null)
+    await logRetention(pool, { requests: 0, sessions: 0, rateLimits: 0, verifications: 0 })
+    await pool.query(`UPDATE vault_access_log SET at = '2026-01-01T03:00:00Z'`)
+    await logRetention(pool, { requests: 1, sessions: 0, rateLimits: 0, verifications: 0 })
+    await logAccess(pool, { actor: ACTOR, action: 'login' })
+    const dernier = await lastRetentionRun(pool)
+    assert.ok(dernier && dernier.getTime() > new Date('2026-01-01T03:00:00Z').getTime())
+  })
+
   it('accepte les actions de connexion de la partie C', async () => {
     for (const action of ['login_failed', 'logout', 'list'] as const) {
       await logAccess(pool, { actor: ACTOR, action })
@@ -170,6 +206,85 @@ describe('accès aux données du coffre', () => {
     assert.equal(await readSealed(pool, randomUUID(), ACTOR), null)
     assert.equal(await readSealed(pool, 'pas-un-identifiant', ACTOR), null)
     assert.deepEqual(await listAccessLog(pool), [])
+  })
+
+  it('rend les colonnes en clair d’une demande pour sa page, sans octets ni journal', async () => {
+    const id = await insertRequest(pool, fakeRequest({ service: 'enfants' }))
+    const demande = await getRequest(pool, id)
+    assert.ok(demande)
+    assert.equal(demande.id, id)
+    assert.equal(demande.service, 'enfants')
+    assert.equal(demande.frozen, false)
+    assert.ok(!('sealed' in demande))
+    assert.deepEqual(demande, (await listRequests(pool))[0])
+    // Le rendu de la page n'écrit rien : la lecture journalisée est celle des octets (readSealed).
+    assert.deepEqual(await listAccessLog(pool), [])
+    assert.equal(await getRequest(pool, randomUUID()), null)
+    assert.equal(await getRequest(pool, 'pas-un-identifiant'), null)
+  })
+
+  it('journalise un export par son seul identifiant, si la demande existe', async () => {
+    const id = await insertRequest(pool, fakeRequest())
+    assert.equal(await logExport(pool, id, ACTOR), true)
+    assert.equal(await logExport(pool, randomUUID(), ACTOR), false)
+    assert.equal(await logExport(pool, 'pas-un-identifiant', ACTOR), false)
+    assert.deepEqual(entries(await listAccessLog(pool)), [
+      { actor: ACTOR, action: 'export', requestId: id },
+    ])
+  })
+
+  it('inscrit le résumé de la conservation en nombres seulement, au nom de system', async () => {
+    await logRetention(pool, { requests: 2, sessions: 1, rateLimits: 0, verifications: 3 })
+    const { rows } = await pool.query(
+      `SELECT actor, action, request_id, purged_requests, purged_sessions, purged_rate_limits,
+              purged_verifications FROM vault_access_log`,
+    )
+    assert.deepEqual(rows, [
+      {
+        actor: 'system',
+        action: 'retention',
+        request_id: null,
+        purged_requests: 2,
+        purged_sessions: 1,
+        purged_rate_limits: 0,
+        purged_verifications: 3,
+      },
+    ])
+    for (const counts of [
+      { requests: -1, sessions: 0, rateLimits: 0, verifications: 0 },
+      { requests: 0.5, sessions: 0, rateLimits: 0, verifications: 0 },
+    ]) {
+      await assert.rejects(logRetention(pool, counts), RangeError)
+    }
+    // La base le garantit aussi : compteurs obligatoires sur `retention`, interdits ailleurs.
+    const refused = { code: '23514' }
+    await assert.rejects(
+      pool.query(`INSERT INTO vault_access_log (actor, action) VALUES ('system', 'retention')`),
+      refused,
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_access_log (actor, action, purged_requests) VALUES ('x', 'read', 1)`,
+      ),
+      refused,
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_access_log (actor, action, request_id, purged_requests, purged_sessions,
+           purged_rate_limits, purged_verifications)
+         VALUES ('system', 'retention', gen_random_uuid(), 0, 0, 0, 0)`,
+      ),
+      refused,
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_access_log (actor, action, purged_requests, purged_sessions,
+           purged_rate_limits, purged_verifications)
+         VALUES ('system', 'retention', -1, 0, 0, 0)`,
+      ),
+      refused,
+    )
+    assert.equal((await listAccessLog(pool)).length, 1)
   })
 
   it('efface une demande et garde sa ligne de journal', async () => {
@@ -236,6 +351,30 @@ describe('accès aux données du coffre', () => {
         .map((requestId) => ({ actor: 'system', action: 'purge', requestId })),
     )
     assert.deepEqual(await purgeExpired(pool, now), [])
+  })
+
+  it('purge exactement les demandes que isExpired désigne : jamais une gelée', async () => {
+    const now = new Date('2027-06-01T12:00:00Z')
+    const cas = [
+      { retentionUntil: new Date('2026-12-01T00:00:00Z'), frozen: false },
+      { retentionUntil: new Date('2026-12-01T00:00:00Z'), frozen: true },
+      { retentionUntil: now, frozen: false },
+      { retentionUntil: now, frozen: true },
+      { retentionUntil: new Date(now.getTime() + 1), frozen: false },
+      { retentionUntil: new Date('2028-01-01T00:00:00Z'), frozen: true },
+    ]
+    const ids: string[] = []
+    for (const { retentionUntil, frozen } of cas) {
+      const id = await insertRequest(pool, fakeRequest({ retentionUntil }))
+      if (frozen) await setFrozen(pool, id, true, ACTOR)
+      ids.push(id)
+    }
+    const attendues = ids.filter((_, index) => isExpired(cas[index]!, now))
+    assert.equal(attendues.length, 2)
+    assert.deepEqual((await purgeExpired(pool, now)).sort(), attendues.sort())
+    const restantes = await listRequests(pool)
+    assert.equal(restantes.length, 4)
+    for (const demande of restantes) assert.equal(isExpired(demande, now), false)
   })
 
   it('journalise une connexion sans demande, du plus récent au plus ancien', async () => {

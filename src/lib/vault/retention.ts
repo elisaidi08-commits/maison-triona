@@ -30,3 +30,25 @@ export function retentionDeadline(createdAt: Date, months: number): Date {
     ),
   )
 }
+
+// Demande échue : échéance atteinte et pas gelée. Une demande gelée (limitation, RGPD art. 18)
+// n'est jamais effacée par la conservation automatique, même échue. Même règle que la requête de
+// `purgeExpired` (repository.ts : `retention_until <= now AND NOT frozen`), que les tests
+// d'intégration comparent à celle-ci ; la page de lecture du coffre l'affiche.
+export function isExpired(request: { retentionUntil: Date; frozen: boolean }, now: Date): boolean {
+  if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
+  return !request.frozen && request.retentionUntil.getTime() <= now.getTime()
+}
+
+// Au-delà de 48 heures sans passage de la conservation planifiée (quotidienne), l'accueil du coffre
+// le signale : secret absent, tâche coupée, base injoignable… Les demandes échues ne sont alors plus
+// effacées. Deux jours laissent passer un passage manqué (Vercel ne réessaie pas).
+export const RETENTION_RUN_ALERT_HOURS = 48
+
+export function retentionRunStatus(last: Date | null, now: Date): 'never' | 'recent' | 'late' {
+  if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
+  if (last === null) return 'never'
+  return now.getTime() - last.getTime() > RETENTION_RUN_ALERT_HOURS * 3600 * 1000
+    ? 'late'
+    : 'recent'
+}

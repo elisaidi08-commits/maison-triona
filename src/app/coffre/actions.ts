@@ -4,15 +4,21 @@ import { parseSetCookieHeader, toCookieOptions } from 'better-auth/cookies'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { effacementDuCoffre, exportDuCoffre, gelDuCoffre, scelleDuCoffre } from '@/lib/auth/acces'
 import { appelerAuth } from '@/lib/auth/appel'
 import type { ReponseAuth } from '@/lib/auth/appel'
-import { getAuth } from '@/lib/auth/serveur'
+import { estSvgQrValide, qrCodeSvg } from '@/lib/auth/qr-code'
+import { getAuth, lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import { isRequestId } from '@/lib/vault/repository'
 
-// Formulaires du coffre (story 3.2, partie C), utilisables sans JavaScript (POST natif vers la
-// Server Action). Chaque action appelle la route Better Auth correspondante par `auth.handler`
-// (limitation de débit, contrôle d'origine, liste fermée de routes, journal d'accès), puis recopie
-// ses cookies vers le navigateur. Rien n'est journalisé ici : ni adresse, ni mot de passe, ni code.
+// Formulaires du coffre (story 3.2, parties C et D), utilisables sans JavaScript (POST natif vers la
+// Server Action). Connexion : chaque action appelle la route Better Auth correspondante par
+// `auth.handler` (limitation de débit, contrôle d'origine, liste fermée de routes, journal d'accès),
+// puis recopie ses cookies vers le navigateur. Rien n'est journalisé ici : ni adresse, ni mot de
+// passe, ni code. Demandes (partie D) : gel, effacement et export revérifient l'accès (session et
+// TOTP) à chaque appel, ne reçoivent qu'un identifiant et passent par les fonctions journalisées de
+// src/lib/auth/acces.ts. Aucune ne reçoit ni ne renvoie un contenu déchiffré.
 
 export type ErreurConnexion = 'saisie' | 'identifiants' | 'trop-de-tentatives' | 'indisponible'
 export type EtatConnexion = { erreur: ErreurConnexion | null; email: string }
@@ -31,6 +37,9 @@ export type EtatEnrolement =
       // URI otpauth (elle contient le secret) et codes de secours : affichés une fois, au retour
       // de l'activation ; sans JavaScript, ils ne survivent pas à une erreur de saisie du code.
       uri: string | null
+      // QR code de l'URI, en SVG produit ici, sur le serveur (D68) ; null s'il n'a pas pu l'être :
+      // le secret en texte suffit alors.
+      qr: string | null
       codesSecours: string[]
       erreur: 'saisie' | 'code' | 'trop-de-tentatives' | 'indisponible' | null
     }
@@ -116,7 +125,8 @@ export async function enrolerTotp(
   const reponse = await appeler('/two-factor/enable', { password: motDePasse })
   if (reponse.statut === 200) {
     const { totpURI, backupCodes } = reponse.donnees as { totpURI: string; backupCodes: string[] }
-    return { etape: 'code', uri: totpURI, codesSecours: backupCodes, erreur: null }
+    const qr = await qrCodeSvg(totpURI).catch(() => null)
+    return { etape: 'code', uri: totpURI, qr, codesSecours: backupCodes, erreur: null }
   }
   if (reponse.code === 'TOTP_ALREADY_ENABLED') redirect('/coffre')
   if (reponse.statut === 401) redirect('/coffre/connexion')
@@ -133,12 +143,39 @@ export async function enrolerTotp(
   }
 }
 
+// État précédent de l'enrôlement, renvoyé par le navigateur avec le formulaire (useActionState) :
+// rien n'en est repris sans contrôle. Le QR code n'est gardé que s'il passe la validation stricte
+// du SVG (il est inséré tel quel dans la page) ; l'URI et les codes de secours, rendus comme texte,
+// ne sont gardés que s'ils ont leur forme attendue.
+function etatCodeSur(avant: EtatEnrolement): Extract<EtatEnrolement, { etape: 'code' }> {
+  if (typeof avant !== 'object' || avant === null || avant.etape !== 'code') {
+    return { etape: 'code', uri: null, qr: null, codesSecours: [], erreur: null }
+  }
+  const uri =
+    typeof avant.uri === 'string' &&
+    avant.uri.length <= 512 &&
+    avant.uri.startsWith('otpauth://totp/')
+      ? avant.uri
+      : null
+  const codesSecours = Array.isArray(avant.codesSecours)
+    ? avant.codesSecours
+        .filter((code) => typeof code === 'string' && /^[A-Za-z0-9-]{1,32}$/.test(code))
+        .slice(0, 20)
+    : []
+  return {
+    etape: 'code',
+    uri,
+    qr: uri && estSvgQrValide(avant.qr) ? avant.qr : null,
+    codesSecours,
+    erreur: null,
+  }
+}
+
 async function confirmerEnrolement(
   avant: EtatEnrolement,
   donnees: FormData,
 ): Promise<EtatEnrolement> {
-  const suite =
-    avant.etape === 'code' ? avant : { etape: 'code' as const, uri: null, codesSecours: [] }
+  const suite = etatCodeSur(avant)
   const code = champ(donnees, 'code').replace(/\s+/g, '')
   if (!code) return { ...suite, erreur: 'saisie' }
 
@@ -160,4 +197,58 @@ async function confirmerEnrolement(
 export async function seDeconnecter(): Promise<void> {
   await appeler('/sign-out', {})
   redirect('/coffre/connexion')
+}
+
+// Accès autorisé, ou redirection (connexion, enrôlement) : une action sur une demande n'aboutit
+// jamais sans session ouverte par le second facteur.
+async function accesAutorise() {
+  const acces = await lireAccesRequete()
+  if (acces.etat === 'anonyme') redirect('/coffre/connexion')
+  if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
+  return acces
+}
+
+export async function basculerGel(donnees: FormData): Promise<void> {
+  const id = champ(donnees, 'id')
+  const gel = champ(donnees, 'gel') === 'oui'
+  const acces = await accesAutorise()
+  if (!isRequestId(id) || !(await gelDuCoffre(getCoffrePool(), acces, id, gel))) redirect('/coffre')
+  redirect(`/coffre/demandes/${id}`)
+}
+
+// Effacement définitif, après la case de confirmation (exigée aussi par le navigateur, `required`).
+export async function effacerDemande(donnees: FormData): Promise<void> {
+  const id = champ(donnees, 'id')
+  const acces = await accesAutorise()
+  if (!isRequestId(id)) redirect('/coffre')
+  if (champ(donnees, 'confirmation') !== 'oui') redirect(`/coffre/demandes/${id}`)
+  const efface = await effacementDuCoffre(getCoffrePool(), acces, id)
+  redirect(efface ? '/coffre?effacee=1' : '/coffre')
+}
+
+// Lecture : appelée par le navigateur au déverrouillage, une fois par page ; elle ne reçoit que
+// l'identifiant, inscrit `read` au journal et rend les octets scellés (base64), rien de lisible.
+export async function lireScelle(id: unknown): Promise<{ scelle: string } | null> {
+  if (!isRequestId(id)) return null
+  const acces = await lireAccesRequete()
+  if (acces.etat !== 'autorise') return null
+  try {
+    const octets = await scelleDuCoffre(getCoffrePool(), acces, id)
+    return octets ? { scelle: Buffer.from(octets).toString('base64') } : null
+  } catch {
+    return null
+  }
+}
+
+// Export : appelée par le navigateur avant de composer le fichier ; elle ne reçoit que
+// l'identifiant et n'inscrit que `export`. Pas d'export sans trace : `ok: false` arrête l'export.
+export async function journaliserExport(id: unknown): Promise<{ ok: boolean }> {
+  if (!isRequestId(id)) return { ok: false }
+  const acces = await lireAccesRequete()
+  if (acces.etat !== 'autorise') return { ok: false }
+  try {
+    return { ok: await exportDuCoffre(getCoffrePool(), acces, id) }
+  } catch {
+    return { ok: false }
+  }
 }

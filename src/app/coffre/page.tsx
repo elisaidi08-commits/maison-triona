@@ -2,50 +2,33 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/Button'
-import { listeDuCoffre } from '@/lib/auth/acces'
+import { dernierPassageConservation, listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import {
+  date,
+  dateHeure,
+  LANGUES,
+  libelle,
+  SERVICES,
+  STATUTS,
+  TYPES,
+  URGENCES,
+} from '@/lib/coffre/libelles'
 import type { VaultRequestSummary } from '@/lib/vault/repository'
+import { RETENTION_RUN_ALERT_HOURS, retentionRunStatus } from '@/lib/vault/retention'
 
 import { seDeconnecter } from './actions'
 import { EnTete } from './_composants/EnTete'
+import { LienCoffre } from './_composants/LienCoffre'
 
-// Accueil du coffre (story 3.2, partie C) : liste des demandes, colonnes en clair seulement (jamais
-// le contenu chiffré), lue par le repository et journalisée (`list`). Le déchiffrement viendra en
-// partie D. Toutes les valeurs sont rendues comme texte.
+// Accueil du coffre (story 3.2, parties C et D) : liste des demandes, colonnes en clair seulement
+// (jamais le contenu chiffré), lue par le repository et journalisée (`list`). La date de chaque
+// demande mène à sa page de lecture (/coffre/demandes/<uuid>, déchiffrement dans le navigateur),
+// par un lien simple, sans préchargement. Toutes les valeurs sont rendues comme texte. La date du
+// dernier passage de la conservation planifiée s'affiche, avec une alerte au-delà de 48 heures.
 
 export const metadata: Metadata = { title: 'Demandes' }
-
-const TYPES: Record<string, string> = { request: 'Demande', urgent: 'Urgente' }
-const STATUTS: Record<string, string> = {
-  new: 'Nouvelle',
-  in_progress: 'En cours',
-  closed: 'Close',
-}
-const SERVICES: Record<string, string> = {
-  conciergerie: 'Conciergerie',
-  'grand-age': 'Grand âge',
-  enfants: 'Enfants',
-  indecis: 'À préciser',
-}
-const LANGUES: Record<string, string> = { fr: 'Français', en: 'Anglais' }
-const URGENCES: Record<string, string> = {
-  aucune: 'Aucune',
-  semaines: 'Semaines à venir',
-  urgent: 'Urgent',
-}
-
-const dateHeure = new Intl.DateTimeFormat('fr-BE', {
-  dateStyle: 'short',
-  timeStyle: 'short',
-  timeZone: 'Europe/Brussels',
-})
-const date = new Intl.DateTimeFormat('fr-BE', { dateStyle: 'short', timeZone: 'Europe/Brussels' })
-
-function libelle(valeurs: Record<string, string>, valeur: string | null): string {
-  if (valeur === null) return '–'
-  return valeurs[valeur] ?? valeur
-}
 
 const COLONNES = [
   'Reçue le',
@@ -62,7 +45,12 @@ const COLONNES = [
 function Ligne({ demande }: { demande: VaultRequestSummary }) {
   return (
     <tr className="border-b border-sapin-20">
-      <td className="py-12 pr-16">{dateHeure.format(demande.createdAt)}</td>
+      <td className="py-12 pr-16">
+        <LienCoffre href={`/coffre/demandes/${demande.id}`}>
+          <span className="sr-only">Lire la demande du </span>
+          {dateHeure.format(demande.createdAt)}
+        </LienCoffre>
+      </td>
       <td className="py-12 pr-16">{libelle(TYPES, demande.kind)}</td>
       <td className="py-12 pr-16">{libelle(SERVICES, demande.service)}</td>
       <td className="py-12 pr-16">{demande.country ?? '–'}</td>
@@ -78,20 +66,48 @@ function Ligne({ demande }: { demande: VaultRequestSummary }) {
   )
 }
 
-export default async function AccueilCoffre() {
+export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre'>) {
+  const { effacee } = await searchParams
   const acces = await lireAccesRequete()
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')
   if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
   const demandes = (await listeDuCoffre(getCoffrePool(), acces)) ?? []
+  const dernierPassage = await dernierPassageConservation(getCoffrePool(), acces)
+  const conservation = retentionRunStatus(dernierPassage, new Date())
 
   return (
     <>
       <EnTete titre="Demandes">
         <p>
-          Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu des
-          demandes reste chiffré.
+          Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu
+          d’une demande s’ouvre sur sa page, dans ce navigateur, avec votre paquet de clé.
         </p>
       </EnTete>
+
+      {effacee === '1' ? (
+        <p role="status" className="max-w-measure border-l-2 border-or py-8 pl-24">
+          La demande a été effacée. Le journal d’accès garde la trace de l’effacement, sans contenu.
+        </p>
+      ) : null}
+
+      {/* Conservation planifiée (partie D) : une date, et une alerte en texte si elle ne passe plus. */}
+      <div className="flex max-w-measure flex-col gap-16">
+        <p className="text-body-s">
+          {dernierPassage
+            ? `Dernier passage de la conservation automatique : ${dateHeure.format(dernierPassage)}.`
+            : 'Aucun passage de la conservation automatique n’est inscrit au journal.'}
+        </p>
+        {conservation === 'recent' ? null : (
+          <p className="border-l-2 border-encre py-8 pl-24">
+            Attention : la conservation automatique{' '}
+            {conservation === 'never'
+              ? 'n’a encore jamais tourné'
+              : `n’a pas tourné depuis plus de ${RETENTION_RUN_ALERT_HOURS} heures`}
+            . Les demandes échues ne sont pas effacées tant qu’elle ne passe pas : vérifier la tâche
+            planifiée (variable CRON_SECRET, journaux de Vercel).
+          </p>
+        )}
+      </div>
 
       {demandes.length === 0 ? (
         <p>Aucune demande pour l’instant.</p>

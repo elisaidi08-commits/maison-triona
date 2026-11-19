@@ -1,6 +1,14 @@
 import type { Pool } from 'pg'
 
-import { listRequestsLogged } from '../vault/repository.ts'
+import {
+  deleteRequest,
+  getRequest,
+  lastRetentionRun,
+  listRequestsLogged,
+  logExport,
+  readSealed,
+  setFrozen,
+} from '../vault/repository.ts'
 import type { VaultRequestSummary } from '../vault/repository.ts'
 import type { AuthCoffre } from './auth.ts'
 import { INACTIVITE_MAX_S } from './config.ts'
@@ -11,7 +19,10 @@ import { evaluerSession } from './session.ts'
 //   pour un compte qui a un TOTP) ; les sessions refusées sont supprimées ;
 // - enrolement : compte sans TOTP, qui ne peut qu'enrôler le sien ;
 // - autorise : TOTP vérifié à l'ouverture de la session.
-// Aucun contenu n'est lu ici : la liste passe par listeDuCoffre, journalisée.
+// Aucun contenu n'est lu ici : la liste passe par listeDuCoffre, la lecture d'une demande (octets
+// scellés) par scelleDuCoffre, l'export, le gel et l'effacement par leurs fonctions ; toutes
+// journalisées au nom du compte. demandeDuCoffre ne rend que les colonnes de tri. Toutes refusées
+// (rien n'est lu ni écrit) sans accès autorisé.
 
 export interface CompteCoffre {
   id: string
@@ -76,4 +87,63 @@ export async function listeDuCoffre(
 ): Promise<VaultRequestSummary[] | null> {
   if (acces.etat !== 'autorise') return null
   return listRequestsLogged(pool, acces.compte.email)
+}
+
+// Une demande (partie D), pour sa page : colonnes en clair seulement (les mêmes que la liste), sans
+// journal. Sans accès autorisé, ou demande inconnue : null.
+export async function demandeDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<VaultRequestSummary | null> {
+  if (acces.etat !== 'autorise') return null
+  return getRequest(pool, id)
+}
+
+// Lecture (partie D) : les octets scellés, remis au navigateur qui les déchiffre ; la lecture est
+// journalisée (`read`) dans la même transaction. Sans accès autorisé, ou demande inconnue : null.
+export async function scelleDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<Uint8Array | null> {
+  if (acces.etat !== 'autorise') return null
+  return readSealed(pool, id, acces.compte.email)
+}
+
+// Export (partie D) : le fichier se compose dans le navigateur ; ici, seulement la ligne `export`.
+export async function exportDuCoffre(pool: Pool, acces: AccesCoffre, id: string): Promise<boolean> {
+  if (acces.etat !== 'autorise') return false
+  return logExport(pool, id, acces.compte.email)
+}
+
+// Gel ou dégel (`freeze`, `unfreeze`) : une demande gelée échappe à la conservation automatique.
+export async function gelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  gel: boolean,
+): Promise<boolean> {
+  if (acces.etat !== 'autorise') return false
+  return setFrozen(pool, id, gel, acces.compte.email)
+}
+
+// Effacement à la demande (`delete`) ; la ligne du journal survit à la demande.
+export async function effacementDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<boolean> {
+  if (acces.etat !== 'autorise') return false
+  return deleteRequest(pool, id, acces.compte.email)
+}
+
+// Dernier passage de la conservation planifiée (accueil du coffre), pour un accès autorisé. Une date,
+// rien d'autre : sans journal.
+export async function dernierPassageConservation(
+  pool: Pool,
+  acces: AccesCoffre,
+): Promise<Date | null> {
+  if (acces.etat !== 'autorise') return null
+  return lastRetentionRun(pool)
 }

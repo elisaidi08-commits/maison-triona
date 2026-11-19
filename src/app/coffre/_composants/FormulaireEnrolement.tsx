@@ -9,9 +9,11 @@ import { TextField } from '@/components/ui/TextField'
 import { enrolerTotp } from '../actions'
 import type { EtatEnrolement } from '../actions'
 
-// Enrôlement du TOTP (obligatoire) : mot de passe, puis secret à saisir dans l'application
-// d'authentification, codes de secours, et premier code qui ouvre le coffre. Pas de QR code (aucune
-// dépendance ajoutée) : le secret se saisit à la main, ou l'adresse otpauth se colle.
+// Enrôlement du TOTP (obligatoire) : mot de passe, puis QR code et secret à enregistrer dans
+// l'application d'authentification, codes de secours, et premier code qui ouvre le coffre. Le QR
+// code est un SVG produit sur le serveur par la Server Action (D68, src/lib/auth/qr-code.ts, contrôlé
+// avant d'arriver ici) : aucun script ni service externe. Le secret en texte et l'adresse otpauth
+// restent à côté, pour une application qui ne lit pas les QR codes.
 
 const INITIAL: EtatEnrolement = { etape: 'mot-de-passe', erreur: null }
 
@@ -87,9 +89,21 @@ export function FormulaireEnrolement() {
           <h2 id="secret-titre" className="text-title-h3 text-encre">
             1. Enregistrez le secret
           </h2>
+          {etat.qr ? (
+            <>
+              <p>Scannez ce QR code avec votre application d’authentification :</p>
+              <div
+                role="img"
+                aria-label="QR code du secret pour l’application d’authentification. Le même secret est écrit ci-dessous."
+                className="self-start"
+                // SVG produit et contrôlé sur le serveur (qrCodeSvg) : une balise et deux tracés.
+                dangerouslySetInnerHTML={{ __html: etat.qr }}
+              />
+            </>
+          ) : null}
           <p>
-            Dans votre application d’authentification, ajoutez un compte « Maison Triona » et
-            saisissez ce secret, en mode « basé sur le temps » :
+            {etat.qr ? 'Ou, dans' : 'Dans'} votre application d’authentification, ajoutez un compte
+            « Maison Triona » et saisissez ce secret, en mode « basé sur le temps » :
           </p>
           <p className="text-body-l break-all text-sapin">
             <code>{secret}</code>
