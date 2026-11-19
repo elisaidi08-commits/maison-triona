@@ -10,8 +10,8 @@ import {
   verifierCronAuBuild,
 } from '../../src/lib/security/cron.ts'
 
-// Secret de la tâche planifiée (story 3.2, partie D) : `Authorization: Bearer <CRON_SECRET>`,
-// comparé à temps constant, refusé sans secret.
+// Secret des tâches planifiées (conservation, story 3.2 D ; boîte d'envoi, story 3.3) :
+// `Authorization: Bearer <CRON_SECRET>`, comparé à temps constant, refusé sans secret.
 
 const SECRET = 'a'.repeat(31) + 'Z' + '0123456789abcdef'
 const ENV = { CRON_SECRET: SECRET }
@@ -96,6 +96,23 @@ describe('planification (vercel.json)', () => {
 
 describe('garde du build', () => {
   const COFFRE = 'postgres://compte:mot-de-passe@exemple.test:5432/base'
+  // Clé d'API TEM factice (story 3.3) : l'envoi des e-mails est configuré dès qu'elle est posée.
+  const TEM = 'cle-tem-factice-0123456789'
+
+  function refuse(env: Record<string, string | undefined>): void {
+    assert.throws(
+      () => verifierCronAuBuild(env),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.message.includes('CRON_SECRET') &&
+        error.message.includes('COFFRE_DATABASE_URL') &&
+        error.message.includes('TEM_SECRET_KEY') &&
+        !error.message.includes('mot-de-passe') &&
+        !error.message.includes(TEM) &&
+        !error.message.includes('court'),
+      JSON.stringify(env),
+    )
+  }
 
   it('échoue en production quand le coffre est configuré sans CRON_SECRET valable', () => {
     for (const env of [
@@ -103,23 +120,43 @@ describe('garde du build', () => {
       { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: '' },
       { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: 'court' },
     ]) {
-      assert.throws(
-        () => verifierCronAuBuild(env),
-        (error: unknown) =>
-          error instanceof Error &&
-          error.message.includes('CRON_SECRET') &&
-          !error.message.includes('mot-de-passe'),
-      )
+      refuse(env)
     }
   })
 
-  it('laisse passer tout le reste : secret valable, aperçu public sans coffre, aperçu, poste local', () => {
+  it('échoue en production quand les e-mails sont configurés sans CRON_SECRET valable (3.3)', () => {
+    for (const env of [
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM, CRON_SECRET: '' },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM, CRON_SECRET: 'court' },
+      // L'ancien minimum de la story 3.3 (16 caractères) ne suffit plus.
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM, CRON_SECRET: 'a'.repeat(16) },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM, CRON_SECRET: 'a'.repeat(31) },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: ` ${TEM} ` },
+      { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, TEM_SECRET_KEY: TEM },
+    ]) {
+      refuse(env)
+    }
+  })
+
+  it('laisse passer tout le reste : secret valable, aperçu public sans coffre ni envoi, aperçu, poste local', () => {
     for (const env of [
       { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: COFFRE, CRON_SECRET: SECRET },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: TEM, CRON_SECRET: SECRET },
+      {
+        VERCEL_ENV: 'production',
+        COFFRE_DATABASE_URL: COFFRE,
+        TEM_SECRET_KEY: TEM,
+        CRON_SECRET: SECRET,
+      },
       { VERCEL_ENV: 'production' },
       { VERCEL_ENV: 'production', COFFRE_DATABASE_URL: '  ' },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: '' },
+      { VERCEL_ENV: 'production', TEM_SECRET_KEY: '  ', COFFRE_DATABASE_URL: '' },
       { VERCEL_ENV: 'preview', COFFRE_DATABASE_URL: COFFRE },
+      { VERCEL_ENV: 'preview', TEM_SECRET_KEY: TEM },
       { COFFRE_DATABASE_URL: COFFRE },
+      { TEM_SECRET_KEY: TEM },
       {},
     ]) {
       assert.doesNotThrow(() => verifierCronAuBuild(env), JSON.stringify(env))

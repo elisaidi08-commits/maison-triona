@@ -5,7 +5,8 @@ import { verifierCronAuBuild } from './src/lib/security/cron'
 
 // Configuration de base. En-têtes de sécurité : story 5.1 ; images : stories 1.3 et 2.5.
 
-// Coffre configuré en production sans CRON_SECRET : le build échoue (story 3.2 D, src/lib/security/cron.ts).
+// Coffre ou e-mails configurés en production sans CRON_SECRET valable : le build échoue (stories
+// 3.2 D et 3.3, src/lib/security/cron.ts).
 verifierCronAuBuild(process.env)
 
 const deploye = Boolean(process.env.VERCEL_ENV)

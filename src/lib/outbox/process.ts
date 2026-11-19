@@ -71,7 +71,10 @@ export interface OutboxRunOptions {
 // Marge sous `maxDuration = 60` de la route : le dernier envoi ou suivi commence avant 30 s. Au
 // pire, il attend la réservation 5 s (`statement_timeout`, src/lib/db/config.ts), TEM 10 s (délai
 // du transport), le marquage 5 s, puis la purge 5 s ; en pratique, quelques millisecondes pour
-// chaque appel à la base. 30 s + 5 s + 10 s + 5 s + 5 s ≈ 55 s < 60 s.
+// chaque appel à la base. 30 s + 5 s + 10 s + 5 s + 5 s ≈ 55 s < 60 s. Cas extrême : le marquage
+// final d'un échec est une transaction de plusieurs requêtes (alerte comprise), chacune sous 5 s,
+// et peut porter la passe un peu au-delà de 60 s. La fonction est alors arrêtée, le bail expire,
+// le message est repris à une passe suivante et, au pire, un doublon rare part (accepté, D69).
 const DEFAULT_BUDGET_MS = 30_000
 const DEFAULT_MAX_SENDS = 20
 const DEFAULT_MAX_CHECKS = 20

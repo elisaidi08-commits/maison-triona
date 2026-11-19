@@ -1,8 +1,10 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 
-// Secret des tâches planifiées (`CRON_SECRET`, story 3.2 D ; docs/architecture.md §6.5). Vercel
-// Cron envoie la valeur de la variable dans l'en-tête `Authorization: Bearer <secret>` à chaque
-// appel (documentation Vercel « Managing Cron Jobs », consultée le 18/11/2026).
+// Secret des tâches planifiées (`CRON_SECRET`, docs/architecture.md §6.5 et §6.7) : conservation
+// du coffre (`/api/cron/retention`, story 3.2 D) et boîte d'envoi des e-mails (`/api/cron/envoi`,
+// story 3.3), une seule vérification pour les deux. Vercel Cron envoie la valeur de la variable
+// dans l'en-tête `Authorization: Bearer <secret>` à chaque appel (documentation Vercel « Managing
+// Cron Jobs », consultée le 18/11/2026).
 // - Refus sans secret configuré : jamais de repli, ni en local ni sur un déploiement.
 // - Secret de 32 caractères au moins, sans espace ni caractère de contrôle (il voyage dans un
 //   en-tête) : `openssl rand -hex 32`. Un secret mal formé est traité comme absent.
@@ -33,29 +35,19 @@ export function autorisationCron(entete: string | null | undefined, env: Environ
   return timingSafeEqual(empreinte(entete), empreinte(`Bearer ${secret}`))
 }
 
-// Garde du build (next.config.ts) : en production Vercel, dès que le coffre est configuré
-// (`COFFRE_DATABASE_URL`), un `CRON_SECRET` valable est exigé ; sans lui, la conservation ne
-// passerait jamais. Pas ailleurs : l'aperçu public (D62) est un déploiement de production sans
-// coffre, et un aperçu de branche n'a pas de tâche planifiée. Le message ne cite aucune valeur.
+// Garde du build (next.config.ts) : en production Vercel, dès que le coffre (`COFFRE_DATABASE_URL`)
+// ou l'envoi des e-mails (`TEM_SECRET_KEY`, story 3.3) est configuré, un `CRON_SECRET` valable est
+// exigé ; sans lui, la conservation ne passerait jamais, et un e-mail dont le premier essai échoue
+// ne serait ni repris ni suivi (`/api/cron/envoi`). Pas ailleurs : l'aperçu public (D62) est un
+// déploiement de production sans coffre ni envoi, et un aperçu de branche n'a pas de tâche
+// planifiée. Le message ne cite aucune valeur.
 export function verifierCronAuBuild(env: Environnement): void {
-  if (env.VERCEL_ENV !== 'production' || !env.COFFRE_DATABASE_URL?.trim()) return
+  if (env.VERCEL_ENV !== 'production') return
+  const coffre = Boolean(env.COFFRE_DATABASE_URL?.trim())
+  const envoi = Boolean(env.TEM_SECRET_KEY?.trim())
+  if (!coffre && !envoi) return
   if (secretCron(env)) return
   throw new Error(
-    'CRON_SECRET manquant ou mal formé (32 caractères au moins, sans espace) : obligatoire en production dès que le coffre est configuré (COFFRE_DATABASE_URL).',
+    'CRON_SECRET manquant ou mal formé (32 caractères au moins, sans espace) : obligatoire en production dès que le coffre (COFFRE_DATABASE_URL) ou les e-mails (TEM_SECRET_KEY) sont configurés.',
   )
-}
-
-// Authentification de la tâche planifiée Vercel (story 3.3) : Vercel envoie
-// `Authorization: Bearer <CRON_SECRET>`. Comparaison en temps constant ; un secret absent ou de
-// moins de 16 caractères (minimum exigé par Vercel) ferme la route.
-
-const MIN_SECRET_LENGTH = 16
-
-export function cronAutorise(header: string | null, secret: string | undefined): boolean {
-  if (!secret || secret.length < MIN_SECRET_LENGTH || header === null) return false
-  const attendu = Buffer.from(`Bearer ${secret}`)
-  const recu = Buffer.from(header)
-  // timingSafeEqual lève si les longueurs diffèrent : on répond non avant.
-  if (recu.length !== attendu.length) return false
-  return timingSafeEqual(recu, attendu)
 }

@@ -60,9 +60,8 @@ import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 // quand même, sans notification. Le premier essai d'envoi part avec `after()`, après la réponse
 // (redirection comprise) ; un `after` qui lève est journalisé `failed:after` et n'empêche jamais
 // le remerciement. Tout étant déjà en base, la tâche Vercel Cron `/api/cron/envoi` reprend le
-// message si cet essai n'aboutit pas. La notification ne porte
-// que la date et le lien vers le coffre, « Prioritaire » au sujet si l'urgence est « urgent » :
-// rien de la demande (D06).
+// message si cet essai n'aboutit pas. La notification ne porte que la date et le lien vers le
+// coffre, « Prioritaire » au sujet si l'urgence est « urgent » : rien de la demande (D06).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
 // Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.

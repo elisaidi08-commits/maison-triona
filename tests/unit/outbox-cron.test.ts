@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import { runCronPass } from '../../src/lib/outbox/cron.ts'
 import type { OutboxDeps, OutboxRunSummary } from '../../src/lib/outbox/process.ts'
 
-const SECRET = 'un-secret-de-plus-de-seize-caracteres'
+// Secret de test au format de `openssl rand -hex 32` (64 caractères, 32 au moins exigés).
+const SECRET = '0123456789abcdef'.repeat(4)
 const SENDING_ENV = {
   CRON_SECRET: SECRET,
   TEM_SECRET_KEY: 'cle-tem-secrete',
@@ -64,6 +65,25 @@ describe('runCronPass', () => {
   test('secret absent de l’environnement : 401', async () => {
     const t = setup({ env: { ...SENDING_ENV, CRON_SECRET: undefined } })
     assert.equal((await runCronPass(t.input)).status, 401)
+  })
+  test('secret de moins de 32 caractères ou avec une espace : 401, même avec l’en-tête exact', async () => {
+    for (const secret of ['a'.repeat(16), 'a'.repeat(31), `${'a'.repeat(16)} ${'a'.repeat(16)}`]) {
+      const t = setup({
+        authorization: `Bearer ${secret}`,
+        env: { ...SENDING_ENV, CRON_SECRET: secret },
+      })
+      assert.deepEqual(await runCronPass(t.input), { status: 401, body: null }, secret)
+      assert.deepEqual(t.logs, ['rejected:cron'])
+      assert.deepEqual(t.counts(), { created: 0, ran: 0 })
+    }
+  })
+  test('secret de 32 caractères exactement : accepté', async () => {
+    const secret = 'a'.repeat(32)
+    const t = setup({
+      authorization: `Bearer ${secret}`,
+      env: { ...SENDING_ENV, CRON_SECRET: secret },
+    })
+    assert.deepEqual(await runCronPass(t.input), { status: 200, body: SUMMARY })
   })
   test('envoi coupé : 204 sans rien exécuter', async () => {
     const t = setup({ env: { CRON_SECRET: SECRET } })

@@ -65,7 +65,7 @@
 - **Vercel Cron, offre Pro** :
   - une fois par minute au plus ;
   - requête `GET` sur le déploiement de **production** seulement ;
-  - en-tête `Authorization: Bearer <CRON_SECRET>`, secret de 16 caractères au moins, figé au build ;
+  - en-tête `Authorization: Bearer <CRON_SECRET>`, figé au build ; la maison exige un secret de 32 caractères au moins, sans espace (`openssl rand -hex 32`, règle de la 3.2 D) ;
   - **aucune nouvelle tentative**, et une exécution peut manquer ou partir deux fois ;
   - **aucune redirection suivie** (le `matcher` de `src/proxy.ts` exclut déjà `api`) ;
   - `vercel.json` → `crons`.
@@ -92,10 +92,10 @@
 | `src/lib/email/templates.ts` (créé) | Notification et alerte, texte seul, en français (interface interne) |
 | `src/lib/vault/store.ts` (modifié) | La notification entre dans la transaction de la demande |
 | `src/actions/request.ts` (modifié) | `after()` : premier essai |
-| `src/lib/security/cron.ts` (créé) | `cronAutorise(header, secret)` (comparaison à temps constant) |
+| `src/lib/security/cron.ts` (créé par la 3.2 D sur `main`) | `autorisationCron(header, env)`, commun aux deux tâches planifiées (comparaison à temps constant) ; `cronAutorise` de la branche retiré à l'intégration de `main` |
 | `src/app/api/cron/envoi/route.ts` (créé) | Tâche planifiée |
 | `vercel.json` (créé) | `crons` : `/api/cron/envoi` toutes les 5 minutes |
-| `tests/unit/email-config.test.ts`, `email-tem.test.ts`, `email-templates.test.ts`, `outbox-schedule.test.ts`, `cron-auth.test.ts` (créés) ; `db-config.test.ts` (modifié) | Tests unitaires |
+| `tests/unit/email-config.test.ts`, `email-tem.test.ts`, `email-templates.test.ts`, `outbox-schedule.test.ts`, `outbox-cron.test.ts` (créés) ; `db-config.test.ts`, `cron-secret.test.ts` de la 3.2 D (modifiés) | Tests unitaires |
 | `tests/integration/outbox-repository.test.ts`, `outbox-process.test.ts`, `outbox-roles.test.ts` (créés) ; `vault-store.test.ts` (modifié) | Tests contre PostgreSQL |
 | `.env.example`, `docs/architecture.md`, `docs/email-deliverability.md`, `docs/privacy.md`, `docs/rgpd/registre-des-traitements.md`, `docs/rgpd/sous-traitants.md`, `docs/coffre-cles.md`, `docs/plan-implementation.md`, `docs/decisions.md`, `README.md`, `CLAUDE.md` (modifiés) | Documentation |
 
@@ -333,9 +333,9 @@ export function runOutbox(deps: OutboxDeps): Promise<{ sent: number; retried: nu
 
 ### Task 9 : Tâche planifiée
 
-- [ ] **Step 1 (TDD)** : `tests/unit/cron-auth.test.ts`. `cronAutorise(header, secret)` :
-  - vrai seulement pour `Bearer <secret>` exact (comparaison `timingSafeEqual` sur des longueurs égales) ;
-  - faux si le secret manque ou fait moins de 16 caractères ;
+- [ ] **Step 1 (TDD)** : `tests/unit/cron-auth.test.ts`. `cronAutorise(header, secret)` (à l'intégration de `main`, remplacés par `autorisationCron(header, env)` et `tests/unit/cron-secret.test.ts` de la 3.2 D, communs aux deux tâches planifiées) :
+  - vrai seulement pour `Bearer <secret>` exact (empreintes SHA-256 comparées par `timingSafeEqual`) ;
+  - faux si le secret manque, fait moins de 32 caractères ou contient une espace ;
   - faux pour un en-tête absent, sans `Bearer`, ou avec un autre secret.
 - [ ] **Step 2** : `src/lib/security/cron.ts`, puis `src/app/api/cron/envoi/route.ts` :
   ```ts
@@ -409,7 +409,7 @@ export function runOutbox(deps: OutboxDeps): Promise<{ sent: number; retried: nu
    Attendre l'état `checked`, jusqu'à 48 heures. Vérifier que le suivi des ouvertures et des clics est coupé.
 2. **IAM** : une application « site » avec une clé d'API limitée à `TransactionalEmailEmailApiCreate` et `TransactionalEmailEmailReadOnly`, sur le projet de la maison seulement. Pas de restriction par IP : les IP de sortie de Vercel ne sont pas fixes.
 3. **Base** : créer le compte de l'envoi, appliquer `db/roles/envoi.sql`, puis relancer `db/roles/site_public.sql` après `npm run db:migrate`.
-4. **Vercel (production)** : renseigner les variables du §Task 10 et `CRON_SECRET` (`openssl rand -base64 48`), puis redéployer. Le secret est figé au build. Les tâches planifiées ne tournent que sur la production.
+4. **Vercel (production)** : renseigner les variables du §Task 10 et `CRON_SECRET` (32 caractères au moins, sans espace : `openssl rand -hex 32` ; sans lui, le build de production échoue dès que `TEM_SECRET_KEY` est posée), puis redéployer. Le secret est figé au build. Les tâches planifiées ne tournent que sur la production.
 5. **Adresses** : celle qui reçoit les notifications de Cat tant que les boîtes du domaine ne sont pas choisies (`reservation-appel.md` §9, question 6), et l'adresse d'alerte de Sady.
 6. **Tests de réception** (`email-deliverability.md` §5) avec des demandes factices, une fois le domaine `checked`.
 

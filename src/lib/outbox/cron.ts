@@ -1,10 +1,12 @@
 import { emailConfigFromEnv } from '../email/config.ts'
 import type { EmailConfig } from '../email/config.ts'
-import { cronAutorise } from '../security/cron.ts'
+import { autorisationCron } from '../security/cron.ts'
 import type { OutboxDeps, OutboxRunSummary } from './process.ts'
 
 // Logique testable de la route `/api/cron/envoi` (story 3.3), sans import de Next.
 // Ordre : autorisation, configuration (envoi coupé = rien à faire), dépendances, passe.
+// Autorisation : la même que la conservation du coffre (`autorisationCron`,
+// src/lib/security/cron.ts) : `CRON_SECRET` de 32 caractères au moins, comparé à temps constant.
 // Le journal ne porte qu'un statut de route : jamais le secret ni un message d'erreur ; le corps
 // de la réponse ne contient que des nombres.
 // Imports relatifs seulement : testé par node --test.
@@ -23,7 +25,7 @@ export async function runCronPass(input: {
 }): Promise<CronResult> {
   const { authorization, env, createDeps, run, log } = input
 
-  if (!cronAutorise(authorization, env.CRON_SECRET)) {
+  if (!autorisationCron(authorization, env)) {
     log('rejected:cron')
     return { status: 401, body: null }
   }
