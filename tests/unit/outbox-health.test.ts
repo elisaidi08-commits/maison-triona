@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import type { Pool } from 'pg'
+
+import { etatEnvoiDuCoffre } from '../../src/lib/auth/acces.ts'
 import {
   emailSendingState,
   OUTBOX_HEALTH_DAYS,
@@ -10,6 +13,7 @@ import {
 
 // État de l'envoi des e-mails sur l'accueil du coffre (story 3.3, suites C) : phrases en français,
 // apostrophe typographique, espace insécable avant « : », singulier et pluriel. Données factices.
+// Lecture réservée à un accès autorisé (etatEnvoiDuCoffre, comme dernierPassageConservation).
 
 const NBSP = ' '
 const RIEN = { late: 0, failed: 0, unnotified: 0 }
@@ -137,5 +141,22 @@ describe('outboxHealthLines', () => {
     assert.throws(() => outboxHealthLines({ ...RIEN, late: -1 }, 'on'), RangeError)
     assert.throws(() => outboxHealthLines({ ...RIEN, failed: 1.5 }, 'on'), RangeError)
     assert.throws(() => outboxHealthLines({ ...RIEN, unnotified: Number.NaN }, 'on'), RangeError)
+  })
+})
+
+describe('etatEnvoiDuCoffre', () => {
+  it('sans accès autorisé : null, sans aucune requête', async () => {
+    let requetes = 0
+    const pool = {
+      query: async () => {
+        requetes += 1
+        throw new Error('aucune requête attendue')
+      },
+    } as unknown as Pool
+    const compte = { id: 'u1', email: 'u1@exemple.test', nom: 'Compte factice' }
+    const maintenant = new Date('2027-03-10T12:00:00Z')
+    assert.equal(await etatEnvoiDuCoffre(pool, { etat: 'anonyme' }, maintenant), null)
+    assert.equal(await etatEnvoiDuCoffre(pool, { etat: 'enrolement', compte }, maintenant), null)
+    assert.equal(requetes, 0)
   })
 })

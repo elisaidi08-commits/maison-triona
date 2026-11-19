@@ -159,19 +159,22 @@ describe('rôles de connexion du coffre', () => {
   })
 
   it('coffre lit les colonnes d’état de la boîte d’envoi, et rien d’autre (3.3, suites C)', async () => {
-    const id = randomUUID()
+    const requestId = randomUUID()
     await admin.query(
       `INSERT INTO outbox (id, template, request_id, last_error)
        VALUES ($1, 'request_notification', $2, 'timeout')`,
-      [id, randomUUID()],
+      [randomUUID(), requestId],
     )
     const { rows } = await coffre.query(
-      `SELECT id, template, status, request_id, next_attempt_at, created_at
-       FROM outbox WHERE id = $1`,
-      [id],
+      `SELECT template, status, request_id, next_attempt_at, created_at
+       FROM outbox WHERE request_id = $1`,
+      [requestId],
     )
     assert.equal(rows.length, 1)
     for (const sql of [
+      // Pas l'identifiant du message : il relierait une ligne `[envoi] <statut> <id>` des journaux
+      // à une demande.
+      'SELECT id FROM outbox',
       'SELECT provider_id FROM outbox',
       'SELECT last_error FROM outbox',
       'SELECT * FROM outbox',

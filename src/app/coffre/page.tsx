@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/Button'
-import { dernierPassageConservation, listeDuCoffre } from '@/lib/auth/acces'
+import type { AccesCoffre } from '@/lib/auth/acces'
+import { dernierPassageConservation, etatEnvoiDuCoffre, listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
-import { emailSendingState, outboxHealth, outboxHealthLines } from '@/lib/outbox/health'
+import { emailSendingState, outboxHealthLines } from '@/lib/outbox/health'
 import {
   date,
   dateHeure,
@@ -32,15 +33,20 @@ import { LienCoffre } from './_composants/LienCoffre'
 // envoi coupé ou mal configuré, messages en retard ou en échec, demandes de la semaine sans
 // notification, avec une alerte en texte quand quelque chose ne va pas. Des comptes seulement :
 // aucune demande n'est ouverte ni affichée, d'où aucune ligne au journal d'accès (comme pour la
-// date de la conservation). Si la requête échoue : « État de l'envoi indisponible. », sans l'erreur.
+// date de la conservation), mais lus comme elle derrière la vérification de l'accès
+// (etatEnvoiDuCoffre). Si la requête échoue : « État de l'envoi indisponible. », sans l'erreur.
 
 export const metadata: Metadata = { title: 'Demandes' }
 
-// État de l'envoi : les phrases du bloc, ou null si la lecture échoue (erreur ni affichée ni citée).
-async function etatEnvoi(maintenant: Date): Promise<{ lines: string[]; alert: boolean } | null> {
+// État de l'envoi : les phrases du bloc, ou null si la lecture échoue (erreur ni affichée ni citée)
+// ou si l'accès n'est pas autorisé.
+async function etatEnvoi(
+  acces: AccesCoffre,
+  maintenant: Date,
+): Promise<{ lines: string[]; alert: boolean } | null> {
   try {
-    const sante = await outboxHealth(getCoffrePool(), maintenant)
-    return outboxHealthLines(sante, emailSendingState(process.env))
+    const sante = await etatEnvoiDuCoffre(getCoffrePool(), acces, maintenant)
+    return sante ? outboxHealthLines(sante, emailSendingState(process.env)) : null
   } catch {
     return null
   }
@@ -90,7 +96,7 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
   const demandes = (await listeDuCoffre(getCoffrePool(), acces)) ?? []
   const dernierPassage = await dernierPassageConservation(getCoffrePool(), acces)
   const conservation = retentionRunStatus(dernierPassage, new Date())
-  const envoi = await etatEnvoi(new Date())
+  const envoi = await etatEnvoi(acces, new Date())
 
   return (
     <>

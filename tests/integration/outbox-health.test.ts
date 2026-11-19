@@ -3,6 +3,7 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { after, before, beforeEach, describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
+import { etatEnvoiDuCoffre } from '../../src/lib/auth/acces.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { outboxHealth } from '../../src/lib/outbox/health.ts'
 import { insertRequest } from '../../src/lib/vault/repository.ts'
@@ -135,5 +136,19 @@ describe('état de l’envoi des e-mails (accueil du coffre)', () => {
 
   it('refuse une date invalide, sans requête', async () => {
     await assert.rejects(outboxHealth(coffre, new Date(Number.NaN)), RangeError)
+  })
+
+  it('accès autorisé : les mêmes comptes, par etatEnvoiDuCoffre', async () => {
+    await message({ status: 'failed', createdAt: avant(JOUR) })
+    await demande(avant(JOUR))
+    const acces = {
+      etat: 'autorise' as const,
+      compte: { id: 'u1', email: 'u1@exemple.test', nom: 'Compte factice' },
+    }
+    assert.deepEqual(await etatEnvoiDuCoffre(coffre, acces, MAINTENANT), {
+      late: 0,
+      failed: 1,
+      unnotified: 1,
+    })
   })
 })

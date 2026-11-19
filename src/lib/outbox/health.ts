@@ -8,7 +8,7 @@ import { guard } from '../vault/repository.ts'
 // n'a pas pu s'écrire (`failed:outbox`), une tâche planifiée qui ne passe plus ou une clé de TEM
 // révoquée (l'alerte à Sady échoue aussi) ne préviennent personne. Des comptes seulement : aucun
 // contenu, aucun identifiant, aucun code d'erreur. Lu avec le rôle `coffre`, qui n'a sur `outbox`
-// que la lecture de six colonnes (db/roles/coffre.sql).
+// que la lecture de cinq colonnes, sans l'identifiant du message (db/roles/coffre.sql).
 // Imports relatifs seulement : testé par node --test.
 
 /** Un message dû depuis plus longtemps : la tâche (toutes les 5 minutes) aurait dû le prendre. */
