@@ -127,7 +127,7 @@ Fonction pure `computeSlots({ settings, rules, exceptions, bookings, busy, now }
 - **Boîte d'envoi** de 3.3, étendue : `send_at` (messages programmés), `channel` (`email` · `sms`), gabarit, `booking_id`. Elle ne contient **aucune coordonnée** : le serveur lit `contact_kms` au moment de l'envoi ; si elle est effacée, le message est abandonné. Tâche planifiée Vercel Cron toutes les 5 minutes.
 - **Tâche quotidienne** (`/api/cron/booking`) : appels passés en « à qualifier », effacement de `contact_kms`, purge des jetons.
 - **Invitations** : `src/lib/booking/ics.ts`, écrit à la main (sous-ensemble RFC 5545), sans dépendance. `METHOD:REQUEST` puis `METHOD:CANCEL`, `UID` stable par destinataire (`<id>-guest@`, `<id>-host@`), `SEQUENCE` incrémentée à chaque déplacement, `VTIMEZONE` Europe/Brussels. À tester dans Google Agenda, Apple Calendrier et Outlook.
-- **SMS** : adaptateur `src/lib/sms` (fournisseur interchangeable, comme `lib/email`). Fournisseur `[À TRANCHER]` après vérification sur les sites officiels du contrat de traitement, de l'hébergement UE, de l'expéditeur alphanumérique en BE, FR, LU, MC et CH, et du prix. Pistes : Sweego (France), seven (Allemagne), GatewayAPI (Danemark) ; environ 5 à 10 centimes par SMS (annuaires, non vérifié). Textes ≤ 160 caractères dans l'alphabet GSM-7 (sinon découpage en segments de 70) ; aucun service nommé, car le SMS s'affiche sur l'écran verrouillé.
+- **SMS** : adaptateur `src/lib/sms` (fournisseur interchangeable, comme `lib/email`). Fournisseur **seven** (Allemagne, D71 ; comparaison et questions à poser avant la signature : `docs/sms-fournisseur.md`). Expéditeur **« Triona »** en France, au Luxembourg, à Monaco et en Suisse ; **numéro court en Belgique**, où les opérateurs refusent tout nom d'expéditeur : le texte commence donc toujours par « Maison Triona ». **Aucun lien** : le SMS renvoie à l'e-mail pour déplacer ou annuler (D71). Textes de **145 caractères au plus** dans l'alphabet GSM-7, pour garder la marge d'un « STOP » ajouté par un opérateur (un seul caractère hors GSM-7 ramène la limite à 70) ; dates en chiffres ; aucun service nommé, car le SMS s'affiche sur l'écran verrouillé. En Belgique, la personne peut répondre STOP au numéro court : le rappel programmé est alors abandonné, si seven nous le signale `[À VÉRIFIER : question 5 à seven]`.
 
 ### 4.6 Arborescence
 
@@ -179,10 +179,10 @@ Bouton « Connecter Google Agenda » dans le coffre : OAuth limité à la **lect
 | Traitement | Données | Base légale (proposée) | Où | Conservation |
 |---|---|---|---|---|
 | Réservation d'appel | E-mail, nom, numéro, langue, créneau, « pas de message vocal », origine, choix SMS | Mesures précontractuelles `[À VALIDER par le juriste]` | Coffre (sealed box) ; e-mail et numéro aussi chiffrés avec la clé serveur jusqu'au dernier message | Comme les demandes (D05) |
-| Messages de l'appel | E-mail, numéro | Mesures précontractuelles ; SMS seulement sur demande de la personne | Fournisseur e-mail (TEM), fournisseur SMS `[À TRANCHER]` | Journaux d'envoi du fournisseur `[À VÉRIFIER]` |
+| Messages de l'appel | E-mail, numéro | Mesures précontractuelles ; SMS seulement sur demande de la personne | Fournisseur e-mail (TEM) ; SMS : seven (Allemagne, D71) | TEM : métadonnées tant que le domaine est actif ; seven : journal réglé sur l'effacement immédiat, journaux de trafic jusqu'à 60 jours selon ses conditions `[À VÉRIFIER : question 1 à seven]` |
 | Invitation à Cat | Titre neutre, heure, lien vers le coffre | Intérêt légitime | Google (agenda de Cat) | Dans son agenda |
 
-- **Nouveau sous-traitant** : le fournisseur SMS (contrat de traitement signé avant l'ouverture).
+- **Nouveau sous-traitant** : seven (D71), contrat de traitement signé au nom de la société avant l'ouverture. Envoi vers Monaco, sans décision d'adéquation de l'UE : `[À VALIDER par le juriste]`.
 - **Risques résiduels** : la clé serveur permet, pendant la fenêtre d'envoi, de lire l'e-mail et le numéro des appels à venir si le serveur est compromis ; le chemin des liens apparaît dans les journaux de Vercel.
 
 ## 8. Découpage en stories (à reporter dans `docs/plan-implementation.md` après relecture)
@@ -203,7 +203,7 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 
 1. Libellé du CTA « Convenir d'un appel » et pages où il apparaît (contact, « Comment ça se passe », FAQ) : Cat.
 2. ~~Plages, durée, pause, délai, horizon, plafond (§3.1)~~ : validés par Sady le 06/11 ; heures exactes des plages à confirmer par Cat.
-3. Fournisseur SMS et nom d'expéditeur : après vérification.
+3. ~~Fournisseur SMS et nom d'expéditeur~~ : seven, « Triona », SMS sans lien (D71) ; « Triona » à présenter à Cat.
 4. Rencontre en personne hors de ce périmètre : à confirmer.
 5. Base légale, consentement et mention du SMS : juriste.
 6. Adresse qui reçoit les notifications de Cat tant que les boîtes du domaine ne sont pas choisies (D47).
@@ -227,3 +227,5 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 - **Conservation** : par la tâche existante (`/api/cron/retention`, pas `/api/cron/booking`) : réservations effacées à leur échéance, jetons 48 h après leur expiration (pas 7 jours), sauf le lien qui sert encore à revoir la confirmation d'un appel à venir. Deux compteurs au journal (`purged_bookings`, `purged_tokens`, migration 0010).
 - **Consommation d'un lien** : un déclencheur (migration 0010) refuse toute mise à jour de `used_at` déjà posée, remise à zéro ou sans réservation qui pointe vers le jeton.
 
+
+**19/11/2026, fournisseur SMS (D71)** : `docs/sms-fournisseur.md` (comparaison, questions à seven) · cette spec §4.5, §7 et §9 · `docs/privacy.md` (§1, sous-traitants) · `docs/rgpd/sous-traitants.md` (seven, transferts vers la Suisse et Monaco) · `docs/rgpd/registre-des-traitements.md` (T2, T8) · `docs/rgpd/analyse-impact.md` · `docs/email-deliverability.md` §1 · `docs/architecture.md` §6.6 · `docs/plan-implementation.md` (3.12) · `docs/launch-checklist.md` §3 · `CLAUDE.md`. Aucun code : la case SMS reste masquée jusqu'à la 3.12.

@@ -17,9 +17,9 @@
 | Confirmation d'appel, déplacement, annulation (D57) | Personne | Jour, heure, lien de gestion, invitation .ics | Aucune (aucun service nommé) |
 | Rappel de la veille (D57) | Personne | Jour, heure, lien de gestion | Aucune |
 | Nouvel appel (D57) | Cat | Jour, heure, lien vers l'appel dans le coffre, invitation .ics « Appel · Maison Triona » | **Aucune** (ni nom, ni numéro) |
-| SMS de confirmation et de rappel (D57, option) | Personne | ≤ 160 caractères GSM-7, jour, heure, lien | Aucune ; visible sur l'écran verrouillé, donc aucun service nommé |
+| SMS de confirmation et de rappel (D57, option) | Personne | 145 caractères GSM-7 au plus : « Maison Triona », jour, heure, renvoi à l'e-mail ; **aucun lien** (D71). Expéditeur « Triona », numéro court en Belgique ; fournisseur seven | Aucune ; visible sur l'écran verrouillé, donc aucun service nommé |
 
-Messages de la réservation d'appel : `docs/reservation-appel.md` §2 et §3.3. Les invitations .ics sont à tester dans Google Agenda, Apple Calendrier et Outlook ; les SMS dans chacun des cinq pays.
+Messages de la réservation d'appel : `docs/reservation-appel.md` §2 et §3.3. Les invitations .ics sont à tester dans Google Agenda, Apple Calendrier et Outlook ; les SMS dans chacun des cinq pays (expéditeur affiché, livraison, STOP au numéro court belge : `docs/sms-fournisseur.md` §3).
 
 Tous en **FR et EN** (langue du visiteur pour la confirmation), texte simple et HTML sobre, **sans image distante, sans pixel de suivi, sans lien traqué**. Les deux e-mails internes (notification, alerte) sont en **français** et en **texte brut** seulement (`src/lib/email/templates.ts`).
 

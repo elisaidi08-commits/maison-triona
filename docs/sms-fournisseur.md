@@ -1,17 +1,17 @@
 # Fournisseur SMS · proposition à trancher
 
-> **Statut** : proposition du 19/11/2026 pour la story **3.12** (D57). Rien n'est ouvert, rien n'est signé. **Décision : Sady.**
+> **Statut** : **décidé le 19/11/2026 (D71)** : seven, expéditeur « Triona », SMS sans lien. Story **3.12** (D57). Rien n'est encore ouvert ni signé : le compte et le DPA se font au nom de la société, après son inscription (D38).
 > **Méthode** : sites officiels des fournisseurs (conditions, DPA, listes de sous-traitants, grilles de prix, documentation de l'API), directives des opérateurs et de l'af2m, guides par pays des agrégateurs ; **tout lu le 19/11/2026**, sources au §8. Ce qui n'a pas pu être lu sur une source officielle est noté « non vérifié ».
-> **À mettre à jour une fois la décision prise** : `docs/reservation-appel.md` §4.5 et §11 (point 3), `docs/rgpd/sous-traitants.md`, `docs/privacy.md` §1 et §7, `docs/rgpd/registre-des-traitements.md`, `docs/rgpd/analyse-impact.md` (nom de l'expéditeur), `docs/email-deliverability.md` §1 et §5, `docs/decisions.md`.
+> **Documents mis à jour avec D71** : `docs/decisions.md`, `docs/reservation-appel.md` §4.5, §7, §9 et §10, `docs/rgpd/sous-traitants.md`, `docs/privacy.md` (§1 et sous-traitants), `docs/rgpd/registre-des-traitements.md` (T2, T8), `docs/rgpd/analyse-impact.md`, `docs/email-deliverability.md` §1, `docs/architecture.md` §6.6, `docs/plan-implementation.md` (3.12), `docs/launch-checklist.md` §3, `CLAUDE.md`.
 
 ---
 
 ## 1. En bref
 
-1. **Recommandation : seven** (Kiel, Allemagne). **En second : GatewayAPI, plateforme `.eu`** (Odense, Danemark). Ce sont les deux seuls dont les serveurs, le DPA et la conservation tiennent nos exigences sans réserve majeure (§4).
+1. **Retenu : seven** (Kiel, Allemagne, D71). **En second : GatewayAPI, plateforme `.eu`** (Odense, Danemark), si les réponses de seven aux questions du §9 ne conviennent pas. Ce sont les deux seuls dont les serveurs, le DPA et la conservation tiennent nos exigences sans réserve majeure (§4).
 2. **En Belgique, aucun nom d'expéditeur n'est possible**, quel que soit le fournisseur. Les directives des opérateurs belges l'interdisent, et les SMS partent d'un **numéro court** (8xxx). Le texte doit donc dire qui écrit (§3).
-3. **« Maison Triona » ne peut pas servir d'expéditeur** : il compte 13 caractères, pour 11 au plus, en lettres et chiffres et sans espace. Il faut choisir un autre nom, par exemple **« Triona »** `[À TRANCHER par Sady et Cat]`.
-4. **Proposition : aucun lien dans les SMS.** Le fournisseur garde le texte dans ses journaux, si bien qu'un lien de gestion y resterait comme une clé valable. Le lien est déjà dans l'e-mail (§6.2).
+3. **« Maison Triona » ne peut pas servir d'expéditeur** : il compte 13 caractères, pour 11 au plus, en lettres et chiffres et sans espace. **« Triona » est retenu** (D71), à présenter à Cat.
+4. **Aucun lien dans les SMS** (D71). Le fournisseur garde le texte dans ses journaux, si bien qu'un lien de gestion y resterait comme une clé valable. Le lien est déjà dans l'e-mail (§6.2).
 5. **Le coût ne départage pas** : moins de 15 € HT par mois au plafond de 4 appels par jour, même si chaque personne coche le SMS.
 6. **Calendrier** : le compte et le DPA se font **au nom de la société**, après son inscription (janvier 2027, D38). L'expéditeur français s'enregistre ensuite, avec un délai annoncé de quelques jours à 8 semaines. D'ici là, la 3.12 se code avec un faux adaptateur, comme `lib/email`.
 
@@ -62,7 +62,7 @@ Prix en euros HT par SMS d'un segment. « Non vérifié » : absent des sources 
 | **BE · FR · LU · MC · CH** | 0,075 partout | 0,070 · 0,043 · 0,092 · 0,105 · 0,077 | 0,072 · 0,040 · 0,084 · **0,190** · 0,068 | 0,085 · 0,061 · 0,098 · 0,165 · 0,092 | Non vérifié | 0,081 · 0,060 · 0,102 · **absent** · 0,060 |
 | **Minimum, frais** | Recharge dès 1 € ; **10 % de la dernière recharge par mois après 6 mois sans envoi** | 150 € par virement (par carte : non trouvé) ; crédit de moins de 100 € non remboursé | Pack de 20 € valable 12 mois | Pack de 61 € ou 9 € par mois | Sans frais mensuels | Pack de 6 € |
 | **Essai** | Bac à sable sans envoi réel ; 0,50 € de crédit | 30 jours, SMS préfixés « THIS IS A TEST SMS: » | Aucun bac à sable | Non vérifié | Non vérifié | Non vérifié |
-| **Verdict** | **Recommandé** | **En second** | Écarté | En réserve | Écarté | **Écarté** |
+| **Verdict** | **Retenu (D71)** | **En second** | Écarté | En réserve | Écarté | **Écarté** |
 
 **Écartés d'emblée** :
 - **Scaleway** : aucune offre SMS.
@@ -120,11 +120,11 @@ L'e-mail prêt à envoyer à seven est au §9. Il ajoute deux questions : les sa
 
 ### 6.1 Expéditeur
 
-- **Nom** : 11 caractères au plus, lettres et chiffres, sans espace (charte af2m) ; « Triona » (6) convient. `[À TRANCHER par Sady et Cat]`
+- **Nom** : 11 caractères au plus, lettres et chiffres, sans espace (charte af2m) ; **« Triona »** (6 caractères), retenu par Sady (D71), à présenter à Cat.
 - **Discrétion** : le nom s'affiche sur l'écran verrouillé, ce qui est déjà identifié comme risque dans `docs/rgpd/analyse-impact.md`. En Belgique, seul un numéro s'affiche.
 - **Le texte commence par « Maison Triona »**. Sans cela, une personne en Belgique recevrait un SMS d'un numéro inconnu sans savoir qui lui écrit.
 
-### 6.2 Aucun lien dans le SMS (proposition)
+### 6.2 Aucun lien dans le SMS (D71)
 
 **Pourquoi** :
 - le texte reste dans les journaux du fournisseur (jusqu'à 30 jours chez GatewayAPI, 90 jours chez Sweego) : un lien de gestion y serait une clé valable pour l'appel ;
@@ -132,7 +132,7 @@ L'e-mail prêt à envoyer à seven est au §9. Il ajoute deux questions : les sa
 - chez GatewayAPI, chaque domaine doit être en liste blanche ;
 - le lien prend à lui seul 91 caractères sur 160.
 
-**Ce que ça change** : la ligne « SMS » de `docs/email-deliverability.md` §1 (« jour, heure, lien ») deviendrait « jour, heure ». Le SMS renvoie à l'e-mail pour déplacer ou annuler. `[À TRANCHER par Sady]`
+**Ce que ça change** : la ligne « SMS » de `docs/email-deliverability.md` §1 dit désormais « jour, heure, renvoi à l'e-mail ». Le SMS renvoie à l'e-mail pour déplacer ou annuler.
 
 ### 6.3 Textes : rester dans l'alphabet GSM-7
 
@@ -178,9 +178,9 @@ Un seul caractère hors GSM-7 fait passer **tout le message** en Unicode, et la 
 
 | Point | Qui | Quand |
 |---|---|---|
-| Fournisseur (seven recommandé, GatewayAPI `.eu` en second) | Sady | Avant la 3.12 |
-| Nom d'expéditeur (« Triona » proposé) | Sady et Cat | Avant l'enregistrement de l'expéditeur en France |
-| SMS sans lien | Sady | Avant la 3.12 |
+| ~~Fournisseur~~ : seven (D71) | Sady | Fait le 19/11/2026 |
+| ~~Nom d'expéditeur~~ : « Triona » (D71), à présenter à Cat | Sady, puis Cat | Avant l'enregistrement de l'expéditeur en France |
+| ~~SMS sans lien~~ (D71) | Sady | Fait le 19/11/2026 |
 | Textes des SMS | Cat (après `i18n-copy-editor`) | Avant l'ouverture |
 | Questions du §5.3 (e-mail rédigé au §9) | Sady (envoi) | Avant la signature |
 | Base légale des SMS, consentement, transfert vers Monaco | Juriste | Avant l'ouverture |

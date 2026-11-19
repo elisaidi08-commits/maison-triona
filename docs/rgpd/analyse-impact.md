@@ -56,7 +56,7 @@ Les lignes directrices européennes sur l'AIPD (WP248 rév. 01) considèrent qu'
 | **Accès illégitime** aux demandes ou aux notes | Révélation de l'état de santé ou de la fin de vie d'un parent, d'une situation familiale, de la présence d'enfants ; **révélation de l'absence des propriétaires** (« préparer une résidence avant une arrivée », « un séjour sur la Riviera ») et de leur aisance : risque de cambriolage, de démarchage, d'escroquerie | Compromission d'un compte du coffre ou du poste de Cat ; compromission de l'hébergeur ou d'une fonction pendant le chiffrement ; e-mail ou note gardés hors du coffre ; erreur de destinataire lors d'une présentation ; journal ou lien exposé |
 | **Modification non désirée** | Mauvaise personne présentée, mauvais horaire d'appel | Compte compromis ; erreur de saisie |
 | **Disparition** | Une famille sans réponse, un appel manqué | Perte de la clé privée du coffre ; panne de la base ; suppression par erreur |
-| **Divulgation à l'entourage** | Un proche apprend qu'une demande a été faite (santé d'un parent, garde d'enfants) | Nom de l'expéditeur « Maison Triona » sur un écran verrouillé (SMS, notification d'e-mail) ; invitation dans un agenda familial partagé |
+| **Divulgation à l'entourage** | Un proche apprend qu'une demande a été faite (santé d'un parent, garde d'enfants) | « Maison Triona » sur un écran verrouillé (début du SMS, dont l'expéditeur est « Triona », ou un numéro court en Belgique, D71 ; notification d'e-mail) ; invitation dans un agenda familial partagé |
 | **Appel ou SMS vers un numéro donné par un tiers** | Le parent apprend la démarche d'un enfant, ou l'inverse | Seule l'adresse e-mail est vérifiée ; le numéro peut appartenir à quelqu'un d'autre |
 | **Détournement par le professionnel présenté** | Abus de faiblesse auprès d'un parent âgé ; absence des propriétaires connue d'un tiers | Le professionnel reçoit l'adresse, les habitudes et les absences de la famille |
 | **Recoupement** | Une demande « grand âge » rattachée à une personne | Colonnes de tri en clair (service, dates) recoupées avec les journaux de l'hébergeur (IP, heure de l'envoi) |
@@ -97,7 +97,7 @@ Les lignes directrices européennes sur l'AIPD (WP248 rév. 01) considèrent qu'
 - **Aucune donnée réelle dans un outil d'IA** ni dans un outil d'automatisation connecté au coffre, à la base ou aux journaux de production.
 - **Aucune messagerie grand public** (WhatsApp ou autre) pour parler de la situation d'une famille.
 - **Copies hors ligne de la clé** protégées par la phrase de passe, rangée à part.
-- **Messages neutres** : SMS et objets d'e-mail sans service ni détail ; première phrase d'un appel neutre, au cas où le numéro appartiendrait à quelqu'un d'autre.
+- **Messages neutres** : SMS et objets d'e-mail sans service ni détail ; SMS **sans lien** (D71 : le fournisseur garde leur texte dans ses journaux) ; première phrase d'un appel neutre, au cas où le numéro appartiendrait à quelqu'un d'autre.
 - **Présentation au moment utile** : l'adresse, les habitudes et les absences de la famille ne vont qu'au professionnel retenu, quand il en a besoin.
 - **Convention avec chaque professionnel** : confidentialité, usage limité des données transmises, suppression si la famille ne donne pas suite.
 - **Contrats de traitement** signés avec chaque sous-traitant ; revue annuelle du dossier.
