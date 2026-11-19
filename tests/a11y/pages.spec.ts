@@ -27,6 +27,7 @@ const PAGES = [
   '/fr/services/grand-age',
   '/fr/services/enfants',
   '/en/services/concierge',
+  '/en/services/childcare',
   '/fr/territoires',
   '/en/where-we-work',
   '/en/services/later-life',
