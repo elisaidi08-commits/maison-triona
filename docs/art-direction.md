@@ -224,7 +224,7 @@ Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (
 ### 7.7 Formulaire
 - Reprend la planche Figma `110:7` : champs soulignés, labels au-dessus, résumé d'erreurs en tête, messages en encre sous une ligne terracotta.
 - Changements : labels 13 px ; ligne d'erreur `#A66A4E` ; **Pays / zone en rangée de choix** (BE · FR · LU · MC · CH · Autre) plutôt qu'un select sans affordance `[À CONFIRMER]`.
-- Confirmation : « K. » 64 px centré, titre, une phrase, lien de retour. Aucune animation sinon un fondu.
+- Confirmation : titre, une phrase, lien de retour, puis le « K. » en fin de colonne sur l'axe gauche, comme une signature, avec 64 px d'air au-dessus, en Light, 48 px sous 1024 px et 64 px dès 1024 px (décision du 19/11/2026, après relecture de la direction artistique). Aucune animation sinon un fondu.
 - Ajouts de la spec d'entrée : présélection de « Nature de la demande » par `?service=` ; champ facultatif « Pour qui ? » ; aide « Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix. »
 
 ### 7.8 Scène de service (structure identique × 3)
