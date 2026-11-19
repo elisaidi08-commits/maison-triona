@@ -6,13 +6,14 @@
 // redimensionnable en hauteur seulement. `defaultValue` : valeur conservée après une erreur
 // serveur (WCAG 3.3.7, aucune ressaisie). `maxLength` : limite native, annoncée dans l'aide.
 // `password`, `inputMode`, `autoCapitalize`, `spellCheck` : formulaires du coffre (story 3.2 C),
-// mot de passe et codes du second facteur.
+// mot de passe et codes du second facteur. `number`, `time`, `date` avec `min`, `max`, `step` :
+// disponibilités du coffre (story 3.8 B) ; bornes natives, revérifiées par le serveur.
 
 type TextFieldProps = {
   id: string
   name: string
   label: string
-  type?: 'text' | 'email' | 'tel' | 'password'
+  type?: 'text' | 'email' | 'tel' | 'password' | 'number' | 'time' | 'date'
   autoComplete?: string
   inputMode?: 'numeric' | 'text'
   autoCapitalize?: 'off' | 'none'
@@ -22,6 +23,9 @@ type TextFieldProps = {
   error?: string
   defaultValue?: string
   maxLength?: number
+  min?: number | string
+  max?: number | string
+  step?: number
   multiline?: boolean
   rows?: number
 }
@@ -40,6 +44,9 @@ export function TextField({
   error,
   defaultValue,
   maxLength,
+  min,
+  max,
+  step,
   multiline = false,
   rows = 6,
 }: TextFieldProps) {
@@ -92,6 +99,9 @@ export function TextField({
         <input
           {...common}
           type={type}
+          min={min}
+          max={max}
+          step={step}
           className={`min-h-touch w-full rounded-none border-0 bg-transparent px-0 py-8 text-body text-encre ${
             error ? 'border-b-2 border-encre' : 'border-b border-encre-68'
           }`}
