@@ -8,7 +8,10 @@ import { getPool } from '@/lib/db/pool'
 import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
 import { createOutboxDeps } from '@/lib/outbox/deps'
 import {
+  applyNotificationCap,
+  NOTIFICATIONS_PAR_JOUR,
   notificationSetup,
+  type QuotaNotifications,
   scheduleFirstAttempts,
   storedStatuses,
 } from '@/lib/outbox/notify-request'
@@ -62,6 +65,11 @@ import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 // le remerciement. Tout étant déjà en base, la tâche Vercel Cron `/api/cron/envoi` reprend le
 // message si cet essai n'aboutit pas. La notification ne porte que la date et le lien vers le
 // coffre, « Prioritaire » au sujet si l'urgence est « urgent » : rien de la demande (D06).
+// Plafond de notifications : au plus `NOTIFICATIONS_PAR_JOUR` e-mails à Cat par jour UTC (clé
+// `notif:<jour>`, une date seulement). Au-delà, la demande est enregistrée sans notification et
+// `alert:notify-cap` est journalisé à chaque fois ; Cat la trouve dans le coffre. Échec ouvert :
+// sans Upstash, ou s'il ne répond pas comme prévu, la notification part. Le compteur est débité
+// avant l'écriture : une écriture qui échoue compte quand même (acceptable).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
 // Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.
@@ -78,6 +86,7 @@ type Statut =
   | 'rejected:invalid'
   | 'rejected:rate'
   | 'alert:global-cap'
+  | 'alert:notify-cap'
   | 'rate:unavailable'
   | 'failed:rate'
   | 'failed:config'
@@ -236,7 +245,27 @@ export async function envoyerDemande(
   if (!clePublique) return fermee
 
   // E-mails coupés ou mal configurés : la demande s'enregistre quand même, sans notification.
-  const envoi = notificationSetup(process.env, configurationManquante)
+  const reglage = notificationSetup(process.env, configurationManquante)
+  let quota: QuotaNotifications = 'indisponible'
+  if (reglage.notify) {
+    const compteur = await limiterDebit([
+      {
+        cle: `notif:${jourUtc(aujourdhui)}`,
+        maximum: NOTIFICATIONS_PAR_JOUR,
+        fenetreSecondes: 24 * 60 * 60,
+      },
+    ])
+    quota =
+      compteur.statut === 'refuse'
+        ? 'depasse'
+        : compteur.statut === 'autorise'
+          ? 'autorise'
+          : 'indisponible'
+  }
+  const plafond = applyNotificationCap(reglage.notify, quota)
+  if (plafond.status) journaliser(plafond.status)
+  const envoi =
+    plafond.notify && reglage.notify ? reglage : { notify: false as const, config: null }
   let enregistree: StoredRequest
   try {
     enregistree = await storeRequest(getPool(), resultat.demande, {

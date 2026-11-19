@@ -197,7 +197,9 @@ Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empile
 |---|---|---|
 | `stamp-sm` | 24 px | Fin du hero, menu mobile |
 | `stamp-md` | 48 px | Pied de page |
-| `stamp-lg` | 64 px | Confirmation du formulaire |
+| `stamp-lg` | 48 px sous 1024 px, 64 px dès 1024 px, Light | Confirmation du formulaire (`stamp-md` sous le point de rupture `lg`) |
+
+`stamp-sm` et `stamp-md` restent en Regular, comme validés par Cat avec l'accueil V4.
 
 **Écarts avec Figma** : hero 88 → 72 px et Medium → Light (luxe par l'air, pas par la masse) ; Territoires passe de `display-l` à `title-h2` ; labels 12 → 13 px ; corps 16-17 → **18 px sur tous les écrans** (spec d'entrée §4.1) ; textes secondaires 14 → 16 px.
 

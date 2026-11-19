@@ -1,5 +1,7 @@
 import type { Pool } from 'pg'
 
+import { outboxHealth } from '../outbox/health.ts'
+import type { OutboxHealth } from '../outbox/health.ts'
 import {
   deleteRequest,
   getRequest,
@@ -146,4 +148,15 @@ export async function dernierPassageConservation(
 ): Promise<Date | null> {
   if (acces.etat !== 'autorise') return null
   return lastRetentionRun(pool)
+}
+
+// État de l'envoi des e-mails (accueil du coffre, story 3.3, suites C), pour un accès autorisé. Des
+// comptes, rien d'autre : sans journal (aucune demande n'est ouverte ni affichée).
+export async function etatEnvoiDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  maintenant: Date,
+): Promise<OutboxHealth | null> {
+  if (acces.etat !== 'autorise') return null
+  return outboxHealth(pool, maintenant)
 }

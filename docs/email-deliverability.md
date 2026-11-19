@@ -44,12 +44,13 @@ Les rapports DMARC contiennent des adresses IP d'envoi, pas de contenu : les lir
 ## 3. Envoi fiable : boîte d'envoi et reprises
 
 1. La demande est **d'abord écrite dans le coffre** (chiffrée). Si cette écriture échoue, le visiteur voit l'écran d'échec (sa saisie est conservée) ; aucun e-mail ne part.
-2. La notification est inscrite dans la **boîte d'envoi** (table `outbox`, même base que le coffre), **dans la même transaction** que la demande, derrière un point de sauvegarde. Si elle ne peut pas s'écrire, la demande est gardée seule et `[demande] failed:outbox` est journalisé : personne n'est prévenu par e-mail, et aucune alerte automatique ne lit ce journal (aucun export des journaux) : signal sur l'accueil du coffre `[À TRANCHER par Sady]`, d'ici là lecture des journaux de Vercel par Sady (`docs/launch-checklist.md` §3).
+2. La notification est inscrite dans la **boîte d'envoi** (table `outbox`, même base que le coffre), **dans la même transaction** que la demande, derrière un point de sauvegarde. Si elle ne peut pas s'écrire, la demande est gardée seule et `[demande] failed:outbox` est journalisé : personne n'est prévenu par e-mail, et aucune alerte automatique ne lit ce journal (aucun export des journaux) : l'accueil du coffre compte les demandes de la semaine sans notification, dans l'état de l'envoi des e-mails (3.3, suites C, `docs/architecture.md` §6.6) ; pour le détail, lecture des journaux de Vercel par Sady (`docs/launch-checklist.md` §3).
 3. **Premier essai** juste après la réponse au visiteur (`after()` de Next). Puis une tâche planifiée Vercel Cron, **toutes les 5 minutes**, reprend les échecs : après **5 min**, **30 min**, puis **2 h** (4 tentatives en tout).
 4. Après la dernière tentative : **alerte à Sady** ; la demande reste lisible dans le coffre. Jamais d'alerte sur une alerte.
 5. Aucun contenu de demande n'est journalisé ; la boîte d'envoi ne contient que des identifiants, des dates, des statuts et le gabarit d'e-mail, jamais une adresse. Ses lignes sont **effacées après 30 jours**.
 6. **Envoi coupé** (variables vides) ou mal configuré : la demande s'enregistre quand même, sans notification, et ne sera **jamais notifiée après coup**. Cat la trouve dans le coffre.
 7. TEM n'a **pas de clé d'idempotence** : un envoi accepté dont la réponse se perd peut partir deux fois. Ce doublon rare est accepté (D69).
+8. **Plafond de 20 notifications par jour UTC** (décision de Sady du 19/11/2026) : au-delà, la demande est gardée dans le coffre sans e-mail (`alert:notify-cap` au journal) pour qu'un flot de demandes ne remplisse pas la boîte de Cat ; sans compteur Upstash joignable, aucun plafond.
 
 ## 4. Rebonds, plaintes, réponses
 

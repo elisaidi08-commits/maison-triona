@@ -4,6 +4,8 @@ import { describe, it } from 'node:test'
 import { emailConfigFromEnv } from '../../src/lib/email/config.ts'
 import type { EmailConfig } from '../../src/lib/email/config.ts'
 import {
+  applyNotificationCap,
+  NOTIFICATIONS_PAR_JOUR,
   notificationSetup,
   scheduleFirstAttempts,
   storedStatuses,
@@ -238,6 +240,30 @@ describe('journaux du branchement', () => {
     assert.match(texte, /failed:after/)
     for (const interdit of [SECRET, ...ADRESSES, '@', 'manquante', 'Configuration']) {
       assert.ok(!texte.includes(interdit), interdit)
+    }
+  })
+})
+
+// Plafond quotidien des notifications : au-delà, la demande est gardée sans notification.
+describe('applyNotificationCap', () => {
+  it('fixe le plafond à vingt notifications par jour', () => {
+    assert.equal(NOTIFICATIONS_PAR_JOUR, 20)
+  })
+  it('laisse passer une notification dans le plafond', () => {
+    assert.deepEqual(applyNotificationCap(true, 'autorise'), { notify: true, status: null })
+  })
+  it('coupe la notification au-delà du plafond et journalise', () => {
+    assert.deepEqual(applyNotificationCap(true, 'depasse'), {
+      notify: false,
+      status: 'alert:notify-cap',
+    })
+  })
+  it('laisse passer quand le compteur est indisponible (échec ouvert)', () => {
+    assert.deepEqual(applyNotificationCap(true, 'indisponible'), { notify: true, status: null })
+  })
+  it("ne change rien quand il n'y a pas de notification", () => {
+    for (const quota of ['autorise', 'depasse', 'indisponible'] as const) {
+      assert.deepEqual(applyNotificationCap(false, quota), { notify: false, status: null })
     }
   })
 })

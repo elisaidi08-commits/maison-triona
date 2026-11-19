@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/Button'
-import { dernierPassageConservation, listeDuCoffre } from '@/lib/auth/acces'
+import type { AccesCoffre } from '@/lib/auth/acces'
+import { dernierPassageConservation, etatEnvoiDuCoffre, listeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { getCoffrePool } from '@/lib/db/pool'
+import { emailSendingState, outboxHealthLines } from '@/lib/outbox/health'
 import {
   date,
   dateHeure,
@@ -27,8 +29,28 @@ import { LienCoffre } from './_composants/LienCoffre'
 // demande mène à sa page de lecture (/coffre/demandes/<uuid>, déchiffrement dans le navigateur),
 // par un lien simple, sans préchargement. Toutes les valeurs sont rendues comme texte. La date du
 // dernier passage de la conservation planifiée s'affiche, avec une alerte au-delà de 48 heures.
+// Juste après, l'état de l'envoi des e-mails (story 3.3, suites C, src/lib/outbox/health.ts) :
+// envoi coupé ou mal configuré, messages en retard ou en échec, demandes de la semaine sans
+// notification, avec une alerte en texte quand quelque chose ne va pas. Des comptes seulement :
+// aucune demande n'est ouverte ni affichée, d'où aucune ligne au journal d'accès (comme pour la
+// date de la conservation), mais lus comme elle derrière la vérification de l'accès
+// (etatEnvoiDuCoffre). Si la requête échoue : « État de l'envoi indisponible. », sans l'erreur.
 
 export const metadata: Metadata = { title: 'Demandes' }
+
+// État de l'envoi : les phrases du bloc, ou null si la lecture échoue (erreur ni affichée ni citée)
+// ou si l'accès n'est pas autorisé.
+async function etatEnvoi(
+  acces: AccesCoffre,
+  maintenant: Date,
+): Promise<{ lines: string[]; alert: boolean } | null> {
+  try {
+    const sante = await etatEnvoiDuCoffre(getCoffrePool(), acces, maintenant)
+    return sante ? outboxHealthLines(sante, emailSendingState(process.env)) : null
+  } catch {
+    return null
+  }
+}
 
 const COLONNES = [
   'Reçue le',
@@ -74,6 +96,7 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
   const demandes = (await listeDuCoffre(getCoffrePool(), acces)) ?? []
   const dernierPassage = await dernierPassageConservation(getCoffrePool(), acces)
   const conservation = retentionRunStatus(dernierPassage, new Date())
+  const envoi = await etatEnvoi(acces, new Date())
 
   return (
     <>
@@ -109,6 +132,22 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
             . Les demandes échues ne sont pas effacées tant qu’elle ne passe pas : vérifier la tâche
             planifiée (variable CRON_SECRET, journaux de Vercel).
           </p>
+        )}
+      </div>
+
+      {/* État de l'envoi des e-mails (3.3, suites C) : même tenue, alertes comme celle du dessus. */}
+      <div className="flex max-w-measure flex-col gap-16">
+        {envoi === null ? (
+          <p className="text-body-s">État de l’envoi indisponible.</p>
+        ) : (
+          envoi.lines.map((ligne) => (
+            <p
+              key={ligne}
+              className={envoi.alert ? 'border-l-2 border-encre py-8 pl-24' : 'text-body-s'}
+            >
+              {ligne}
+            </p>
+          ))
         )}
       </div>
 
