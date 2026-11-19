@@ -2,9 +2,17 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { localizedPath } from '@/i18n/pathnames'
 import { getPool } from '@/lib/db/pool'
 import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
+import { createOutboxDeps } from '@/lib/outbox/deps'
+import {
+  notificationSetup,
+  scheduleFirstAttempts,
+  storedStatuses,
+} from '@/lib/outbox/notify-request'
+import { sendNow } from '@/lib/outbox/process'
 import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
 import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
@@ -18,9 +26,10 @@ import { secretFormulaire } from '@/lib/security/secret'
 import { lireValeurs, validerDemande } from '@/lib/validation/demande'
 import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 import { VaultKeyError } from '@/lib/vault/seal'
-import { storeRequest } from '@/lib/vault/store'
+import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 
-// Envoi du formulaire de contact (stories 3.1, 3.5 et 3.2 B, docs/architecture.md §6.1 et §6.7).
+// Envoi du formulaire de contact (stories 3.1, 3.5, 3.2 B et 3.3, docs/architecture.md §6.1, §6.6
+// et §6.7).
 // Une Server Action est un point d'entrée POST public : tout est revérifié ici, dans cet ordre :
 // 1. piège à robots (champ caché rempli) : seul rejet silencieux, la réponse ressemble à un envoi
 //    abouti (coffre ouvert : la page de remerciement ; fermé : « ouvrira bientôt ») ;
@@ -36,11 +45,23 @@ import { storeRequest } from '@/lib/vault/store'
 // 7. coffre : sans `DATABASE_URL` ou sans `VAULT_PUBLIC_KEY`, envoi fermé ; rien n'est enregistré,
 //    envoyé ni journalisé, et le formulaire affiche « L'envoi des demandes ouvrira bientôt ».
 //    Configuré : la demande est scellée avec la clé publique puis écrite dans le coffre avec la
-//    version de la politique de confidentialité acceptée (`stored`), et le visiteur part vers
-//    /contact/merci (303 sans JavaScript). Échec d'écriture
-//    (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a pas
-//    abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé).
-//    Les e-mails (boîte d'envoi, même transaction) viendront avec la story 3.3.
+//    version de la politique de confidentialité acceptée (`stored`) et, e-mails configurés, avec
+//    la notification à Cat dans la boîte d'envoi, dans la même transaction (`queued`) ; le
+//    visiteur part vers /contact/merci (303 sans JavaScript). Une notification qui ne peut pas
+//    s'écrire (droit manquant, contrainte) n'empêche pas la demande de s'enregistrer : elle est
+//    gardée seule, `failed:outbox` à chaque fois (Cat n'est pas prévenue de cette demande, elle la
+//    trouvera dans le coffre), et le visiteur part vers le remerciement. Échec d'écriture de la
+//    demande (`failed:vault`, ou `failed:config` si la clé publique est invalide) : « L'envoi n'a
+//    pas abouti », la saisie revient avec un horodatage neuf (le précédent a pu être consommé) ;
+//    rien n'est écrit, ni la demande ni la notification.
+// E-mails (story 3.3, logique dans src/lib/outbox/notify-request.ts, testée sans Next) : la
+// configuration est lue juste avant l'écriture. Vide, l'envoi est coupé (`mail:disabled`) ; à
+// moitié posée, `failed:config`, une fois par instance l'un et l'autre : la demande s'enregistre
+// quand même, sans notification. Le premier essai d'envoi part avec `after()`, après la réponse
+// (redirection comprise) ; un `after` qui lève est journalisé `failed:after` et n'empêche jamais
+// le remerciement. Tout étant déjà en base, la tâche Vercel Cron `/api/cron/envoi` reprend le
+// message si cet essai n'aboutit pas. La notification ne porte que la date et le lien vers le
+// coffre, « Prioritaire » au sujet si l'urgence est « urgent » : rien de la demande (D06).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
 // Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.
@@ -62,17 +83,25 @@ type Statut =
   | 'failed:config'
   | 'failed:vault'
   | 'stored'
+  | 'queued'
+  | 'failed:outbox'
+  | 'failed:after'
+  | 'mail:disabled'
 
 function journaliser(statut: Statut) {
   console.info(`[demande] ${statut}`)
 }
 
-// Configuration manquante (secret, variables d'Upstash) : signalée une fois par instance.
+// Configuration manquante (secret, variables d'Upstash, e-mails, compte de l'envoi) : signalée une
+// fois par instance, `failed:config` sauf mention contraire (`mail:disabled`, e-mails coupés).
 const signalees = new Set<string>()
-function configurationManquante(element: string) {
+function configurationManquante(
+  element: string,
+  statut: 'failed:config' | 'mail:disabled' = 'failed:config',
+) {
   if (signalees.has(element)) return
   signalees.add(element)
-  journaliser('failed:config')
+  journaliser(statut)
 }
 
 async function adresseIp(): Promise<string> {
@@ -206,18 +235,34 @@ export async function envoyerDemande(
   // Coffre non configuré : rien n'est enregistré, envoyé ni journalisé.
   if (!clePublique) return fermee
 
+  // E-mails coupés ou mal configurés : la demande s'enregistre quand même, sans notification.
+  const envoi = notificationSetup(process.env, configurationManquante)
+  let enregistree: StoredRequest
   try {
-    await storeRequest(getPool(), resultat.demande, {
+    enregistree = await storeRequest(getPool(), resultat.demande, {
       publicKey: clePublique,
       privacyVersion: PRIVACY_POLICY_VERSION,
       now: new Date(maintenant),
+      notify: envoi.notify,
     })
   } catch (error) {
     // Jamais l'erreur elle-même : un statut seulement.
     journaliser(error instanceof VaultKeyError ? 'failed:config' : 'failed:vault')
     return { statut: 'echec', valeurs, jeton: signerHorodatage(Date.now(), secret) }
   }
-  journaliser('stored')
-  // Hors du try : `redirect` lève une exception de contrôle (doc Next.js).
+  // `stored`, puis `failed:outbox` à chaque demande dont Cat n'est pas prévenue, ou `queued`.
+  for (const statut of storedStatuses(enregistree)) journaliser(statut)
+  // Ne lève jamais : la demande est enregistrée, le visiteur doit atteindre le remerciement.
+  if (envoi.notify) {
+    scheduleFirstAttempts(enregistree.outbox, envoi.config, {
+      after,
+      createDeps: createOutboxDeps,
+      sendNow,
+      log: journaliser,
+      logOnce: configurationManquante,
+    })
+  }
+  // En dernier, hors du try : `redirect` lève une exception de contrôle (doc Next.js) ; les
+  // rappels `after()` déjà posés s'exécutent quand même.
   redirect(merci)
 }

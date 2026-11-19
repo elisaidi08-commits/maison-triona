@@ -24,10 +24,17 @@ const ALLOWED_PREFIXES = [
   'https://schema.org',
 ]
 
+// Appels de serveur à serveur (jamais depuis le navigateur) : autorisés dans ce fichier seulement.
+const SERVER_ONLY = { 'src/lib/email/tem.ts': ['https://api.scaleway.com/'] }
+
 const MOODBOARD = [/cosmos_/i, /docs\/moodboard/i, /MOODBOARD/, /ASSETS PHOTO MAQUETTE/i]
 
 const findings = []
-const isAllowed = (url) => ALLOWED_PREFIXES.some((prefix) => url.startsWith(prefix))
+const isAllowed = (url, file) =>
+  ALLOWED_PREFIXES.some((prefix) => url.startsWith(prefix)) ||
+  Object.entries(SERVER_ONLY).some(
+    ([path, prefixes]) => rel(file) === path && prefixes.some((prefix) => url.startsWith(prefix)),
+  )
 
 function scan(file, urlPattern) {
   const lines = readFileSync(file, 'utf8').split('\n')
@@ -35,7 +42,7 @@ function scan(file, urlPattern) {
     const where = `${rel(file)}:${index + 1}`
     for (const match of line.matchAll(urlPattern)) {
       const url = match[1] ?? match[0]
-      if (!isAllowed(url)) findings.push(`${where}  ressource externe : ${url}`)
+      if (!isAllowed(url, file)) findings.push(`${where}  ressource externe : ${url}`)
     }
     for (const pattern of MOODBOARD) {
       if (pattern.test(line)) findings.push(`${where}  référence au moodboard : ${pattern}`)

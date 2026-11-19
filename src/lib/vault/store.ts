@@ -1,6 +1,9 @@
+import { randomUUID } from 'node:crypto'
+
 import type { Pool } from 'pg'
 
 import { withTransaction } from '../db/transaction.ts'
+import { enqueueNotification } from '../outbox/repository.ts'
 import type { Demande } from '../validation/demande.ts'
 import { insertRequest, VaultError, type NewVaultRequest } from './repository.ts'
 import { RETENTION_MONTHS, retentionDeadline } from './retention.ts'
@@ -9,8 +12,14 @@ import { sealRequest, VaultKeyError, type SealedFields } from './seal.ts'
 // Enregistrement d'une demande valide dans le coffre (story 3.2, partie B ; docs/architecture.md
 // §6.5). Colonnes en clair = colonnes de tri, rien de personnel : type, service, pays, langue de
 // réponse, urgence, origine. Tout le reste (nom, e-mail, téléphone, « pour qui », créneau, mot
-// libre) est scellé avec la clé publique avant d'atteindre la base. Écrit dans une transaction :
-// la boîte d'envoi des e-mails (story 3.3) s'y ajoutera.
+// libre) est scellé avec la clé publique avant d'atteindre la base.
+// Notification (story 3.3) : avec `notify`, la ligne de la boîte d'envoi (un gabarit, des
+// identifiants, la priorité) est écrite dans la MÊME transaction que la demande, derrière un point
+// de sauvegarde : une demande s'enregistre même si sa notification ne peut pas s'écrire (droit
+// manquant, contrainte) ; on revient alors au point de sauvegarde, la demande est validée seule et
+// `notifyFailed` le signale à l'appelant. Une erreur sur la demande elle-même lève toujours et
+// annule tout. Identifiants tirés ici (`randomUUID`) : le rôle `site_public` insère sans
+// RETURNING. Prioritaire seulement pour l'urgence « urgent ».
 // Consentement : la version de la politique acceptée (`privacy_version`) et la date (`created_at`).
 // La langue de l'interface n'est pas gardée. Aucune erreur levée ne cite un champ (VaultKeyError,
 // VaultError, RangeError si le texte dépasse 16 Kio).
@@ -45,21 +54,54 @@ export interface StoreOptions {
   /** Version de la politique de confidentialité acceptée (`PRIVACY_POLICY_VERSION`). */
   privacyVersion: string
   now: Date
+  /** Écrire la notification à Cat dans la boîte d'envoi (faux quand l'envoi est coupé). */
+  notify: boolean
 }
 
-/** Scelle puis enregistre la demande ; renvoie son identifiant. */
+export interface StoredRequest {
+  /** Identifiant de la demande. */
+  id: string
+  /** Identifiants des messages écrits dans la boîte d'envoi (vide sans notification). */
+  outbox: string[]
+  /** Vrai si la notification demandée n'a pas pu s'écrire : la demande est gardée sans elle. */
+  notifyFailed: boolean
+}
+
+/** Scelle puis enregistre la demande, et sa notification si `notify`, dans une transaction. */
 export async function storeRequest(
   pool: Pool,
   demande: Demande,
-  { publicKey, privacyVersion, now }: StoreOptions,
-): Promise<string> {
+  { publicKey, privacyVersion, now, notify }: StoreOptions,
+): Promise<StoredRequest> {
   const { clear, sealed } = splitRequest(demande)
   const octets = await sealRequest(sealed, publicKey)
   const retentionUntil = retentionDeadline(now, RETENTION_MONTHS)
   try {
-    return await withTransaction(pool, (client) =>
-      insertRequest(client, { ...clear, sealed: octets, retentionUntil, privacyVersion }),
-    )
+    return await withTransaction(pool, async (client) => {
+      const id = await insertRequest(client, {
+        ...clear,
+        sealed: octets,
+        retentionUntil,
+        privacyVersion,
+      })
+      if (!notify) return { id, outbox: [], notifyFailed: false }
+      const outboxId = randomUUID()
+      await client.query('SAVEPOINT notification')
+      try {
+        await enqueueNotification(client, {
+          id: outboxId,
+          requestId: id,
+          priority: demande.urgence === 'urgent',
+        })
+      } catch {
+        // Notification seule abandonnée, jamais citée : la demande reste dans la transaction. Si
+        // le retour au point de sauvegarde échoue à son tour, l'erreur remonte et annule tout.
+        await client.query('ROLLBACK TO SAVEPOINT notification')
+        return { id, outbox: [], notifyFailed: true }
+      }
+      await client.query('RELEASE SAVEPOINT notification')
+      return { id, outbox: [outboxId], notifyFailed: false }
+    })
   } catch (error) {
     // Connexion refusée, transaction annulée : on ne garde que le code, jamais le message brut.
     if (error instanceof VaultError || error instanceof VaultKeyError) throw error

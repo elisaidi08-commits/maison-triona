@@ -34,7 +34,7 @@ export async function resetDatabase(pool: Pool): Promise<void> {
 
 // Rôles de connexion (db/roles/*.sql, partie B et partie C), créés dans le serveur de test (les
 // rôles PostgreSQL sont communs à toutes les bases) et appliqués après les migrations.
-const ROLES = ['site_public', 'coffre'] as const
+const ROLES = ['site_public', 'coffre', 'envoi'] as const
 
 export async function applyRoles(pool: Pool): Promise<void> {
   for (const role of ROLES) {
@@ -51,3 +51,8 @@ export function coffrePool(): Pool {
 
 // Même chose, sous forme d'URL (sous-processus : scripts/coffre-compte.mjs).
 export const COFFRE_TEST_DATABASE_URL = `${TEST_DATABASE_URL}${TEST_DATABASE_URL.includes('?') ? '&' : '?'}options=-c%20role%3Dcoffre`
+
+// Connexion de l'envoi des e-mails (premier essai et tâche planifiée), sous le rôle `envoi`.
+export function envoiPool(): Pool {
+  return new PgPool({ connectionString: TEST_DATABASE_URL, options: '-c role=envoi', max: 5 })
+}

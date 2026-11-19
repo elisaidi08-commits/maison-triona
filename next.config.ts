@@ -1,11 +1,13 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
+import { redirectionsVercelApp } from './src/lib/redirections'
 import { verifierCronAuBuild } from './src/lib/security/cron'
 
 // Configuration de base. En-têtes de sécurité : story 5.1 ; images : stories 1.3 et 2.5.
 
-// Coffre configuré en production sans CRON_SECRET : le build échoue (story 3.2 D, src/lib/security/cron.ts).
+// Coffre ou e-mails configurés en production sans CRON_SECRET valable : le build échoue (stories
+// 3.2 D et 3.3, src/lib/security/cron.ts).
 verifierCronAuBuild(process.env)
 
 const deploye = Boolean(process.env.VERCEL_ENV)
@@ -92,18 +94,11 @@ const nextConfig: NextConfig = {
   },
   // Le jour de l'ouverture, l'adresse vercel.app redirige vers le domaine (308) : sinon elle serait
   // indexable en double (audit du 06/11/2026, §3.1 n° 7). Inactive d'ici là, jamais sur un aperçu, et
-  // jamais vers une adresse vercel.app (boucle) : siteUrl() refuse alors le build.
+  // jamais vers une adresse vercel.app (boucle) : siteUrl() refuse alors le build. Jamais sur
+  // `/api/cron/` : Vercel Cron ne suit aucune redirection, et les deux tâches planifiées
+  // (`/api/cron/retention`, `/api/cron/envoi`) sont protégées par CRON_SECRET (src/lib/redirections.ts).
   async redirects() {
-    const site = process.env.SITE_URL?.trim().replace(/\/+$/, '')
-    if (!ouvert || !site || new URL(site).hostname.endsWith('.vercel.app')) return []
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: '.*\\.vercel\\.app' }],
-        destination: `${site}/:path*`,
-        permanent: true,
-      },
-    ]
+    return redirectionsVercelApp({ ouvert, siteUrl: process.env.SITE_URL })
   },
   experimental: {
     // Page 404 unique pour les adresses qui ne passent par aucune langue (fichiers inconnus).

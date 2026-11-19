@@ -5,8 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 // Barre mobile « Écrire en toute discrétion » (docs/art-direction.md §7.10) : fixée en bas sous
-// 1024 px, 56 px, aplat sapin, filet or en haut. Absente de la page Contact ; masquée pendant la
-// saisie au clavier (un champ a le focus). La page réserve sa hauteur (tokens.css :
+// 1024 px, 56 px, aplat sapin, filet or en haut. Absente de la page Contact et de tout ce qui est
+// dessous (remerciement après l'envoi, futurs rendez-vous `/contact/appel/...`), dans les deux
+// langues (`href` est le chemin localisé du contact) ; masquée pendant la saisie au clavier (un
+// champ a le focus). La page réserve sa hauteur (tokens.css :
 // --barre-mobile-height), le focus n'est donc jamais masqué (WCAG 2.4.11). Sous le menu mobile ouvert.
 
 const FIELDS = 'input, textarea, select, [contenteditable="true"]'
@@ -32,7 +34,7 @@ export function MobileBar({ href, label }: { href: string; label: string }) {
     }
   }, [])
 
-  if (pathname === href) return null
+  if (pathname === href || pathname.startsWith(`${href}/`)) return null
 
   return (
     <div

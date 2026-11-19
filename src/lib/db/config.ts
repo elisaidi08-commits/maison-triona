@@ -1,9 +1,10 @@
 import type { PoolConfig } from 'pg'
 
-// Configuration des pools PostgreSQL du coffre, lue depuis l'environnement. Deux connexions, deux
+// Configuration des pools PostgreSQL du coffre, lue depuis l'environnement. Trois connexions, trois
 // comptes (docs/coffre-cles.md §3) :
 // - DATABASE_URL : site public, rôle `site_public`, insertion seule (partie B) ;
-// - COFFRE_DATABASE_URL : espace /coffre et scripts/coffre-compte.mjs, rôle `coffre` (partie C).
+// - COFFRE_DATABASE_URL : espace /coffre et scripts/coffre-compte.mjs, rôle `coffre` (partie C) ;
+// - ENVOI_DATABASE_URL : première tentative d'envoi et tâche planifiée, rôle envoi (story 3.3).
 // Les messages d'erreur ne contiennent jamais l'URL de connexion (elle porte le mot de passe).
 // TLS exigé sur tout déploiement Vercel (production, aperçus, branches) : la base est ailleurs.
 // Délais de 5 s (connexion, requête) : une base lente ou injoignable fait échouer l'envoi vite,
@@ -49,4 +50,14 @@ export function coffrePoolConfigFromEnv(env: Environnement): PoolConfig {
     throw new Error('COFFRE_DATABASE_URL doit différer de DATABASE_URL (deux comptes distincts)')
   }
   return configPour(url, 'COFFRE_DATABASE_URL', env, 'maison-triona-coffre')
+}
+
+// Connexion de la boîte d'envoi : ni le compte du site public ni celui du coffre. Sur un
+// déploiement, une URL identique à l'une des deux est refusée (sans jamais la citer).
+export function envoiPoolConfigFromEnv(env: Environnement): PoolConfig {
+  const url = env.ENVOI_DATABASE_URL
+  if (url && env.VERCEL_ENV && (url === env.DATABASE_URL || url === env.COFFRE_DATABASE_URL)) {
+    throw new Error('ENVOI_DATABASE_URL doit différer des autres comptes')
+  }
+  return configPour(url, 'ENVOI_DATABASE_URL', env, 'maison-triona-envoi')
 }

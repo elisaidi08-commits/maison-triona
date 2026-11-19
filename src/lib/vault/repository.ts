@@ -135,7 +135,8 @@ function identifierField(error: unknown, key: 'code' | 'constraint'): string | u
   return typeof value === 'string' && IDENTIFIER.test(value) ? value : undefined
 }
 
-async function guard<T>(operation: string, run: () => Promise<T>): Promise<T> {
+// Exporté : la boîte d'envoi (src/lib/outbox/repository.ts) réduit ses erreurs de la même façon.
+export async function guard<T>(operation: string, run: () => Promise<T>): Promise<T> {
   try {
     return await run()
   } catch (error) {
@@ -143,7 +144,7 @@ async function guard<T>(operation: string, run: () => Promise<T>): Promise<T> {
   }
 }
 
-function isUuid(id: string): boolean {
+export function isUuid(id: string): boolean {
   return UUID.test(id)
 }
 

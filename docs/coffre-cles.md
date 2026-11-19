@@ -46,9 +46,9 @@ Une **paire par environnement** : la production a la sienne ; une préproduction
 
 ### 3.1 Un rôle qui ne sait qu'insérer : `site_public`
 
-Le site public écrit des demandes, il n'a jamais besoin d'en lire une. Son compte PostgreSQL a donc le rôle **`site_public`** (`db/roles/site_public.sql`) : `USAGE` sur le schéma `public` et `INSERT` sur `vault_requests`, **rien d'autre**. Ni `SELECT` (l'identifiant d'une demande est tiré par le serveur, l'insertion se fait sans `RETURNING`), ni `UPDATE`, ni `DELETE`, ni le journal d'accès. Un serveur compromis ou une injection ne peut donc ni lire, ni modifier, ni effacer le coffre. Prouvé par `tests/integration/vault-role.test.ts`.
+Le site public écrit des demandes, il n'a jamais besoin d'en lire une. Son compte PostgreSQL a donc le rôle **`site_public`** (`db/roles/site_public.sql`) : `USAGE` sur le schéma `public`, `INSERT` sur `vault_requests` et, depuis la story 3.3, `INSERT` sur `outbox` limité aux colonnes d'une notification (`id`, `template`, `request_id`, `priority` : la notification de sa demande, écrite dans la même transaction), **rien d'autre**. L'état, les tentatives, les dates, l'identifiant du prestataire et les alertes restent au rôle `envoi`. Ni `SELECT` (l'identifiant d'une demande est tiré par le serveur, l'insertion se fait sans `RETURNING`), ni `UPDATE`, ni `DELETE`, ni le journal d'accès. Un serveur compromis ou une injection ne peut donc ni lire, ni modifier, ni effacer le coffre. Prouvé par `tests/integration/vault-role.test.ts` et `tests/integration/outbox-roles.test.ts`.
 
-1. Avec le compte **administrateur** de l'instance : appliquer les migrations (`DATABASE_URL=<URL administrateur> npm run db:migrate`), puis le rôle : `psql "<URL administrateur>" -f db/roles/site_public.sql`. Le fichier est rejouable ; il n'est pas dans les migrations automatiques, et il se rejoue après chaque migration qui ajoute une table que le site doit remplir.
+1. Avec le compte **administrateur** de l'instance : appliquer les migrations (`DATABASE_URL=<URL administrateur> npm run db:migrate`), puis le rôle : `psql "<URL administrateur>" -f db/roles/site_public.sql`. Le fichier est rejouable ; il n'est pas dans les migrations automatiques, et il se rejoue après chaque migration qui ajoute une table que le site doit remplir. C'est le cas de **`0006_boite_envoi.sql`** (story 3.3) : sans ce nouveau passage, la notification ne s'écrit pas, chaque demande est gardée sans elle et `[demande] failed:outbox` apparaît dans les journaux (§3.3).
 2. Créer le compte de connexion du site (sur Scaleway : console de l'instance, utilisateur sans aucun droit donné par la console) et lui donner le rôle : `GRANT site_public TO <compte du site>;`. Mot de passe long et aléatoire, jamais dans le dépôt. La façon exacte de créer un compte sans droit sur l'offre gérée de Scaleway reste **à vérifier sur l'instance**.
 3. Vérifier, connecté avec ce compte : `SELECT count(*) FROM vault_requests;` doit être **refusé** (`permission denied`).
 
@@ -60,19 +60,28 @@ L'espace `/coffre`, la tâche de conservation (§9) et le script des comptes (`n
 2. Créer le compte de connexion du coffre, distinct de celui du site, et lui donner le rôle : `GRANT coffre TO <compte du coffre>;`. Mot de passe long et aléatoire, jamais dans le dépôt.
 3. Vérifier, connecté avec ce compte : `UPDATE vault_requests SET status = status;` et `DELETE FROM vault_access_log;` doivent être **refusés**.
 
-### 3.3 Deux URL de connexion
+### 3.3 Un troisième rôle pour l'envoi des e-mails : `envoi` (story 3.3)
+
+Le premier essai d'envoi (juste après la demande) et la tâche planifiée `/api/cron/envoi` se connectent avec **un troisième compte**, qui a le rôle **`envoi`** (`db/roles/envoi.sql`) : `USAGE` sur le schéma ; lecture, insertion, modification et effacement de la boîte d'envoi `outbox`, **rien d'autre**. Aucun droit sur les demandes, le journal d'accès ni les tables de Better Auth. La boîte d'envoi ne contient d'ailleurs ni adresse ni contenu : un gabarit, des identifiants, des dates et des statuts. Prouvé par `tests/integration/outbox-roles.test.ts`.
+
+1. Avec le compte administrateur, **après** `npm run db:migrate` (migration `0006_boite_envoi.sql`) : `psql "<URL administrateur>" -f db/roles/site_public.sql -f db/roles/coffre.sql -f db/roles/envoi.sql`. Les trois fichiers sont rejouables. **Rejouer `site_public.sql` est indispensable** : c'est lui qui donne au site le droit d'écrire la notification ; sans lui, chaque demande est gardée sans notification (`[demande] failed:outbox`), et Cat n'est prévenue d'aucune.
+2. Créer le compte de connexion de l'envoi, distinct des deux autres, et lui donner le rôle : `GRANT envoi TO <compte de l'envoi>;`. Mot de passe long et aléatoire, jamais dans le dépôt. Son URL va dans `ENVOI_DATABASE_URL` (§3.4).
+3. Vérifier, connecté avec ce compte : `SELECT count(*) FROM outbox;` doit **passer**, `SELECT count(*) FROM vault_requests;` doit être **refusé**. Connecté avec le compte du site : `SELECT count(*) FROM outbox;` doit être **refusé**.
+
+### 3.4 Trois URL de connexion
 
 | Variable | Compte | Utilisé par | Droits |
 |---|---|---|---|
-| `DATABASE_URL` | compte du site (`site_public`) | Server Action du formulaire | Insertion seule |
+| `DATABASE_URL` | compte du site (`site_public`) | Server Action du formulaire | Insertion seule (demandes, notifications) |
 | `COFFRE_DATABASE_URL` | compte du coffre (`coffre`) | Espace `/coffre` (connexion, sessions, liste, lecture, gel, effacement), tâche de conservation et `npm run coffre:compte` | Tables de Better Auth ; lecture, gel et effacement des demandes ; journal en insertion et lecture |
+| `ENVOI_DATABASE_URL` | compte de l'envoi (`envoi`) | Premier essai d'envoi (`after()`) et tâche planifiée `/api/cron/envoi` | Boîte d'envoi seulement |
 | URL administrateur | propriétaire du schéma | `npm run db:migrate` et `db/roles/*.sql`, à la main | Tous ; **jamais** dans une variable de Vercel |
 
-Deux pools distincts dans le code (`getPool`, `getCoffrePool`, `src/lib/db/pool.ts`) : le site public ne peut pas emprunter le compte du coffre. Sur un déploiement, une `COFFRE_DATABASE_URL` identique à `DATABASE_URL` est refusée au démarrage du coffre.
+Trois pools distincts dans le code (`getPool`, `getCoffrePool`, `getEnvoiPool`, `src/lib/db/pool.ts`) : le site public n'emprunte jamais le compte du coffre. Il **emprunte en revanche celui de l'envoi** : la Server Action du formulaire lance le premier essai d'envoi avec `after()`, après la réponse, avec le pool du rôle `envoi` et le transport TEM (`src/lib/outbox/deps.ts`). La fonction serveur du formulaire a donc accès à `ENVOI_DATABASE_URL` et à `TEM_SECRET_KEY` ; elle ne peut toujours ni lire, ni modifier, ni effacer une demande (le rôle `envoi` n'a aucun droit sur `vault_requests`). Risque résiduel : `docs/privacy.md` §8. Sur un déploiement, une `COFFRE_DATABASE_URL` identique à `DATABASE_URL` est refusée au démarrage du coffre, et une `ENVOI_DATABASE_URL` identique à l'une des deux autres est refusée à l'envoi.
 
 TLS est exigé sur **tout** déploiement Vercel (production, aperçus, branches) : sans `DATABASE_CA_CERT`, la connexion est refusée. Délais : 5 s pour se connecter, 5 s par requête ; au-delà, l'envoi échoue (« L'envoi n'a pas abouti ») et le visiteur garde sa saisie.
 
-### 3.4 Poser `VAULT_PUBLIC_KEY`
+### 3.5 Poser `VAULT_PUBLIC_KEY`
 
 1. Vercel → projet → *Settings* → *Environment Variables* : `VAULT_PUBLIC_KEY` = la clé publique affichée, environnement **Production** seulement. Vérifier qu'elle est identique au champ `publicKey` des paquets.
 2. Le formulaire n'enregistre une demande que si **`DATABASE_URL` et `VAULT_PUBLIC_KEY`** sont posées. Sans l'une des deux, il garde l'état « L'envoi des demandes ouvrira bientôt » et n'écrit rien.
@@ -136,6 +145,6 @@ Le journal d'accès garde l'adresse du compte comme acteur : il reste lisible ap
 ## 9. Conservation planifiée (partie D)
 
 - Chaque jour à 03:00 UTC, Vercel Cron appelle `/api/cron/retention` (`vercel.json`), sur le déploiement de **production** seulement. La tâche, avec le compte du coffre : efface les demandes échues non gelées (une ligne `purge` chacune), purge les sessions échues ou inactives, les compteurs de limitation de débit de plus de 15 minutes et les défis du second facteur expirés, puis inscrit un résumé `retention` au journal, **en nombres seulement**.
-- **`CRON_SECRET`** (à poser sur Vercel, environnement **Production**, puis redéployer) : 32 caractères au moins, lettres et chiffres (`openssl rand -hex 32`), jamais dans le dépôt. Sans lui, ou s'il est mal formé, chaque appel répond 401 et **rien n'est effacé** : le plafond de conservation n'est plus appliqué. Rotation : changer la variable, redéployer, vérifier dans Vercel (*Settings*, *Schedules*, *Cron Jobs*, *View Logs*) que le passage suivant répond 200.
+- **`CRON_SECRET`** (à poser sur Vercel, environnement **Production**, puis redéployer) : 32 caractères au moins, lettres et chiffres (`openssl rand -hex 32`), jamais dans le dépôt. Sans lui, ou s'il est mal formé, chaque appel répond 401 et **rien n'est effacé** : le plafond de conservation n'est plus appliqué. Rotation : changer la variable, redéployer, vérifier dans Vercel (*Settings*, *Schedules*, *Cron Jobs*, *View Logs*) que le passage suivant répond 200. Le même secret protège la tâche de l'envoi des e-mails (`/api/cron/envoi`, story 3.3, §3.3), avec la même vérification.
 - Vérification : après le premier passage, une ligne `retention` (acteur `system`) au journal ; l'accueil du coffre affiche la date du dernier passage et **une alerte en texte au-delà de 48 heures** (ou tant qu'aucun passage n'est inscrit). Un passage peut manquer (Vercel ne réessaie pas) : le suivant rattrape tout ce qui est échu.
-- Sans `CRON_SECRET`, chaque appel laisse dans les journaux de Vercel une ligne fixe `[conservation] refused:no-secret`. En production, si `COFFRE_DATABASE_URL` est posée sans `CRON_SECRET` valable, **le build échoue** (`next.config.ts`) ; l'aperçu public sans coffre (D62) n'est pas concerné.
+- Sans `CRON_SECRET`, chaque appel laisse dans les journaux de Vercel une ligne fixe `[conservation] refused:no-secret`. En production, si `COFFRE_DATABASE_URL` ou `TEM_SECRET_KEY` (e-mails) est posée sans `CRON_SECRET` valable, **le build échoue** (`next.config.ts`) ; l'aperçu public sans coffre ni envoi (D62) n'est pas concerné.
