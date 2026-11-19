@@ -32,6 +32,7 @@
 - [ ] + **Risque accepté, plafond de notifications** (D70, `docs/privacy.md` §8 n° 9) : une seule IP (3 envois valides par 10 minutes, adresses différentes) épuise les 20 notifications du jour en une heure environ ; ensuite, aucune demande n'est notifiée à Cat jusqu'au lendemain (UTC), **urgentes comprises** ; le compte « sans notification » de l'état de l'envoi, sur l'accueil du coffre, le montre, et **une alerte technique part à Sady au premier dépassement du jour** (ajoutée le 19/11/2026, date seulement ; aucune si Upstash ne répond pas comme prévu). À relire avec Cat avant l'ouverture : regarder le coffre chaque jour, même sans e-mail.
 - [ ] SPF / DKIM / DMARC validés ; tests de réception réalisés et consignés avec des **demandes factices**, notification et alerte comprises (`docs/email-deliverability.md` §5).
 - [ ] + Suppression d'une demande testée (y compris la politique de sauvegarde documentée).
+- [ ] + **Réservation d'appel** (story 3.10) : `db/migrations/0008` et `0010` appliquées, `db/roles/site_public.sql` et `coffre.sql` rejoués ; réservation de test de bout en bout sur la production (lien créé dans le coffre, réservation, confirmation, fichier .ics ouvert dans Google Agenda, Apple Calendrier et Outlook) ; `BOOKING_SMS_OPT_IN` **absente** tant que le fournisseur SMS n'est pas choisi (case masquée) ; la conservation planifiée inscrit `purged_bookings` et `purged_tokens` au journal.
 - [ ] + Lien « Situation urgente » : présent **seulement** si Cat l'a validé ; numéros d'urgence vérifiés.
 
 ## 4. Contenu et langues
@@ -49,6 +50,7 @@
 ## 6. Mesure
 - [ ] Analytics sans traceurs actif (servi via notre domaine) ; **pas de bandeau** si aucun traceur.
 - [ ] + Événement `Entrée` agrégé, sans identifiant ; pages vues sans paramètres de requête.
+- [ ] + **Liens de réservation exclus de la mesure** (story 3.10) : `/*/contact/appel/*` (réservation, confirmation, fichier .ics, liens de gestion) n'est jamais compté, sinon le chemin, donc le jeton, partirait à Plausible. Exclusion posée dans le script ou la réécriture servis par notre domaine (option d'exclusion de pages de Plausible, à vérifier dans sa documentation au moment de l'installer), et vérifiée : après une réservation de test, aucune page `/contact/appel/…` dans le tableau de bord. La page de demande de lien (`/fr/contact/appel`, 3.9) peut, elle, être comptée.
 
 ## 7. Qualité
 - [ ] Pages 404 et 500 soignées (FR/EN), favicon, image de partage (FR/EN).

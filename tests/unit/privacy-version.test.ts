@@ -19,6 +19,9 @@ const lire = (langue: string) =>
 
 const EMPREINTES: Record<string, string> = {
   '2026-11-18': 'b178f13d77d1d90e8e4b57e4b06ce3c5790d8badf480ce40632a6c37cc41f807',
+  // Réservation d'appel (story 3.10) : la politique ne décrit que ce qui existe (ni e-mail, ni SMS,
+  // ni agenda Google pour les appels).
+  '2026-11-19': '23e8ca2001bcc658bdf252a3e7bf771ff6993f92847d2633314a36e00bb5430b',
 }
 
 describe('PRIVACY_POLICY_VERSION', () => {

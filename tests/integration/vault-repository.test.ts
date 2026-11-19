@@ -169,9 +169,23 @@ describe('accès aux données du coffre', () => {
 
   it('rend la date du dernier passage de la conservation, ou null', async () => {
     assert.equal(await lastRetentionRun(pool), null)
-    await logRetention(pool, { requests: 0, sessions: 0, rateLimits: 0, verifications: 0 })
+    await logRetention(pool, {
+      requests: 0,
+      sessions: 0,
+      rateLimits: 0,
+      verifications: 0,
+      bookings: 0,
+      tokens: 0,
+    })
     await pool.query(`UPDATE vault_access_log SET at = '2026-01-01T03:00:00Z'`)
-    await logRetention(pool, { requests: 1, sessions: 0, rateLimits: 0, verifications: 0 })
+    await logRetention(pool, {
+      requests: 1,
+      sessions: 0,
+      rateLimits: 0,
+      verifications: 0,
+      bookings: 0,
+      tokens: 0,
+    })
     await logAccess(pool, { actor: ACTOR, action: 'login' })
     const dernier = await lastRetentionRun(pool)
     assert.ok(dernier && dernier.getTime() > new Date('2026-01-01T03:00:00Z').getTime())
@@ -234,10 +248,17 @@ describe('accès aux données du coffre', () => {
   })
 
   it('inscrit le résumé de la conservation en nombres seulement, au nom de system', async () => {
-    await logRetention(pool, { requests: 2, sessions: 1, rateLimits: 0, verifications: 3 })
+    await logRetention(pool, {
+      requests: 2,
+      sessions: 1,
+      rateLimits: 0,
+      verifications: 3,
+      bookings: 4,
+      tokens: 5,
+    })
     const { rows } = await pool.query(
       `SELECT actor, action, request_id, purged_requests, purged_sessions, purged_rate_limits,
-              purged_verifications FROM vault_access_log`,
+              purged_verifications, purged_bookings, purged_tokens FROM vault_access_log`,
     )
     assert.deepEqual(rows, [
       {
@@ -248,11 +269,14 @@ describe('accès aux données du coffre', () => {
         purged_sessions: 1,
         purged_rate_limits: 0,
         purged_verifications: 3,
+        purged_bookings: 4,
+        purged_tokens: 5,
       },
     ])
     for (const counts of [
-      { requests: -1, sessions: 0, rateLimits: 0, verifications: 0 },
-      { requests: 0.5, sessions: 0, rateLimits: 0, verifications: 0 },
+      { requests: -1, sessions: 0, rateLimits: 0, verifications: 0, bookings: 0, tokens: 0 },
+      { requests: 0.5, sessions: 0, rateLimits: 0, verifications: 0, bookings: 0, tokens: 0 },
+      { requests: 0, sessions: 0, rateLimits: 0, verifications: 0, bookings: -2, tokens: 0 },
     ]) {
       await assert.rejects(logRetention(pool, counts), RangeError)
     }
@@ -265,6 +289,21 @@ describe('accès aux données du coffre', () => {
     await assert.rejects(
       pool.query(
         `INSERT INTO vault_access_log (actor, action, purged_requests) VALUES ('x', 'read', 1)`,
+      ),
+      refused,
+    )
+    // Depuis 0010 : les deux compteurs de la réservation sont exigés aussi, et interdits ailleurs.
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_access_log (actor, action, purged_requests, purged_sessions,
+           purged_rate_limits, purged_verifications)
+         VALUES ('system', 'retention', 0, 0, 0, 0)`,
+      ),
+      refused,
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO vault_access_log (actor, action, purged_tokens) VALUES ('x', 'read', 1)`,
       ),
       refused,
     )

@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 
+import { createBookingLink, type IssuedLink } from '../booking/bookings.ts'
 import { outboxHealth } from '../outbox/health.ts'
 import type { OutboxHealth } from '../outbox/health.ts'
 import {
@@ -159,4 +160,16 @@ export async function etatEnvoiDuCoffre(
 ): Promise<OutboxHealth | null> {
   if (acces.etat !== 'autorise') return null
   return outboxHealth(pool, maintenant)
+}
+
+// Lien de réservation d'un appel (story 3.10, pont en attendant l'e-mail de la story 3.9) : un jeton
+// neuf, 48 heures, sans cible ; `booking_link` au journal au nom du compte, sans valeur, dans la même
+// transaction. Le jeton n'est rendu qu'ici, pour être affiché une fois. Sans accès autorisé : null.
+export async function lienDeReservationDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  maintenant: Date = new Date(),
+): Promise<IssuedLink | null> {
+  if (acces.etat !== 'autorise') return null
+  return createBookingLink(pool, acces.compte.email, maintenant)
 }

@@ -29,7 +29,8 @@
     "Accessibility",
     "Meta.ogAlt",
     "Contact",
-    "ContactThanks"
+    "ContactThanks",
+    "Booking"
   ],
   "en": [
     "Home.title",
@@ -61,6 +62,7 @@
     "Accessibility",
     "Meta.ogAlt",
     "Contact",
-    "ContactThanks"
+    "ContactThanks",
+    "Booking"
   ]
 }

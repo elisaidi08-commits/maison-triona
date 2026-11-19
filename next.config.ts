@@ -64,6 +64,21 @@ const coffreHeaders = [
   { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
 ]
 
+// Liens personnels de réservation d'appel (story 3.10, docs/reservation-appel.md §4.4) : le jeton est
+// dans l'adresse. Jamais indexés, jamais mis en cache. Référent : l'origine seule (`strict-origin`),
+// jamais le chemin, donc jamais le jeton ; et ces pages ne font aucune requête vers un autre site (CSP
+// 'self', aucun lien externe). Pas `no-referrer` : avec lui, le navigateur envoie `Origin: null` sur
+// l'envoi d'un formulaire sans JavaScript (spécification Fetch, « append a request Origin header »),
+// et Next refuse alors la Server Action (contrôle d'origine contre le CSRF). Réservation,
+// confirmation, fichier .ics, et les liens de gestion à venir (3.11) ; pas la page de demande de lien
+// (/contact/appel, 3.9). Placé après les en-têtes du site.
+const LIEN_RESERVATION = '/:locale(fr|en)/contact/appel/:chemin+'
+const lienHeaders = [
+  { key: 'Referrer-Policy', value: 'strict-origin' },
+  { key: 'Cache-Control', value: 'no-store' },
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+]
+
 // Tout sauf /coffre et ce qui est dessous.
 const HORS_COFFRE = '/((?!coffre(?:/|$)).*)'
 
@@ -84,11 +99,13 @@ const nextConfig: NextConfig = {
   // part (story 3.2 C).
   async headers() {
     const site = [{ source: HORS_COFFRE, headers: securityHeaders }]
+    const lien = [{ source: LIEN_RESERVATION, headers: lienHeaders }]
     const coffre = [{ source: '/coffre/:path*', headers: coffreHeaders }]
-    if (ouvert) return [...site, ...coffre]
+    if (ouvert) return [...site, ...lien, ...coffre]
     return [
       ...site,
       { source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
+      ...lien,
       ...coffre,
     ]
   },

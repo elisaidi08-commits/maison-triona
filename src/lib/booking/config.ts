@@ -11,7 +11,13 @@ import type {
   ExceptionKind,
 } from './settings.ts'
 import type { BookedCall, SlotInput } from './slots.ts'
-import { addDays, timeToMinutes, zonedParts, type IsoWeekday } from './zoned-time.ts'
+import {
+  addDays,
+  timeToMinutes,
+  zonedParts,
+  zonedTimeToUtc,
+  type IsoWeekday,
+} from './zoned-time.ts'
 
 /** Ligne de `booking_settings`. */
 export interface SettingsRow {
@@ -176,4 +182,21 @@ export function callsDuring(
     const { date } = zonedParts(call.start, timeZone)
     return absence.startDate <= date && date <= absence.endDate
   })
+}
+
+/**
+ * Période des appels confirmés à lire pour calculer les créneaux à cet instant : du début du jour
+ * local (les appels déjà passés aujourd'hui comptent dans le plafond du jour) au lendemain du dernier
+ * jour de l'horizon. Rien avant : un appel passé ne bloque plus aucun créneau.
+ */
+export function bookingWindow(
+  settings: Pick<BookingSettings, 'timeZone' | 'horizonDays'>,
+  now: Date,
+): { from: Date; to: Date } {
+  if (Number.isNaN(now.getTime())) throw new RangeError('Date invalide')
+  const today = zonedParts(now, settings.timeZone).date
+  return {
+    from: zonedTimeToUtc(today, '00:00', settings.timeZone),
+    to: zonedTimeToUtc(addDays(today, settings.horizonDays + 1), '00:00', settings.timeZone),
+  }
 }

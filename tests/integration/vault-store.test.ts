@@ -278,7 +278,7 @@ describe('enregistrement chiffré dans le coffre', () => {
         source: 'salon',
         status: 'new',
         frozen: false,
-        privacyVersion: '2026-11-18',
+        privacyVersion: PRIVACY_POLICY_VERSION,
       },
     )
     assert.equal(

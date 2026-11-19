@@ -539,11 +539,10 @@
         "id": "call",
         "title": "When you arrange a call",
         "paragraphs": [
-          "You may also arrange a call with us. You receive by email a personal link, valid for 48 hours, to choose your time; no account or cookie is needed.",
-          "We then keep your email address, your name, your number, the language and time you chose, your “no voicemail” preference and, if you wish to say, how you heard of the house. We never leave a voicemail.",
-          "You receive a confirmation, then a reminder the day before, by email. By text message only if you ask: a confirmation, then a reminder two hours before.",
-          "So that we can write to you until the call, your email address and number are also encrypted with a key our server can use; in that form, they are erased 24 hours after the call. Everything else is protected like an enquiry.",
-          "The invitation added to the founder’s calendar (Google Calendar) contains neither your name nor your contact details: only the time and a link to the vault."
+          "You may also arrange a call with us. The house sends you a personal link, valid for 48 hours, to choose your time; no account or cookie is needed.",
+          "We then keep your name, your number, the language and time you chose and, if you wish to say, how you heard of the house. We never leave a voicemail.",
+          "This information is encrypted as soon as it arrives, like an enquiry: only the house can read it. Only the time and the status of the call remain readable, so that the same time is never offered twice.",
+          "Once the call is arranged, the page offers you a file to add to your calendar; it contains neither your name nor your number."
         ]
       },
       {
@@ -604,14 +603,6 @@
             "value": "Audience measurement as totals, without cookies; data hosted in Germany."
           },
           {
-            "term": "Text message provider",
-            "value": "Call confirmations and reminders, only if you ask, within the European Union. [À DÉFINIR]"
-          },
-          {
-            "term": "Google (United States)",
-            "value": "The founder’s calendar: the time of the call and a link to the vault, with no name or contact details."
-          },
-          {
             "term": "House mailbox",
             "value": "[À DÉFINIR]"
           }
@@ -621,7 +612,7 @@
         "id": "transfers",
         "title": "Outside the European Union",
         "paragraphs": [
-          "Vercel, Upstash and Google are American companies: even when processed on European servers, data may be accessible from the United States. Google receives no data that names you."
+          "Vercel and Upstash are American companies: even when processed on European servers, data may be accessible from the United States."
         ]
       },
       {
@@ -629,7 +620,7 @@
         "title": "How long we keep your information",
         "items": [
           "Your enquiry: for as long as we are in touch, then it is erased. You may ask us to erase it sooner.",
-          "Your call: the same length of time as an enquiry. Your email address and number, in the form used for messages, are erased 24 hours after the call; personal links, 7 days after they expire.",
+          "Your call: the same length of time as an enquiry. Personal links are erased two days after they expire, or after the call they were used to arrange.",
           "Backups: an erased enquiry may remain there for 7 days before it disappears; its content stays encrypted.",
           "Our host’s logs: one day.",
           "Protection against abusive submissions: 24 hours at most.",
@@ -662,8 +653,7 @@
         "items": [
           "Our host, Vercel, is an American company. Your enquiry passes through its servers in readable form until it is encrypted; we do not store it there. Like any American company, Vercel may be required by American law to hand over data, even data processed in Europe.",
           "An erased enquiry remains in the backups for up to 7 days; its content stays encrypted.",
-          "Until 24 hours after a call, your email address and number remain readable by our server, so that it can send you the messages for the call: a compromised server would allow them to be read.",
-          "The personal booking link appears in our host’s logs. It is only valid for 48 hours and no longer works once the call is booked.",
+          "The personal booking link appears in our host’s logs. It is only valid for 48 hours; once the call is arranged, it only serves to see the confirmation again, until the call.",
           "The confirmation is sent to the address typed into the form. If it reaches you although you did not write to us, please ignore it: it contains nothing but an acknowledgement of receipt."
         ]
       },
@@ -970,5 +960,92 @@
     "title": "Thank you, your request has arrived safely.",
     "body": "We reply within 48 working hours, Monday to Friday.",
     "back": "Back to the home page"
+  },
+  "Booking": {
+    "metaTitle": "Arrange a call",
+    "title": "Let us arrange a call.",
+    "intro": "Choose the time that suits you: we will call you at that time. Times are Brussels and Paris time.",
+    "slots": {
+      "legend": "Which time suits you?",
+      "next": "The next available times",
+      "nearby": "The closest available times",
+      "week": "Week of {date}",
+      "none": "No time is available in the coming weeks. Write to us: we reply within 48 working hours, Monday to Friday.",
+      "write": "Write to us"
+    },
+    "form": {
+      "fields": {
+        "nom": {
+          "label": "Your name"
+        },
+        "telephone": {
+          "label": "Your number",
+          "hint": "With the country code, for example +32 for Belgium."
+        },
+        "voicemail": "We never leave a voicemail.",
+        "langue": {
+          "legend": "In which language?",
+          "options": {
+            "fr": "Français",
+            "en": "English"
+          }
+        },
+        "sms": {
+          "label": "Also let me know by text message",
+          "hint": "A confirmation, then a reminder two hours before the call."
+        },
+        "consentement": {
+          "label": "I agree that Maison Triona may use this information to arrange this call, as described in the privacy policy.",
+          "link": "Read the privacy policy (opens in a new tab)"
+        }
+      },
+      "buttons": {
+        "send": "Arrange this call",
+        "sending": "Sending"
+      },
+      "errors": {
+        "prefix": "Error:",
+        "one": "One thing to check",
+        "many": "{count} things to check",
+        "codes": {
+          "creneau": "Please choose a time.",
+          "nomRequis": "Please enter your name.",
+          "nomCourt": "Your name must be at least 2 characters long.",
+          "nomLong": "Your name must be 120 characters or fewer.",
+          "telephoneRequis": "Please enter your number.",
+          "telephoneFormat": "Please enter a valid phone number, with the country code if needed.",
+          "langue": "Please choose the language of the call.",
+          "origine": "Please choose one of the answers offered.",
+          "consentement": "Please tick the box so that we can arrange this call."
+        }
+      },
+      "status": {
+        "taken": "This time has just been taken. The closest times are listed first; what you entered is still in the form.",
+        "failed": "Your booking could not be sent. What you entered is still in the form.",
+        "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; what you entered is still in the form."
+      }
+    },
+    "invalid": {
+      "title": "This link is no longer valid.",
+      "body": "To arrange a call, write to us: we reply within 48 working hours, Monday to Friday.",
+      "write": "Write to us"
+    },
+    "unavailable": {
+      "title": "Booking is temporarily unavailable.",
+      "body": "Please try again in a few minutes, or write to us: we reply within 48 working hours."
+    },
+    "confirmation": {
+      "metaTitle": "Call arranged",
+      "title": "Your call is arranged.",
+      "when": "{jour}, at {heure}, Brussels and Paris time.",
+      "body": "We will call you on the number you gave. We never leave a voicemail.",
+      "calendar": "Add to my calendar",
+      "calendarHint": "A file to open with your calendar (.ics).",
+      "back": "Back to the home page"
+    },
+    "ics": {
+      "summary": "Call · Maison Triona",
+      "description": "Maison Triona will call you on the number you gave."
+    }
   }
 }

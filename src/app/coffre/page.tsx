@@ -21,6 +21,7 @@ import type { VaultRequestSummary } from '@/lib/vault/repository'
 import { RETENTION_RUN_ALERT_HOURS, retentionRunStatus } from '@/lib/vault/retention'
 
 import { seDeconnecter } from './actions'
+import { CreerLienReservation } from './_composants/CreerLienReservation'
 import { EnTete } from './_composants/EnTete'
 import { LienCoffre } from './_composants/LienCoffre'
 
@@ -35,6 +36,8 @@ import { LienCoffre } from './_composants/LienCoffre'
 // aucune demande n'est ouverte ni affichée, d'où aucune ligne au journal d'accès (comme pour la
 // date de la conservation), mais lus comme elle derrière la vérification de l'accès
 // (etatEnvoiDuCoffre). Si la requête échoue : « État de l'envoi indisponible. », sans l'erreur.
+// Depuis la story 3.10 : « Créer un lien de réservation » (CreerLienReservation), le lien affiché une
+// fois.
 
 export const metadata: Metadata = { title: 'Demandes' }
 
@@ -178,6 +181,9 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
           </table>
         </div>
       )}
+
+      {/* Réservation d'appel (story 3.10) : lien créé à la main, en attendant l'e-mail (story 3.9). */}
+      <CreerLienReservation />
 
       <form action={seDeconnecter}>
         <Button type="submit" variant="discret">

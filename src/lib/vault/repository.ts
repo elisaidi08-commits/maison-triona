@@ -31,6 +31,9 @@ export type AccessAction =
   | 'freeze'
   | 'unfreeze'
   | 'retention'
+  // Disponibilités (story 3.8 B, 0007) et création d'un lien de réservation (story 3.10, 0008).
+  | 'availability'
+  | 'booking_link'
 
 export interface NewVaultRequest {
   kind: RequestKind
@@ -67,6 +70,9 @@ export interface RetentionCounts {
   sessions: number
   rateLimits: number
   verifications: number
+  // Réservations échues et jetons expirés depuis plus de 48 heures (story 3.10, migration 0010).
+  bookings: number
+  tokens: number
 }
 
 export interface AccessLogEntry {
@@ -400,9 +406,18 @@ export async function logRetention(db: Pool | PoolClient, counts: RetentionCount
   await guard('logRetention', () =>
     db.query(
       `INSERT INTO vault_access_log
-         (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications)
-       VALUES ($1, 'retention', $2, $3, $4, $5)`,
-      [SYSTEM_ACTOR, counts.requests, counts.sessions, counts.rateLimits, counts.verifications],
+         (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications,
+          purged_bookings, purged_tokens)
+       VALUES ($1, 'retention', $2, $3, $4, $5, $6, $7)`,
+      [
+        SYSTEM_ACTOR,
+        counts.requests,
+        counts.sessions,
+        counts.rateLimits,
+        counts.verifications,
+        counts.bookings,
+        counts.tokens,
+      ],
     ),
   )
 }

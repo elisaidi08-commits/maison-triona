@@ -1,6 +1,6 @@
 # Réservation d'appel — spec
 
-> **Statut** : conception validée par Sady le 06/11/2026 (D57). **Story 3.8 livrée** : moteur de calcul (partie A, #44) et disponibilités dans le coffre (partie B, 19/11/2026 : `docs/architecture.md` §6.3). Le reste (3.9 à 3.14) n'est pas installé.
+> **Statut** : conception validée par Sady le 06/11/2026 (D57). **Story 3.8 livrée** : moteur de calcul (partie A, #44) et disponibilités dans le coffre (partie B, 19/11/2026 : `docs/architecture.md` §6.3). **Story 3.10 livrée le 19/11/2026** : réservation par lien personnel, confirmation et fichier .ics, lien créé depuis le coffre en attendant l'e-mail (§10). **Story 3.9 en partie** : jetons seulement. Le reste (page et e-mail de la 3.9, 3.11 à 3.14) n'est pas installé.
 > **Dépend de** : stories 3.2 (coffre), 3.3 (envoi et boîte d'envoi), 3.5 (anti-abus). **Remplace** la story 3.6 (rappel à la demande).
 > **Priorité** : cette spec précise `docs/architecture.md` §6 et `docs/trust-contact-launch.md` §3 pour la réservation ; en cas de conflit sur un point de confidentialité, `docs/privacy.md` et les règles de discrétion de `CLAUDE.md` priment.
 
@@ -117,7 +117,7 @@ Fonction pure `computeSlots({ settings, rules, exceptions, bookings, busy, now }
 
 - Jeton de 32 octets aléatoires (base64url) ; la base ne garde que son empreinte.
 - **Ouvrir un lien n'engage rien** : la page affichée par `GET` ne modifie rien (les messageries d'entreprise ouvrent les liens pour les analyser) ; seule la Server Action (`POST`) réserve, déplace ou annule.
-- Pages de lien : `noindex`, `Cache-Control: no-store`, `Referrer-Policy: no-referrer`, hors du sitemap.
+- Pages de lien : `noindex`, `Cache-Control: no-store`, `Referrer-Policy: strict-origin` (l'origine seule, jamais le chemin ni le jeton ; `no-referrer` ferait envoyer `Origin: null` au formulaire sans JavaScript, que Next refuse : écart de la 3.10, §10), hors du sitemap.
 - Anti-abus (3.5) : honeypot, horodatage signé, limitation de débit (Upstash, UE) sur la demande de lien : 3 par 10 minutes par empreinte d'IP, 3 par 24 heures par `email_hmac`.
 - **Aucun cookie** sur le site public : le lien sert de clé.
 - **Risque résiduel** à écrire dans `docs/privacy.md` : le chemin du lien apparaît dans les journaux de Vercel ; délai court de 48 heures, accès aux journaux restreint.
@@ -214,3 +214,16 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 `docs/architecture.md` (§3 arborescence, §6.3 rappel remplacé, §6.6 boîte d'envoi étendue, §6.5 exception de chiffrement) · `docs/privacy.md` (§1, §7, §8) · `docs/plan-implementation.md` (epic 3) · `docs/email-deliverability.md` (§1 liste des messages) · `docs/trust-contact-launch.md` (§3.1 deux entrées) · `CLAUDE.md` (table des documents).
 
 **19/11/2026, story 3.8 B** (disponibilités dans le coffre) : `docs/architecture.md` §6.3 (tables, page, droits, journal, point d'accroche de la 3.10) et §6.5 (journal d'accès : `availability`) · `docs/coffre-cles.md` §3.2 (droits du rôle `coffre`) · `docs/plan-implementation.md` (3.8, lot E). Écarts avec cette spec : le fuseau est **figé** sur Bruxelles par la base (en changer demande une migration) ; jours fériés préremplis de **2026 à 2035** par la migration, années suivantes par un bouton de la page ; bornes des réglages proposées `[À CONFIRMER par Sady]` (§3.1, ci-dessous).
+
+**19/11/2026, story 3.10** (réservation) : `docs/architecture.md` §3, §6.3 (réservation livrée, point d'accroche branché), §6.5 (journal : `booking_link`) et §9.1 (en-têtes des liens) · `docs/coffre-cles.md` §3.1 et §3.2 (droits des deux rôles) · `docs/privacy.md` §1 et §8 · `docs/rgpd/registre-des-traitements.md` (T2) · `docs/plan-implementation.md` (3.9 en partie, 3.10, lot E). Écarts avec cette spec, à valider par Sady :
+- **Données** (§4.1) : la langue, le choix SMS et l'origine sont **scellés** avec le nom et le numéro (consigne de la story), pas en clair ; restent en clair le créneau, le statut, la version de la politique acceptée et l'échéance de conservation. La 3.12 devra relire langue et choix SMS pour envoyer (clé serveur, `contact_kms`). Ni e-mail, ni `email_hmac`, ni `request_id` dans `bookings` tant que la 3.9 n'existe pas ; `booking_tokens.email_hmac` existe, vide.
+- **« Pas de message vocal »** (§2) : une **mention** (« Nous ne laissons jamais de message vocal »), pas une case : rien n'est recueilli. La politique de confidentialité en brouillon parle encore d'une « préférence » : à aligner.
+- **Lien d'accès consommé** (§2, étape 4) : sans lien de gestion (3.11), le lien d'accès utilisé ne rouvre plus la réservation mais sert de clé à la confirmation et au fichier .ics jusqu'à la fin de l'appel. La 3.11 le remplacera par le lien de gestion.
+- **Invitation** (§4.5) : fichier « Ajouter à mon agenda » téléchargé (`METHOD:PUBLISH`, heures en UTC, sans VTIMEZONE) ; les invitations par e-mail (`REQUEST`, `CANCEL`, VTIMEZONE) viendront avec l'envoi. Ni e-mail, ni notification à Cat (3.3) : points d'accroche notés dans `src/actions/booking.ts`.
+- **Fuseau** (§2) : heure de Bruxelles seulement ; le lien « Changer de fuseau » n'est pas fait.
+- **Numéro** : même contrôle que le formulaire de contact (`telephoneValide`) ; `libphonenumber-js` non installé.
+- **Anti-abus** (§4.4) : sur la page de réservation, limitation de débit par empreinte d'IP (5 envois valides par 10 minutes) et lien lu avant tout scellement ; piège et horodatage restent pour la demande de lien (3.9).
+- **SMS** : case masquée tant que le fournisseur n'est pas choisi (`BOOKING_SMS_OPT_IN` absente) ; la politique de confidentialité (brouillon) ne parle ni d'e-mail, ni de SMS, ni d'agenda Google pour les appels tant qu'ils ne partent pas.
+- **Conservation** : par la tâche existante (`/api/cron/retention`, pas `/api/cron/booking`) : réservations effacées à leur échéance, jetons 48 h après leur expiration (pas 7 jours), sauf le lien qui sert encore à revoir la confirmation d'un appel à venir. Deux compteurs au journal (`purged_bookings`, `purged_tokens`, migration 0010).
+- **Consommation d'un lien** : un déclencheur (migration 0010) refuse toute mise à jour de `used_at` déjà posée, remise à zéro ou sans réservation qui pointe vers le jeton.
+
