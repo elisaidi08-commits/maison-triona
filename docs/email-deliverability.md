@@ -50,6 +50,7 @@ Les rapports DMARC contiennent des adresses IP d'envoi, pas de contenu : les lir
 5. Aucun contenu de demande n'est journalisé ; la boîte d'envoi ne contient que des identifiants, des dates, des statuts et le gabarit d'e-mail, jamais une adresse. Ses lignes sont **effacées après 30 jours**.
 6. **Envoi coupé** (variables vides) ou mal configuré : la demande s'enregistre quand même, sans notification, et ne sera **jamais notifiée après coup**. Cat la trouve dans le coffre.
 7. TEM n'a **pas de clé d'idempotence** : un envoi accepté dont la réponse se perd peut partir deux fois. Ce doublon rare est accepté (D69).
+8. **Plafond de 20 notifications par jour UTC** (décision de Sady du 19/11/2026) : au-delà, la demande est gardée dans le coffre sans e-mail (`alert:notify-cap` au journal) pour qu'un flot de demandes ne remplisse pas la boîte de Cat ; sans compteur Upstash joignable, aucun plafond.
 
 ## 4. Rebonds, plaintes, réponses
 

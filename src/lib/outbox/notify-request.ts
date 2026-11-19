@@ -15,11 +15,23 @@ import type { OutboxDeps } from './process.ts'
 //   lève est journalisé `failed:after` à chaque fois ; des dépendances impossibles à créer
 //   (ENVOI_DATABASE_URL absente ou refusée), `failed:config` une fois par instance. Dans tous les
 //   cas, le message est en base et la tâche planifiée `/api/cron/envoi` le reprend.
+// - Plafond : `applyNotificationCap` coupe la notification (pas la demande, toujours enregistrée)
+//   au-delà de `NOTIFICATIONS_PAR_JOUR` par jour UTC, `alert:notify-cap` à chaque fois ; si le
+//   compteur est indisponible, la notification part (échec ouvert, comme la limitation de débit).
 // Journaux : des statuts fixes seulement, jamais un message d'erreur (il nommerait des variables),
 // un secret ni une adresse.
 // Imports relatifs seulement : testé par node --test.
 
 export type SetupLogStatus = 'failed:config' | 'mail:disabled'
+export type QuotaNotifications = 'autorise' | 'depasse' | 'indisponible'
+
+/**
+ * Plafond de notifications par jour UTC (décision de Sady, 19/11/2026) : chaque demande valide
+ * envoie un e-mail à Cat, et un flot réparti de demandes d'apparence valide pourrait remplir sa
+ * boîte. Au-delà, la demande est quand même enregistrée dans le coffre, sans notification.
+ */
+export const NOTIFICATIONS_PAR_JOUR = 20
+
 export type StoredStatus = 'stored' | 'failed:outbox' | 'queued'
 
 /** Journal « une fois par instance » : `key` distingue ce qui est signalé. */
@@ -69,6 +81,19 @@ export function notificationSetup(
     return { notify: false, config: null }
   }
   return { notify: true, config }
+}
+
+/**
+ * Applique le plafond du jour à la décision de notifier. Sans notification (e-mails coupés), le
+ * quota n'est pas consulté : l'appelant ne le débite pas. Compteur indisponible : la notification
+ * part.
+ */
+export function applyNotificationCap(
+  notify: boolean,
+  quota: QuotaNotifications,
+): { notify: boolean; status: 'alert:notify-cap' | null } {
+  if (notify && quota === 'depasse') return { notify: false, status: 'alert:notify-cap' }
+  return { notify, status: null }
 }
 
 /** Statuts à journaliser une fois la demande enregistrée, dans l'ordre. */
