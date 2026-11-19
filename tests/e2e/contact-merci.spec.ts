@@ -28,16 +28,34 @@ for (const [locale, titre, delai] of [
     await expect(page.locator('main')).toContainText(delai)
 
     // Cachet « K. » de 64 px (story 3.3) : décoratif, dernier élément de la colonne, après le
-    // lien de retour.
-    const dernier = page.locator('main h1').locator('xpath=..').locator(':scope > :last-child')
-    await expect(dernier).toHaveAttribute('aria-hidden', 'true')
-    await expect(dernier).toHaveText('K.')
-    await expect(dernier).toHaveCSS('font-size', '64px')
+    // lien de retour, sur l'axe gauche, avec 64 px d'air au-dessus.
+    const texte = page.locator('main h1').locator('xpath=..')
+    const cachet = texte.locator('xpath=..').locator(':scope > :last-child > [aria-hidden="true"]')
+    await expect(cachet).toHaveText('K.')
+    await expect(cachet).toHaveCSS('font-size', '64px')
+    const retour = await texte.locator(':scope > :last-child').boundingBox()
+    const boite = await cachet.boundingBox()
+    const boiteTitre = await page.locator('main h1').boundingBox()
+    expect(Math.round((boite?.y ?? 0) - ((retour?.y ?? 0) + (retour?.height ?? 0)))).toBe(64)
+    expect(boite?.x).toBe(boiteTitre?.x)
 
     // Rien de la demande, ni dans la page ni dans son HTML (attributs et données comprises).
     const html = await page.content()
     for (const valeur of Object.values(ECHO)) expect(html).not.toContain(valeur)
     await expect(page.locator('main :is(form, input, textarea, select)')).toHaveCount(0)
+  })
+}
+
+// Après l'envoi, plus de barre « Écrire en toute discrétion » : la demande vient d'être écrite.
+// Témoin : la barre est bien là sur l'accueil de la même langue.
+for (const locale of ['fr', 'en'] as const) {
+  test(`/${locale}/contact/merci : pas de barre mobile (390 px)`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`/${locale}`)
+    await expect(page.locator('[data-barre-mobile]')).toBeVisible()
+    await page.goto(`/${locale}/contact/merci`)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.locator('[data-barre-mobile]')).toHaveCount(0)
   })
 }
 

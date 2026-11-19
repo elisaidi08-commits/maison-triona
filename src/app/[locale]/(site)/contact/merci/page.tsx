@@ -11,7 +11,8 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 // statique, noindex, hors du sitemap : elle ne reprend rien de la demande (aucun paramètre lu,
 // aucun état reçu), seulement le délai de réponse. Le brouillon du formulaire s'efface à
 // l'affichage. Même colonne que le contact, close par le cachet « K. » de 64 px (story 3.3),
-// décoratif. Texte en brouillon (content/brouillons.json), d'après l'annexe B.4 de
+// décoratif, sur l'axe gauche, avec 64 px d'air au-dessus (relecture de la direction artistique :
+// hors de l'espacement de 24 px du texte, qui n'en laisserait que 24). Texte en brouillon (content/brouillons.json), d'après l'annexe B.4 de
 // docs/trust-contact-launch.md.
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,16 +26,21 @@ export default async function Page() {
   const t = await getTranslations('ContactThanks')
   return (
     <div className="conteneur py-section">
-      <div className="mx-auto flex max-w-measure flex-col gap-24">
-        <Rule short />
-        <h1 tabIndex={-1} className="font-display text-display-l text-balance text-sapin">
-          {t('title')}
-        </h1>
-        <p className="text-body-l">{t('body')}</p>
-        <p>
-          <TextLink href={localizedPath('/', locale)}>{t('back')}</TextLink>
-        </p>
-        <Stamp size="lg" />
+      <div className="mx-auto max-w-measure">
+        <div className="flex flex-col gap-24">
+          <Rule short />
+          <h1 tabIndex={-1} className="font-display text-display-l text-balance text-sapin">
+            {t('title')}
+          </h1>
+          <p className="text-body-l">{t('body')}</p>
+          <p>
+            <TextLink href={localizedPath('/', locale)}>{t('back')}</TextLink>
+          </p>
+        </div>
+        {/* `flex` : le cachet n'hérite d'aucune hauteur de ligne, l'air au-dessus reste de 64 px. */}
+        <div className="flex pt-64">
+          <Stamp size="lg" />
+        </div>
       </div>
       <EffacerBrouillon />
     </div>
