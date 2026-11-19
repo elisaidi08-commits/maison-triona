@@ -101,7 +101,7 @@ export function LanguageSuggestion({
       <button
         type="button"
         onClick={close}
-        className="inline-flex min-h-touch cursor-pointer items-center underline decoration-sapin-20 decoration-1 underline-offset-8"
+        className="inline-flex min-h-touch min-w-touch cursor-pointer items-center justify-center underline decoration-sapin-20 decoration-1 underline-offset-8"
       >
         {closeLabel}
       </button>

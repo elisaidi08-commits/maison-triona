@@ -819,6 +819,9 @@
       text-transform: uppercase;
       cursor: pointer;
       transition: color var(--transition-duration-micro) var(--ease-standard);
+      /* La scène est collante : remonté au-dessus de la suggestion de langue, sinon masqué au
+         focus (WCAG 2.4.11) ; `translate`, sans décalage de mise en page. */
+      translate: 0 calc(-1 * var(--suggestion-langue-height));
     }
     [data-immersion-pause]:hover {
       color: var(--color-champagne);
