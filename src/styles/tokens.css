@@ -230,6 +230,28 @@
   bottom: var(--barre-mobile-height);
 }
 
+/* Bouton posé en bas d'un média collant (pause vidéo des scènes) : remonté au-dessus de la
+   suggestion de langue quand elle s'affiche ; le défilement ne le dégagerait pas, et le bandeau
+   fixe le masquerait au focus (WCAG 2.4.11). `translate` : aucun décalage de mise en page (CLS 0). */
+@utility au-dessus-suggestion {
+  translate: 0 calc(-1 * var(--suggestion-langue-height));
+}
+
+/* Sommaire collant (pages légales, La Maison) : jamais plus haut que la place libre, sinon ses
+   derniers liens prendraient le focus hors de l'écran (WCAG 2.4.11) ; il défile alors seul. La
+   marge intérieure garde l'anneau de focus (3 + 3 px) visible dans la zone qui défile. */
+@utility sommaire-collant {
+  max-height: calc(
+    100svh - var(--mini-menu-height) - var(--barre-mobile-height) - var(--suggestion-langue-height)
+  );
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-inline: calc(-1 * var(--spacing-8));
+  padding-inline: var(--spacing-8);
+  padding-bottom: var(--spacing-8);
+  scroll-padding-block: var(--spacing-8);
+}
+
 /* Bouton posé sur une image (pause vidéo) : anneau champagne collé à l'aplat sapin du bouton,
    pour qu'il contraste toujours avec ce qu'il touche (6,47:1), quelle que soit l'image. */
 @utility focus-sur-image {
@@ -286,6 +308,8 @@
        retiré par D25) et barre mobile (§7.10, 0 tant qu'elle n'existe pas). */
     --mini-menu-height: 0px;
     --barre-mobile-height: 0px;
+    /* Hauteur de la suggestion de langue, posée par LanguageSuggestion.tsx quand elle s'affiche. */
+    --suggestion-langue-height: 0px;
     --distance-reveal: 12px;
     --stagger: 80ms;
   }

@@ -53,7 +53,7 @@ export default async function HousePage() {
             aria-labelledby="sommaire-titre"
             className="max-w-measure lg:col-span-3 lg:max-w-none"
           >
-            <div className="flex flex-col gap-16 lg:sticky lg:top-mini-menu lg:pt-32">
+            <div className="flex flex-col gap-16 lg:sommaire-collant lg:sticky lg:top-mini-menu lg:pt-32">
               <p id="sommaire-titre" className="text-label text-encre uppercase">
                 {t('contents')}
               </p>

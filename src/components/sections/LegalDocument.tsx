@@ -47,7 +47,7 @@ export async function LegalDocument({
 
       <div className="mt-96 grid gap-64 lg:grid-cols-12 lg:gap-gutter">
         <nav aria-labelledby="sommaire-titre" className="max-w-measure lg:col-span-3 lg:max-w-none">
-          <div className="flex flex-col gap-16 lg:sticky lg:top-mini-menu lg:pt-32">
+          <div className="flex flex-col gap-16 lg:sommaire-collant lg:sticky lg:top-mini-menu lg:pt-32">
             <h2 id="sommaire-titre" className="text-label text-encre uppercase">
               {page('toc')}
             </h2>
