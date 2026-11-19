@@ -34,6 +34,11 @@ export type AccessAction =
   // Disponibilités (story 3.8 B, 0007) et création d'un lien de réservation (story 3.10, 0008).
   | 'availability'
   | 'booking_link'
+  // Agenda des appels (story 3.13, 0011) : affichage, lecture d'un appel, statut, rattachement.
+  | 'booking_list'
+  | 'booking_read'
+  | 'booking_status'
+  | 'booking_attach'
 
 export interface NewVaultRequest {
   kind: RequestKind
