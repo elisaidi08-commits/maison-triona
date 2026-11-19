@@ -112,6 +112,8 @@ Son principal atout : **anonymisation fixe à 30 jours**, sans réglage à oubli
 6. Peut-on ouvrir un compte de test, ou utiliser le bac à sable, avant l'inscription de la société ?
 7. Quelle est la version du DPA en vigueur ?
 
+L'e-mail prêt à envoyer à seven est au §9. Il ajoute deux questions : les sauvegardes, et les frais d'inactivité avant l'ouverture.
+
 ---
 
 ## 6. Conséquences pour la story 3.12
@@ -180,7 +182,7 @@ Un seul caractère hors GSM-7 fait passer **tout le message** en Unicode, et la 
 | Nom d'expéditeur (« Triona » proposé) | Sady et Cat | Avant l'enregistrement de l'expéditeur en France |
 | SMS sans lien | Sady | Avant la 3.12 |
 | Textes des SMS | Cat (après `i18n-copy-editor`) | Avant l'ouverture |
-| Questions du §5.3 | Sady (envoi), Claude (rédaction si besoin) | Avant la signature |
+| Questions du §5.3 (e-mail rédigé au §9) | Sady (envoi) | Avant la signature |
 | Base légale des SMS, consentement, transfert vers Monaco | Juriste | Avant l'ouverture |
 | Compte, DPA, enregistrement de l'expéditeur en France, tests de réception dans les cinq pays | Sady, au nom de la société | Après l'inscription de la société (janvier 2027), avant l'ouverture |
 
@@ -235,3 +237,78 @@ Un seul caractère hors GSM-7 fait passer **tout le message** en Unicode, et la 
 - SMSFactor : https://www.smsfactor.com/mentions-legales
 - Brevo : https://www.brevo.com/legal/termsofuse/
 - Scaleway (aucun produit SMS dans la documentation) : https://github.com/scaleway/docs-content
+
+---
+
+## 9. E-mail à seven, prêt à envoyer
+
+**Avant l'envoi** :
+- L'envoyer depuis l'adresse de la maison, si elle existe déjà.
+- **Ne rien y ajouter sur les services** ni sur la clientèle : le fournisseur n'a besoin que de l'usage (rendez-vous, rappel) et du volume.
+- Formulaire de contact ou adresse du support : à prendre sur https://www.seven.io/en/company/imprint/ au moment de l'envoi.
+- En anglais : le support de seven répond en allemand et en anglais.
+- Les réponses se notent au §5.3, avec leur date.
+
+**Variante GatewayAPI `.eu`** : remplacer les questions suivantes.
+- **1 et 2** : les 30 jours avant anonymisation comprennent-ils les sauvegardes, gardées 3 mois selon les conditions (art. 13.1) ? L'option « Secret » est-elle couverte par le DPA `.eu` ?
+- **6** : que recouvre la mention « Pre-approval required » pour Monaco ?
+- **10** : y a-t-il des frais ou une expiration du crédit, et peut-on recharger moins de 150 € par carte ?
+- **Ajouter** : la double authentification peut-elle se faire par application (TOTP), et la connexion par Google peut-elle être désactivée sur le compte ?
+
+```text
+Subject: Pre-sales questions: transactional SMS, data retention and sender IDs (BE, FR, LU, MC, CH)
+
+Hello,
+
+We are a small company being set up in Belgium (registration expected in
+January 2027). We plan to use seven for transactional SMS only: the
+confirmation of a phone appointment and a reminder two hours before it,
+sent only when the recipient has asked for them. Expected volume: under
+200 SMS per month, to Belgium, France, Luxembourg, Monaco and Switzerland.
+
+Before opening an account and signing your DPA, we would be grateful for
+written answers to the questions below.
+
+Data retention
+1. If "Automatic Journal Deletion" is set to "Immediately", what exactly
+   is deleted (message text, recipient number, sender, delivery status)?
+   Does it also cover the traffic data in section 8 of your terms
+   (sender, recipient, time, available for 60 days)? What is the default
+   value of this setting on a new account?
+2. Are message texts or recipient numbers kept anywhere else, such as
+   backups, application logs or routing partners? If so, for how long?
+
+Sub-processors and routing
+3. Which carriers or aggregators route SMS to each of the five countries
+   above? Is any message stored or processed outside the EU/EEA, apart
+   from delivery to the destination network?
+4. Who is the HLR provider that your sub-processor annex names "on
+   request"? Is an HLR lookup made for every message, or only when we
+   ask for one?
+
+Sender IDs
+5. Belgium: we understand that alphanumeric sender IDs are replaced by a
+   short code. Which short code is used? Is a free STOP reply handled,
+   and is it reported to us (webhook or API)?
+6. Monaco: your international regulations PDF (February 2023) says that
+   alphanumeric IDs are filtered. Is this still the case? If so, which
+   sender do recipients see?
+7. France: which documents are required to register an alphanumeric
+   sender ID for transactional traffic, and what is the usual delay? Is
+   a STOP mention added to transactional messages?
+
+Account and contract
+8. Can we open an account and use the sandbox before the company is
+   registered, and then put the account and the DPA in the company's
+   name once it is registered?
+9. Which version of the DPA is current? Your GDPR page mentions version
+   2.3 and your changelog of 12 May 2026 mentions version 2.1.
+10. Does the inactivity fee in section 4 of your terms apply to an
+    account that has not sent any SMS yet, between its opening and our
+    launch?
+
+Thank you in advance for your answers.
+
+Kind regards,
+[Name]
+```
