@@ -109,7 +109,7 @@ select 'holiday', jour, jour, nom
 from paques,
   lateral (
     values
-      (make_date(y, 1, 1), 'Jour de l''An'),
+      (make_date(y, 1, 1), 'Jour de l’An'),
       (dimanche + 1, 'Lundi de Pâques'),
       (make_date(y, 5, 1), 'Fête du Travail'),
       (dimanche + 39, 'Ascension'),

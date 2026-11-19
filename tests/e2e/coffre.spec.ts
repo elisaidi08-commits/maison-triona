@@ -66,6 +66,34 @@ test('sans session, /coffre mène à la connexion, sans passer par une langue', 
   await expect(page).toHaveURL(/\/coffre\/connexion$/)
 })
 
+// Disponibilités (story 3.8 B) : session ouverte par le TOTP exigée, CSP à nonce du coffre (sans
+// WebAssembly : rien ne s'y déchiffre). Le parcours avec session : coffre-disponibilites.spec.ts.
+test('sans session, /coffre/disponibilites mène à la connexion, sans rien afficher', async ({
+  page,
+}) => {
+  await page.goto('/coffre/disponibilites')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Connexion')
+  await page.goto('/coffre/disponibilites?ok=reglages')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+  expect(await page.locator('main').innerText()).not.toContain('réglages')
+})
+
+test('/coffre/disponibilites a la CSP à nonce et les en-têtes du coffre', async ({ request }) => {
+  const response = await request.get('/coffre/disponibilites', { maxRedirects: 0 })
+  const headers = response.headers()
+  const csp = headers['content-security-policy'] ?? ''
+  expect(csp).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'(;|$)/)
+  expect(csp).not.toContain("'unsafe-inline'")
+  expect(csp).not.toContain('wasm-unsafe-eval')
+  expect(csp).toContain("form-action 'self'")
+  expect(csp).toContain("frame-ancestors 'none'")
+  expect(headers['x-robots-tag']).toBe('noindex, nofollow')
+  expect(headers['cache-control']).toContain('no-store')
+  expect(headers['referrer-policy']).toBe('no-referrer')
+  expect(await response.text()).not.toContain('Prochains créneaux')
+})
+
 test('le site public ne pose aucun cookie, même après une visite du coffre', async ({
   page,
   context,
@@ -169,6 +197,7 @@ test('WebAssembly n’est admis que sur les pages de lecture du coffre', async (
     '/coffre/connexion',
     '/coffre/enrolement',
     '/coffre/verification',
+    '/coffre/disponibilites',
   ]) {
     expect(await scriptSrc(path), path).toMatch(
       /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'$/,

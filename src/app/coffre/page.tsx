@@ -82,6 +82,9 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
           Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu
           d’une demande s’ouvre sur sa page, dans ce navigateur, avec votre paquet de clé.
         </p>
+        <p>
+          <LienCoffre href="/coffre/disponibilites">Disponibilités des appels</LienCoffre>
+        </p>
       </EnTete>
 
       {effacee === '1' ? (
