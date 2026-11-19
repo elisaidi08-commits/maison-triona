@@ -54,7 +54,9 @@ export interface CreneauAffiche {
 // le début du créneau perdu (ses voisins viennent en tête). `echec` : coffre injoignable, rien
 // d'enregistré, la saisie revient. Une réservation aboutie ne renvoie pas d'état : l'action redirige
 // vers la confirmation. Un lien qui ne vaut plus redirige vers sa page, qui le dit sobrement.
-export type StatutReservation = 'initial' | 'erreurs' | 'pris' | 'echec'
+// `limite` : trop d'envois depuis la même adresse IP en peu de temps (limitation de débit, comme le
+// formulaire de contact) ; rien n'est lu ni écrit, la saisie revient.
+export type StatutReservation = 'initial' | 'erreurs' | 'pris' | 'echec' | 'limite'
 
 export type EtatReservation = {
   statut: StatutReservation

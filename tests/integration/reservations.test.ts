@@ -8,6 +8,7 @@ import pg from 'pg'
 
 import {
   bookSlot,
+  checkBookingLink,
   createBookingLink,
   issueAccessToken,
   readBookingLink,
@@ -253,6 +254,24 @@ describe('réservation d’appel', () => {
       state: 'invalid',
     })
     assert.deepEqual(await readBookingLink(site, 'pas-un-jeton', MAINTENANT), { state: 'invalid' })
+  })
+
+  it('vérifie un lien avant tout scellement, sans rien écrire : valable, réservé, sans valeur', async () => {
+    const token = await lien()
+    const avant = await etatDesTables()
+    assert.equal(await checkBookingLink(site, token, MAINTENANT), 'valid')
+    assert.equal(await checkBookingLink(site, generateToken().token, MAINTENANT), 'invalid')
+    assert.equal(await checkBookingLink(site, 'court', MAINTENANT), 'invalid')
+    assert.equal(
+      await checkBookingLink(site, token, new Date('2027-03-03T08:00:00Z')),
+      'invalid',
+      'expiré',
+    )
+    assert.equal(await etatDesTables(), avant)
+    await reserver(token, MARDI_1030)
+    assert.equal(await checkBookingLink(site, token, MAINTENANT), 'booked')
+    // L'appel passé, le lien ne vaut plus rien.
+    assert.equal(await checkBookingLink(site, token, new Date('2027-03-02T10:00:00Z')), 'invalid')
   })
 
   it('réserve : créneau et pause en clair, personne scellée, jeton consommé une seule fois', async () => {

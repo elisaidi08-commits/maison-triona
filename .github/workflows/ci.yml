@@ -46,3 +46,18 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run test:a11y
+      # Parcours de réservation d'appel avec base, sans JavaScript compris (story 3.10,
+      # tests/e2e/reservation-parcours.spec.ts) : base jetable sur le service Postgres, clé publique de
+      # coffre produite à la volée (X25519 ; sa clé privée n'est pas gardée), serveur dédié sur le
+      # port 3200 (projet `reservation` de playwright.config.ts). Migrations, rôles et compte factice
+      # sont posés par le test. Le serveur de la suite (3100) reste sans base : formulaire « fermé ».
+      - name: Base et clé du parcours de réservation
+        env:
+          ADMIN_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+        run: |
+          node -e 'const pg = require("pg"); const c = new pg.Client({ connectionString: process.env.ADMIN_DATABASE_URL }); c.connect().then(() => c.query("CREATE DATABASE maison_triona_reservation_e2e_test")).then(() => c.end())'
+          CLE=$(node -e 'const { publicKey } = require("node:crypto").generateKeyPairSync("x25519"); process.stdout.write(Buffer.from(publicKey.export({ format: "jwk" }).x, "base64url").toString("base64"))')
+          echo "RESERVATION_E2E_VAULT_PUBLIC_KEY=$CLE" >> "$GITHUB_ENV"
+      - run: npm run test:e2e:reservation
+        env:
+          RESERVATION_E2E_DATABASE_URL: postgres://postgres:postgres@localhost:5432/maison_triona_reservation_e2e_test

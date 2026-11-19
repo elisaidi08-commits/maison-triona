@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { after, before, beforeEach, describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
@@ -85,7 +85,7 @@ describe('conservation planifiée du coffre', () => {
   })
   beforeEach(() =>
     admin.query(
-      'TRUNCATE "user", "verification", "rateLimit", vault_access_log, vault_requests RESTART IDENTITY CASCADE',
+      'TRUNCATE "user", "verification", "rateLimit", vault_access_log, vault_requests, bookings, booking_tokens RESTART IDENTITY CASCADE',
     ),
   )
   after(async () => {
@@ -111,6 +111,8 @@ describe('conservation planifiée du coffre', () => {
       sessions: 2,
       rateLimits: 1,
       verifications: 1,
+      bookings: 0,
+      tokens: 0,
     })
 
     const { rows: restantes } = await admin.query<{ id: string }>(
@@ -126,7 +128,8 @@ describe('conservation planifiée du coffre', () => {
 
     const { rows: journal } = await admin.query(
       `SELECT actor, action, request_id, purged_requests, purged_sessions, purged_rate_limits,
-              purged_verifications FROM vault_access_log WHERE actor = 'system' ORDER BY id`,
+              purged_verifications, purged_bookings, purged_tokens
+       FROM vault_access_log WHERE actor = 'system' ORDER BY id`,
     )
     assert.deepEqual(journal, [
       {
@@ -137,6 +140,8 @@ describe('conservation planifiée du coffre', () => {
         purged_sessions: null,
         purged_rate_limits: null,
         purged_verifications: null,
+        purged_bookings: null,
+        purged_tokens: null,
       },
       {
         actor: 'system',
@@ -146,8 +151,61 @@ describe('conservation planifiée du coffre', () => {
         purged_sessions: 2,
         purged_rate_limits: 1,
         purged_verifications: 1,
+        purged_bookings: 0,
+        purged_tokens: 0,
       },
     ])
+  })
+
+  it('efface les réservations échues et les jetons expirés depuis plus de 48 heures (3.10)', async () => {
+    // Jetons : A expiré depuis 3 jours, B depuis 15 heures, C et D utilisés et expirés depuis
+    // 12 jours ; C sert de clé à la confirmation d'un appel à venir, D à un appel passé.
+    const jeton = async (nom: string, expire: string, utilise = false) => {
+      const id = randomUUID()
+      const fin = new Date(expire)
+      await admin.query(
+        `INSERT INTO booking_tokens (id, token_hash, created_at, expires_at, used_at)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id, randomBytes(32), new Date(fin.getTime() - 48 * 3600_000), fin, utilise ? fin : null],
+      )
+      return { nom, id }
+    }
+    const appel = async (debut: string, conservation: string, jetonId: string | null = null) => {
+      const id = randomUUID()
+      await admin.query(
+        `INSERT INTO bookings (id, access_token_id, starts_at, ends_at, slot, privacy_version,
+           retention_until, sealed)
+         VALUES ($1, $2, $3::timestamptz, $3::timestamptz + interval '30 minutes',
+           tstzrange($3::timestamptz, $3::timestamptz + interval '45 minutes'), '2026-11-18', $4, $5)`,
+        [id, jetonId, debut, conservation, randomBytes(2096)],
+      )
+      return id
+    }
+    const a = await jeton('A', '2027-05-29T00:00:00Z')
+    const b = await jeton('B', '2027-05-31T12:00:00Z')
+    const c = await jeton('C', '2027-05-20T00:00:00Z', true)
+    const d = await jeton('D', '2027-05-20T00:00:00Z', true)
+    const aVenir = await appel('2027-06-05T09:30:00Z', '2028-06-05T09:30:00Z', c.id)
+    const passe = await appel('2027-05-25T09:30:00Z', '2028-05-25T09:30:00Z', d.id)
+    await appel('2026-05-20T09:30:00Z', '2027-05-20T09:30:00Z')
+
+    const counts = await runRetention(coffre, MAINTENANT)
+    assert.equal(counts.bookings, 1)
+    assert.equal(counts.tokens, 2)
+    const { rows: jetons } = await admin.query<{ id: string }>('SELECT id FROM booking_tokens')
+    assert.deepEqual(jetons.map((row) => row.id).sort(), [b.id, c.id].sort())
+    assert.ok(!jetons.some((row) => row.id === a.id || row.id === d.id))
+    const { rows: appels } = await admin.query<{ id: string; access_token_id: string | null }>(
+      'SELECT id, access_token_id FROM bookings ORDER BY starts_at',
+    )
+    assert.deepEqual(appels, [
+      { id: passe, access_token_id: null },
+      { id: aVenir, access_token_id: c.id },
+    ])
+    const { rows: journal } = await admin.query(
+      `SELECT purged_bookings, purged_tokens FROM vault_access_log WHERE action = 'retention'`,
+    )
+    assert.deepEqual(journal, [{ purged_bookings: 1, purged_tokens: 2 }])
   })
 
   it('est rejouable : un second passage, même simultané, n’efface rien de plus', async () => {
@@ -219,7 +277,14 @@ describe('conservation planifiée du coffre', () => {
     assert.equal(reponse.status, 200)
     assert.equal(reponse.headers.get('cache-control'), 'no-store')
     const corps = (await reponse.json()) as Record<string, unknown>
-    assert.deepEqual(corps, { requests: 1, sessions: 0, rateLimits: 0, verifications: 0 })
+    assert.deepEqual(corps, {
+      requests: 1,
+      sessions: 0,
+      rateLimits: 0,
+      verifications: 0,
+      bookings: 0,
+      tokens: 0,
+    })
     for (const valeur of Object.values(corps)) assert.equal(typeof valeur, 'number')
   })
 

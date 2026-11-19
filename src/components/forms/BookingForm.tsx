@@ -21,7 +21,7 @@ import { LANGUES, LIMITES, ORIGINES } from '@/lib/demande/champs'
 // Réservation d'un appel (story 3.10 ; docs/reservation-appel.md §2, étape 3) : un seul écran, un seul
 // bouton. En tête, les trois prochains créneaux (après un créneau pris, les trois plus proches) ;
 // puis les autres, par semaine et par jour ; puis nom, numéro, la mention « pas de message vocal »,
-// langue de l'appel, SMS en option, origine (liste fermée de D41), consentement. Mêmes composants que
+// langue de l'appel, SMS en option (masqué tant que le fournisseur n'est pas choisi), origine (liste fermée de D41), consentement. Mêmes composants que
 // le formulaire de contact (ChoiceRow, TextField, CheckboxField, ErrorSummary).
 // - Sans JavaScript : POST natif vers la Server Action ; la page revient avec le résumé d'erreurs et
 //   toute la saisie (WCAG 3.3.7), ou part vers la confirmation.
@@ -51,7 +51,7 @@ export type TextesReservation = {
       many: string
       codes: Record<CodeErreurReservation, string>
     }
-    status: { taken: string; failed: string }
+    status: { taken: string; failed: string; limit: string }
   }
   origine: { legend: string; options: Libelles }
 }
@@ -62,6 +62,9 @@ type BookingFormProps = {
   creneaux: CreneauAffiche[]
   // État de l'action rendu avec la page, après un envoi sans JavaScript (src/lib/booking/action-state.ts).
   etatInitial?: EtatReservation
+  // Case « Me prévenir aussi par SMS » : proposée seulement une fois le fournisseur choisi
+  // (src/lib/booking/options.ts) ; sinon absente.
+  sms: boolean
   textes: TextesReservation
   // Politique de confidentialité, section « Lorsque vous convenez d'un appel ».
   confidentialite: string
@@ -82,6 +85,7 @@ export function BookingForm({
   jeton,
   creneaux,
   etatInitial,
+  sms,
   textes,
   confidentialite,
 }: BookingFormProps) {
@@ -103,7 +107,7 @@ export function BookingForm({
   useEffect(() => {
     if (etatTraite.current === etatVu) return
     etatTraite.current = etatVu
-    if (etatVu.statut === 'pris' || etatVu.statut === 'echec') statut.current?.focus()
+    if (['pris', 'echec', 'limite'].includes(etatVu.statut)) statut.current?.focus()
   }, [etatVu])
 
   const surEnvoi = (event: FormEvent<HTMLFormElement>) => {
@@ -148,7 +152,9 @@ export function BookingForm({
     ? textes.form.status.taken
     : etat.statut === 'echec'
       ? textes.form.status.failed
-      : null
+      : etat.statut === 'limite'
+        ? textes.form.status.limit
+        : null
 
   return (
     <form action={envoyer} noValidate onSubmit={surEnvoi} className="flex flex-col gap-64">
@@ -250,13 +256,15 @@ export function BookingForm({
         error={erreur('langue')}
         options={LANGUES.map((value) => ({ value, label: f.langue.options[value] ?? value }))}
       />
-      <CheckboxField
-        id={ID.sms}
-        name="sms"
-        label={f.sms.label}
-        defaultChecked={v.sms === 'oui'}
-        hint={f.sms.hint}
-      />
+      {sms ? (
+        <CheckboxField
+          id={ID.sms}
+          name="sms"
+          label={f.sms.label}
+          defaultChecked={v.sms === 'oui'}
+          hint={f.sms.hint}
+        />
+      ) : null}
       <ChoiceRow
         id={ID.origine}
         name="origine"

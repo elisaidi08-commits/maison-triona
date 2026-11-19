@@ -524,6 +524,8 @@ describe('authentification du coffre', () => {
         'purged_sessions:integer',
         'purged_rate_limits:integer',
         'purged_verifications:integer',
+        'purged_bookings:integer',
+        'purged_tokens:integer',
       ],
     )
     const { rows: tout } = await pool.query('SELECT * FROM vault_access_log')

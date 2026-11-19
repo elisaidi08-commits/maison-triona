@@ -197,6 +197,30 @@ export async function readBookingLink(db: Db, token: string, now: Date): Promise
   })
 }
 
+export type LinkCheck = 'valid' | 'booked' | 'invalid'
+
+/**
+ * Avant de sceller et de réserver (Server Action) : le lien vaut-il encore ? Lecture seule. `booked` :
+ * le lien a déjà servi à un appel confirmé à venir (double clic, renvoi), la confirmation suffit.
+ * Un lien sans valeur ne coûte ainsi ni scellement ni transaction ; `bookSlot` revérifie de toute
+ * façon, sous verrou.
+ */
+export async function checkBookingLink(db: Db, token: string, now: Date): Promise<LinkCheck> {
+  assertValidDate(now, 'Date')
+  if (!isTokenFormat(token)) return 'invalid'
+  return guard('checkBookingLink', async () => {
+    const found = await findToken(db, token)
+    if (!found) return 'invalid'
+    const state = accessTokenState(found, now)
+    if (state === 'valid') return 'valid'
+    if (state !== 'used') return 'invalid'
+    const booking = await bookingOfToken(db, found.id)
+    return booking?.status === 'confirmed' && booking.ends_at.getTime() > now.getTime()
+      ? 'booked'
+      : 'invalid'
+  })
+}
+
 export interface Confirmation {
   bookingId: string
   start: Date
@@ -332,4 +356,41 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
     }
     throw error
   }
+}
+
+/** Délai après l'expiration d'un jeton avant son effacement par la conservation planifiée. */
+export const TOKEN_PURGE_DELAY_HOURS = 48
+
+/**
+ * Conservation planifiée (story 3.2 D, /api/cron/retention ; rôle `coffre`) : efface les réservations
+ * dont l'échéance de conservation est passée. Rend le nombre effacé, rien d'autre.
+ */
+export async function purgeBookings(db: Db, now: Date): Promise<number> {
+  assertValidDate(now, 'Date de purge')
+  return guard('purgeBookings', async () => {
+    const { rowCount } = await db.query('DELETE FROM bookings WHERE retention_until <= $1', [now])
+    return rowCount ?? 0
+  })
+}
+
+/**
+ * Même tâche : efface les jetons expirés depuis plus de 48 heures, sauf celui qui sert encore de clé à
+ * la confirmation d'un appel confirmé à venir (jusqu'à la story 3.11) ; il part au premier passage qui
+ * suit la fin de l'appel. Rend le nombre effacé.
+ */
+export async function purgeTokens(db: Db, now: Date): Promise<number> {
+  assertValidDate(now, 'Date de purge')
+  const limite = new Date(now.getTime() - TOKEN_PURGE_DELAY_HOURS * 3600 * 1000)
+  return guard('purgeTokens', async () => {
+    const { rowCount } = await db.query(
+      `DELETE FROM booking_tokens AS t
+       WHERE t.expires_at <= $1
+         AND NOT EXISTS (
+           SELECT 1 FROM bookings AS b
+           WHERE b.access_token_id = t.id AND b.status = 'confirmed' AND b.ends_at > $2
+         )`,
+      [limite, now],
+    )
+    return rowCount ?? 0
+  })
 }

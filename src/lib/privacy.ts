@@ -5,4 +5,4 @@
 // tests/unit/privacy-version.test.ts échoue sinon. Donnée technique, jamais affichée (D61).
 // Imports relatifs seulement : testé par node --test.
 
-export const PRIVACY_POLICY_VERSION = '2026-11-18'
+export const PRIVACY_POLICY_VERSION = '2026-11-19'

@@ -545,11 +545,10 @@
         "id": "appel",
         "title": "Lorsque vous convenez d’un appel",
         "paragraphs": [
-          "Vous pouvez aussi convenir d’un appel avec nous. Vous recevez par e‑mail un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
-          "Nous gardons alors votre adresse e‑mail, votre nom, votre numéro, la langue et le créneau choisis, votre préférence « pas de message vocal » et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
-          "Vous recevez une confirmation, puis un rappel la veille, par e‑mail. Par SMS, seulement si vous le demandez : une confirmation, puis un rappel deux heures avant.",
-          "Pour pouvoir vous écrire jusqu’à l’appel, votre adresse e‑mail et votre numéro sont aussi chiffrés avec une clé que notre serveur peut utiliser ; sous cette forme, ils sont effacés 24 heures après l’appel. Tout le reste est protégé comme une demande.",
-          "L’invitation ajoutée à l’agenda de la fondatrice (Google Agenda) ne contient ni votre nom ni vos coordonnées : seulement l’heure et un lien vers le coffre."
+          "Vous pouvez aussi convenir d’un appel avec nous. La maison vous transmet un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Nous gardons alors votre nom, votre numéro, la langue et le créneau choisis et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
+          "Ces informations sont chiffrées dès leur arrivée, comme une demande : seule la maison peut les lire. Seuls le créneau et l’état de l’appel restent lisibles, pour qu’un même moment ne soit jamais proposé deux fois.",
+          "Une fois l’appel convenu, la page vous propose un fichier à ajouter à votre agenda ; il ne contient ni votre nom ni votre numéro."
         ]
       },
       {
@@ -610,14 +609,6 @@
             "value": "Mesure d’audience en totaux, sans cookie ; données hébergées en Allemagne."
           },
           {
-            "term": "Fournisseur de SMS",
-            "value": "Confirmation et rappel des appels, seulement si vous le demandez, dans l’Union européenne. [À DÉFINIR]"
-          },
-          {
-            "term": "Google (États-Unis)",
-            "value": "Agenda de la fondatrice : l’heure de l’appel et un lien vers le coffre, sans nom ni coordonnées."
-          },
-          {
             "term": "Messagerie de la maison",
             "value": "[À DÉFINIR]"
           }
@@ -627,7 +618,7 @@
         "id": "transferts",
         "title": "Hors de l’Union européenne",
         "paragraphs": [
-          "Vercel, Upstash et Google sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis. Google ne reçoit aucune donnée qui vous nomme."
+          "Vercel et Upstash sont des sociétés américaines : même traitées sur des serveurs européens, les données peuvent être accessibles depuis les États-Unis."
         ]
       },
       {
@@ -635,7 +626,7 @@
         "title": "Combien de temps nous gardons vos informations",
         "items": [
           "Votre demande : le temps de nos échanges, puis elle est effacée. Vous pouvez nous demander de l’effacer plus tôt.",
-          "Votre appel : la même durée qu’une demande. Votre adresse e‑mail et votre numéro, sous la forme qui sert aux messages, sont effacés 24 heures après l’appel ; les liens personnels, 7 jours après leur expiration.",
+          "Votre appel : la même durée qu’une demande. Les liens personnels sont effacés deux jours après leur expiration, ou après l’appel qu’ils ont servi à convenir.",
           "Les sauvegardes : une demande effacée peut y subsister 7 jours avant de disparaître ; son contenu y reste chiffré.",
           "Les journaux de l’hébergeur : un jour.",
           "La protection contre les envois abusifs : 24 heures au plus.",
@@ -669,7 +660,7 @@
           "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
           "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
           "Jusqu’à 24 heures après un appel, votre adresse e‑mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
-          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures et ne sert plus une fois l’appel réservé.",
+          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures ; une fois l’appel convenu, il ne sert plus qu’à revoir la confirmation, jusqu’à l’appel.",
           "Le message de confirmation part à l’adresse saisie dans le formulaire. S’il vous parvient sans que vous ayez écrit, ignorez-le : il ne contient rien d’autre qu’un accusé de réception."
         ]
       },
@@ -1037,7 +1028,8 @@
       },
       "status": {
         "taken": "Ce créneau vient d’être pris. Les moments les plus proches sont en tête ; votre saisie est restée dans le formulaire.",
-        "failed": "L’envoi n’a pas abouti. Votre saisie est restée dans le formulaire."
+        "failed": "L’envoi n’a pas abouti. Votre saisie est restée dans le formulaire.",
+        "limit": "Trop d’envois sont arrivés en peu de temps. Réessayez dans quelques minutes ; votre saisie est restée dans le formulaire."
       }
     },
     "invalid": {

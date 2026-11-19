@@ -15,21 +15,21 @@ import { codeTotp, secretDeLUri } from '../integration/totp'
 // et saisie conservée, réservation, confirmation, fichier .ics) ; lien consommé ; créneau pris par
 // une autre personne (« Ce créneau vient d'être pris », voisins en tête, saisie conservée) ; axe
 // WCAG 2.2 AA en FR et EN ; aucune violation de la CSP ; jeton jamais en clair en base.
-// IGNORÉ PAR DÉFAUT : il lui faut une base jetable (nom en _test, VIDÉE par le test) et un serveur
-// branché dessus, avec les deux rôles. Pour le lancer :
+// IGNORÉ PAR DÉFAUT sans `RESERVATION_E2E_DATABASE_URL` : il lui faut une base jetable (nom en _test,
+// VIDÉE par le test) et un serveur branché dessus, avec les deux rôles. Projet Playwright
+// `reservation` : playwright.config.ts démarre alors ce serveur dédié, sur le port 3200 (variables
+// posées par la configuration), à côté du serveur de la suite (3100), qui garde son formulaire
+// « fermé ». En CI : .github/workflows/ci.yml (base sur le service Postgres, clé produite à la volée).
+// En local :
 //   createdb maison_triona_reservation_e2e_test
 //   npm run build
-//   B=postgres://localhost:5432/maison_triona_reservation_e2e_test
-//   DATABASE_URL="$B?options=-c%20role%3Dsite_public" \
-//     VAULT_PUBLIC_KEY='wexjuk1fSzFzd2w6IQBjeT/dStKAPNwvb9+RUlVKmy8=' \
-//     COFFRE_DATABASE_URL="$B?options=-c%20role%3Dcoffre" \
-//     BETTER_AUTH_SECRET=secret-factice-e2e-0123456789-abcdefghijkl \
-//     BETTER_AUTH_URL=http://localhost:3100 SITE_URL=http://localhost:3100 \
-//     npx next start -p 3100 &
-//   RESERVATION_E2E_DATABASE_URL=$B npx playwright test tests/e2e/reservation-parcours.spec.ts
-//   (arrêter le serveur, puis dropdb maison_triona_reservation_e2e_test)
-// La clé publique est factice (sa clé privée n'a pas été gardée) : rien de ce qui est scellé ici ne
-// se rouvre. Données factices uniquement.
+//   RESERVATION_E2E_DATABASE_URL=postgres://localhost:5432/maison_triona_reservation_e2e_test \
+//     npm run test:e2e:reservation
+//   (puis dropdb maison_triona_reservation_e2e_test)
+// Migrations, rôles et compte factice : posés par le test lui-même (preparer).
+// Clé publique du coffre : `RESERVATION_E2E_VAULT_PUBLIC_KEY` (CI, produite à la volée), sinon une
+// clé factice dont la clé privée n'a pas été gardée : rien de ce qui est scellé ici ne se rouvre.
+// Données factices uniquement.
 
 const BASE = process.env.RESERVATION_E2E_DATABASE_URL
 const RACINE = `${resolve(__dirname, '../..')}/`
@@ -38,6 +38,11 @@ const MOT_DE_PASSE = 'mot-de-passe-factice-e2e-reservation-0001'
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 const NOM = 'Hortense Parcours-Factice'
 const NUMERO = '+32 470 98 76 54'
+
+// Origine du serveur dédié (projet `reservation`, port 3200).
+function origine(): string {
+  return new URL(test.info().project.use.baseURL ?? 'http://localhost:3200').origin
+}
 
 // Base vidée, migrée, rôles posés, compte factice : par un sous-processus Node (modules du projet).
 function preparer(): void {
@@ -63,7 +68,7 @@ function preparer(): void {
     }
     const auth = creerAuth(coffre, {
       BETTER_AUTH_SECRET: 'secret-factice-preparation-0123456789-abcdef',
-      BETTER_AUTH_URL: 'http://localhost:3100',
+      BETTER_AUTH_URL: process.env.ORIGINE,
     })
     await creerCompte(auth, coffre, { nom: 'Compte Factice', email: process.env.EMAIL, motDePasse: process.env.MDP })
     await admin.end(); await coffre.end()
@@ -71,7 +76,7 @@ function preparer(): void {
   execFileSync(
     process.execPath,
     ['--disable-warning=MODULE_TYPELESS_PACKAGE_JSON', '--input-type=module', '-e', script],
-    { cwd: RACINE, env: { ...process.env, BASE, EMAIL, MDP: MOT_DE_PASSE } },
+    { cwd: RACINE, env: { ...process.env, BASE, EMAIL, MDP: MOT_DE_PASSE, ORIGINE: origine() } },
   )
 }
 
@@ -150,7 +155,8 @@ test.describe('réservation d’un appel de bout en bout', () => {
       // Un lien, affiché une fois, empreinte seule en base, journal sans valeur.
       const lien = await creerLien(page)
       const jeton = new URL(lien).pathname.split('/').at(-1) ?? ''
-      expect(lien).toMatch(/^http:\/\/localhost:3100\/fr\/contact\/appel\/[A-Za-z0-9_-]{43}$/)
+      expect(new URL(lien).origin).toBe(origine())
+      expect(new URL(lien).pathname).toMatch(/^\/fr\/contact\/appel\/[A-Za-z0-9_-]{43}$/)
       const { rows: jetons } = await base.query('SELECT token_hash, used_at FROM booking_tokens')
       expect(jetons).toHaveLength(1)
       expect(jetons[0].token_hash.toString('hex')).toBe(
@@ -186,14 +192,16 @@ test.describe('réservation d’un appel de bout en bout', () => {
         await expect(nu.page.getByLabel('Votre nom')).toHaveValue(NOM)
         expect(await etatDesTables(base)).toBe(avant)
 
-        // Réservation : premier créneau, numéro, SMS, consentement.
+        // Case SMS masquée tant que le fournisseur n'est pas choisi (BOOKING_SMS_OPT_IN absente).
+        await expect(nu.page.getByLabel('Me prévenir aussi par SMS')).toHaveCount(0)
+
+        // Réservation : premier créneau, numéro, consentement.
         const premier = tete.getByRole('radio').first()
         const libellePremier = (
           await nu.page.locator(`label[for="${await premier.getAttribute('id')}"]`).innerText()
         ).trim()
         await premier.check()
         await nu.page.getByLabel('Votre numéro').fill(NUMERO)
-        await nu.page.getByLabel('Me prévenir aussi par SMS').check()
         await nu.page.getByLabel(/^J’accepte que Maison Triona/).check()
         await nu.page.getByRole('button', { name: 'Convenir de cet appel' }).click()
         await nu.page.waitForURL(/\/confirmation$/)

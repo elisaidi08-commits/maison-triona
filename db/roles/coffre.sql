@@ -1,7 +1,8 @@
 -- Rôle de l'espace /coffre (story 3.2 C et D, docs/coffre-cles.md §3) : comptes et sessions de Better
 -- Auth, lecture des demandes, gel et effacement des demandes (partie D), journal d'accès en écriture et
 -- en lecture, disponibilités de Cat (story 3.8 B), réservations en lecture et création d'un lien de
--- réservation (story 3.10), rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
+-- réservation (story 3.10), effacement des réservations échues et des jetons expirés par la
+-- conservation (0010), rien d'autre. Ni insertion d'une demande, ni modification d'une autre colonne que
 -- `frozen` (ni le contenu scellé, ni l'échéance, ni le statut), ni modification ni effacement du
 -- journal, ni table de migrations, ni création d'objet. La tâche planifiée de conservation
 -- (/api/cron/retention) passe par ce même rôle. Depuis la story 3.3 (suites C), il lit aussi cinq
@@ -64,3 +65,10 @@ grant update (active) on availability_exceptions to coffre;
 -- modification, ni effacement des jetons ; ni écriture des réservations (stories 3.11 et 3.13).
 grant select on bookings to coffre;
 grant insert (id, token_hash, purpose, created_at, expires_at) on booking_tokens to coffre;
+
+-- Conservation planifiée (/api/cron/retention, db/migrations/0010_jetons_usage.sql) : effacement des
+-- réservations échues et des jetons expirés depuis plus de 48 heures. Pour les jetons, la lecture des
+-- deux seules colonnes que la condition d'effacement exige (identifiant, expiration), jamais
+-- l'empreinte ni les dates d'usage.
+grant delete on bookings to coffre;
+grant select (id, expires_at), delete on booking_tokens to coffre;

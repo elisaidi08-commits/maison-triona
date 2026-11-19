@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 
 import { purgerAuth } from '../auth/purge.ts'
+import { purgeBookings, purgeTokens } from '../booking/bookings.ts'
 import { withTransaction } from '../db/transaction.ts'
 import { autorisationCron, secretCron } from '../security/cron.ts'
 import { logRetention, purgeExpired, VaultError, type RetentionCounts } from './repository.ts'
@@ -10,7 +11,9 @@ import { logRetention, purgeExpired, VaultError, type RetentionCounts } from './
 // 1. efface les demandes échues non gelées (une ligne `purge` chacune, au nom de `system`) ;
 // 2. purge les sessions échues ou inactives, les compteurs de limitation de débit périmés et les
 //    défis du second facteur expirés (purgerAuth) ;
-// 3. inscrit au journal un résumé en nombres seulement (`retention`).
+// 3. efface les réservations d'appel échues et les jetons de lien expirés depuis plus de 48 heures
+//    (story 3.10, src/lib/booking/bookings.ts) ;
+// 4. inscrit au journal un résumé en nombres seulement (`retention`).
 // Le tout dans une transaction, sous verrou consultatif : Vercel peut livrer deux fois le même
 // passage ; le second attend le premier, ne trouve plus rien et inscrit un résumé à zéro. Une
 // passe manquée se rattrape le lendemain (tout ce qui est échu depuis est effacé).
@@ -28,11 +31,16 @@ export async function runRetention(pool: Pool, now: Date): Promise<RetentionCoun
       await client.query(VERROU)
       const requests = (await purgeExpired(client, now)).length
       const auth = await purgerAuth(client, now)
+      // Réservations d'abord : un jeton n'est plus retenu par une réservation effacée.
+      const bookings = await purgeBookings(client, now)
+      const tokens = await purgeTokens(client, now)
       const counts: RetentionCounts = {
         requests,
         sessions: auth.sessions,
         rateLimits: auth.limites,
         verifications: auth.verifications,
+        bookings,
+        tokens,
       }
       await logRetention(client, counts)
       return counts

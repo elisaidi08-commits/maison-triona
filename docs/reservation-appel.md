@@ -222,6 +222,8 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 - **Invitation** (§4.5) : fichier « Ajouter à mon agenda » téléchargé (`METHOD:PUBLISH`, heures en UTC, sans VTIMEZONE) ; les invitations par e-mail (`REQUEST`, `CANCEL`, VTIMEZONE) viendront avec l'envoi. Ni e-mail, ni notification à Cat (3.3) : points d'accroche notés dans `src/actions/booking.ts`.
 - **Fuseau** (§2) : heure de Bruxelles seulement ; le lien « Changer de fuseau » n'est pas fait.
 - **Numéro** : même contrôle que le formulaire de contact (`telephoneValide`) ; `libphonenumber-js` non installé.
-- **Anti-abus** (§4.4) : le jeton suffit comme clé sur la page de réservation ; piège, horodatage et limitation de débit restent pour la demande de lien (3.9).
-- **Conservation** : l'échéance est posée (12 mois après l'appel), mais aucune tâche ne purge encore les réservations ni les jetons (`/api/cron/booking`, 3.12).
+- **Anti-abus** (§4.4) : sur la page de réservation, limitation de débit par empreinte d'IP (5 envois valides par 10 minutes) et lien lu avant tout scellement ; piège et horodatage restent pour la demande de lien (3.9).
+- **SMS** : case masquée tant que le fournisseur n'est pas choisi (`BOOKING_SMS_OPT_IN` absente) ; la politique de confidentialité (brouillon) ne parle ni d'e-mail, ni de SMS, ni d'agenda Google pour les appels tant qu'ils ne partent pas.
+- **Conservation** : par la tâche existante (`/api/cron/retention`, pas `/api/cron/booking`) : réservations effacées à leur échéance, jetons 48 h après leur expiration (pas 7 jours), sauf le lien qui sert encore à revoir la confirmation d'un appel à venir. Deux compteurs au journal (`purged_bookings`, `purged_tokens`, migration 0010).
+- **Consommation d'un lien** : un déclencheur (migration 0010) refuse toute mise à jour de `used_at` déjà posée, remise à zéro ou sans réservation qui pointe vers le jeton.
 

@@ -20,6 +20,10 @@ export async function retenirEtat(etat: EtatReservation): Promise<EtatReservatio
   return etat
 }
 
+// Lu une fois, puis retiré : rien ne reste en mémoire après le rendu qui le consomme.
 export async function etatRetenu(): Promise<EtatReservation | undefined> {
-  return etats.get(await headers())
+  const cle = await headers()
+  const etat = etats.get(cle)
+  etats.delete(cle)
+  return etat
 }

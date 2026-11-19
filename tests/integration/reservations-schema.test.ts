@@ -256,6 +256,29 @@ describe('tables de la réservation d’appel', () => {
     await admin.query('DELETE FROM booking_tokens')
   })
 
+  it('un jeton ne se consomme qu’une fois, et seulement par une réservation (0010)', async () => {
+    const jetonId = await jeton()
+    const consommer = (db: pg.Pool, valeur = 'now()') =>
+      db.query(`UPDATE booking_tokens SET used_at = ${valeur} WHERE id = $1`, [jetonId])
+    // Sans réservation qui pointe vers lui : refusé, sous le rôle du site comme ailleurs.
+    await assert.rejects(consommer(site), CONTROLE)
+    await assert.rejects(consommer(site, 'NULL'), CONTROLE)
+    await assert.rejects(consommer(admin), CONTROLE)
+    await reserver(admin, '2027-03-09T09:30Z', '2027-03-09T10:00Z', '2027-03-09T10:15Z', {
+      jetonId,
+    })
+    await consommer(site)
+    // Déjà utilisé : ni une seconde date, ni un retour à zéro, même pour l'administrateur.
+    await assert.rejects(consommer(site), CONTROLE)
+    await assert.rejects(consommer(site, 'NULL'), CONTROLE)
+    await assert.rejects(consommer(admin), CONTROLE)
+    await assert.rejects(consommer(site), (erreur: Error) => !/\d/.test(erreur.message))
+    // Les autres colonnes ne déclenchent rien.
+    await admin.query('UPDATE booking_tokens SET revoked_at = now() WHERE id = $1', [jetonId])
+    await admin.query('DELETE FROM bookings')
+    await admin.query('DELETE FROM booking_tokens')
+  })
+
   it('site_public lit les disponibilités, le créneau et le statut, jamais le scellé', async () => {
     const jetonId = await jeton()
     await reserver(admin, '2027-03-05T09:30Z', '2027-03-05T10:00Z', '2027-03-05T10:15Z', {
@@ -325,7 +348,7 @@ describe('tables de la réservation d’appel', () => {
     await admin.query('DELETE FROM booking_tokens')
   })
 
-  it('coffre lit les réservations et crée un lien, sans rien de plus', async () => {
+  it('coffre lit les réservations, crée un lien, efface pour la conservation, sans rien de plus', async () => {
     await reserver(admin, '2027-03-08T09:30Z', '2027-03-08T10:00Z', '2027-03-08T10:15Z')
     const { rows } = await coffre.query('SELECT id, sealed, status, privacy_version FROM bookings')
     assert.equal(rows.length, 1)
@@ -338,13 +361,20 @@ describe('tables de la réservation d’appel', () => {
     for (const sql of [
       "INSERT INTO bookings (id, starts_at, ends_at, slot, sealed, privacy_version, retention_until) VALUES (gen_random_uuid(), now(), now() + interval '1 hour', tstzrange(now(), now() + interval '1 hour'), '\\x00', 'v', now())",
       "UPDATE bookings SET status = 'done'",
-      'DELETE FROM bookings',
+      'TRUNCATE bookings',
       'SELECT * FROM booking_tokens',
+      'SELECT token_hash FROM booking_tokens',
+      'SELECT used_at FROM booking_tokens',
       'UPDATE booking_tokens SET used_at = now()',
-      'DELETE FROM booking_tokens',
+      'TRUNCATE booking_tokens',
     ]) {
       await assert.rejects(coffre.query(sql), REFUS, sql)
     }
+    // Conservation planifiée (0010) : effacer, avec la seule lecture de l'identifiant et de
+    // l'expiration des jetons.
+    await coffre.query('DELETE FROM bookings WHERE retention_until <= now()')
+    await coffre.query('DELETE FROM booking_tokens WHERE expires_at <= now()')
+    await coffre.query('SELECT id, expires_at FROM booking_tokens')
     await admin.query('DELETE FROM bookings')
     await admin.query('DELETE FROM booking_tokens')
   })
