@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { after, before, describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
@@ -22,7 +22,9 @@ import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } fr
 // insère des demandes et ne voit rien d'autre, aucune table de Better Auth comprise ; `coffre` a ce
 // que l'espace /coffre exige : lire, geler (`frozen` seulement) et effacer une demande, écrire et
 // relire le journal, sans pouvoir modifier une autre colonne, insérer une demande, ni modifier ou
-// effacer le journal.
+// effacer le journal. Depuis la 3.3 (suites C), il lit aussi quelques colonnes de la boîte d'envoi
+// (état de l'envoi sur l'accueil), sans l'identifiant du prestataire ni le code d'erreur, et sans
+// jamais l'écrire.
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const TABLES_AUTH = [
@@ -154,5 +156,33 @@ describe('rôles de connexion du coffre', () => {
       await assert.rejects(coffre.query(sql), REFUS, sql)
     }
     await assert.rejects(insertRequest(coffre, demande()), REFUS)
+  })
+
+  it('coffre lit les colonnes d’état de la boîte d’envoi, et rien d’autre (3.3, suites C)', async () => {
+    const id = randomUUID()
+    await admin.query(
+      `INSERT INTO outbox (id, template, request_id, last_error)
+       VALUES ($1, 'request_notification', $2, 'timeout')`,
+      [id, randomUUID()],
+    )
+    const { rows } = await coffre.query(
+      `SELECT id, template, status, request_id, next_attempt_at, created_at
+       FROM outbox WHERE id = $1`,
+      [id],
+    )
+    assert.equal(rows.length, 1)
+    for (const sql of [
+      'SELECT provider_id FROM outbox',
+      'SELECT last_error FROM outbox',
+      'SELECT * FROM outbox',
+      `INSERT INTO outbox (id, template, request_id)
+       VALUES ('00000000-0000-4000-8000-000000000001', 'request_notification',
+               '00000000-0000-4000-8000-000000000002')`,
+      "UPDATE outbox SET status = 'failed'",
+      'DELETE FROM outbox',
+      'TRUNCATE outbox',
+    ]) {
+      await assert.rejects(coffre.query(sql), REFUS, sql)
+    }
   })
 })
