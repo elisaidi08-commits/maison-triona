@@ -30,7 +30,11 @@ const ALERT_LINES: Record<AlertEvent, string> = {
   send_failed: 'Échec définitif de l’envoi.',
   undelivered: 'Message non délivré au destinataire.',
   tracking_expired: 'Livraison non confirmée après 72 heures.',
+  notify_cap: `Plafond de notifications atteint${NBSP}: les demandes suivantes de la journée sont enregistrées dans le coffre, sans e-mail.`,
 }
+
+// Seule l'alerte du plafond ne porte pas d'identifiant : elle ne concerne aucun message.
+const WITHOUT_SUBJECT: readonly AlertEvent[] = ['notify_cap']
 
 const DATE_FORMAT = new Intl.DateTimeFormat('fr-BE', {
   timeZone: 'Europe/Brussels',
@@ -82,22 +86,27 @@ export function renderNotification(input: {
   return { subject, text }
 }
 
+// `subjectId` : identifiant du message en cause, obligatoire sauf pour `notify_cap`, qui n'en a
+// aucun (et n'en accepte aucun).
 export function renderAlert(input: {
   event: AlertEvent
-  subjectId: string
+  subjectId: string | null
   createdAt: Date
 }): RenderedEmail {
   if (!Object.hasOwn(ALERT_LINES, input.event)) {
     throw new RangeError('Événement d’alerte inconnu.')
   }
-  assertUuid(input.subjectId, 'subjectId')
-  const text = [
-    ALERT_LINES[input.event],
-    '',
-    `Identifiant du message${NBSP}: ${input.subjectId}`,
+  const lines = [ALERT_LINES[input.event], '']
+  if (WITHOUT_SUBJECT.includes(input.event)) {
+    if (input.subjectId !== null) throw new RangeError('subjectId doit être nul.')
+  } else {
+    assertUuid(input.subjectId as string, 'subjectId')
+    lines.push(`Identifiant du message${NBSP}: ${input.subjectId}`)
+  }
+  lines.push(
     `Date${NBSP}: ${formatDate(input.createdAt)}`,
     '',
     'Aucune donnée de demande dans ce message.',
-  ].join('\n')
-  return { subject: ALERT_SUBJECT, text }
+  )
+  return { subject: ALERT_SUBJECT, text: lines.join('\n') }
 }

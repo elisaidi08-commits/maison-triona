@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Notification de demande (3.3 A) | Cat | **La date et le lien vers la demande dans le coffre, rien d'autre** (D06) : « Une demande est arrivée le mercredi 18 novembre 2026 à 22 h 14. », le lien `<SITE_URL>/coffre/demandes/<id>`, puis « Ce message ne contient rien de la demande. ». Objet « Nouvelle demande · Maison Triona », + « · Prioritaire » si l'urgence est « urgent » | **Aucune** (ni nom, ni contact, ni service, ni pays, ni langue, ni origine, ni message) |
 | Confirmation | Visiteur | **Reportée** (D69 : partie B, seulement si Cat la veut). Prévu : texte fixe, « votre demande est bien arrivée », la suite, aucun écho du contenu. D'ici là, la page `/contact/merci` confirme à l'écran, et la réponse de Cat sous 48 heures ouvrées sert de confirmation écrite | Aucune |
-| Alerte technique (3.3 A) | Sady | Objet « Alerte technique · Maison Triona » : échec définitif de l'envoi, message non délivré (rebond, spam, liste de blocage), ou livraison non confirmée après 72 heures | Identifiant du message de la boîte d'envoi et date seulement |
+| Alerte technique (3.3 A) | Sady | Objet « Alerte technique · Maison Triona » : échec définitif de l'envoi, message non délivré (rebond, spam, liste de blocage), livraison non confirmée après 72 heures, ou premier dépassement du jour du plafond de notifications (3.3, suites, 19/11/2026) | Identifiant du message de la boîte d'envoi et date seulement ; pour le plafond, la date seulement |
 | Lien d'accès (D57) | Personne qui veut convenir d'un appel | Lien personnel valable 48 h | Aucune |
 | Confirmation d'appel, déplacement, annulation (D57) | Personne | Jour, heure, lien de gestion, invitation .ics | Aucune (aucun service nommé) |
 | Rappel de la veille (D57) | Personne | Jour, heure, lien de gestion | Aucune |
@@ -50,7 +50,7 @@ Les rapports DMARC contiennent des adresses IP d'envoi, pas de contenu : les lir
 5. Aucun contenu de demande n'est journalisé ; la boîte d'envoi ne contient que des identifiants, des dates, des statuts et le gabarit d'e-mail, jamais une adresse. Ses lignes sont **effacées après 30 jours**.
 6. **Envoi coupé** (variables vides) ou mal configuré : la demande s'enregistre quand même, sans notification, et ne sera **jamais notifiée après coup**. Cat la trouve dans le coffre.
 7. TEM n'a **pas de clé d'idempotence** : un envoi accepté dont la réponse se perd peut partir deux fois. Ce doublon rare est accepté (D69).
-8. **Plafond de 20 notifications par jour UTC** (décision de Sady du 19/11/2026) : au-delà, la demande est gardée dans le coffre sans e-mail (`alert:notify-cap` au journal) pour qu'un flot de demandes ne remplisse pas la boîte de Cat ; sans compteur Upstash joignable, aucun plafond.
+8. **Plafond de 20 notifications par jour UTC** (décision de Sady du 19/11/2026) : au-delà, la demande est gardée dans le coffre sans e-mail (`alert:notify-cap` au journal) pour qu'un flot de demandes ne remplisse pas la boîte de Cat ; au premier dépassement du jour, une seule **alerte à Sady** (date seulement) ; sans compteur Upstash joignable, aucun plafond.
 
 ## 4. Rebonds, plaintes, réponses
 

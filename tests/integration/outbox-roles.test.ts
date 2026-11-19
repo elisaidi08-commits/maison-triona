@@ -80,6 +80,24 @@ describe('boîte d’envoi : rôles', () => {
     }
   })
 
+  it('site_public n’écrit pas l’alerte du plafond, même sans identifiant de message', async () => {
+    const client = await pool.connect()
+    try {
+      await client.query('SET ROLE site_public')
+      await assert.rejects(
+        client.query(
+          `INSERT INTO outbox (id, template, alert_event)
+           VALUES ($1, 'technical_alert', 'notify_cap')`,
+          [randomUUID()],
+        ),
+        REFUS,
+      )
+    } finally {
+      await client.query('RESET ROLE')
+      client.release()
+    }
+  })
+
   it('envoi gère la boîte d’envoi, sans accès aux demandes ni à l’authentification', async () => {
     await pool.query(
       "INSERT INTO outbox (id, template, request_id) VALUES ($1, 'request_notification', $2)",

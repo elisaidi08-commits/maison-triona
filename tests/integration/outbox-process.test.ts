@@ -16,7 +16,7 @@ import type {
 import { renderAlert, renderNotification } from '../../src/lib/email/templates.ts'
 import { runOutbox, sendItem, sendNow } from '../../src/lib/outbox/process.ts'
 import type { OutboxDeps, OutboxLogStatus } from '../../src/lib/outbox/process.ts'
-import { claimOne } from '../../src/lib/outbox/repository.ts'
+import { claimOne, enqueueCapAlert } from '../../src/lib/outbox/repository.ts'
 import { applyRoles, envoiPool, resetDatabase, testPool } from './helpers.ts'
 
 // Envoi d'un message et passe de la tâche planifiée (story 3.3, tâche 7), contre PostgreSQL et
@@ -355,6 +355,31 @@ describe('boîte d’envoi : envoi d’un message (sendItem)', () => {
       [['send_failed', 'pending']],
     )
     assert.deepEqual(h.logs, [['failed:provider', id]])
+  })
+
+  it('envoie à Sady l’alerte du plafond, sans identifiant, écrite par le rôle envoi', async () => {
+    const id = randomUUID()
+    await enqueueCapAlert(pool, id)
+    const createdAt = (await row(id))?.created_at
+    assert.ok(createdAt)
+    const h = harness()
+    await sendNow(h.deps, id)
+    const mail = renderAlert({ event: 'notify_cap', subjectId: null, createdAt })
+    assert.deepEqual(h.sent, [
+      { from: CONFIG.from, to: CONFIG.alertTo, subject: mail.subject, text: mail.text },
+    ])
+    assert.equal((await row(id))?.status, 'accepted')
+    assert.deepEqual(h.logs, [['sent', id]])
+  })
+
+  it('l’alerte du plafond qui échoue définitivement ne crée pas d’alerte', async () => {
+    const id = randomUUID()
+    await enqueueCapAlert(pool, id)
+    const h = harness({ sends: [REFUSED] })
+    await sendNow(h.deps, id)
+    assert.equal((await row(id))?.status, 'failed')
+    assert.equal(await count(), 1)
+    assert.deepEqual(h.logs, [['failed:alert', id]])
   })
 
   it('une alerte qui échoue définitivement ne crée pas d’alerte : failed:alert', async () => {

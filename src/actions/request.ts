@@ -9,13 +9,17 @@ import { CHAMP_PIEGE, type EtatDemande } from '@/lib/demande/champs'
 import { createOutboxDeps } from '@/lib/outbox/deps'
 import {
   applyNotificationCap,
+  CAP_ALERT_TTL_SECONDS,
+  capAlertKey,
   NOTIFICATIONS_PAR_JOUR,
   notificationSetup,
   type QuotaNotifications,
+  scheduleCapAlert,
   scheduleFirstAttempts,
   storedStatuses,
 } from '@/lib/outbox/notify-request'
 import { sendNow } from '@/lib/outbox/process'
+import { enqueueCapAlert } from '@/lib/outbox/repository'
 import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
 import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
@@ -69,7 +73,10 @@ import { storeRequest, type StoredRequest } from '@/lib/vault/store'
 // `notif:<jour>`, une date seulement). Au-delà, la demande est enregistrée sans notification et
 // `alert:notify-cap` est journalisé à chaque fois ; Cat la trouve dans le coffre. Échec ouvert :
 // sans Upstash, ou s'il ne répond pas comme prévu, la notification part. Le compteur est débité
-// avant l'écriture : une écriture qui échoue compte quand même (acceptable).
+// avant l'écriture : une écriture qui échoue compte quand même (acceptable). Au premier
+// dépassement du jour (clé d'usage unique `notif-plafond:<jour>`, posée une fois même sous
+// concurrence), une alerte technique part à Sady (`alert:notify-cap-sent`), écrite par le compte
+// de l'envoi dans un `after()` ; tout autre résultat de la clé, aucune alerte (échec fermé).
 // Upstash : une panne réseau laisse passer ; des identifiants refusés aussi, journalisés
 // `failed:config` ; toute autre réponse inattendue refuse (« L'envoi n'a pas abouti »).
 // Journaux : un statut seulement, jamais une valeur du formulaire, une adresse ni une erreur brute.
@@ -87,6 +94,8 @@ type Statut =
   | 'rejected:rate'
   | 'alert:global-cap'
   | 'alert:notify-cap'
+  | 'alert:notify-cap-sent'
+  | 'failed:notify-cap-alert'
   | 'rate:unavailable'
   | 'failed:rate'
   | 'failed:config'
@@ -264,6 +273,19 @@ export async function envoyerDemande(
   }
   const plafond = applyNotificationCap(reglage.notify, quota)
   if (plafond.status) journaliser(plafond.status)
+  // Premier dépassement du jour : alerte à Sady, posée avant l'écriture (elle ne dépend pas de
+  // cette demande). Ne lève jamais.
+  if (plafond.status && reglage.notify) {
+    const premier = await usageUnique(capAlertKey(aujourdhui), CAP_ALERT_TTL_SECONDS)
+    scheduleCapAlert(premier.statut, reglage.config, {
+      after,
+      createDeps: createOutboxDeps,
+      enqueue: enqueueCapAlert,
+      sendNow,
+      log: journaliser,
+      logOnce: configurationManquante,
+    })
+  }
   const envoi =
     plafond.notify && reglage.notify ? reglage : { notify: false as const, config: null }
   let enregistree: StoredRequest
