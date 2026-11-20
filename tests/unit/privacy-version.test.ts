@@ -24,6 +24,9 @@ const EMPREINTES: Record<string, string> = {
   '2026-11-19': '23e8ca2001bcc658bdf252a3e7bf771ff6993f92847d2633314a36e00bb5430b',
   // Demande de lien (story 3.9) : l'adresse e-mail, son empreinte et le fournisseur d'envoi.
   '2026-11-20': 'd2652a7f307185c59e2e15a6c9afa7db1a2c631bd6a172e11cdb940ddae40e4d',
+  // Mesure d'audience (story 5.2) : aucun script de Plausible, notre serveur transmet la page vue
+  // avec l'adresse IP et le navigateur.
+  '2026-11-20.2': '4848dd4d373e9a5c29cf7513565ec17c7090f273629ba16c295c42f7a77a4d85',
 }
 
 describe('PRIVACY_POLICY_VERSION', () => {

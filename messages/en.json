@@ -569,7 +569,7 @@
         "id": "measurement",
         "title": "What we measure",
         "paragraphs": [
-          "To know whether the site is useful, we count page views and a few choices, such as the service viewed, always as totals. The tool we use, Plausible, sets no cookies. To count visitors without identifying them, it computes a daily fingerprint from your IP address and your browser, with a key erased every 24 hours; your IP address is not kept, only the country, region and city are derived from it. It is served from our own domain; its data is hosted in Germany."
+          "To know whether the site is useful, we count page views and a few choices, such as the service viewed, always as totals. The tool we use, Plausible, sets no cookies. To count visitors without identifying them, it computes a daily fingerprint from your IP address and your browser, with a key erased every 24 hours; your IP address is not kept, only the country, region and city are derived from it. No Plausible script is loaded: your browser sends the page view to our site, which passes it on to Plausible with your IP address and the name of your browser, needed for this fingerprint; we do not keep them. Its data is hosted in Germany."
         ]
       },
       {

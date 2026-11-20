@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ipVisiteur, lireConfigMesure, transmettre } from '../../src/lib/mesure/plausible.ts'
+import {
+  envoiDuSite,
+  ipVisiteur,
+  lireConfigMesure,
+  transmettre,
+} from '../../src/lib/mesure/plausible.ts'
 
 const EVENEMENT = {
   name: 'pageview',
@@ -82,4 +87,32 @@ test('une panne de Plausible ne lève jamais', async () => {
     ip: '203.0.113.7',
     fetch: fetchEnPanne,
   })
+})
+
+test('coupée sur un aperçu Vercel, active en production', () => {
+  const base = { PLAUSIBLE_DOMAIN: 'maisontriona.com', SITE_URL: 'https://maisontriona.com/' }
+  assert.equal(lireConfigMesure({ ...base, VERCEL_ENV: 'preview' }), null)
+  assert.deepEqual(lireConfigMesure({ ...base, VERCEL_ENV: 'production' }), {
+    domaine: 'maisontriona.com',
+    siteUrl: 'https://maisontriona.com',
+  })
+  assert.throws(
+    () =>
+      lireConfigMesure({ PLAUSIBLE_DOMAIN: 'maisontriona.com', SITE_URL: 'http://exemple.org' }),
+    /SITE_URL/,
+  )
+})
+
+test('seuls les envois de notre site sont acceptés', () => {
+  const site = 'https://maisontriona.com'
+  assert.equal(envoiDuSite(new Headers({ 'sec-fetch-site': 'same-origin' }), site), true)
+  assert.equal(envoiDuSite(new Headers({ origin: 'https://maisontriona.com' }), site), true)
+  assert.equal(
+    envoiDuSite(
+      new Headers({ 'sec-fetch-site': 'cross-site', origin: 'https://autre.example' }),
+      site,
+    ),
+    false,
+  )
+  assert.equal(envoiDuSite(new Headers(), site), false)
 })

@@ -32,9 +32,17 @@ test('les liens de réservation ne sont jamais comptés (le jeton partirait)', (
   assert.equal(cheminMesurable('/fr/contact/appel/Zm9vYmFyYmF6'), null)
   assert.equal(cheminMesurable('/en/contact/appel/Zm9vYmFyYmF6/confirmation'), null)
   assert.equal(cheminMesurable('/fr/contact/appel/gerer/Zm9vYmFy'), null)
-  // La page de demande de lien, sans jeton, reste comptée.
+  // La demande de lien et sa page d'envoi, sans jeton, restent comptées dans les deux langues.
   assert.equal(cheminMesurable('/fr/contact/appel'), '/fr/contact/appel')
+  assert.equal(cheminMesurable('/fr/contact/appel/envoye'), '/fr/contact/appel/envoye')
   assert.equal(cheminMesurable('/en/contact/call/sent'), '/en/contact/call/sent')
+})
+
+test('un chemin hors de la liste des pages est compté comme /404', () => {
+  assert.equal(cheminMesurable('/fr/n-importe-quoi-de-forge'), '/404')
+  assert.equal(cheminMesurable('/fr/<script>'), '/404')
+  assert.equal(cheminMesurable('/en/the-house'), '/en/the-house')
+  assert.equal(cheminMesurable('/fr/the-house'), '/404')
 })
 
 test('le coffre, la démo et tout chemin hors des deux langues sont refusés', () => {
@@ -43,7 +51,6 @@ test('le coffre, la démo et tout chemin hors des deux langues sont refusés', (
   assert.equal(cheminMesurable('/fr/demo'), null)
   assert.equal(cheminMesurable('/de/accueil'), null)
   assert.equal(cheminMesurable('https://example.org/fr'), null)
-  assert.equal(cheminMesurable('/fr/<script>'), null)
   assert.equal(cheminMesurable(`/fr/${'a'.repeat(300)}`), null)
 })
 
@@ -72,6 +79,19 @@ test('une page vue devient un événement Plausible complet, sans propriété', 
       domain: 'maisontriona.com',
       referrer: 'https://duckduckgo.com',
     },
+  )
+})
+
+test('un événement est rattaché à la racine de la langue, jamais à la page', () => {
+  assert.deepEqual(
+    construireEvenement({
+      evenement: 'partage:email',
+      chemin: '/fr/services/grand-age',
+      referent: null,
+      siteUrl: SITE,
+      domaine: 'maisontriona.com',
+    }),
+    { name: 'Partage e-mail', url: 'https://maisontriona.com/fr', domain: 'maisontriona.com' },
   )
 })
 

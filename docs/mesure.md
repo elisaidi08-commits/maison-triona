@@ -7,10 +7,13 @@
 1. Le navigateur envoie une **page vue** à chaque changement de page, et un **événement** quand on clique sur un élément marqué `data-mesure` (composant `src/components/mesure/Mesure.tsx`, un seul écouteur délégué).
 2. L'envoi va **à notre domaine seulement** (`POST /api/m`, `sendBeacon`, aucun cookie). Aucun script de Plausible n'est chargé, même servi par notre domaine.
 3. Notre serveur (`src/app/api/m/route.ts`) filtre de nouveau, puis transmet à Plausible **après** la réponse (`POST https://plausible.io/api/event`, Events API lue le 20/11/2026), avec le navigateur (`User-Agent`) et l'IP du visiteur (`X-Forwarded-For`). Plausible en tire une empreinte quotidienne pour compter les visiteurs uniques, sans garder l'IP. Sans IP réelle, il écarterait l'événement comme un robot.
-4. La route répond toujours **204**, sans corps, et ne journalise rien.
+4. La route répond toujours **204**, sans corps, et ne journalise rien. Elle ne garde que les envois **venus de notre site** (`Sec-Fetch-Site: same-origin` ou `Origin` du site) et **60 par minute au plus par réseau** (empreinte de l'IP avec la clé du jour, Upstash, comme la demande de lien) : un autre site ne peut pas faire compter des événements par ses visiteurs.
+5. **Coupée sur les aperçus Vercel** (`VERCEL_ENV` autre que `production`) : une visite de test ne compte jamais.
 
 **Filtres** (`src/lib/mesure/evenements.ts`, appliqués dans le navigateur **et** sur le serveur) :
 - chemin sans paramètres ni ancre (`/fr/contact?service=…&s=…` devient `/fr/contact`) ;
+- **liste fermée des pages** (`PATHNAMES`, deux langues) : tout autre chemin sous `/fr` ou `/en` est compté comme `/404` ;
+- un **événement** est rattaché à la racine de la langue (`/fr`, `/en`), jamais à la page : « Partage e-mail » ne dit pas quelle page de service a été partagée ;
 - jamais compté : les liens personnels de réservation `/<langue>/contact/appel/<jeton>…` (le jeton ne quitte pas le navigateur), le coffre, la démo, tout chemin hors de `/fr` et `/en` ;
 - référent : l'**origine** d'un site externe seulement, et seulement à l'arrivée sur le site ;
 - événements : liste fermée, ci-dessous. Tout autre code est ignoré.
@@ -56,6 +59,10 @@ Propriété **de domaine** `maisontriona.com`, vérifiée par un enregistrement 
 | Sources (5 premières origines) | | | |
 | Search Console : clics, impressions, 5 requêtes principales | | | |
 | Une décision à prendre ou à surveiller | | | |
+
+## Relecture sécurité (20/11/2026)
+
+`security-privacy-reviewer` : rien de bloquant. Corrigé avant la PR : texte de la politique publiée (« servi depuis notre domaine » remplacé par la transmission par notre serveur, version `2026-11-20.2`), envois d'autres sites refusés et débit limité, aperçus coupés, événements à la racine de la langue, liste fermée des pages, risque n° 12 (recoupement) dans `docs/privacy.md` §8, Vercel parmi les destinataires (registre T7), `PLAUSIBLE_DOMAIN` dans `.env.example`. **À trancher par Sady** : tronquer l'IP avant de l'envoyer (risque n° 12). **Au juriste** : exemption de consentement avec envoi de l'IP à chaque événement.
 
 ## Vérification du 20/11/2026
 
