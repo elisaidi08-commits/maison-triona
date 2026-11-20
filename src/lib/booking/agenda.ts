@@ -6,7 +6,19 @@
  * navigateur, déchiffré.
  * Imports relatifs seulement : testé par node --test, lu aussi par le navigateur.
  */
+import { SETTINGS_LIMITS } from './settings.ts'
 import { addDays, isoWeekday, zonedParts, zonedTimeToUtc } from './zoned-time.ts'
+
+/** Appels plus anciens que la vue, encore « à qualifier », montrés au plus. */
+export const EARLIER_TO_QUALIFY_LIMIT = 50
+
+/**
+ * Appels qu'une page de l'agenda peut montrer au plus, donc déchiffrer en une fois : une semaine au
+ * plafond quotidien le plus haut permis (7 × 12), plus ceux d'avant restés à qualifier (50).
+ * Aucun appel ne s'annule avant la 3.11 (la base le refuse) ; quand un appel annulé libérera sa
+ * plage, la vue montrera aussi les annulés : la 3.11 devra revoir cette borne.
+ */
+export const AGENDA_MAX_CALLS = 7 * SETTINGS_LIMITS.dailyCap.max + EARLIER_TO_QUALIFY_LIMIT
 
 /** Statuts d'un appel en base (db/migrations/0008_reservations.sql). */
 export const BOOKING_STATUSES = [
@@ -73,7 +85,7 @@ export function isToQualify(call: CallTimes, now: Date): boolean {
 /**
  * « Fait » ou « pas de réponse » se choisit une fois l'appel commencé (un appel sans réponse se sait
  * tout de suite), et se corrige ; jamais pour un appel annulé. Même règle que le déclencheur de
- * db/migrations/0012_agenda.sql, qui a le dernier mot.
+ * db/migrations/0013_agenda.sql, qui a le dernier mot.
  */
 export function canQualify(call: CallTimes, now: Date): boolean {
   return QUALIFIABLE.includes(call.status) && call.startsAt.getTime() <= now.getTime()

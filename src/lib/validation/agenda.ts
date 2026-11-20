@@ -3,12 +3,17 @@
  * revérifié ici : identifiant d'appel, statut choisi (« fait » ou « pas de réponse » seulement),
  * demande à rattacher (identifiant, ou « aucune »), identifiants des appels à déchiffrer. Une erreur
  * ne rend qu'un code, jamais la valeur reçue. La base a le dernier mot (déclencheur des statuts, clé
- * étrangère du rattachement, db/migrations/0012_agenda.sql).
+ * étrangère du rattachement, db/migrations/0013_agenda.sql).
  * Imports relatifs seulement : testé par node --test.
  */
 import { z } from 'zod'
 
-import { AUCUNE_DEMANDE, QUALIFICATIONS, type Qualification } from '../booking/agenda.ts'
+import {
+  AGENDA_MAX_CALLS,
+  AUCUNE_DEMANDE,
+  QUALIFICATIONS,
+  type Qualification,
+} from '../booking/agenda.ts'
 
 export { AUCUNE_DEMANDE }
 
@@ -19,8 +24,11 @@ export type CodeErreurAgenda = 'identifiant' | 'statut' | 'demande'
 
 export type ResultatAgenda<T> = { ok: true; valeur: T } | { ok: false; erreur: CodeErreurAgenda }
 
-/** Appels déchiffrés en une fois : ceux d'une semaine et ceux qui restent à qualifier. */
-export const LECTURE_MAX = 100
+/**
+ * Appels déchiffrés en une fois : tout ce qu'une page de l'agenda peut montrer (une semaine au
+ * plafond le plus haut, et ceux qui restent à qualifier), tiré des constantes, jamais recopié.
+ */
+export const LECTURE_MAX = AGENDA_MAX_CALLS
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const identifiant = z
@@ -63,8 +71,10 @@ export function validerRattachement(
 }
 
 /**
- * Identifiants des appels dont le navigateur demande les octets scellés : un tableau de 1 à 100
- * identifiants, sans doublon. Autre chose : null, rien n'est lu.
+ * Identifiants des appels dont le navigateur demande les octets scellés : un tableau de 1 à
+ * LECTURE_MAX identifiants, sans doublon. Autre chose : null, rien n'est lu. Ce ne sont pas forcément
+ * ceux de la page affichée : tout appel peut être demandé, puisque la session est autorisée (TOTP)
+ * et que chaque appel rendu a sa ligne `booking_read` au journal.
  */
 export function validerIdentifiantsAppels(valeur: unknown): string[] | null {
   const lu = z.array(identifiant).min(1).max(LECTURE_MAX).safeParse(valeur)

@@ -66,10 +66,9 @@ export function cspCoffre(
     "default-src 'self'",
     // `'wasm-unsafe-eval'` (partie D), sur les pages de lecture seulement (`wasm`, voir
     // estCheminLecture : demandes et agenda des appels) : elles déchiffrent dans le navigateur avec
-    // libsodium, qui n'existe qu'en
-    // WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ; il autorise la compilation
-    // de WebAssembly, pas `eval()` ni `new Function`. Ni la connexion, ni la liste, ni le site public
-    // (next.config.ts) ne l'ont. `'unsafe-eval'` : développement seulement (React reconstruit les
+    // libsodium, qui n'existe qu'en WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ;
+    // il autorise la compilation de WebAssembly, pas `eval()` ni `new Function`. Ni la connexion, ni
+    // la liste, ni les disponibilités, ni le site public (next.config.ts) ne l'ont. `'unsafe-eval'` : développement seulement (React reconstruit les
     // piles d'erreur).
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${options.wasm ? " 'wasm-unsafe-eval'" : ''}${options.dev ? " 'unsafe-eval'" : ''}`,
     // Styles en ligne du serveur de développement seulement ; en production, le nonce suffit.

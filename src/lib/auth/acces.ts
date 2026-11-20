@@ -4,11 +4,13 @@ import type { Qualification } from '../booking/agenda.ts'
 import {
   attachBooking,
   listAgendaLogged,
+  listCallsOfRequest,
   readBookingsSealed,
   setBookingStatus,
 } from '../booking/agenda-repository.ts'
 import type {
   AgendaListing,
+  AttachedCall,
   AttachResult,
   SealedCall,
   StatusResult,
@@ -244,4 +246,14 @@ export async function rattachementAppelDuCoffre(
 ): Promise<AttachResult | null> {
   if (acces.etat !== 'autorise') return null
   return attachBooking(pool, id, demande, acces.compte.email)
+}
+
+// Appels rattachés à une demande (sa page du coffre) : heures et statut, sans contenu ni journal.
+export async function appelsDeLaDemandeDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<AttachedCall[] | null> {
+  if (acces.etat !== 'autorise') return null
+  return listCallsOfRequest(pool, id)
 }

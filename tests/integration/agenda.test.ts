@@ -7,6 +7,7 @@ import sodium from 'libsodium-wrappers-sumo'
 
 import {
   agendaDuCoffre,
+  appelsDeLaDemandeDuCoffre,
   demandesRecentesDuCoffre,
   rattachementAppelDuCoffre,
   scellesAppelsDuCoffre,
@@ -19,6 +20,8 @@ import {
   readBookingsSealed,
   setBookingStatus,
 } from '../../src/lib/booking/agenda-repository.ts'
+import { loadOpenSlots } from '../../src/lib/booking/bookings.ts'
+import { listConfirmedCalls } from '../../src/lib/booking/repository.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { openSealedBooking } from '../../src/lib/vault/open.ts'
 import { deleteRequest, insertRequest } from '../../src/lib/vault/repository.ts'
@@ -269,6 +272,16 @@ describe('agenda des appels (rôle coffre)', () => {
     assert.equal(lu.calls[0]?.requestId, premiere)
     assert.equal(lu.calls[0]?.requestCreatedAt?.toISOString(), rows[0].created_at.toISOString())
 
+    // Sur la page de la demande : l'appel rattaché, heures et statut, rien de scellé.
+    assert.deepEqual(await appelsDeLaDemandeDuCoffre(coffre, autorise, premiere), [
+      {
+        id,
+        startsAt: new Date('2027-03-01T09:30:00Z'),
+        endsAt: new Date('2027-03-01T10:00:00Z'),
+        status: 'confirmed',
+      },
+    ])
+    assert.equal(await appelsDeLaDemandeDuCoffre(coffre, { etat: 'anonyme' }, premiere), null)
     assert.equal(await attachBooking(coffre, id, randomUUID(), CAT), 'unknown-request')
     assert.equal(await attachBooking(coffre, id, 'pas-un-id', CAT), 'unknown-request')
     assert.equal(await attachBooking(coffre, randomUUID(), premiere, CAT), 'not-found')
@@ -293,6 +306,41 @@ describe('agenda des appels (rôle coffre)', () => {
         { actor: CAT, action: 'delete', booking_id: null, request_id: premiere },
       ],
     )
+  })
+
+  it('plafond du jour : 4 appels sur 4 dont un « fait », aucun nouveau créneau ce jour-là', async () => {
+    // Lundi 1er mars 2027, 9 h à Bruxelles ; le mercredi 3 a six créneaux (10 h 30 à 17 h 30).
+    const maintenant = new Date('2027-03-01T08:00:00Z')
+    const mercredi = (slot: { start: Date }) => slot.start.toISOString().startsWith('2027-03-03')
+    assert.equal((await loadOpenSlots(coffre, maintenant)).filter(mercredi).length, 6)
+    await appel(new Date('2027-03-03T09:30:00Z'))
+    await appel(new Date('2027-03-03T10:15:00Z'))
+    await appel(new Date('2027-03-03T15:00:00Z'))
+    assert.equal((await loadOpenSlots(coffre, maintenant)).filter(mercredi).length, 3)
+    // Le quatrième, déjà qualifié (écrit tel quel : à cette date, la base refuserait de le
+    // qualifier, il n'a pas commencé) : il compte encore dans le plafond.
+    const fait = await appel(new Date('2027-03-03T15:45:00Z'), 'done')
+    assert.deepEqual((await loadOpenSlots(coffre, maintenant)).filter(mercredi), [])
+    // Témoin : sans lui, les créneaux du mercredi reviennent.
+    await admin.query('DELETE FROM bookings WHERE id = $1', [fait])
+    assert.equal((await loadOpenSlots(coffre, maintenant)).filter(mercredi).length, 3)
+  })
+
+  it('un appel qualifié garde sa plage : ni créneau, ni réservation qui la chevauche', async () => {
+    // Appel de 30 minutes commencé il y a 10 minutes, qualifié tout de suite.
+    const debut = dans(-10)
+    const id = await appel(debut)
+    assert.equal(await setBookingStatus(coffre, id, 'no_answer', CAT), 'changed')
+    const occupes = await listConfirmedCalls(coffre, dans(-60), dans(60))
+    assert.deepEqual(
+      occupes.map((occupe) => [occupe.start.toISOString(), occupe.occupiedUntil.toISOString()]),
+      [[debut.toISOString(), new Date(debut.getTime() + 45 * MINUTE).toISOString()]],
+    )
+    // La contrainte d'exclusion couvre aussi les appels qualifiés.
+    await assert.rejects(appel(dans(5)), { code: '23P01' })
+    // Un appel annulé, lui, ne compte pas.
+    await appel(dans(-10), 'cancelled_by_house')
+    assert.equal((await listConfirmedCalls(coffre, dans(-60), dans(60))).length, 1)
   })
 
   it('journal sans contenu : ni nom, ni numéro, ni octets scellés, ni heure, ni statut', async () => {

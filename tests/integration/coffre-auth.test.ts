@@ -527,7 +527,7 @@ describe('authentification du coffre', () => {
         'purged_verifications:integer',
         'purged_bookings:integer',
         'purged_tokens:integer',
-        // Agenda des appels (story 3.13, 0012) : l'identifiant de l'appel visé, rien d'autre.
+        // Agenda des appels (story 3.13, 0013) : l'identifiant de l'appel visé, rien d'autre.
         'booking_id:uuid',
       ],
     )

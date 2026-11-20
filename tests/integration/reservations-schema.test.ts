@@ -95,7 +95,8 @@ describe('tables de la réservation d’appel', () => {
     assert.equal(contraintes.length, 1)
     assert.match(
       contraintes[0].def,
-      /EXCLUDE USING gist \(slot WITH &&\) WHERE \(\(?status = 'confirmed'/,
+      // Depuis 0013 (agenda), les appels qualifiés gardent aussi leur plage.
+      /EXCLUDE USING gist \(slot WITH &&\) WHERE \(\(status = ANY \(ARRAY\['confirmed'::text, 'done'::text, 'no_answer'::text\]\)\)\)/,
     )
   })
 

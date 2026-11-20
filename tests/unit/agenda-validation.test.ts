@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
+import { EARLIER_TO_QUALIFY_LIMIT } from '../../src/lib/booking/agenda.ts'
+import { SETTINGS_LIMITS } from '../../src/lib/booking/settings.ts'
 import {
   adresseVue,
   estErreurAppel,
@@ -115,6 +117,11 @@ describe('identifiants à déchiffrer', () => {
       APPEL,
       DEMANDE,
     ])
+  })
+
+  test('borne tirée des constantes : une semaine au plafond le plus haut, plus les « à qualifier »', () => {
+    assert.equal(LECTURE_MAX, 7 * SETTINGS_LIMITS.dailyCap.max + EARLIER_TO_QUALIFY_LIMIT)
+    assert.equal(LECTURE_MAX, 134)
   })
 
   test('refuse un tableau vide, trop long, ou autre chose', () => {

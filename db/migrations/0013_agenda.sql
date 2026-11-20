@@ -1,5 +1,5 @@
--- Agenda des appels de Cat dans le coffre (story 3.13 ; docs/reservation-appel.md §3.2). Numéro 0012,
--- réservé à cette story.
+-- Agenda des appels de Cat dans le coffre (story 3.13 ; docs/reservation-appel.md §3.2). Numéro 0013 :
+-- 0011 est la demande de lien (3.9), 0012 l'alerte du plafond des liens (PR #84).
 -- 1. Statuts. La liste est déjà celle de la spec depuis 0008 (`confirmed`, `done`, `no_answer`,
 --    `cancelled_by_guest`, `cancelled_by_house`) ; « à qualifier » ne se stocke pas : il se déduit
 --    (confirmé, heure de fin passée, src/lib/booking/agenda.ts). Ce qui change : un déclencheur dit
@@ -29,7 +29,9 @@ alter table bookings
 create index bookings_request_idx on bookings (request_id) where request_id is not null;
 
 create function bookings_status_transition() returns trigger
-language plpgsql as $$
+language plpgsql
+set search_path = pg_catalog
+as $$
 begin
   if new.status = old.status then
     return new;
@@ -50,6 +52,16 @@ $$;
 create trigger bookings_status_transition
   before update of status on bookings
   for each row execute function bookings_status_transition();
+
+-- La plage d'un appel qui a eu lieu ne se rouvre jamais. « Fait » et « pas de réponse » sortent
+-- d'un appel commencé (déclencheur ci-dessus) : ils gardent leur plage (début → fin + pause) dans la
+-- contrainte d'exclusion, comme un appel confirmé, et comptent dans le plafond du jour
+-- (listConfirmedCalls, src/lib/booking/repository.ts). Sans cela, qualifier un appel tôt (un appel
+-- de 2 heures, délai minimal d'une heure) rendrait réservable la fin de sa plage, et un appel qualifié
+-- rouvrirait un créneau au-delà du plafond. Seul un appel annulé (3.11) libère sa plage.
+alter table bookings drop constraint bookings_no_overlap;
+alter table bookings add constraint bookings_no_overlap
+  exclude using gist (slot with &&) where (status in ('confirmed', 'done', 'no_answer'));
 
 alter table vault_access_log add column booking_id uuid;
 

@@ -2,9 +2,9 @@ import type { Pool, PoolClient } from 'pg'
 
 import { withTransaction } from '../db/transaction.ts'
 import { isUuid, LIST_LOG_WINDOW_S, VaultError } from '../vault/repository.ts'
-import type { BookingStatus, Qualification } from './agenda.ts'
+import { EARLIER_TO_QUALIFY_LIMIT, type BookingStatus, type Qualification } from './agenda.ts'
 
-// Agenda des appels de Cat (story 3.13 ; docs/reservation-appel.md §3.2 ; db/migrations/0012_agenda.sql),
+// Agenda des appels de Cat (story 3.13 ; docs/reservation-appel.md §3.2 ; db/migrations/0013_agenda.sql),
 // rôle `coffre`, sans ORM, dans le style de src/lib/vault/repository.ts : requêtes paramétrées, erreurs
 // réduites à leur code (VaultError). Chaque lecture et chaque action est inscrite au journal d'accès
 // dans la même transaction, au nom du compte, sans contenu (ni nom, ni numéro, ni heure, ni statut) :
@@ -19,8 +19,7 @@ type Db = Pool | PoolClient
 const CONTROLE = '23514'
 const CLE_ETRANGERE = '23503'
 
-/** Appels plus anciens que la vue, encore « à qualifier », montrés au plus. */
-export const EARLIER_TO_QUALIFY_LIMIT = 50
+export { EARLIER_TO_QUALIFY_LIMIT }
 
 export interface AgendaCall {
   id: string
@@ -178,7 +177,7 @@ export type StatusResult = 'changed' | 'unchanged' | 'not-found' | 'refused'
 
 /**
  * « Fait » ou « pas de réponse » (§3.2), pour un appel commencé, confirmé ou déjà qualifié (Cat
- * corrige un clic). La condition est dans la requête ; le déclencheur de 0012 la double sous tout
+ * corrige un clic). La condition est dans la requête ; le déclencheur de 0013 la double sous tout
  * rôle. `unchanged` : déjà ce statut (double clic), rien n'est écrit.
  */
 export async function setBookingStatus(
@@ -261,4 +260,39 @@ export async function attachBooking(
     if (error instanceof VaultError && error.code === CLE_ETRANGERE) return 'unknown-request'
     throw error
   }
+}
+
+export interface AttachedCall {
+  id: string
+  startsAt: Date
+  endsAt: Date
+  status: BookingStatus
+}
+
+/**
+ * Appels rattachés à une demande, pour sa page du coffre : heures et statut seulement, jamais
+ * `sealed`. Sans journal, comme les colonnes de la demande (`getRequest`) : Next 16 peut rendre une
+ * page deux fois ; rien de la personne n'est lu. Sert à l'effacement (docs/rgpd/procedures.md) :
+ * Cat voit qu'un appel existe avant d'effacer la demande.
+ */
+export async function listCallsOfRequest(pool: Pool, requestId: string): Promise<AttachedCall[]> {
+  if (!isUuid(requestId)) return []
+  return guard('listCallsOfRequest', async () => {
+    const { rows } = await pool.query<{
+      id: string
+      starts_at: Date
+      ends_at: Date
+      status: BookingStatus
+    }>(
+      `SELECT id, starts_at, ends_at, status FROM bookings
+       WHERE request_id = $1 ORDER BY starts_at, id`,
+      [requestId],
+    )
+    return rows.map((row) => ({
+      id: row.id,
+      startsAt: row.starts_at,
+      endsAt: row.ends_at,
+      status: row.status,
+    }))
+  })
 }

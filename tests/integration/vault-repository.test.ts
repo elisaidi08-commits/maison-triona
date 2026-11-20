@@ -69,7 +69,7 @@ describe('accès aux données du coffre', () => {
     await resetDatabase(pool)
     await migrate(pool, MIGRATIONS)
   })
-  // `bookings` référence `vault_requests` depuis 0012 (rattachement d'un appel) : vidée avec elle.
+  // `bookings` référence `vault_requests` depuis 0013 (rattachement d'un appel) : vidée avec elle.
   beforeEach(() =>
     pool.query('TRUNCATE vault_requests, bookings, vault_access_log RESTART IDENTITY'),
   )
