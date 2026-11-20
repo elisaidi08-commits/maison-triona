@@ -1041,13 +1041,13 @@
       "title": "Your call is arranged.",
       "when": "{jour}, at {heure}, Brussels and Paris time.",
       "body": "We will call you on the number you gave. We never leave a voicemail.",
-      "keep": "Keep the address of this page: it lets you move or cancel your call, up to its time.",
-      "moved": "Your call has been moved. If you had added it to your calendar, open the new file: it replaces the previous one.",
+      "keep": "Keep the address of this page, in your bookmarks for instance: until the time of the call, it lets you move or cancel it.",
+      "moved": "Your call has been moved. If you had added it to your calendar, open the new file; if the previous entry is still there, delete it.",
       "calendar": "Add to my calendar",
-      "calendarHint": "A file to open with your calendar (.ics). After a change of time, the new file replaces the previous one.",
+      "calendarHint": "A file to open with your calendar (.ics).",
       "move": {
         "title": "Move the call",
-        "intro": "Choose another time. Your current time stays booked until the new one is taken.",
+        "intro": "Choose another time. Your call stays at the agreed time until the new one is confirmed.",
         "slots": {
           "legend": "Which other time suits you?",
           "next": "The next available times",
@@ -1058,28 +1058,28 @@
         "button": "Move the call",
         "sending": "Sending",
         "errors": {
-          "one": "One point to review",
+          "one": "One thing to check",
           "prefix": "Error:",
           "creneau": "Please choose a time."
         },
         "status": {
           "taken": "This time has just been taken. The closest times are listed first; your call stays at the agreed time.",
-          "failed": "The change could not be made. Your call stays at the agreed time.",
+          "failed": "The call could not be moved. It stays at the agreed time.",
           "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; your call stays at the agreed time."
         }
       },
       "cancel": {
         "title": "Cancel the call",
-        "intro": "If no time suits you any more, you can cancel the call.",
+        "intro": "You will be asked to confirm; nothing is cancelled before then.",
         "link": "Cancel the call"
       },
       "started": {
-        "title": "Your call has started.",
-        "body": "It can no longer be moved or cancelled. For any question, write to us."
+        "title": "It is time for your call.",
+        "body": "It can no longer be moved or cancelled. If you have any questions, please write to us."
       },
       "cancelled": {
         "title": "Your call is cancelled.",
-        "body": "The time has been freed. If you had added it to your calendar, open this file to remove it.",
+        "body": "If you had added it to your calendar, open this file to remove it, or delete the entry yourself.",
         "calendar": "Remove from my calendar",
         "calendarHint": "A file to open with your calendar (.ics).",
         "newCall": "Arrange another call"
@@ -1090,12 +1090,12 @@
     "cancelPage": {
       "metaTitle": "Cancel your call",
       "title": "Cancel your call?",
-      "body": "The call on {jour}, at {heure}, will be cancelled and the time freed. To arrange another call, simply ask for a new link.",
+      "body": "{jour}, at {heure}, Brussels and Paris time. This call will be cancelled. To arrange another one, you will simply need to ask for a new link.",
       "confirm": "Confirm the cancellation",
       "keep": "Keep my call",
       "unavailable": "This call can no longer be cancelled.",
-      "failed": "The cancellation could not be made. Your call is still on; please try again in a moment.",
-      "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; your call is still on."
+      "failed": "Your call could not be cancelled. It is still booked; please try again in a moment.",
+      "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; your call is still booked."
     },
     "ics": {
       "summary": "Call · Maison Triona",

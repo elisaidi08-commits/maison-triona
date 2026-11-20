@@ -1048,15 +1048,15 @@
       "title": "Votre appel est convenu.",
       "when": "{jour}, à {heure}, heure de Bruxelles et de Paris.",
       "body": "Nous vous appelons au numéro indiqué. Nous ne laissons jamais de message vocal.",
-      "keep": "Gardez l’adresse de cette page : elle vous permet de déplacer ou d’annuler votre appel, jusqu’à son heure.",
-      "moved": "Votre appel est déplacé. Si vous l’aviez ajouté à votre agenda, ouvrez le nouveau fichier : il remplace l’ancien.",
+      "keep": "Gardez l’adresse de cette page, par exemple dans vos favoris : jusqu’à l’heure de l’appel, elle vous permet de le déplacer ou de l’annuler.",
+      "moved": "Votre appel est déplacé. Si vous l’aviez ajouté à votre agenda, ouvrez le nouveau fichier ; si l’ancien rendez-vous y figure encore, supprimez-le.",
       "calendar": "Ajouter à mon agenda",
-      "calendarHint": "Un fichier à ouvrir avec votre agenda (.ics). Après un déplacement, le nouveau fichier remplace l’ancien.",
+      "calendarHint": "Un fichier à ouvrir avec votre agenda (.ics).",
       "move": {
         "title": "Déplacer l’appel",
-        "intro": "Choisissez un autre moment. Votre heure actuelle reste réservée jusqu’à ce que le nouveau moment soit pris.",
+        "intro": "Choisissez un autre moment. Votre appel reste prévu à l’heure dite tant que le nouveau moment n’est pas confirmé.",
         "slots": {
-          "legend": "Quel autre moment vous convient ?",
+          "legend": "Quel autre moment vous convient ?",
           "next": "Les prochains moments libres",
           "nearby": "Les moments les plus proches",
           "week": "Semaine du {date}"
@@ -1066,27 +1066,27 @@
         "sending": "Envoi en cours",
         "errors": {
           "one": "Un point à revoir",
-          "prefix": "Erreur :",
+          "prefix": "Erreur :",
           "creneau": "Merci de choisir un moment."
         },
         "status": {
-          "taken": "Ce moment vient d’être pris. Les moments les plus proches sont en tête ; votre appel reste prévu à l’heure dite.",
+          "taken": "Ce moment vient d’être pris. Les moments les plus proches sont en tête ; votre appel reste prévu à l’heure dite.",
           "failed": "Le déplacement n’a pas abouti. Votre appel reste prévu à l’heure dite.",
-          "limit": "Trop d’envois sont arrivés en peu de temps. Réessayez dans quelques minutes ; votre appel reste prévu à l’heure dite."
+          "limit": "Trop d’envois sont arrivés en peu de temps. Réessayez dans quelques minutes ; votre appel reste prévu à l’heure dite."
         }
       },
       "cancel": {
         "title": "Annuler l’appel",
-        "intro": "Si aucun moment ne vous convient plus, vous pouvez annuler l’appel.",
+        "intro": "Une page vous demandera de confirmer ; rien n’est annulé avant.",
         "link": "Annuler l’appel"
       },
       "started": {
-        "title": "Votre appel a commencé.",
+        "title": "L’heure de votre appel est arrivée.",
         "body": "Il ne peut plus être déplacé ni annulé. Pour toute question, écrivez-nous."
       },
       "cancelled": {
         "title": "Votre appel est annulé.",
-        "body": "Le moment est libéré. Si vous l’aviez ajouté à votre agenda, ouvrez ce fichier pour l’en retirer.",
+        "body": "Si vous l’aviez ajouté à votre agenda, ouvrez ce fichier pour l’en retirer, ou supprimez le rendez-vous vous-même.",
         "calendar": "Retirer de mon agenda",
         "calendarHint": "Un fichier à ouvrir avec votre agenda (.ics).",
         "newCall": "Convenir d’un autre appel"
@@ -1096,13 +1096,13 @@
     },
     "cancelPage": {
       "metaTitle": "Annuler votre appel",
-      "title": "Annuler votre appel ?",
-      "body": "L’appel du {jour}, à {heure}, sera annulé et le moment libéré. Pour convenir d’un autre appel, il suffira de demander un nouveau lien.",
+      "title": "Annuler votre appel ?",
+      "body": "{jour}, à {heure}, heure de Bruxelles et de Paris. Cet appel sera annulé. Pour en convenir d’un autre, il vous suffira de demander un nouveau lien.",
       "confirm": "Confirmer l’annulation",
       "keep": "Garder mon appel",
       "unavailable": "Cet appel ne peut plus être annulé.",
-      "failed": "L’annulation n’a pas abouti. Votre appel reste prévu ; réessayez dans un instant.",
-      "limit": "Trop d’envois sont arrivés en peu de temps. Réessayez dans quelques minutes ; votre appel reste prévu."
+      "failed": "L’annulation n’a pas abouti. Votre appel reste prévu ; réessayez dans un instant.",
+      "limit": "Trop d’envois sont arrivés en peu de temps. Réessayez dans quelques minutes ; votre appel reste prévu."
     },
     "ics": {
       "summary": "Appel · Maison Triona",
