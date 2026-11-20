@@ -26,6 +26,9 @@ const baseURL = `http://localhost:${PORT}`
 // est recopié dans un fichier que le test relit (ni adresse ni jeton). Un seul processus de test à la
 // fois (`workers: 1`) : les parcours vident la même base. Depuis la story 3.13, il porte aussi
 // l'agenda des appels (tests/e2e/agenda-parcours.spec.ts).
+// Secret du formulaire des serveurs de test (horodatage, sel des empreintes d'IP, lien de gestion).
+const SECRET_FORMULAIRE_E2E = 'secret-factice-e2e-formulaire-0123456789-abcdef'
+
 const RESERVATION_PORT = Number(process.env.RESERVATION_PORT ?? 3200)
 const reservationURL = `http://localhost:${RESERVATION_PORT}`
 const reservationBase = process.env.RESERVATION_E2E_DATABASE_URL
@@ -68,6 +71,9 @@ export default defineConfig({
       url: baseURL,
       reuseExistingServer: !process.env.CI,
       timeout: 240_000,
+      // `next start` tourne en production : le secret du formulaire n'a plus de repli (story 3.11,
+      // src/lib/security/secret.ts). Secret factice, jamais déployé.
+      env: { FORM_SIGNING_SECRET: SECRET_FORMULAIRE_E2E },
     },
     ...(reservationBase
       ? [
@@ -94,6 +100,7 @@ export default defineConfig({
                 process.env.RESERVATION_E2E_VAULT_PUBLIC_KEY ??
                 'wexjuk1fSzFzd2w6IQBjeT/dStKAPNwvb9+RUlVKmy8=',
               BETTER_AUTH_SECRET: 'secret-factice-e2e-reservation-0123456789-abcdef',
+              FORM_SIGNING_SECRET: SECRET_FORMULAIRE_E2E,
               BETTER_AUTH_URL: reservationURL,
               SITE_URL: reservationURL,
               // Demande de lien (story 3.9) : envoi, e-mails factices, limitation, empreintes.

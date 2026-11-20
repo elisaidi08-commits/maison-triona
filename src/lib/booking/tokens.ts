@@ -6,7 +6,7 @@
  * (`timingSafeEqual`). Un jeton ne va jamais dans un journal, ni dans un message d'erreur.
  * Serveur seulement (API de Node) ; imports relatifs : testé par node --test.
  */
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const TOKEN_BYTES = 32
 /** Longueur du jeton en base64url sans remplissage : ⌈32 × 8 / 6⌉. */
@@ -85,18 +85,21 @@ export function accessTokenState(token: StoredToken, now: Date): TokenState {
 
 /**
  * Lien de gestion d'un appel (story 3.11 ; §2, étapes 4 et 6) : déduit du lien d'accès qui l'a réservé
- * et d'un secret serveur (HMAC-SHA256, étiquette propre), même forme qu'un jeton (43 caractères). Le
- * déduire plutôt que le tirer au hasard permet de le rendre une seconde fois au double envoi du
- * formulaire, sans le garder nulle part ; la base n'en reçoit que l'empreinte, comme tout jeton. Sans
- * le secret, le lien d'accès seul ne le donne pas ; passé ACCESS_REPLAY_MINUTES, le serveur ne le
- * rend plus.
+ * et d'une sous-clé propre (HKDF-SHA256 de `FORM_SIGNING_SECRET`, étiquette « gestion » : la clé du
+ * lien n'est ni celle de l'horodatage ni celle du sel des empreintes d'IP), puis HMAC-SHA256 ; même
+ * forme qu'un jeton (43 caractères). Le déduire plutôt que le tirer au hasard permet de le rendre une
+ * seconde fois au double envoi du formulaire, sans le garder nulle part ; la base n'en reçoit que
+ * l'empreinte, comme tout jeton. Sans le secret, le lien d'accès seul ne le donne pas ; passé
+ * ACCESS_REPLAY_MINUTES, le serveur ne le rend plus.
+ * Changer `FORM_SIGNING_SECRET` ne casse aucun lien de gestion déjà émis (son empreinte est en base) :
+ * seul un double envoi dans les 15 minutes qui suivent une réservation mène alors à « Ce lien n'est
+ * plus valable » (l'appel, lui, est réservé).
  */
 export function deriveManageToken(accessToken: string, secret: string): string {
   if (!isTokenFormat(accessToken)) throw new RangeError('Jeton invalide')
   if (typeof secret !== 'string' || secret.length === 0) throw new RangeError('Secret manquant')
-  return createHmac('sha256', secret)
-    .update(`maison-triona:gestion:${accessToken}`, 'utf8')
-    .digest('base64url')
+  const cle = Buffer.from(hkdfSync('sha256', secret, '', 'maison-triona:gestion', 32))
+  return createHmac('sha256', cle).update(accessToken, 'utf8').digest('base64url')
 }
 
 /** Le lien d'accès a-t-il servi assez récemment pour rendre encore le lien de gestion ? */
