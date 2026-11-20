@@ -99,8 +99,7 @@ export function ChoiceRow({
                   />
                   {/* 8 px entre libellé et catégorie : le filet du survol et du focus (6 px sous le
                     libellé) ne touche pas les capitales. */}
-                  {/* Coupure sans tiret d'un mot trop long pour la ligne (texte agrandi, D73). */}
-                  <span className="flex flex-col gap-8 wrap-anywhere">
+                  <span className="flex flex-col gap-8">
                     <span className="filet-survol self-start text-choix text-encre">
                       {option.label}
                     </span>

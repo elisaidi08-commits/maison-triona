@@ -1,26 +1,50 @@
 import { expect, test } from '@playwright/test'
 
 // Texte agrandi (constat n° 4 de docs/a11y-report.md, D73) : sur un téléphone (390 px), avec le
-// texte du navigateur à 200 %, un mot long d'un titre ou d'un choix (« Accompagnement »,
-// « Companionship ») ne doit plus dépasser de l'écran ni faire défiler la page en largeur. Le texte
-// agrandi est simulé par la taille de police racine à 200 % : toutes les tailles du site sont en
-// rem (src/styles/tokens.css). Rien ne change à l'affichage normal : la coupure (sans tiret) ne
-// joue que si le mot ne tient pas seul sur sa ligne.
+// texte du navigateur à 200 %, un mot long d'un titre, d'un choix ou d'un paragraphe
+// (« Accompagnement », « Companionship ») ne doit plus dépasser de l'écran ni faire défiler la page
+// en largeur. Le texte agrandi est simulé par la taille de police racine à 200 % : toutes les
+// tailles du site sont en rem (src/styles/tokens.css). Rien ne change à l'affichage normal : la
+// coupure (sans tiret) ne joue que si le mot ne tient pas seul sur sa ligne.
 
+// Toutes les pages publiques de la suite axe (tests/a11y/pages.spec.ts), FR et EN, hors démo et 404.
 const PAGES = [
   '/fr',
-  '/fr/services',
-  '/fr/services/grand-age',
-  '/fr/services/conciergerie',
-  '/fr/notre-independance',
-  '/fr/contact',
-  '/fr/confidentialite',
-  '/fr/contact/appel',
   '/en',
-  '/en/services/later-life',
-  '/en/services/concierge',
+  '/fr/la-maison',
+  '/en/the-house',
+  '/fr/contact',
   '/en/contact',
+  '/fr/contact/merci',
+  '/en/contact/merci',
+  '/fr/contact/appel',
   '/en/contact/call',
+  '/fr/contact/appel/envoye',
+  '/en/contact/call/sent',
+  '/fr/faq',
+  '/en/faq',
+  '/fr/comment-ca-se-passe',
+  '/en/how-it-works',
+  '/fr/comment-ca-se-passe/langage-simple',
+  '/en/how-it-works/easy-read',
+  '/fr/notre-independance',
+  '/en/our-independence',
+  '/fr/accessibilite',
+  '/en/accessibility',
+  '/fr/services',
+  '/en/services',
+  '/fr/services/conciergerie',
+  '/fr/services/grand-age',
+  '/fr/services/enfants',
+  '/en/services/concierge',
+  '/en/services/later-life',
+  '/en/services/childcare',
+  '/fr/territoires',
+  '/en/where-we-work',
+  '/fr/mentions-legales',
+  '/en/legal-notice',
+  '/fr/confidentialite',
+  '/en/privacy',
 ]
 
 test.use({ viewport: { width: 390, height: 844 } })

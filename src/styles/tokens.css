@@ -360,11 +360,13 @@
     line-height: var(--text-body--line-height);
   }
 
-  /* Titres et texte agrandi (D73, WCAG 1.4.4 et 1.4.10) : un mot long (« Accompagnement ») ou une
-     suite insécable ne fait plus défiler la page en largeur quand le texte du navigateur est
-     agrandi sur un téléphone. Coupure sans tiret, seulement si le mot ne tient pas seul sur sa
-     ligne : rien ne change à l'affichage normal (pas de césure, choix de Sady du 20/11/2026). */
-  :where(h1, h2, h3, h4, h5, h6) {
+  /* Texte agrandi (D73, WCAG 1.4.4 et 1.4.10) : un mot long (« Accompagnement », « l'accompagnement »)
+     ou une suite insécable ne fait plus défiler la page en largeur quand le texte du navigateur est
+     agrandi sur un téléphone. Sur tout le texte (hérité), car un mot de paragraphe ou de lien
+     élargit aussi sa colonne de grille ou de flex. Coupure sans tiret, seulement si le mot ne tient
+     pas seul sur sa ligne : rien ne change à l'affichage normal (pas de césure, choix de Sady du
+     20/11/2026 ; captures identiques avant et après). */
+  body {
     overflow-wrap: anywhere;
   }
 
