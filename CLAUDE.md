@@ -86,7 +86,7 @@ bash scripts/ingest-media.sh …       # ingestion d'un média (via /ingest-medi
 - **Rayon 0** (rayon 2 px pour l'anneau de focus seulement). Aucune ombre, aucun dégradé décoratif, aucun `backdrop-blur`.
 - **Couleurs du kit de Cat** (D43, D50) : sapin `#26382F`, champagne `#C6A96B`, or profond `#B58E4C`, ivoire `#F3EDE1`, encre `#2A241F`.
 - **Or** : filets, T du logo, point du « K. », bordure de bouton sur sapin. **Jamais en texte sur fond clair.** Texte or = champagne `#C6A96B` sur sapin uniquement.
-- **Typo** (D50) : **Cormorant Garamond** Light/Regular pour les titres, ≥ 40 px desktop (≥ 32 px mobile) ; **EB Garamond** ailleurs ; **corps 20 px** (jamais sous 18 px) ; labels capitales +0,12 em, 14 px. Polices produites par `scripts/polices-kit.py`.
+- **Typo** (D76, validée par Cat le 20/11/2026, remplace le kit Garamond de D50) : **Plus Jakarta Sans** Medium pour les titres, le nom et le cachet (display 40 à 72 px, h2 30 à 44 px) ; **Inter** (taille optique 14) pour le texte, les libellés et la navigation ; **corps 18 px, petits textes 18 px aussi (jamais sous 18 px)** ; navigation 16 px ; labels capitales +0,12 em, 13 px. Polices produites par `scripts/polices-kit.py` ; kit Garamond gardé dans `src/fonts/` pour revenir en arrière.
 - **Accessibilité** : WCAG **2.2 AA**, texte courant **AAA** quand possible ; focus **3 px** jamais masqué ; cibles **≥ 48 px** (56 px pour les choix d'entrée) ; vrais liens ; tout fonctionne sans JavaScript ; `prefers-reduced-motion` = version statique complète ; **bouton pause** sur toute vidéo.
 - **Texte sur image** : seul le titre display du hero, sur voile sapin ≥ 58 % ; tout texte courant sur aplat (`docs/design-tokens.md` §2.4).
 - **Aucune icône pictographique** ; séparateurs = filets 1 px ou glyphes.

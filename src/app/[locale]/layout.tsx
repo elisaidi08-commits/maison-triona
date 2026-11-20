@@ -14,7 +14,7 @@ import { lireConfigMesure } from '@/lib/mesure/plausible'
 import { openGraphBase } from '@/lib/seo'
 import { indexable, siteUrl } from '@/lib/site'
 import { routing, type Locale } from '@/i18n/routing'
-import { cormorant, ebGaramond } from '@/styles/fonts'
+import { fontDisplay, fontText } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // Layout racine par langue (/fr, /en). La langue vient du segment [locale] via next/root-params.
@@ -61,7 +61,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
     <html
       lang={locale}
       data-scroll-behavior="smooth"
-      className={`${cormorant.variable} ${ebGaramond.variable}`}
+      className={`${fontDisplay.variable} ${fontText.variable}`}
     >
       <body>
         <SkipLink label={t('label')} />

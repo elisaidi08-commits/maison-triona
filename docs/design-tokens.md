@@ -147,10 +147,10 @@ Opacité minimale d'un voile pour garantir le contraste **quelle que soit l'imag
 
 | Token | Valeur | Statut |
 |---|---|---|
-| `--font-display` | **Cormorant Garamond**, Light 300 / Regular 400 (`src/fonts/cormorant-garamond.woff2`, 24 ko) | **Kit de Cat (D43, D50)** |
-| `--font-text` | **EB Garamond**, Regular 400 / Medium 500 (`src/fonts/eb-garamond.woff2`, 32 ko) | **Kit de Cat (D43, D50)** |
+| `--font-display` | **Plus Jakarta Sans**, Regular 400 / Medium 500 (`src/fonts/plus-jakarta-sans.woff2`, 15 ko) | **D76, validée par Cat le 20/11/2026** |
+| `--font-text` | **Inter**, Regular 400 à SemiBold 600, taille optique fixée à 14 (`src/fonts/inter.woff2`, 24 ko) | **D76, validée par Cat le 20/11/2026** |
 
-Les deux fichiers sont produits par `scripts/polices-kit.py` (polices variables réduites à leur plage de graisses, sous-ensemble latin du français, woff2) : **56 ko préchargés** (24,1 + 32,2 ko) pour un budget de 80 ko. Le sous-ensemble contient le trait d'union insécable U+2011 depuis la story 2.15 (« vous‑même », « e‑mail » ne passent plus par une police de secours ni ne se coupent en fin de ligne). Licences OFL dans `src/fonts/`. Newsreader et Manrope ne servent plus (Newsreader reste sur le banc d'essai `/demo`).
+**D76** remplace le kit Garamond de D50 (Cormorant Garamond et EB Garamond, gardés dans `src/fonts/` pour revenir en arrière) : **39 ko préchargés** au lieu de 56 ko, repli Arial ajusté. Le paragraphe suivant décrit le kit Garamond (historique). Les deux fichiers sont produits par `scripts/polices-kit.py` (polices variables réduites à leur plage de graisses, sous-ensemble latin du français, woff2) : **56 ko préchargés** (24,1 + 32,2 ko) pour un budget de 80 ko. Le sous-ensemble contient le trait d'union insécable U+2011 depuis la story 2.15 (« vous‑même », « e‑mail » ne passent plus par une police de secours ni ne se coupent en fin de ligne). Licences OFL dans `src/fonts/`. Newsreader et Manrope ne servent plus (Newsreader reste sur le banc d'essai `/demo`).
 
 Chargement : `next/font` (la doc Next.js confirme que les fichiers sont téléchargés au build et servis par le site : aucune requête du navigateur vers Google). Préchargement limité à deux fichiers (display + texte Regular).
 
@@ -176,6 +176,25 @@ Source : `ofl/newsreader/Newsreader[opsz,wght].ttf` du dépôt `google/fonts`.
 Si Satoshi devait revenir : `next/font/local` avec les WOFF2 fournis **tels quels** (la licence interdit subsetting et conversion), dépôt git **privé** (redistribution interdite), et licence acceptée **par Cat elle-même** (la FFL interdit de transmettre les fichiers à des prestataires).
 
 ### 3.2 Échelle
+
+> **D76 (20/11/2026, validée par Cat)** : échelle de la maquette Figma, en Plus Jakarta Sans Medium (titres) et Inter (texte). Valeurs de `src/styles/tokens.css`, en px à 390 / 834 / 1440 :
+>
+> | Token | Famille / graisse | 390 | 834 | 1440 | Interligne | Interlettrage |
+> |---|---|---|---|---|---|---|
+> | `marque` | Plus Jakarta Sans Medium | 48 | 68 | 96 | 1.04 | −0.03em |
+> | `display-xl` | Plus Jakarta Sans Medium | 40 | 54 | 72 | 1.05 | −0.02em |
+> | `display-l` | Plus Jakarta Sans Medium | 34 | 43 | 56 | 1.1 | −0.015em |
+> | `title-h2` | Plus Jakarta Sans Medium | 30 | 36 | 44 | 1.17 | −0.01em |
+> | `title-h3` | Inter Medium | 20 | 22 | 24 | 1.33 | 0 |
+> | `choix` | Inter Medium | 19 | 19 | 20 | 1.4 | 0 |
+> | `body-l` | Inter Regular | 18 | 19 | 20 | 1.6 | 0 |
+> | `body` | Inter Regular | **18** | **18** | **18** | 1.65 | 0 |
+> | `body-s` | Inter Regular | 18 | 18 | 18 | 1.6 | 0 (remonté de 16 à 18 px, Sady, 20/11/2026 : jamais sous 18 px) |
+> | `label` | Inter Medium, capitales | 13 | 13 | 13 | 1.3 | +0.12em |
+> | `label-l` | Inter Medium, capitales | 14 | 14 | 14 | 1.5 | +0.12em |
+> | `nav` | Inter Medium | 16 | 16 | 16 | 1.4 | 0 |
+>
+> Le tableau qui suit est l'échelle du kit Garamond (D50), gardée comme historique.
 
 Tailles **fluides** entre 390 et 1440 px (un seul token par niveau, pas d'empilement de classes responsives). Valeurs aux trois points de contrôle des maquettes. **Recalée pour les Garamond du kit (D50)** : leur œil (0,40 em) est plus petit que celui de Manrope (0,52 em), d'où un corps à 20 px et des libellés agrandis.
 

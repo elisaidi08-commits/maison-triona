@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { cormorant, ebGaramond } from '@/styles/fonts'
+import { fontDisplay, fontText } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // Erreur du layout racine (audit du 06/11/2026, §3.1 n° 13) : elle remplace tout le document, avec
@@ -10,7 +10,7 @@ import '@/styles/tokens.css'
 
 export default function GlobalError({ retry }: { error: unknown; retry: () => void }) {
   return (
-    <html lang="fr" className={`${cormorant.variable} ${ebGaramond.variable}`}>
+    <html lang="fr" className={`${fontDisplay.variable} ${fontText.variable}`}>
       <body>
         <title>Maison Triona</title>
         <main className="conteneur flex flex-col gap-24 py-section">

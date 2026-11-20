@@ -1,5 +1,5 @@
 // Liste d'entrée par besoin (docs/art-direction.md §7.2) : vrais liens, filet or entre les lignes,
-// numéro en cyprès aligné sur la première ligne, libellé EB Garamond Medium 22-24 px, catégorie en
+// numéro en cyprès aligné sur la première ligne, libellé Inter Medium 19-20 px (D76), catégorie en
 // label capitales. Survol et focus : un filet or se dessine sous le libellé (mouvement M4).
 // Aucune icône, aucune flèche. Le choix sans numéro est une porte de sortie, moins appuyée :
 // libellé en graisse normale et phrase de conversation en corps de texte.
