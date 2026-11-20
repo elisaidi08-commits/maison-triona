@@ -1,36 +1,26 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { flushSync } from 'react-dom'
 
 import { Button } from '@/components/ui/Button'
 import { ErrorSummary } from '@/components/ui/ErrorSummary'
-import { INACTIVITE_MAX_S } from '@/lib/auth/durees'
 import { nomFichierExport, texteExport } from '@/lib/coffre/export'
 import { CHAMPS_SCELLES, valeurScellee } from '@/lib/coffre/libelles'
 import type { Colonne } from '@/lib/coffre/libelles'
-import type { VaultKeys } from '@/lib/vault/open'
 import type { SealedFields } from '@/lib/vault/seal'
 
 import { journaliserExport, lireScelle } from '../actions'
+import { ChampsCle } from './ChampsCle'
+import { etatTrousseau, useHydrate, useTrousseau } from './useTrousseau'
 
 // Lecture déchiffrée d'une demande (story 3.2, partie D ; docs/coffre-cles.md §8), dans le
-// navigateur seulement. La personne dépose son paquet de clé (un ou plusieurs fichiers JSON : après
-// une rotation, chaque paquet est essayé) et tape sa phrase ; libsodium (WebAssembly, chargé à la
-// demande, d'où `'wasm-unsafe-eval'` dans la CSP du coffre) déverrouille la clé privée, puis ouvre
-// les octets scellés, demandés au serveur à ce moment-là (action `lireScelle`, qui inscrit `read` au
-// journal, une fois par page).
-// - Ni la clé privée, ni la phrase, ni le texte en clair ne vont au serveur, ni dans localStorage,
-//   sessionStorage, IndexedDB ou un cookie. Les champs du formulaire n'ont pas d'attribut `name`
-//   (un envoi natif, avant le chargement du script, ne transmettrait rien) et sont vidés aussitôt.
-// - Les clés déverrouillées vivent en mémoire, le temps de la page. Tout se verrouille (relecture
-//   sécurité de la partie D) : sur « Verrouiller » ; en quittant la page (`pagehide`, y compris vers
-//   le cache arrière du navigateur, d'où une page revenue par « Précédent » arrive verrouillée) ;
-//   après 15 minutes sans interaction (`INACTIVITE_MAX_S`, la même inactivité que la session) ;
-//   au démontage. Verrouiller vide l'état (texte déchiffré, octets scellés, nombre de clés) et
-//   remplit de zéros les octets des clés (`memzero`) ; les octets scellés décodés le sont dès
-//   l'ouverture. JavaScript ne permet pas d'effacer une chaîne : le texte est seulement oublié.
+// navigateur seulement. Le trousseau (paquet de clé, phrase, verrouillages, remise à zéro des clés)
+// est dans useTrousseau, partagé avec l'agenda des appels (story 3.13) : mêmes garanties. Les octets
+// scellés sont demandés au serveur au déverrouillage (action `lireScelle`, qui inscrit `read` au
+// journal, une fois par page) ; les octets décodés sont remis à zéro dès l'ouverture.
+// - Ni la clé privée, ni la phrase, ni le texte en clair ne vont au serveur, ni dans le stockage du
+//   navigateur. Verrouiller vide aussi les octets scellés et l'état de l'export.
 // - Le contenu est rendu comme texte, jamais comme HTML.
 // - Export : l'action serveur ne reçoit que l'identifiant et inscrit `export` au journal ; le
 //   fichier texte est composé ici (Blob) et téléchargé, sans passer par le serveur.
@@ -73,108 +63,28 @@ const EXPORTS = {
     'Erreur : l’export n’a pas pu être inscrit au journal ; aucun fichier n’a été créé. Réessayez.',
 } as const
 
-// Vrai une fois le script chargé et la page hydratée (faux au rendu serveur) : le bouton reste
-// inactif jusque-là.
-const abonner = () => () => {}
-
-// Interactions qui comptent comme activité sur la page de lecture.
-const ACTIVITE = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
-const VERIFICATION_MS = 15_000
-
-const VERROUILLAGES = {
-  inactivite: 'Lecture verrouillée après 15 minutes sans activité : les clés ont été effacées.',
-  page: 'Lecture verrouillée en quittant la page : les clés ont été effacées.',
-  bouton: 'Lecture verrouillée : les clés ont été effacées.',
-} as const
-type Verrouillage = keyof typeof VERROUILLAGES
-
-// Remplit de zéros les octets des clés (privée et publique), puis vide le trousseau.
-async function oublier(trousseau: VaultKeys[]): Promise<void> {
-  if (trousseau.length === 0) return
-  const cles = trousseau.splice(0)
-  const { loadSodium } = await import('@/lib/vault/sodium')
-  const lib = await loadSodium()
-  for (const cle of cles) {
-    lib.memzero(cle.privateKey)
-    lib.memzero(cle.publicKey)
-  }
-}
-
 export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne[] }) {
-  const hydrate = useSyncExternalStore(
-    abonner,
-    () => true,
-    () => false,
-  )
+  const hydrate = useHydrate()
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<Erreur | null>(null)
-  const [champs, setChamps] = useState<SealedFields | null>(null)
-  const [nombreCles, setNombreCles] = useState(0)
   const [exportEtat, setExportEtat] = useState<keyof typeof EXPORTS | null>(null)
-  const [verrouillage, setVerrouillage] = useState<Verrouillage | null>(null)
-  const derniereActivite = useRef(0)
-  const trousseau = useRef<VaultKeys[]>([])
   // Octets scellés (base64), demandés une seule fois : rien de lisible sans la clé privée.
   const scelle = useRef<string | null>(null)
-  const fichiers = useRef<HTMLInputElement>(null)
-  const phrase = useRef<HTMLInputElement>(null)
   const titreLu = useRef<HTMLHeadingElement>(null)
-
-  // Verrouille : état vidé, clés remplies de zéros, champs du formulaire vidés. Stable (références et
-  // setters seulement) : sert aux écouteurs ci-dessous.
-  const verrouiller = useCallback((raison: Verrouillage) => {
-    setChamps(null)
+  const {
+    contenu: champs,
+    setContenu: setChamps,
+    nombreCles,
+    verrouillage,
+    trousseau,
+    fichiers,
+    phrase,
+    verrouiller,
+    ouvrirCles,
+  } = useTrousseau<SealedFields>(() => {
     setExportEtat(null)
-    setNombreCles(0)
     scelle.current = null
-    if (phrase.current) phrase.current.value = ''
-    if (fichiers.current) fichiers.current.value = ''
-    if (trousseau.current.length > 0) setVerrouillage(raison)
-    void oublier(trousseau.current)
-  }, [])
-
-  // Démontage (autre page du coffre) : les clés sont effacées de la mémoire.
-  useEffect(() => {
-    const cles = trousseau.current
-    return () => {
-      void oublier(cles)
-    }
-  }, [])
-
-  // Page quittée, y compris vers le cache arrière (bfcache) : verrouillée avant de partir, rendu
-  // compris (flushSync), pour que la page gardée en cache ne contienne plus le texte.
-  useEffect(() => {
-    const quitter = () => flushSync(() => verrouiller('page'))
-    window.addEventListener('pagehide', quitter)
-    return () => window.removeEventListener('pagehide', quitter)
-  }, [verrouiller])
-
-  // 15 minutes sans interaction, clés en mémoire : verrouillée. Vérifié toutes les 15 secondes et au
-  // retour sur l'onglet (les minuteries des onglets cachés sont ralenties).
-  const actif = champs !== null || nombreCles > 0
-  useEffect(() => {
-    if (!actif) return
-    derniereActivite.current = Date.now()
-    const noter = () => {
-      derniereActivite.current = Date.now()
-    }
-    const verifier = () => {
-      if (Date.now() - derniereActivite.current >= INACTIVITE_MAX_S * 1000) {
-        verrouiller('inactivite')
-      }
-    }
-    const visible = () => {
-      if (document.visibilityState === 'visible') verifier()
-    }
-    for (const type of ACTIVITE) window.addEventListener(type, noter, { passive: true })
-    document.addEventListener('visibilitychange', visible)
-    const minuterie = window.setInterval(verifier, VERIFICATION_MS)
-    return () => {
-      for (const type of ACTIVITE) window.removeEventListener(type, noter)
-      document.removeEventListener('visibilitychange', visible)
-      window.clearInterval(minuterie)
-    }
-  }, [actif, verrouiller])
+  })
 
   // Demande ouverte : le focus va au contenu, que le lecteur d'écran annonce.
   useEffect(() => {
@@ -184,63 +94,19 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
   async function deverrouiller(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (enCours) return
-    const deposes = Array.from(fichiers.current?.files ?? [])
-    const saisie = phrase.current?.value ?? ''
-    if (deposes.length === 0 || saisie === '') {
-      setErreur('saisie')
-      return
-    }
     setErreur(null)
-    setVerrouillage(null)
     setEnCours(true)
     try {
-      // Argon2id (256 Mio) occupe la page quelques secondes : l'état « en cours » s'affiche d'abord.
-      await new Promise((resolve) => setTimeout(resolve, 50))
-      const [{ openSealed, unlockPrivateKey }, { decodeKeyPacket }, { fromBase64, loadSodium }] =
-        await Promise.all([
-          import('@/lib/vault/open'),
-          import('@/lib/vault/key-packet'),
-          import('@/lib/vault/sodium'),
-        ])
-      const lib = await loadSodium()
-
-      let lisibles = 0
-      let ouverts = 0
-      for (const fichier of deposes) {
-        let paquet: unknown
-        try {
-          paquet = JSON.parse(await fichier.text())
-        } catch {
-          continue
-        }
-        if (!decodeKeyPacket(lib, paquet)) continue
-        lisibles += 1
-        try {
-          const cles = await unlockPrivateKey(paquet, saisie)
-          ouverts += 1
-          // Deux paquets de la même paire (Cat et Sady) : une seule clé gardée.
-          const connue = trousseau.current.some((autre) =>
-            lib.memcmp(autre.publicKey, cles.publicKey),
-          )
-          if (connue) lib.memzero(cles.privateKey)
-          else trousseau.current.push(cles)
-        } catch {
-          // Cette phrase n'ouvre pas ce paquet : on essaie le suivant.
-        }
-      }
-      // Ni la phrase ni les fichiers ne restent dans le formulaire.
-      if (phrase.current) phrase.current.value = ''
-      if (fichiers.current) fichiers.current.value = ''
-      setNombreCles(trousseau.current.length)
-      if (lisibles === 0) {
-        setErreur('paquet')
+      const cles = await ouvrirCles()
+      if (cles.etat !== 'pret') {
+        setErreur(cles.etat)
         return
       }
-
-      if (ouverts === 0 && trousseau.current.length === 0) {
-        setErreur('phrase')
-        return
-      }
+      const { lib, ouverts } = cles
+      const [{ openSealed }, { fromBase64 }] = await Promise.all([
+        import('@/lib/vault/open'),
+        import('@/lib/vault/sodium'),
+      ])
       scelle.current ??= (await lireScelle(id))?.scelle ?? null
       if (scelle.current === null) {
         setErreur('lecture')
@@ -249,9 +115,9 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
       const octets = fromBase64(lib, scelle.current)
       if (octets) {
         try {
-          for (const cles of trousseau.current) {
+          for (const cle of trousseau.current) {
             try {
-              setChamps(await openSealed(octets, cles))
+              setChamps(await openSealed(octets, cle))
               return
             } catch {
               // Autre paire (avant ou après une rotation) : clé suivante.
@@ -296,15 +162,12 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
     setExportEtat('fait')
   }
 
-  const etat = enCours
-    ? 'Déverrouillage en cours. La page peut rester immobile quelques secondes.'
-    : champs
-      ? 'Demande déchiffrée dans ce navigateur.'
-      : nombreCles > 0
-        ? `${nombreCles === 1 ? 'Une clé déverrouillée' : `${nombreCles} clés déverrouillées`} en mémoire, le temps de la page.`
-        : verrouillage
-          ? VERROUILLAGES[verrouillage]
-          : ''
+  const etat = etatTrousseau({
+    enCours,
+    ouvert: champs ? 'Demande déchiffrée dans ce navigateur.' : null,
+    nombreCles,
+    verrouillage,
+  })
 
   return (
     <section aria-labelledby="lecture-titre" className="flex max-w-measure flex-col gap-32">
@@ -367,37 +230,7 @@ export function LectureDemande({ id, colonnes }: { id: string; colonnes: Colonne
             Le contenu est chiffré. Il s’ouvre ici, dans ce navigateur, avec votre paquet de clé et
             votre phrase de passe ; ni l’un ni l’autre n’est envoyé.
           </p>
-          <div className="flex flex-col gap-8">
-            <label htmlFor="paquet" className="text-label text-encre uppercase">
-              Paquet de clé
-            </label>
-            <p id="paquet-aide" className="text-body-s text-encre">
-              Votre fichier .json, gardé hors ligne. Après un changement de paire, déposez aussi
-              l’ancien paquet : chacun est essayé.
-            </p>
-            <input
-              id="paquet"
-              ref={fichiers}
-              type="file"
-              accept=".json,application/json"
-              multiple
-              aria-describedby="paquet-aide"
-              className="min-h-touch w-full text-body text-encre"
-            />
-          </div>
-          <div className="flex flex-col gap-8">
-            <label htmlFor="phrase" className="text-label text-encre uppercase">
-              Phrase de passe
-            </label>
-            <input
-              id="phrase"
-              ref={phrase}
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              className="min-h-touch w-full rounded-none border-0 border-b border-encre-68 bg-transparent px-0 py-8 text-body text-encre"
-            />
-          </div>
+          <ChampsCle fichiers={fichiers} phrase={phrase} />
           <div>
             <Button
               type="submit"
