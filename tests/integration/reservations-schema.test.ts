@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 import { migrate } from '../../src/lib/db/migrate.ts'
-import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import {
+  applyRoles,
+  coffrePool,
+  insererHorsGardes,
+  resetDatabase,
+  TEST_DATABASE_URL,
+  testPool,
+} from './helpers.ts'
 
 // Tables de la réservation d'appel (story 3.10, db/migrations/0008_reservations.sql) : contrainte
 // d'exclusion sur les créneaux confirmés, contrôles de la base, droits des deux rôles (`site_public` :
@@ -50,7 +57,13 @@ async function reserver(
   options: { statut?: string; jetonId?: string | null } = {},
 ): Promise<string> {
   const id = randomUUID()
-  await db.query(
+  // Le propriétaire pose des appels hors des bornes de 0014 (dates figées, statuts) ; le site public,
+  // lui, n'a plus le droit d'insérer (story 3.11) : son essai reste une requête ordinaire.
+  const inserer =
+    db === admin
+      ? (sql: string, p: unknown[]) => insererHorsGardes(admin, sql, p)
+      : (sql: string, p: unknown[]) => db.query(sql, p)
+  await inserer(
     `INSERT INTO bookings
        (id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed${
          options.statut ? ', status' : ''
@@ -204,7 +217,7 @@ describe('tables de la réservation d’appel', () => {
         ),
       ],
     ] as const) {
-      await assert.rejects(admin.query(sql, [...params]), CONTROLE, cas)
+      await assert.rejects(insererHorsGardes(admin, sql, [...params]), CONTROLE, cas)
     }
   })
 
@@ -261,19 +274,20 @@ describe('tables de la réservation d’appel', () => {
     const jetonId = await jeton()
     const consommer = (db: pg.Pool, valeur = 'now()') =>
       db.query(`UPDATE booking_tokens SET used_at = ${valeur} WHERE id = $1`, [jetonId])
-    // Sans réservation qui pointe vers lui : refusé, sous le rôle du site comme ailleurs.
-    await assert.rejects(consommer(site), CONTROLE)
-    await assert.rejects(consommer(site, 'NULL'), CONTROLE)
+    // Depuis la story 3.11, le site public n'écrit plus `used_at` (il consomme par
+    // `book_slot_as_guest`) : refus de droit.
+    await assert.rejects(consommer(site), REFUS)
+    // Sans réservation qui pointe vers lui : refusé, même pour l'administrateur.
     await assert.rejects(consommer(admin), CONTROLE)
+    await assert.rejects(consommer(admin, 'NULL'), CONTROLE)
     await reserver(admin, '2027-03-09T09:30Z', '2027-03-09T10:00Z', '2027-03-09T10:15Z', {
       jetonId,
     })
-    await consommer(site)
+    await consommer(admin)
     // Déjà utilisé : ni une seconde date, ni un retour à zéro, même pour l'administrateur.
-    await assert.rejects(consommer(site), CONTROLE)
-    await assert.rejects(consommer(site, 'NULL'), CONTROLE)
     await assert.rejects(consommer(admin), CONTROLE)
-    await assert.rejects(consommer(site), (erreur: Error) => !/\d/.test(erreur.message))
+    await assert.rejects(consommer(admin, 'NULL'), CONTROLE)
+    await assert.rejects(consommer(admin), (erreur: Error) => !/\d/.test(erreur.message))
     // Les autres colonnes ne déclenchent rien.
     await admin.query('UPDATE booking_tokens SET revoked_at = now() WHERE id = $1', [jetonId])
     await admin.query('DELETE FROM bookings')
@@ -325,7 +339,9 @@ describe('tables de la réservation d’appel', () => {
       await assert.rejects(site.query(sql), REFUS, sql)
     }
 
-    // Vérifier un jeton, le consommer (verrou de ligne), insérer une réservation : permis.
+    // Retrouver et verrouiller un jeton par la fonction de la base : permis. Le consommer ou insérer
+    // une réservation directement : refusé depuis la story 3.11 (`book_slot_as_guest` seulement,
+    // gestion.test.ts).
     const client = await site.connect()
     try {
       await client.query('BEGIN')
@@ -339,13 +355,18 @@ describe('tables de la réservation d’appel', () => {
         [empreinte[0].token_hash],
       )
       assert.equal(jetons.length, 1)
-      await client.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [jetonId])
+      await assert.rejects(
+        client.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [jetonId]),
+        REFUS,
+      )
       await client.query('ROLLBACK')
     } finally {
       client.release()
     }
-    await reserver(site, '2027-03-05T10:15Z', '2027-03-05T10:45Z', '2027-03-05T11:00Z')
-    // Le statut n'est pas à sa main : toujours « confirmé » par défaut.
+    await assert.rejects(
+      reserver(site, '2027-03-05T10:15Z', '2027-03-05T10:45Z', '2027-03-05T11:00Z'),
+      REFUS,
+    )
     await assert.rejects(
       reserver(site, '2027-03-05T12:00Z', '2027-03-05T12:30Z', '2027-03-05T12:45Z', {
         statut: 'cancelled_by_house',

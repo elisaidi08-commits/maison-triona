@@ -19,16 +19,20 @@
 --    ligne (début, fin, plage) : l'ancienne plage n'est libérée qu'au moment où la nouvelle est prise,
 --    dans la même instruction ; la contrainte d'exclusion (0013) refuse un chevauchement (23P01) et
 --    rien ne change alors.
--- 5. Le site public n'a AUCUN droit d'écriture sur `bookings` (relecture sécurité) : il ne verrouille,
+-- 5. Le site public n'a AUCUN droit d'écriture sur `bookings` ni de lecture de `booking_tokens`
+--    (relecture sécurité) : il ne réserve que par `book_slot_as_guest` (lien d'accès vivant retrouvé
+--    par son empreinte, appel inséré dans les bornes de la base, lien consommé et lien de gestion
+--    créé dans la même transaction) ; il ne verrouille,
 --    ne déplace et n'annule un appel que par trois fonctions qui exigent l'empreinte d'un lien de
 --    gestion valable (`lock_call_as_guest`, `move_booking_as_guest`, `cancel_booking_as_guest`), et
 --    n'agissent que sur l'appel de ce lien. Il ne lit plus aucune empreinte de jeton
 --    (`token_hash`) : il retrouve un lien par `find_booking_token` / `lock_booking_token`, sur
 --    l'empreinte qu'il calcule du jeton reçu. Une empreinte est ainsi une capacité : sans le jeton, le
 --    site public ne peut viser aucun lien, donc aucun appel.
--- 6. Bornes d'un déplacement, sous tout rôle (coffre compris) : durée de l'appel inchangée, pause
---    comprise entre 0 et celle des réglages, début dans l'horizon de réservation ; l'échéance de
---    conservation est recalculée depuis le nouveau début (même règle que la réservation).
+-- 6. Bornes d'une réservation (`bookings_insert_guard`) et d'un déplacement (`bookings_move_guard`),
+--    sous tout rôle (coffre et propriétaire compris) : durée des réglages (inchangée pour un
+--    déplacement), pause au plus celle des réglages, début entre le délai minimal et l'horizon de
+--    réservation ; l'échéance de conservation est toujours calculée par la base depuis le début.
 -- 8. Contenu scellé d'un appel annulé effacé à la fin du créneau d'origine (D78, en bas).
 -- 7. Journal d'accès : trois actions du coffre sur un appel, `booking_move`, `booking_cancel`,
 --    `booking_delete` (effacement, procédure RGPD), chacune avec l'appel visé et rien d'autre.
@@ -138,8 +142,8 @@ begin
 end;
 $$;
 
--- Déplacement : un appel confirmé, pas encore commencé, vers un début à venir, toujours confirmé,
--- sous tout rôle. Bornes (relecture sécurité) : la durée de l'appel ne change pas ; la plage occupée
+-- Déplacement : un appel confirmé, pas encore commencé, vers un début au-delà du délai minimal,
+-- toujours confirmé, sous tout rôle. Bornes (relecture sécurité) : la durée de l'appel ne change pas ; la plage occupée
 -- dépasse la fin d'au plus la pause des réglages ; le début reste dans l'horizon de réservation (la
 -- fenêtre de `bookingWindow` court jusqu'au minuit local qui suit le dernier jour : horizon + 1 jour,
 -- plus une heure pour un changement d'heure). L'échéance de conservation est recalculée depuis le
@@ -154,6 +158,7 @@ as $$
 declare
   pause integer;
   horizon integer;
+  delai integer;
 begin
   if new.starts_at = old.starts_at and new.ends_at = old.ends_at and new.slot = old.slot then
     return new;
@@ -164,13 +169,18 @@ begin
   if old.starts_at <= now() then
     raise exception 'Appel commencé : il ne se déplace plus' using errcode = 'check_violation';
   end if;
-  if new.starts_at <= now() then
-    raise exception 'Nouveau créneau déjà passé' using errcode = 'check_violation';
-  end if;
   if new.ends_at - new.starts_at <> old.ends_at - old.starts_at then
     raise exception 'La durée d’un appel ne change pas' using errcode = 'check_violation';
   end if;
-  select buffer_minutes, horizon_days into pause, horizon from public.booking_settings;
+  select buffer_minutes, horizon_days, min_notice_minutes into pause, horizon, delai
+    from public.booking_settings;
+  if not found then
+    raise exception 'Réglages des appels absents' using errcode = 'check_violation';
+  end if;
+  -- Délai minimal, à l'heure de la base (relecture sécurité, troisième passage).
+  if new.starts_at < now() + make_interval(mins => delai) then
+    raise exception 'Nouveau créneau dans le délai minimal' using errcode = 'check_violation';
+  end if;
   if upper(new.slot) - new.ends_at > make_interval(mins => pause) then
     raise exception 'Pause plus longue que celle des réglages' using errcode = 'check_violation';
   end if;
@@ -296,6 +306,102 @@ begin
 end;
 $$;
 revoke all on function cancel_booking_as_guest(bytea) from public;
+
+-- Bornes de toute insertion d'un appel, sous tout rôle (troisième relecture sécurité : avant elle,
+-- le site public insérait directement un appel à 3 h, avec une plage jusqu'en 2100 et une échéance
+-- à 50 ans). Un appel naît confirmé, séquence 0 ; durée des réglages ; pause au plus celle des
+-- réglages ; début entre le délai minimal et l'horizon (même tolérance que `bookings_move_guard`) ;
+-- échéance de conservation posée ici, comme `retentionDeadline(début, 12)`. Les créneaux eux-mêmes
+-- (semaine type, absences, plafond) restent calculés par l'application sous verrou du jour ; la
+-- contrainte d'exclusion a le dernier mot sur les chevauchements. Les tests qui posent des appels
+-- passés le font hors déclencheurs (`session_replication_role = replica`, superutilisateur).
+create function bookings_insert_guard() returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+declare
+  reglages record;
+begin
+  select duration_minutes, buffer_minutes, min_notice_minutes, horizon_days into reglages
+    from public.booking_settings;
+  if not found then
+    raise exception 'Réglages des appels absents' using errcode = 'check_violation';
+  end if;
+  if new.status <> 'confirmed' or new.sequence <> 0 then
+    raise exception 'Un appel naît confirmé' using errcode = 'check_violation';
+  end if;
+  if new.ends_at - new.starts_at <> make_interval(mins => reglages.duration_minutes) then
+    raise exception 'Durée d’appel hors réglages' using errcode = 'check_violation';
+  end if;
+  if upper(new.slot) - new.ends_at > make_interval(mins => reglages.buffer_minutes) then
+    raise exception 'Pause plus longue que celle des réglages' using errcode = 'check_violation';
+  end if;
+  if new.starts_at < now() + make_interval(mins => reglages.min_notice_minutes) then
+    raise exception 'Créneau dans le délai minimal' using errcode = 'check_violation';
+  end if;
+  if new.starts_at > now() + make_interval(days => reglages.horizon_days + 1, hours => 1) then
+    raise exception 'Créneau hors de l’horizon de réservation' using errcode = 'check_violation';
+  end if;
+  new.retention_until := ((new.starts_at at time zone 'UTC') + interval '12 months') at time zone 'UTC';
+  return new;
+end;
+$$;
+
+create trigger bookings_insert_guard
+  before insert on bookings
+  for each row execute function bookings_insert_guard();
+
+-- Réservation par le site public (rôle `site_public`, seule voie d'insertion d'un appel) : le lien
+-- d'accès de cette empreinte, verrouillé, doit être vivant (usage `access`, ni consommé, ni annulé,
+-- ni expiré à l'heure de la base). Dans la même transaction : l'appel est inséré (bornes de
+-- `bookings_insert_guard`, contrainte d'exclusion : 23P01 si le créneau vient d'être pris), le lien
+-- consommé (`used_at` : l'heure de l'application si elle est plus tard que celle de la base, jamais
+-- plus tôt ; elle ne sert qu'à la reprise de 15 minutes), et le lien de gestion créé
+-- (`issue_manage_token`, devenue interne). Le contenu scellé (nom, numéro, langue, choix SMS,
+-- origine) est celui que l'application a scellé, de taille fixe (contrainte). Rend l'identifiant de
+-- l'appel, ou NULL si le lien ne vaut pas.
+create function book_slot_as_guest(
+  p_access_hash bytea, p_start timestamptz, p_end timestamptz, p_occupied_until timestamptz,
+  p_privacy_version text, p_sealed bytea, p_manage_hash bytea, p_used_at timestamptz
+) returns uuid
+language plpgsql
+security definer
+-- `public, pg_temp` (comme `revoke_live_access_links`, 0011) et non `pg_catalog` seul : la
+-- consommation du lien déclenche `booking_tokens_usage_unique` (0010), écrit sans chemin figé, qui
+-- hérite de celui-ci pour trouver `bookings`. `pg_temp` en dernier : aucun objet temporaire ne masque
+-- une table ; les noms restent qualifiés ici.
+set search_path = public, pg_temp
+as $$
+declare
+  lien record;
+  appel uuid := gen_random_uuid();
+begin
+  select t.id, t.purpose, t.used_at, t.revoked_at, t.expires_at into lien
+    from public.booking_tokens as t
+   where t.token_hash = p_access_hash
+     for update of t;
+  if not found or lien.purpose <> 'access' or lien.used_at is not null
+     or lien.revoked_at is not null or lien.expires_at <= now() then
+    return null;
+  end if;
+  -- `retention_until` : posée par `bookings_insert_guard` (valeur provisoire ici).
+  insert into public.bookings
+    (id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
+  values
+    (appel, lien.id, p_start, p_end, tstzrange(p_start, p_occupied_until, '[)'),
+     p_privacy_version, p_start, p_sealed);
+  update public.booking_tokens
+     set used_at = greatest(coalesce(p_used_at, now()), now())
+   where id = lien.id;
+  if not public.issue_manage_token(gen_random_uuid(), p_manage_hash, lien.id) then
+    raise exception 'Lien de gestion non créé' using errcode = 'check_violation';
+  end if;
+  return appel;
+end;
+$$;
+revoke all on function
+  book_slot_as_guest(bytea, timestamptz, timestamptz, timestamptz, text, bytea, bytea, timestamptz)
+  from public;
 
 -- Liste complète des actions, reprise telle quelle de 0013 (`availability`, `booking_link` et les
 -- quatre de l'agenda compris) : une migration qui redéfinit cette contrainte ne retire jamais une

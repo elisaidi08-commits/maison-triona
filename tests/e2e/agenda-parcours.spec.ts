@@ -94,11 +94,20 @@ function preparer(): Jeu {
       const id = randomUUID()
       const debut = new Date(Date.now() + minutes * 60000)
       const fin = new Date(debut.getTime() + 30 * 60000)
-      await admin.query(
-        \`INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
-         VALUES ($1, $2, $3, tstzrange($2, $4), '2026-11-19', $2::timestamptz + interval '1 year', $5)\`,
-        [id, debut, fin, new Date(fin.getTime() + 15 * 60000), await sealBooking(champs, publicKey)],
-      )
+      // Appels passés : posés hors des bornes de la base (0014), le temps de l'instruction.
+      const client = await admin.connect()
+      try {
+        await client.query('BEGIN')
+        await client.query('SET LOCAL session_replication_role = replica')
+        await client.query(
+          \`INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
+           VALUES ($1, $2, $3, tstzrange($2, $4), '2026-11-19', $2::timestamptz + interval '1 year', $5)\`,
+          [id, debut, fin, new Date(fin.getTime() + 15 * 60000), await sealBooking(champs, publicKey)],
+        )
+        await client.query('COMMIT')
+      } finally {
+        client.release()
+      }
       return { id, debut: debut.toISOString() }
     }
     const hortense = await appel(JSON.parse(process.env.HORTENSE), -40)

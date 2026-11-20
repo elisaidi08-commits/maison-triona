@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 import { migrate } from '../../src/lib/db/migrate.ts'
-import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import {
+  applyRoles,
+  coffrePool,
+  insererHorsGardes,
+  resetDatabase,
+  TEST_DATABASE_URL,
+  testPool,
+} from './helpers.ts'
 
 // Agenda des appels (story 3.13, db/migrations/0013_agenda.sql), contre PostgreSQL 17 avec les vrais
 // rôles : changements de statut acceptés par la base (qualification d'un appel commencé, sous tout
@@ -37,7 +44,8 @@ async function appel(minutes: number, statut = 'confirmed'): Promise<string> {
   const debut = new Date(Date.now() + minutes * MINUTE)
   const fin = new Date(debut.getTime() + 30 * MINUTE)
   const occupe = new Date(fin.getTime() + 15 * MINUTE)
-  await admin.query(
+  await insererHorsGardes(
+    admin,
     `INSERT INTO bookings
        (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed, status)
      VALUES ($1, $2, $3, tstzrange($2, $4), '2026-11-18', $2::timestamptz + interval '1 year', $5, $6)`,

@@ -21,6 +21,7 @@ import {
 import {
   bookSlot,
   cancelBookingByToken,
+  checkBookingLink,
   createBookingLink,
   moveBookingByToken,
   readManageLink,
@@ -36,7 +37,14 @@ import {
 import { retentionDeadline } from '../../src/lib/vault/retention.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { sealBooking } from '../../src/lib/vault/seal.ts'
-import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import {
+  applyRoles,
+  coffrePool,
+  insererHorsGardes,
+  resetDatabase,
+  TEST_DATABASE_URL,
+  testPool,
+} from './helpers.ts'
 
 // Déplacer et annuler un appel (story 3.11 ; docs/reservation-appel.md §2, étape 6, §3.2 ;
 // db/migrations/0014_deplacer_annuler.sql), contre PostgreSQL 17 avec les vrais rôles : `site_public`
@@ -122,6 +130,11 @@ async function appel(id: string) {
   return rows[0]
 }
 
+async function compter(table: string): Promise<number> {
+  const { rows } = await admin.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)
+  return rows[0]?.n ?? 0
+}
+
 async function echeanceGestion(id: string): Promise<string> {
   const { rows } = await admin.query(
     "SELECT expires_at FROM booking_tokens WHERE booking_id = $1 AND purpose = 'manage'",
@@ -138,7 +151,8 @@ async function appelReel(minutes: number, statut = 'confirmed'): Promise<string>
   const id = randomUUID()
   const debut = new Date(Date.now() + minutes * MINUTE)
   const fin = new Date(debut.getTime() + 30 * MINUTE)
-  await admin.query(
+  await insererHorsGardes(
+    admin,
     `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed, status)
      VALUES ($1, $2, $3, tstzrange($2, $4), 'v', $2::timestamptz + interval '1 year', $5, $6)`,
     [id, debut, fin, new Date(fin.getTime() + 15 * MINUTE), Buffer.alloc(2096, 3), statut],
@@ -492,14 +506,38 @@ describe('déplacer et annuler un appel (3.11)', () => {
        VALUES ($1, $2, 'access', now() - interval '1 hour', now() + interval '1 hour')`,
       [ancienId, ancien.hash],
     )
-    const sansLien = await appelReel(3 * 24 * 60)
+    const sansLien = randomUUID()
+    const debutSansLien = new Date(Date.now() + 3 * 24 * 60 * MINUTE)
+    await insererHorsGardes(
+      admin,
+      `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
+       VALUES ($1, $2, $3, tstzrange($2, $4), 'v', $2::timestamptz + interval '1 year', $5)`,
+      [
+        sansLien,
+        debutSansLien,
+        apres(debutSansLien, 30),
+        apres(debutSansLien, 45),
+        Buffer.alloc(2096, 4),
+      ],
+    )
     await admin.query(
       "UPDATE bookings SET access_token_id = $2, created_at = now() - interval '1 minute' WHERE id = $1",
       [sansLien, ancienId],
     )
     await admin.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [ancienId])
+    // `issue_manage_token` est devenue interne (troisième relecture) : le site public ne l'appelle
+    // plus ; même appelée par le propriétaire, elle ne crée rien hors de la transaction de la
+    // réservation.
+    await assert.rejects(
+      site.query('SELECT issue_manage_token($1, $2, $3)', [
+        randomUUID(),
+        generateToken().hash,
+        acces[0].access_token_id,
+      ]),
+      REFUS,
+    )
     for (const cible of [acces[0].access_token_id, randomUUID(), ancienId]) {
-      const { rows } = await site.query('SELECT issue_manage_token($1, $2, $3) AS cree', [
+      const { rows } = await admin.query('SELECT issue_manage_token($1, $2, $3) AS cree', [
         randomUUID(),
         generateToken().hash,
         cible,
@@ -521,6 +559,144 @@ describe('déplacer et annuler un appel (3.11)', () => {
       "SELECT count(*)::int AS n FROM booking_tokens WHERE purpose = 'manage'",
     )
     assert.equal(liens[0].n, 1)
+  })
+
+  it('A1 : chacune des quatre étapes de l’attaque par le site public est refusée', async () => {
+    const victime = await createBookingLink(coffre, CAT, MAINTENANT)
+    // 1. lister les liens d'accès vivants ;
+    await assert.rejects(
+      site.query("SELECT id FROM booking_tokens WHERE purpose = 'access' AND used_at IS NULL"),
+      REFUS,
+    )
+    // 2. poser un appel à 3 h, plage jusqu'en 2100, échéance à 50 ans, sur le lien d'une victime ;
+    const { rows: lien } = await admin.query(
+      'SELECT id FROM booking_tokens WHERE token_hash = $1',
+      [hashToken(victime.token)],
+    )
+    const troisHeures = heure(MARDI, '03:00')
+    await assert.rejects(
+      site.query(
+        `INSERT INTO bookings
+           (id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
+         VALUES (gen_random_uuid(), $1, $2, $3, tstzrange($2, '2100-01-01'), 'v',
+           now() + interval '50 years', $4)`,
+        [lien[0].id, troisHeures, apres(troisHeures, 30), Buffer.alloc(2096)],
+      ),
+      REFUS,
+    )
+    // 3. consommer ce lien ;
+    await assert.rejects(
+      site.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [lien[0].id]),
+      REFUS,
+    )
+    // 4. se fabriquer un lien de gestion.
+    await assert.rejects(
+      site.query("SELECT issue_manage_token(gen_random_uuid(), sha256('x'), $1)", [lien[0].id]),
+      REFUS,
+    )
+    // Le lien de la victime vaut toujours ; elle réserve normalement.
+    assert.equal(await checkBookingLink(site, victime.token, MAINTENANT), 'valid')
+    assert.equal(await compter('bookings'), 0)
+  })
+
+  it('book_slot_as_guest : lien vivant seulement, bornes des réglages imposées par la base', async () => {
+    const reserverDirect = (
+      hash: Buffer,
+      debut: Date,
+      duree = 30,
+      occupe = 45,
+      gestion = generateToken().hash,
+    ) =>
+      site.query('SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7, $8) AS id', [
+        hash,
+        debut,
+        apres(debut, duree),
+        apres(debut, occupe),
+        PRIVACY,
+        Buffer.alloc(2096, 5),
+        gestion,
+        MAINTENANT,
+      ])
+    // Jeton inconnu, consommé, expiré, de gestion : rien (NULL), rien d'écrit.
+    const consomme = await reserver(MARDI_1030)
+    const expire = generateToken()
+    await admin.query(
+      `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
+       VALUES ($1, $2, 'access', now() - interval '2 hours', now() - interval '1 hour')`,
+      [randomUUID(), expire.hash],
+    )
+    for (const hash of [
+      generateToken().hash,
+      hashToken(consomme.acces),
+      expire.hash,
+      hashToken(consomme.gestion),
+    ]) {
+      const { rows } = await reserverDirect(hash, MARDI_1600)
+      assert.equal(rows[0].id, null)
+    }
+    assert.equal(await compter('bookings'), 1)
+    // Lien vivant, mais hors réglages : durée, pause, délai minimal, horizon → refus de la base.
+    const vivant = await createBookingLink(coffre, CAT, MAINTENANT)
+    const hash = hashToken(vivant.token)
+    const demain = new Date(Date.now() + 60 * MINUTE)
+    const loin = new Date(Date.now() + 23 * 24 * 60 * MINUTE)
+    for (const [cas, essai] of [
+      ['durée', () => reserverDirect(hash, MARDI_1600, 60, 75)],
+      ['pause', () => reserverDirect(hash, MARDI_1600, 30, 30 + 16)],
+      [
+        'plage jusqu’en 2100',
+        () =>
+          site.query("SELECT book_slot_as_guest($1, $2, $3, '2100-01-01', $4, $5, $6, $7)", [
+            hash,
+            MARDI_1600,
+            apres(MARDI_1600, 30),
+            PRIVACY,
+            Buffer.alloc(2096, 5),
+            generateToken().hash,
+            MAINTENANT,
+          ]),
+      ],
+      ['délai minimal', () => reserverDirect(hash, demain)],
+      ['horizon', () => reserverDirect(hash, loin)],
+    ] as const) {
+      await assert.rejects(essai(), CONTROLE, cas)
+    }
+    assert.equal(await compter('bookings'), 1)
+    assert.equal(await checkBookingLink(site, vivant.token, MAINTENANT), 'valid')
+    // Dans les bornes : l'appel, le lien consommé et son lien de gestion, échéance posée par la base.
+    const gestion = generateToken()
+    const { rows } = await reserverDirect(hash, MARDI_1600, 30, 45, gestion.hash)
+    assert.ok(rows[0].id)
+    const { rows: ligne } = await admin.query(
+      'SELECT retention_until, status, sequence FROM bookings WHERE id = $1',
+      [rows[0].id],
+    )
+    assert.equal(
+      ligne[0].retention_until.toISOString(),
+      retentionDeadline(MARDI_1600, 12).toISOString(),
+    )
+    assert.equal(ligne[0].status, 'confirmed')
+    assert.equal(ligne[0].sequence, 0)
+    const { rows: liens } = await admin.query(
+      'SELECT purpose, used_at FROM booking_tokens WHERE token_hash = ANY ($1::bytea[]) ORDER BY purpose',
+      [[hash, gestion.hash]],
+    )
+    assert.equal(liens.length, 2)
+    assert.equal(liens[0].purpose, 'access')
+    assert.equal(liens[0].used_at.toISOString(), MAINTENANT.toISOString())
+    assert.equal(liens[1].purpose, 'manage')
+    // Le même lien ne réserve plus.
+    const { rows: encore } = await reserverDirect(hash, MERCREDI_1030)
+    assert.equal(encore[0].id, null)
+    // Sous tout rôle, une insertion hors bornes est refusée (déclencheur), même au propriétaire.
+    await assert.rejects(
+      admin.query(
+        `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
+         VALUES (gen_random_uuid(), $1, $2, tstzrange($1, '2100-01-01'), 'v', now(), $3)`,
+        [MERCREDI_1030, apres(MERCREDI_1030, 30), Buffer.alloc(2096)],
+      ),
+      CONTROLE,
+    )
   })
 
   it('fonctions du site public : empreinte inconnue, d’accès, expirée ou annulée → rien', async () => {

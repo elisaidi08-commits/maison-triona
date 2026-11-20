@@ -36,22 +36,15 @@ grant insert (id, template, request_id, priority) on outbox to site_public;
 -- Réservation d'appel (story 3.10, db/migrations/0008_reservations.sql ; docs/reservation-appel.md
 -- §4.2). La page publique calcule les créneaux : disponibilités de Cat en lecture (rien de personnel),
 -- et des réservations, l'identifiant, le lien qui a servi, le créneau et le statut seulement : jamais
--- `sealed`, ni la version de la politique, ni les dates de création et de conservation. Jetons : les
--- colonnes d'état, jamais l'empreinte (`token_hash`) ni l'adresse (`email_hmac`) : depuis la story
--- 3.11, un lien se retrouve par les fonctions `find_booking_token` et `lock_booking_token` (verrou de
--- ligne), sur l'empreinte du jeton reçu ; `used_at` seul en écriture (consommer le lien, sous le
--- déclencheur de 0010). Création et annulation : story 3.9, en bas ;
--- aucun effacement. Réservation : insertion des colonnes écrites par la page ; le statut
--- n'en fait pas partie, une réservation naît toujours « confirmée » (valeur par défaut).
+-- `sealed`, ni la version de la politique, ni les dates de création et de conservation. Jetons :
+-- depuis la story 3.11, AUCUNE lecture directe (ni l'empreinte, ni l'adresse, ni les liens vivants) :
+-- un lien se retrouve par `find_booking_token` et `lock_booking_token` (verrou de ligne), sur
+-- l'empreinte du jeton reçu. Création et annulation : story 3.9, en bas ; aucun effacement.
 grant select on booking_settings, availability_rules, availability_exceptions to site_public;
 grant select (id, access_token_id, starts_at, ends_at, slot, status, sequence)
   on bookings to site_public;
-grant insert (
-  id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed
-) on bookings to site_public;
-grant select (id, purpose, booking_id, created_at, expires_at, used_at, revoked_at)
-  on booking_tokens to site_public;
-grant update (used_at) on booking_tokens to site_public;
+-- Depuis la story 3.11 (troisième relecture sécurité) : ni insertion d'un appel, ni lecture, ni
+-- écriture directe des jetons. Réserver passe par `book_slot_as_guest` (en bas).
 
 -- Demande de lien (story 3.9, db/migrations/0011_demande_de_lien.sql ; docs/reservation-appel.md
 -- §2, §4.4) : création d'un lien d'accès avec l'empreinte de l'adresse (jamais l'adresse, jamais le
@@ -61,6 +54,7 @@ grant update (used_at) on booking_tokens to site_public;
 -- écriture de `revoked_at`. Aucun effacement. L'e-mail d'accès entre dans la boîte d'envoi par le
 -- droit d'insertion déjà donné plus haut (gabarit `booking_access`, sans demande : contrainte de
 -- 0011).
+-- Insertion sans RETURNING (le site public ne lit aucune colonne des jetons, story 3.11).
 grant insert (id, token_hash, email_hmac, expires_at) on booking_tokens to site_public;
 grant execute on function revoke_live_access_links(bytea) to site_public;
 
@@ -68,8 +62,9 @@ grant execute on function revoke_live_access_links(bytea) to site_public;
 -- §2, étapes 4 et 6 ; relecture sécurité) : le site public n'a AUCUN droit d'écriture sur `bookings`.
 -- Tout passe par des fonctions SECURITY DEFINER qui exigent l'empreinte d'un lien valable, qu'il ne
 -- peut pas lire (plus haut) : il ne vise donc un appel qu'avec le jeton de son lien de gestion.
--- - `issue_manage_token` : le lien de gestion, dans la transaction de la réservation, pour l'appel
---   que ce lien d'accès vient d'insérer (échéance et empreinte d'adresse fixées par la base) ;
+-- - `book_slot_as_guest` : réserver, par l'empreinte d'un lien d'accès vivant ; l'appel est inséré
+--   dans les bornes de la base (`bookings_insert_guard`), le lien consommé et le lien de gestion créé
+--   (`issue_manage_token`, interne : le site public ne l'appelle plus) dans la même transaction ;
 -- - `find_booking_token`, `lock_booking_token` : un lien par son empreinte (sans l'empreinte) ;
 -- - `lock_call_as_guest`, `move_booking_as_guest`, `cancel_booking_as_guest` : verrouiller,
 --   déplacer, annuler (« annulé par la personne ») l'appel d'un lien de gestion valable, et lui seul.
@@ -80,7 +75,12 @@ grant execute on function revoke_live_access_links(bytea) to site_public;
 -- REVOKE : un rôle déjà posé par une version précédente de ce fichier perd ces droits (le fichier
 -- repart de toute façon de rien, en haut).
 revoke update on bookings from site_public;
-grant execute on function issue_manage_token(uuid, bytea, uuid) to site_public;
+revoke insert on bookings from site_public;
+revoke select, update on booking_tokens from site_public;
+revoke execute on function issue_manage_token(uuid, bytea, uuid) from site_public;
+grant execute on function
+  book_slot_as_guest(bytea, timestamptz, timestamptz, timestamptz, text, bytea, bytea, timestamptz)
+  to site_public;
 grant execute on function find_booking_token(bytea) to site_public;
 grant execute on function lock_booking_token(bytea) to site_public;
 grant execute on function lock_call_as_guest(bytea) to site_public;

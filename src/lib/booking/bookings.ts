@@ -5,7 +5,6 @@ import type { Pool, PoolClient } from 'pg'
 import { withTransaction } from '../db/transaction.ts'
 import { enqueueAccessLink } from '../outbox/repository.ts'
 import { VaultError } from '../vault/repository.ts'
-import { RETENTION_MONTHS, retentionDeadline } from '../vault/retention.ts'
 import { BOOKING_SEALED_BYTES } from '../vault/seal.ts'
 import { bookingWindow, type SlotConfig } from './config.ts'
 import type { BookingStatus } from './agenda.ts'
@@ -145,13 +144,15 @@ export async function issueAccessToken(
     await client.query('SELECT revoke_live_access_links($1)', [emailHmac])
     // Heures de la base : le site public ne fixe ni la création ni l'usage du lien (rôle
     // `site_public`, 0011) ; `now` ne sert qu'aux liens du coffre.
-    const { rows } = await client.query<{ expires_at: Date }>(
+    // Sans RETURNING : depuis la story 3.11, le site public ne lit aucune colonne des jetons.
+    // L'échéance rendue est celle de l'heure de l'application (à quelques millisecondes près de
+    // celle de la base, qui fait foi).
+    await client.query(
       `INSERT INTO booking_tokens (id, token_hash, email_hmac, expires_at)
-       VALUES ($1, $2, $3, now() + make_interval(hours => $4))
-       RETURNING expires_at`,
+       VALUES ($1, $2, $3, now() + make_interval(hours => $4))`,
       [id, hash, emailHmac, ACCESS_TOKEN_TTL_HOURS],
     )
-    return { token, expiresAt: rows[0]?.expires_at ?? expiresAt }
+    return { token, expiresAt }
   }
   await client.query(
     `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
@@ -312,10 +313,11 @@ function codeOf(error: unknown): string | undefined {
  *    après l'autre, le plafond par jour se compte sans course ;
  * 3. les créneaux ouverts sont recalculés (computeSlots : semaine type, absences, délai, horizon,
  *    plafond, appels confirmés) ; le début choisi doit en être ;
- * 4. insertion (la contrainte d'exclusion reste le dernier mot : une violation rend `taken`), puis
- *    le lien est consommé (`used_at`). L'identifiant est tiré ici : insertion sans RETURNING ;
- * 5. lien de gestion de l'appel (story 3.11), créé par la base (`issue_manage_token`) pour l'appel
- *    que ce lien d'accès vient de réserver : empreinte seule, échéance à la fin de l'appel.
+ * 4. depuis la story 3.11 (troisième relecture sécurité), une seule fonction de la base,
+ *    `book_slot_as_guest` : lien d'accès revérifié et verrouillé, appel inséré dans les bornes de la
+ *    base (`bookings_insert_guard` : durée, pause, délai minimal, horizon, échéance de conservation ;
+ *    la contrainte d'exclusion reste le dernier mot : une violation rend `taken`), lien consommé
+ *    (`used_at`) et lien de gestion créé (empreinte seule, échéance à la fin de l'appel).
  * Rien n'est écrit si le lien ne vaut plus ou si le créneau n'est plus ouvert. Un second envoi du même
  * lien (moins de ACCESS_REPLAY_MINUTES) rend la réservation faite ; plus tard, `invalid-link`.
  */
@@ -355,36 +357,28 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
         const slot = slots.find((candidate) => candidate.start.getTime() === start.getTime())
         if (!slot) return { status: 'taken', slots }
 
-        const id = randomUUID()
         const occupiedUntil = new Date(
           slot.end.getTime() + config.settings.bufferMinutes * MINUTE_MS,
         )
-        await client.query(
-          `INSERT INTO bookings
-             (id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed)
-           VALUES ($1, $2, $3::timestamptz, $4::timestamptz,
-                   tstzrange($3::timestamptz, $5::timestamptz, '[)'), $6, $7, $8)`,
+        // Fonction de la base (0014) : lien d'accès revérifié et verrouillé, appel inséré dans les
+        // bornes de la base (échéance de conservation comprise), lien consommé, lien de gestion
+        // créé, dans cette transaction. Le site public n'a aucun autre droit d'écriture.
+        const { rows } = await client.query<{ id: string | null }>(
+          `SELECT book_slot_as_guest($1, $2::timestamptz, $3::timestamptz, $4::timestamptz, $5, $6,
+             $7, $8::timestamptz) AS id`,
           [
-            id,
-            found.id,
+            hashToken(token),
             slot.start,
             slot.end,
             occupiedUntil,
             privacyVersion,
-            retentionDeadline(slot.start, RETENTION_MONTHS),
             sealed,
+            hashToken(manageToken),
+            now,
           ],
         )
-        const { rowCount } = await client.query(
-          'UPDATE booking_tokens SET used_at = $2 WHERE id = $1 AND used_at IS NULL',
-          [found.id, now],
-        )
-        if (rowCount !== 1) throw new Error('Lien déjà consommé')
-        const { rows: gestion } = await client.query<{ cree: boolean }>(
-          'SELECT issue_manage_token($1, $2, $3) AS cree',
-          [randomUUID(), hashToken(manageToken), found.id],
-        )
-        if (gestion[0]?.cree !== true) throw new Error('Lien de gestion non créé')
+        const id = rows[0]?.id
+        if (!id) return { status: 'invalid-link' }
         return { status: 'booked', bookingId: id }
       }),
     )
@@ -393,6 +387,9 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
     // les créneaux encore ouverts sont relus. Même lien déjà inscrit (unicité) : la réservation faite.
     const code = codeOf(error)
     if (code === EXCLUSION) return { status: 'taken', slots: await loadOpenSlots(pool, now) }
+    // Bornes refusées par la base (délai minimal franchi entre le calcul et l'insertion, réglages
+    // changés) : le créneau n'est plus ouvert.
+    if (code === CONTROLE) return { status: 'taken', slots: await loadOpenSlots(pool, now) }
     if (code === UNIQUE) {
       const found = await guard('bookSlot', () => findToken(pool, token))
       const booking =

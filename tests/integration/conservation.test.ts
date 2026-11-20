@@ -7,7 +7,7 @@ import { migrate } from '../../src/lib/db/migrate.ts'
 import { handleRetention, runRetention } from '../../src/lib/vault/conservation.ts'
 import { insertRequest, setFrozen } from '../../src/lib/vault/repository.ts'
 import type { NewVaultRequest } from '../../src/lib/vault/repository.ts'
-import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
+import { applyRoles, coffrePool, insererHorsGardes, resetDatabase, testPool } from './helpers.ts'
 
 // Conservation planifiée (story 3.2, partie D), sous le rôle `coffre`, comme en production : la
 // tâche efface les demandes échues non gelées, purge sessions, compteurs de débit et défis échus,
@@ -175,7 +175,8 @@ describe('conservation planifiée du coffre', () => {
     }
     const appel = async (debut: string, conservation: string, jetonId: string | null = null) => {
       const id = randomUUID()
-      await admin.query(
+      await insererHorsGardes(
+        admin,
         `INSERT INTO bookings (id, access_token_id, starts_at, ends_at, slot, privacy_version,
            retention_until, sealed)
          VALUES ($1, $2, $3::timestamptz, $3::timestamptz + interval '30 minutes',
@@ -216,7 +217,8 @@ describe('conservation planifiée du coffre', () => {
   it('efface le contenu scellé d’un appel annulé à la fin du créneau d’origine, garde le créneau (D78)', async () => {
     const appel = async (debut: string, statut: string) => {
       const id = randomUUID()
-      await admin.query(
+      await insererHorsGardes(
+        admin,
         `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed,
            status)
          VALUES ($1, $2::timestamptz, $2::timestamptz + interval '30 minutes',
@@ -264,7 +266,8 @@ describe('conservation planifiée du coffre', () => {
     }
     // Un appel actif ne peut jamais être sans contenu (contrainte).
     await assert.rejects(
-      admin.query(
+      insererHorsGardes(
+        admin,
         `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until)
          VALUES (gen_random_uuid(), now(), now() + interval '30 minutes',
            tstzrange(now(), now() + interval '45 minutes'), 'v', now() + interval '1 year')`,

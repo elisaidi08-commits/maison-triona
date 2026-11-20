@@ -26,7 +26,7 @@ import { migrate } from '../../src/lib/db/migrate.ts'
 import { openSealedBooking } from '../../src/lib/vault/open.ts'
 import { deleteRequest, insertRequest } from '../../src/lib/vault/repository.ts'
 import { sealBooking } from '../../src/lib/vault/seal.ts'
-import { applyRoles, coffrePool, resetDatabase, testPool } from './helpers.ts'
+import { applyRoles, coffrePool, insererHorsGardes, resetDatabase, testPool } from './helpers.ts'
 
 // Agenda des appels (story 3.13 ; docs/reservation-appel.md §3.2) contre PostgreSQL 17, sous le rôle
 // `coffre` : liste d'une période (heures, statuts, rattachements, jamais le scellé) et appels d'avant
@@ -62,7 +62,8 @@ async function scelle(nom = NOM): Promise<Uint8Array> {
 async function appel(debut: Date, statut = 'confirmed', nom = NOM): Promise<string> {
   const id = randomUUID()
   const fin = new Date(debut.getTime() + 30 * MINUTE)
-  await admin.query(
+  await insererHorsGardes(
+    admin,
     `INSERT INTO bookings
        (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed, status)
      VALUES ($1, $2, $3, tstzrange($2, $4), '2026-11-18', $2::timestamptz + interval '1 year', $5, $6)`,

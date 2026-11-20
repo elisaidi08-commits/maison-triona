@@ -56,3 +56,26 @@ export const COFFRE_TEST_DATABASE_URL = `${TEST_DATABASE_URL}${TEST_DATABASE_URL
 export function envoiPool(): Pool {
   return new PgPool({ connectionString: TEST_DATABASE_URL, options: '-c role=envoi', max: 5 })
 }
+
+// Appels posés pour un test hors des bornes de la base (appel passé, annulé, qualifié…) : les
+// déclencheurs de 0014 refusent toute insertion hors réglages, sous tout rôle. Hors déclencheurs, le
+// temps de l'instruction (`session_replication_role = replica`, superutilisateur du serveur de test
+// seulement) ; les contraintes (taille du scellé, plage, exclusion) s'appliquent toujours.
+export async function insererHorsGardes(
+  pool: Pool,
+  sql: string,
+  params: unknown[] = [],
+): Promise<void> {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query('SET LOCAL session_replication_role = replica')
+    await client.query(sql, params)
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+}
