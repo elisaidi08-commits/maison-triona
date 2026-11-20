@@ -29,7 +29,9 @@ export async function ShareLinks({ page, locale }: { page: PublicPage; locale: L
         {t('title')}
       </p>
       <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:gap-32">
-        <TextLink href={mailto}>{t('email')}</TextLink>
+        <TextLink href={mailto} mesure="partage:email">
+          {t('email')}
+        </TextLink>
         <CopyLink url={url} label={t('copy')} copied={t('copied')} />
       </div>
     </aside>

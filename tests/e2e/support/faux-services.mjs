@@ -4,7 +4,9 @@
 //   `INCR clé`, avec expiration ; de quoi prouver les limites par IP et par adresse ;
 // - Scaleway TEM (src/lib/email/tem.ts) : `POST …/emails` garde le message et répond un identifiant ;
 //   `GET …/emails/<id>` répond « sent ». Le serveur testé y est redirigé par rediriger-tem.mjs.
-// Pour le test : `GET /__emails` (messages reçus), `POST /__reset` (tout effacer), `GET /` (prêt).
+// Pour le test : `GET /__emails` (messages reçus), `POST /__reset` (tout effacer), `POST /__cle`
+// (poser un compteur, `{ cle, valeur, duree }` : plafond global du jour), `GET /__cle?cle=…` (lire
+// un compteur), `GET /` (prêt).
 // Jamais déployé, jamais importé par le site : lancé par playwright.config.ts (projet `reservation`).
 // Données factices uniquement.
 import { createServer } from 'node:http'
@@ -70,6 +72,15 @@ createServer(async (requete, reponse) => {
     if (requete.method === 'POST' && chemin === '/__reset') {
       cles.clear()
       emails = []
+      return json(reponse, 200, { ok: true })
+    }
+    if (requete.method === 'GET' && chemin === '/__cle') {
+      const cle = new URL(requete.url ?? '/', 'http://127.0.0.1').searchParams.get('cle') ?? ''
+      return json(reponse, 200, { valeur: lire(cle)?.valeur ?? null })
+    }
+    if (requete.method === 'POST' && chemin === '/__cle') {
+      const { cle, valeur, duree } = JSON.parse(await corps(requete))
+      cles.set(String(cle), { valeur: String(valeur), expire: Date.now() + Number(duree) * 1000 })
       return json(reponse, 200, { ok: true })
     }
     if (requete.method === 'POST' && chemin === '/multi-exec') {

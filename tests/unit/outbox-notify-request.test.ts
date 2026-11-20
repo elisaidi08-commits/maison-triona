@@ -462,3 +462,88 @@ describe('scheduleCapAlert', () => {
     }
   })
 })
+
+// Plafond global des demandes de lien (3.9, suites, D72) : même mécanisme, son propre événement,
+// sa propre clé du jour et ses propres statuts.
+function alerteLien(options: { enqueueThrows?: boolean } = {}) {
+  const taches: (() => Promise<void>)[] = []
+  const ecrites: [Pool, string, string][] = []
+  const envois: [OutboxDeps, string][] = []
+  const journal: string[] = []
+  const once = journalUneFois()
+  const pool = { marque: 'pool-envoi' } as unknown as Pool
+  const outboxDeps = { pool, newId: () => ALERTE_ID } as unknown as OutboxDeps
+  const deps: CapAlertDeps<'link_cap'> = {
+    after: (tache) => {
+      taches.push(tache)
+    },
+    createDeps: () => outboxDeps,
+    enqueue: async (p, id, event) => {
+      if (options.enqueueThrows) throw new Error(`permission refusée ${ADRESSES[2]}`)
+      ecrites.push([p, id, event])
+    },
+    sendNow: async (d, id) => {
+      envois.push([d, id])
+    },
+    log: (statut) => {
+      journal.push(statut)
+    },
+    logOnce: once.logOnce,
+  }
+  return { deps, taches, ecrites, envois, journal, pool, outboxDeps }
+}
+
+describe('alerte du plafond des demandes de lien', () => {
+  it('sa clé du jour UTC est distincte de celle des notifications', () => {
+    assert.equal(
+      capAlertKey(new Date('2026-11-20T23:59:59Z'), 'link_cap'),
+      'lien-plafond:2026-11-20',
+    )
+    assert.equal(
+      capAlertKey(new Date('2026-11-21T00:00:00Z'), 'link_cap'),
+      'lien-plafond:2026-11-21',
+    )
+    assert.equal(capAlertKey(new Date('2026-11-20T12:00:00Z')), 'notif-plafond:2026-11-20')
+  })
+
+  it('premier dépassement : l’événement link_cap écrit par l’envoi, puis envoyé aussitôt', async () => {
+    const t = alerteLien()
+    scheduleCapAlert('nouveau', CONFIG, t.deps, 'link_cap')
+    assert.deepEqual(t.journal, ['alert:link-cap-sent'])
+    assert.deepEqual(t.ecrites, [])
+    await t.taches[0]!()
+    assert.deepEqual(t.ecrites, [[t.pool, ALERTE_ID, 'link_cap']])
+    assert.deepEqual(t.envois, [[t.outboxDeps, ALERTE_ID]])
+  })
+
+  it('tout autre résultat de la clé : aucune alerte', () => {
+    for (const statut of ['deja-vu', 'inactif', 'reseau', 'config', 'reponse']) {
+      const t = alerteLien()
+      scheduleCapAlert(statut, CONFIG, t.deps, 'link_cap')
+      assert.equal(t.taches.length, 0, statut)
+      assert.deepEqual(t.journal, [], statut)
+    }
+  })
+
+  it('écriture refusée : rien ne part, `failed:link-cap-alert`, sans adresse', async () => {
+    const t = alerteLien({ enqueueThrows: true })
+    scheduleCapAlert('nouveau', CONFIG, t.deps, 'link_cap')
+    await assert.doesNotReject(t.taches[0]!())
+    assert.deepEqual(t.envois, [])
+    assert.deepEqual(t.journal, ['alert:link-cap-sent', 'failed:link-cap-alert'])
+    assert.ok(!JSON.stringify(t.journal).includes('@'))
+  })
+
+  it('sans événement : l’alerte des notifications, inchangée', async () => {
+    const ecrites: unknown[] = []
+    const t = alertePlafond({
+      enqueue: async (...args: unknown[]) => {
+        ecrites.push(args.slice(1))
+      },
+    })
+    scheduleCapAlert('nouveau', CONFIG, t.deps)
+    await t.taches[0]!()
+    assert.deepEqual(ecrites, [[ALERTE_ID, 'notify_cap']])
+    assert.deepEqual(t.journal, ['alert:notify-cap-sent'])
+  })
+})

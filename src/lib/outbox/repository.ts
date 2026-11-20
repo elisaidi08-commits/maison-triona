@@ -9,7 +9,7 @@ import { guard, isUuid } from '../vault/repository.ts'
 // `guard` (code et contrainte seulement) et les arguments refusés ne sont jamais cités.
 // `enqueueNotification` sert au site public (rôle `site_public`, INSERT seul) ; le reste au rôle
 // `envoi` (premier essai après la réponse, puis tâche planifiée toutes les 5 minutes), y compris
-// `enqueueCapAlert` (alerte du plafond de notifications, migration 0009).
+// `enqueueCapAlert` (alertes de plafond : notifications, migration 0009 ; demandes de lien, 0012).
 // `booking_access` (story 3.9, migration 0011) : l'e-mail d'accès d'une demande de lien. La ligne ne
 // porte ni l'adresse ni le jeton : ils ne vivent qu'en mémoire, le temps du premier essai
 // (`sendAccessLinkNow`, process.ts). La tâche planifiée ne peut donc pas le reprendre : elle ne le
@@ -23,10 +23,14 @@ export const ACCESS_LINK_FIRST_ATTEMPT_MINUTES = 5
 /** Alertes sur un message de la boîte d'envoi : elles portent son identifiant (`alert_subject`). */
 export type MessageAlertEvent = 'send_failed' | 'undelivered' | 'tracking_expired'
 /**
- * `notify_cap` : premier dépassement du jour du plafond de notifications (3.3, suites, décision de
- * Sady du 19/11/2026). Elle ne porte aucun identifiant : ni message, ni demande.
+ * Alertes de plafond, sans aucun identifiant (ni message, ni demande, ni adresse) :
+ * - `notify_cap` : premier dépassement du jour du plafond de notifications (3.3, suites, décision
+ *   de Sady du 19/11/2026, D70) ;
+ * - `link_cap` : premier dépassement du jour du plafond global des demandes de lien (3.9, suites,
+ *   décision de Sady du 20/11/2026, D72).
  */
-export type AlertEvent = MessageAlertEvent | 'notify_cap'
+export type CapAlertEvent = 'notify_cap' | 'link_cap'
+export type AlertEvent = MessageAlertEvent | CapAlertEvent
 export type DeliveryOutcome = 'delivered' | 'undelivered'
 
 export interface OutboxItem {
@@ -55,8 +59,9 @@ const PROVIDER_ID = /^[A-Za-z0-9._:-]{1,100}$/
 const FLAG = /^[a-z_]{1,40}$/
 const MAX_FLAGS = 20
 const OUTCOMES: readonly string[] = ['delivered', 'undelivered']
-// Événements d'une alerte écrite par le suivi ou l'échec d'un message : jamais `notify_cap`.
+// Événements d'une alerte écrite par le suivi ou l'échec d'un message : jamais une alerte de plafond.
 const MESSAGE_ALERT_EVENTS: readonly string[] = ['send_failed', 'undelivered', 'tracking_expired']
+const CAP_ALERT_EVENTS: readonly string[] = ['notify_cap', 'link_cap']
 
 const ITEM_COLUMNS =
   'id, template, request_id, priority, alert_event, alert_subject, attempts, created_at'
@@ -178,13 +183,19 @@ export async function enqueueAccessLink(client: PoolClient, id: string): Promise
   )
 }
 
-// Alerte du premier dépassement du jour du plafond de notifications, écrite par le rôle `envoi`
-// (le site public n'a aucun droit sur les colonnes d'alerte) puis envoyée tout de suite par
-// `sendNow` ; la tâche planifiée la reprend comme tout message. Aucun identifiant de message ni de
-// demande : l'alerte ne concerne aucune ligne. L'appelant garantit qu'il n'y en a qu'une par jour.
-export async function enqueueCapAlert(pool: Pool, id: string): Promise<void> {
+// Alerte du premier dépassement du jour d'un plafond (notifications par défaut, ou demandes de
+// lien), écrite par le rôle `envoi` (le site public n'a aucun droit sur les colonnes d'alerte) puis
+// envoyée tout de suite par `sendNow` ; la tâche planifiée la reprend comme tout message. Aucun
+// identifiant de message ni de demande : l'alerte ne concerne aucune ligne. L'appelant garantit
+// qu'il n'y en a qu'une par jour et par plafond.
+export async function enqueueCapAlert(
+  pool: Pool,
+  id: string,
+  event: CapAlertEvent = 'notify_cap',
+): Promise<void> {
   assertId(id, 'Identifiant de l’alerte')
-  await guard('enqueueCapAlert', () => pool.query(INSERT_ALERT, [id, 'notify_cap', null]))
+  if (!CAP_ALERT_EVENTS.includes(event)) throw new RangeError('Événement d’alerte invalide')
+  await guard('enqueueCapAlert', () => pool.query(INSERT_ALERT, [id, event, null]))
 }
 
 // Réserve jusqu'à `limit` messages dus (bail de 2 minutes) et compte la tentative.

@@ -71,6 +71,10 @@ test('le bouton pause des scènes collantes passe au-dessus de la suggestion de 
   await page.goto('/fr/services')
   await expectSuggestion(page)
   const buttons = page.getByRole('button', { name: /vidéo/ })
+  // Le bouton pause n'apparaît qu'après l'hydratation (PauseVideosButton, `useEffect`), qui peut
+  // suivre l'événement `load` où `goto` rend la main : attendre le premier avant de compter (avec
+  // un processeur ralenti six fois, compter tout de suite échouait 4 fois sur 10).
+  await expect(buttons.first()).toBeVisible()
   expect(await buttons.count()).toBeGreaterThan(0)
   for (const button of await buttons.all()) await expectFocusVisible(page, button)
 })

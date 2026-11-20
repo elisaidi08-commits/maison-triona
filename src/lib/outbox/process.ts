@@ -115,7 +115,8 @@ function failedStatus(item: OutboxItem): OutboxLogStatus {
 }
 
 // Lève si la ligne est incohérente (identifiant ou événement manquant ou invalide) : échec `render`.
-// L'alerte du plafond (`notify_cap`) n'a pas d'identifiant : `renderAlert` en vérifie la forme.
+// Les alertes de plafond (`notify_cap`, `link_cap`) n'ont pas d'identifiant : `renderAlert` en
+// vérifie la forme.
 function render(item: OutboxItem, config: EmailConfig): { to: string; mail: RenderedEmail } {
   if (item.template === 'technical_alert') {
     if (item.alertEvent === null) throw new RangeError('Alerte incomplète')

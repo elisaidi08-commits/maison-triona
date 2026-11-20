@@ -39,5 +39,5 @@ test('menu mobile : s’ouvre, page courante marquée, Échap le ferme', async (
     'page',
   )
   await page.keyboard.press('Escape')
-  await expect(page.locator('details')).not.toHaveAttribute('open', '')
+  await expect(page.locator('header details')).not.toHaveAttribute('open', '')
 })

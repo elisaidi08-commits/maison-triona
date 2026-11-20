@@ -10,10 +10,15 @@ export function estCheminCoffre(chemin: string): boolean {
 const CHEMIN_DEMANDE = /^\/coffre\/demandes\/([^/]+)\/?$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-// Pages de lecture des demandes (/coffre/demandes/…) : les seules qui chargent libsodium, donc les
-// seules dont la CSP admet WebAssembly (`cspCoffre`, option `wasm`).
+// Pages de lecture : celles des demandes (/coffre/demandes/…) et l'agenda des appels (/coffre/appels,
+// story 3.13), les seules qui chargent libsodium, donc les seules dont la CSP admet WebAssembly
+// (`cspCoffre`, option `wasm`). L'agenda seul, pas ce qui serait dessous.
 export function estCheminLecture(chemin: string): boolean {
-  return chemin.startsWith('/coffre/demandes/')
+  return (
+    chemin.startsWith('/coffre/demandes/') ||
+    chemin === '/coffre/appels' ||
+    chemin === '/coffre/appels/'
+  )
 }
 
 export function cheminDemandeMalForme(chemin: string): boolean {
@@ -60,10 +65,10 @@ export function cspCoffre(
   return [
     "default-src 'self'",
     // `'wasm-unsafe-eval'` (partie D), sur les pages de lecture seulement (`wasm`, voir
-    // estCheminLecture) : elles déchiffrent dans le navigateur avec libsodium, qui n'existe qu'en
-    // WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ; il autorise la compilation
-    // de WebAssembly, pas `eval()` ni `new Function`. Ni la connexion, ni la liste, ni le site public
-    // (next.config.ts) ne l'ont. `'unsafe-eval'` : développement seulement (React reconstruit les
+    // estCheminLecture : demandes et agenda des appels) : elles déchiffrent dans le navigateur avec
+    // libsodium, qui n'existe qu'en WebAssembly (`WebAssembly.instantiate`, sans repli JavaScript) ;
+    // il autorise la compilation de WebAssembly, pas `eval()` ni `new Function`. Ni la connexion, ni
+    // la liste, ni les disponibilités, ni le site public (next.config.ts) ne l'ont. `'unsafe-eval'` : développement seulement (React reconstruit les
     // piles d'erreur).
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${options.wasm ? " 'wasm-unsafe-eval'" : ''}${options.dev ? " 'unsafe-eval'" : ''}`,
     // Styles en ligne du serveur de développement seulement ; en production, le nonce suffit.

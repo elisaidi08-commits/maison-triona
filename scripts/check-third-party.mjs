@@ -25,7 +25,11 @@ const ALLOWED_PREFIXES = [
 ]
 
 // Appels de serveur à serveur (jamais depuis le navigateur) : autorisés dans ce fichier seulement.
-const SERVER_ONLY = { 'src/lib/email/tem.ts': ['https://api.scaleway.com/'] }
+const SERVER_ONLY = {
+  'src/lib/email/tem.ts': ['https://api.scaleway.com/'],
+  'src/lib/sms/seven.ts': ['https://gateway.seven.io/'],
+  'src/lib/mesure/plausible.ts': ['https://plausible.io/'],
+}
 
 const MOODBOARD = [/cosmos_/i, /docs\/moodboard/i, /MOODBOARD/, /ASSETS PHOTO MAQUETTE/i]
 

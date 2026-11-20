@@ -201,7 +201,10 @@ describe('enregistrement chiffré dans le coffre', () => {
     cles = await unlockPrivateKey(cree.packet, PHRASE)
     await applyRoles(pool)
   })
-  beforeEach(() => pool.query('TRUNCATE vault_requests, vault_access_log, outbox RESTART IDENTITY'))
+  // `bookings` référence `vault_requests` depuis 0013 (rattachement d'un appel) : vidée avec elle.
+  beforeEach(() =>
+    pool.query('TRUNCATE vault_requests, bookings, vault_access_log, outbox RESTART IDENTITY'),
+  )
   after(async () => {
     await sitePublic.end()
     await pool.end()

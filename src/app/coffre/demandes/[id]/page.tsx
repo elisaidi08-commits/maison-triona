@@ -3,8 +3,11 @@ import { notFound, redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/Button'
 import { CheckboxField } from '@/components/ui/CheckboxField'
-import { demandeDuCoffre } from '@/lib/auth/acces'
+import { appelsDeLaDemandeDuCoffre, demandeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
+import { agendaStatus } from '@/lib/booking/agenda'
+import { heuresAppel, jourAppel, STATUTS_APPEL } from '@/lib/coffre/appels'
+import { dateEnLettres } from '@/lib/coffre/disponibilites'
 import { colonnesEnClair, date } from '@/lib/coffre/libelles'
 import { getCoffrePool } from '@/lib/db/pool'
 import { isRequestId } from '@/lib/vault/repository'
@@ -41,6 +44,7 @@ export default async function PageDemande({ params }: PageProps<'/coffre/demande
   const demande = await demandeDuCoffre(getCoffrePool(), acces, id)
   if (!demande) notFound()
 
+  const appels = (await appelsDeLaDemandeDuCoffre(getCoffrePool(), acces, id)) ?? []
   const echue = isExpired(demande, new Date())
   const conservation = demande.frozen
     ? 'Gelée : la conservation automatique ne l’effacera pas, même échue. Dégelez-la quand la limitation n’a plus lieu d’être.'
@@ -89,6 +93,30 @@ export default async function PageDemande({ params }: PageProps<'/coffre/demande
           </Button>
         </form>
       </section>
+
+      {/* Appels rattachés (story 3.13) : heures et statut, sans contenu ; avant d'effacer la demande,
+          Cat voit qu'un appel existe (docs/rgpd/procedures.md, effacement). */}
+      {appels.length > 0 ? (
+        <section aria-labelledby="appels-titre" className="flex max-w-measure flex-col gap-24">
+          <h2 id="appels-titre" className="text-title-h3 text-encre">
+            Appels rattachés
+          </h2>
+          <ul className="flex flex-col border-t border-sapin-20">
+            {appels.map((appel) => (
+              <li key={appel.id} className="border-b border-sapin-20 py-12">
+                {dateEnLettres(jourAppel(appel.startsAt))},{' '}
+                {heuresAppel(appel.startsAt, appel.endsAt)} ·{' '}
+                {STATUTS_APPEL[agendaStatus(appel, new Date())]}
+              </li>
+            ))}
+          </ul>
+          <p>
+            Effacer la demande n’efface pas ces appels : leur rattachement est retiré. Si la
+            personne demande l’effacement, l’appel doit être effacé aussi : en attendant un bouton
+            dans l’agenda, demandez-le à Sady.
+          </p>
+        </section>
+      ) : null}
 
       <section aria-labelledby="effacement-titre" className="flex max-w-measure flex-col gap-24">
         <h2 id="effacement-titre" className="text-title-h3 text-encre">
