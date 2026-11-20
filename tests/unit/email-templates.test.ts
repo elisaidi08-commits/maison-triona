@@ -127,7 +127,7 @@ describe('renderAlert', () => {
     assert.equal(
       mail.text,
       [
-        `Plafond des demandes de lien atteint${N}: jusqu’à la fin de la journée (UTC), plus aucun lien de réservation n’est envoyé.`,
+        `Plafond des demandes de lien atteint${N}: jusqu’à minuit UTC, plus aucun lien de réservation n’est créé ni envoyé, mais la page annonce l’envoi au visiteur.`,
         '',
         `Date${N}: mercredi 18 novembre 2026 à 22${N}h${N}14`,
         '',

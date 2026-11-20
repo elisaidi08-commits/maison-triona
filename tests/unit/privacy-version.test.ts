@@ -26,7 +26,7 @@ const EMPREINTES: Record<string, string> = {
   '2026-11-20': 'd2652a7f307185c59e2e15a6c9afa7db1a2c631bd6a172e11cdb940ddae40e4d',
   // Suites de la demande de lien (D72) : plus de confirmation promise au visiteur (D69), la limite
   // de l'e-mail d'accès saisi par un autre, une phrase française restée de la 3.10 retirée.
-  '2026-11-20.2': '7453068f3ad684bc64af3562360483ca613b71377cf81602fc9d9e0362ca5c9f',
+  '2026-11-20.2': '88116d4b97b351b235d00051a00e059be98db2f18fe4514a30574b67e3327905',
 }
 
 describe('PRIVACY_POLICY_VERSION', () => {

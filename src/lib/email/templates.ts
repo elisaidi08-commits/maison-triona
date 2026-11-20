@@ -31,7 +31,7 @@ const ALERT_LINES: Record<AlertEvent, string> = {
   undelivered: 'Message non délivré au destinataire.',
   tracking_expired: 'Livraison non confirmée après 72 heures.',
   notify_cap: `Plafond de notifications atteint${NBSP}: les demandes suivantes de la journée sont enregistrées dans le coffre, sans e-mail.`,
-  link_cap: `Plafond des demandes de lien atteint${NBSP}: jusqu’à la fin de la journée (UTC), plus aucun lien de réservation n’est envoyé.`,
+  link_cap: `Plafond des demandes de lien atteint${NBSP}: jusqu’à minuit UTC, plus aucun lien de réservation n’est créé ni envoyé, mais la page annonce l’envoi au visiteur.`,
 }
 
 // Seules les alertes de plafond ne portent pas d'identifiant : elles ne concernent aucun message.

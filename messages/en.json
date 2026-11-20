@@ -539,7 +539,7 @@
         "title": "When you arrange a call",
         "paragraphs": [
           "You may also arrange a call with us. The house sends you a personal link, valid for 48 hours, to choose your time; no account or cookie is needed.",
-          "To receive this link, you give us your email address. It is used only to send it to you: our email provider receives it and keeps a record of it for as long as our sending domain is active. We do not keep it; only a fingerprint, which does not reveal it, stays with the link for a few days, to cancel an earlier link and to limit repeated requests (three a day at most).",
+          "To receive this link, you give us your email address. It is used only to send it to you: our email provider receives it and keeps a record of it for as long as our sending domain is active. We do not keep it: a fingerprint, which does not reveal it, stays with the link until it is erased, to cancel an earlier link; another, kept for 24 hours at most, limits repeated requests (three a day at most).",
           "We then keep your name, your number, the language and time you chose and, if you wish to say, how you heard of the house. We never leave a voicemail.",
           "This information is encrypted as soon as it arrives, like an enquiry: only the house can read it. Only the time and the status of the call remain readable, so that the same time is never offered twice.",
           "Once the call is arranged, the page offers you a file to add to your calendar; it contains neither your name nor your number."
@@ -554,7 +554,7 @@
           "Only two people can read the encrypted content: the founder of the house and the person in charge of the technical upkeep of the site. Every login requires two-factor authentication; every reading, export or deletion is recorded in a log.",
           "The message that tells us a new enquiry has arrived contains nothing of your enquiry: only its date and a link to the vault.",
           "Our technical logs keep nothing you write: only an identifier and the outcome of the submission. As for any website, our host records the address of the pages visited, the date, your IP address and your browser, for one day.",
-          "To block abusive submissions, we keep for 24 hours at most a fingerprint of your IP address, computed with a key changed every day, and, if you give one, a fingerprint of your email address."
+          "To block abusive submissions, we keep for 24 hours at most a fingerprint of your IP address, computed with a key changed every day, and a fingerprint of your email address, if you give it."
         ]
       },
       {
@@ -654,7 +654,7 @@
           "Our host, Vercel, is an American company. Your enquiry passes through its servers in readable form until it is encrypted; we do not store it there. Like any American company, Vercel may be required by American law to hand over data, even data processed in Europe.",
           "An erased enquiry remains in the backups for up to 7 days; its content stays encrypted.",
           "The personal booking link appears in our host’s logs. It is only valid for 48 hours; once the call is arranged, it only serves to see the confirmation again, until the call.",
-          "The personal booking link is sent to the address typed on the request page, and we cannot check that it is yours. If it reaches you although you did not ask for it, please ignore it: it expires on its own after 48 hours."
+          "This link is sent to the address entered to receive it, and we cannot check that it is yours. If it reaches you without your having asked for it, simply ignore it: it expires on its own after 48 hours."
         ]
       },
       {

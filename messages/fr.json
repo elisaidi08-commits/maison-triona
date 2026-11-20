@@ -544,8 +544,8 @@
         "id": "appel",
         "title": "Lorsque vous convenez d’un appel",
         "paragraphs": [
-          "Vous pouvez aussi convenir d’un appel avec nous. La maison vous transmet un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
-          "Pour recevoir ce lien, vous indiquez votre adresse e‑mail. Elle ne sert qu’à vous l’envoyer : notre fournisseur d’envoi d’e‑mails la reçoit et en garde la trace tant que notre domaine d’envoi est actif. Nous ne la gardons pas ; seule une empreinte, qui ne la révèle pas, reste quelques jours avec le lien, pour annuler un lien précédent et limiter les demandes répétées (trois par jour au plus).",
+          "Vous pouvez aussi convenir d’un appel avec nous. La maison vous transmet un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Pour recevoir ce lien, vous indiquez votre adresse e‑mail. Elle ne sert qu’à vous l’envoyer : notre fournisseur d’envoi d’e‑mails la reçoit et en garde la trace tant que notre domaine d’envoi est actif. Nous ne la gardons pas : une empreinte, qui ne la révèle pas, reste avec le lien jusqu’à son effacement, pour annuler un lien précédent ; une autre, gardée 24 heures au plus, limite les demandes répétées (trois par jour au plus).",
           "Nous gardons alors votre nom, votre numéro, la langue et le créneau choisis et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
           "Ces informations sont chiffrées dès leur arrivée, comme une demande : seule la maison peut les lire. Seuls le créneau et l’état de l’appel restent lisibles, pour qu’un même moment ne soit jamais proposé deux fois.",
           "Une fois l’appel convenu, la page vous propose un fichier à ajouter à votre agenda ; il ne contient ni votre nom ni votre numéro."
@@ -560,7 +560,7 @@
           "Seules deux personnes peuvent lire le contenu chiffré : la fondatrice de la maison et la personne chargée de la maintenance technique du site. Chaque connexion exige une double authentification ; chaque lecture, export ou suppression laisse une trace dans un journal.",
           "Le message qui nous prévient d’une nouvelle demande ne contient rien de votre demande : seulement sa date et un lien vers le coffre.",
           "Nos journaux techniques ne gardent rien de ce que vous écrivez : seulement un identifiant et le résultat de l’envoi. Comme pour tout site, notre hébergeur enregistre l’adresse des pages consultées, la date, votre adresse IP et votre navigateur, pendant un jour.",
-          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et, si vous en indiquez une, une empreinte de votre adresse e‑mail."
+          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et une empreinte de votre adresse e‑mail, si vous l’indiquez."
         ]
       },
       {
@@ -659,8 +659,8 @@
         "items": [
           "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
           "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
-          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures ; une fois l’appel convenu, il ne sert plus qu’à revoir la confirmation, jusqu’à l’appel.",
-          "Le lien personnel de réservation part à l’adresse saisie sur la page de demande, sans que nous puissions vérifier qu’elle est la vôtre. S’il vous parvient sans que vous l’ayez demandé, ignorez-le : il expire de lui-même au bout de 48 heures."
+          "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures ; une fois l’appel convenu, il ne sert plus qu’à revoir la confirmation, jusqu’à l’appel.",
+          "Ce lien part à l’adresse saisie pour le recevoir, sans que nous puissions vérifier qu’elle est la vôtre. S’il vous parvient sans que vous l’ayez demandé, ignorez-le : il expire de lui-même au bout de 48 heures."
         ]
       },
       {
