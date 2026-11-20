@@ -668,7 +668,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
       NOM.toLowerCase(),
       '470',
       MARDI_1600.toISOString().slice(0, 13).toLowerCase(),
-      'cancelled',
+      'cancelled_by',
     ]) {
       assert.equal(texte.includes(interdit), false, interdit)
     }

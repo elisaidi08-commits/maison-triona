@@ -304,7 +304,8 @@ describe('tables de la réservation d’appel', () => {
       'SELECT created_at FROM bookings',
       'SELECT retention_until FROM bookings',
       "UPDATE bookings SET status = 'cancelled_by_house'",
-      'UPDATE bookings SET sealed = sealed',
+      // `sealed` : seulement remis à NULL pour un appel annulé (D78, conservation.test.ts).
+      'UPDATE bookings SET sealed = NULL',
       'DELETE FROM bookings',
       'TRUNCATE bookings',
       'SELECT * FROM booking_tokens',
@@ -370,7 +371,8 @@ describe('tables de la réservation d’appel', () => {
       // Statut et rattachement : agenda de la story 3.13 (agenda-schema.test.ts) ; créneau : story
       // 3.11 (gestion.test.ts) ; rien d'autre.
       'UPDATE bookings SET sequence = sequence',
-      'UPDATE bookings SET sealed = sealed',
+      // `sealed` : remis à NULL pour un appel annulé seulement, par un déclencheur (D78,
+      // conservation.test.ts) : pas un refus de droit ici.
       'UPDATE bookings SET retention_until = now()',
       'TRUNCATE bookings',
       'SELECT * FROM booking_tokens',

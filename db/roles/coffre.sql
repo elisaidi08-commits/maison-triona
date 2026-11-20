@@ -90,3 +90,9 @@ grant update (status, request_id) on bookings to coffre;
 -- gestion part avec lui (clé étrangère), son lien d'accès est effacé dans la même transaction. Ni le
 -- contenu scellé, ni l'échéance, ni la séquence, ni aucun lien en écriture.
 grant update (starts_at, ends_at, slot) on bookings to coffre;
+
+-- Conservation d'un appel annulé (D78, migration 0014) : la tâche planifiée (/api/cron/retention, ce
+-- rôle) efface le contenu scellé d'un appel annulé à la fin de son créneau d'origine. `sealed` en
+-- écriture, borné par le déclencheur `bookings_sealed_guard` (sous tout rôle) : seulement une remise à
+-- NULL, seulement pour un appel annulé ; jamais un contenu écrit.
+grant update (sealed) on bookings to coffre;

@@ -169,7 +169,8 @@ describe('agenda des appels : schéma et droits (0013)', () => {
   it('coffre ne modifie que le statut, le rattachement et (3.11) le créneau', async () => {
     await appel(-60)
     for (const sql of [
-      'UPDATE bookings SET sealed = sealed',
+      // `sealed` : remis à NULL pour un appel annulé seulement, par un déclencheur (D78,
+      // conservation.test.ts) : pas un refus de droit ici.
       'UPDATE bookings SET sequence = sequence + 1',
       'UPDATE bookings SET retention_until = now()',
       "UPDATE bookings SET privacy_version = 'v'",
@@ -289,8 +290,8 @@ describe('agenda des appels : schéma et droits (0013)', () => {
     await coffre.query(
       `INSERT INTO vault_access_log
          (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications,
-          purged_bookings, purged_tokens)
-       VALUES ('system', 'retention', 0, 0, 0, 0, 0, 0)`,
+          purged_bookings, purged_tokens, purged_cancelled_calls)
+       VALUES ('system', 'retention', 0, 0, 0, 0, 0, 0, 0)`,
     )
     await assert.rejects(ecrire('autre', null, null), CONTROLE)
 

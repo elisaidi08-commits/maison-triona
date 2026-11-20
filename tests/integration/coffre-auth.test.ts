@@ -529,6 +529,8 @@ describe('authentification du coffre', () => {
         'purged_tokens:integer',
         // Agenda des appels (story 3.13, 0013) : l'identifiant de l'appel visé, rien d'autre.
         'booking_id:uuid',
+        // Contenus d'appels annulés effacés par la conservation (D78, 0014) : un nombre.
+        'purged_cancelled_calls:integer',
       ],
     )
     const { rows: tout } = await pool.query('SELECT * FROM vault_access_log')

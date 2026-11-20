@@ -173,7 +173,9 @@ export async function readBookingsSealed(
   return guard('readBookingsSealed', () =>
     withTransaction(pool, async (client) => {
       const { rows } = await client.query<{ id: string; sealed: Uint8Array }>(
-        'SELECT id, sealed FROM bookings WHERE id = ANY ($1::uuid[]) ORDER BY starts_at, id',
+        // Un appel annulé dont le contenu est effacé (D78) n'a plus rien à remettre.
+        `SELECT id, sealed FROM bookings
+         WHERE id = ANY ($1::uuid[]) AND sealed IS NOT NULL ORDER BY starts_at, id`,
         [valid],
       )
       if (rows.length === 0) return []

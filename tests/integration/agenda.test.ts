@@ -378,6 +378,7 @@ describe('agenda des appels (rôle coffre)', () => {
         'purged_verifications',
         'purged_bookings',
         'purged_tokens',
+        'purged_cancelled_calls',
       ]) {
         assert.equal(ligne[colonne], null)
       }

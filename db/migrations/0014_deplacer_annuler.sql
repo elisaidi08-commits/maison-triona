@@ -29,6 +29,7 @@
 -- 6. Bornes d'un déplacement, sous tout rôle (coffre compris) : durée de l'appel inchangée, pause
 --    comprise entre 0 et celle des réglages, début dans l'horizon de réservation ; l'échéance de
 --    conservation est recalculée depuis le nouveau début (même règle que la réservation).
+-- 8. Contenu scellé d'un appel annulé effacé à la fin du créneau d'origine (D78, en bas).
 -- 7. Journal d'accès : trois actions du coffre sur un appel, `booking_move`, `booking_cancel`,
 --    `booking_delete` (effacement, procédure RGPD), chacune avec l'appel visé et rien d'autre.
 -- Les droits (site public : déplacer et annuler par le lien de gestion ; coffre : déplacer, annuler,
@@ -324,3 +325,64 @@ alter table vault_access_log add constraint vault_access_log_booking_check check
     else booking_id is null
   end
 );
+
+-- 8. Conservation d'un appel annulé (D78, RGPD : minimisation). Après une annulation, par la personne
+--    ou par la maison, le contenu scellé (nom, numéro, langue, choix SMS, origine) est effacé à la fin
+--    du créneau d'origine (`ends_at`, qui ne bouge plus après une annulation) par la conservation
+--    planifiée (/api/cron/retention, `purgeCancelledContents`) ; le créneau et le statut restent, sans
+--    contenu, jusqu'à l'échéance de la réservation. Jusqu'à l'heure prévue, Cat peut encore rappeler
+--    la personne (aucun message ne part avant la 3.12).
+--    Solution retenue : `sealed` devient nullable (plutôt qu'une valeur vide factice) ; NULL n'est
+--    permis que pour un appel annulé (contrainte), et seulement par une remise à NULL (déclencheur,
+--    sous tout rôle) : jamais de contenu rendu à un appel, jamais d'effacement d'un appel actif. La
+--    contrainte de taille (2 096 octets) reste pour tout contenu présent.
+alter table bookings alter column sealed drop not null;
+alter table bookings add constraint bookings_sealed_presence_check check (
+  sealed is not null or status in ('cancelled_by_guest', 'cancelled_by_house')
+);
+
+create function bookings_sealed_guard() returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if new.sealed is not distinct from old.sealed then
+    return new;
+  end if;
+  if new.sealed is not null or old.status not in ('cancelled_by_guest', 'cancelled_by_house') then
+    raise exception 'Contenu d’un appel : seul celui d’un appel annulé s’efface'
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger bookings_sealed_guard
+  before update of sealed on bookings
+  for each row execute function bookings_sealed_guard();
+
+-- Résumé de la conservation : un compteur de plus, `purged_cancelled_calls` (contenus d'appels
+-- annulés effacés), entier, obligatoire sur une ligne `retention`, interdit ailleurs. Posée NOT VALID,
+-- comme en 0010 : les lignes `retention` antérieures n'ont pas ce compteur (le journal ne se réécrit
+-- jamais).
+alter table vault_access_log add column purged_cancelled_calls integer;
+
+alter table vault_access_log drop constraint vault_access_log_retention_check;
+alter table vault_access_log add constraint vault_access_log_retention_check check (
+  case
+    when action = 'retention' then
+      request_id is null
+      and coalesce(
+        purged_requests >= 0 and purged_sessions >= 0
+          and purged_rate_limits >= 0 and purged_verifications >= 0
+          and purged_bookings >= 0 and purged_tokens >= 0
+          and purged_cancelled_calls >= 0,
+        false
+      )
+    else
+      purged_requests is null and purged_sessions is null
+        and purged_rate_limits is null and purged_verifications is null
+        and purged_bookings is null and purged_tokens is null
+        and purged_cancelled_calls is null
+  end
+) not valid;

@@ -113,6 +113,7 @@ describe('conservation planifiée du coffre', () => {
       verifications: 1,
       bookings: 0,
       tokens: 0,
+      cancelledCalls: 0,
     })
 
     const { rows: restantes } = await admin.query<{ id: string }>(
@@ -212,6 +213,66 @@ describe('conservation planifiée du coffre', () => {
     assert.deepEqual(journal, [{ purged_bookings: 1, purged_tokens: 3 }])
   })
 
+  it('efface le contenu scellé d’un appel annulé à la fin du créneau d’origine, garde le créneau (D78)', async () => {
+    const appel = async (debut: string, statut: string) => {
+      const id = randomUUID()
+      await admin.query(
+        `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed,
+           status)
+         VALUES ($1, $2::timestamptz, $2::timestamptz + interval '30 minutes',
+           tstzrange($2::timestamptz, $2::timestamptz + interval '45 minutes'), '2026-11-18',
+           $2::timestamptz + interval '1 year', $3, $4)`,
+        [id, debut, randomBytes(2096), statut],
+      )
+      return id
+    }
+    // Fini avant MAINTENANT (1er juin 2027) : annulé par la personne, par la maison, fait ; annulé
+    // mais pas encore fini.
+    const parLaPersonne = await appel('2027-05-31T09:30:00Z', 'cancelled_by_guest')
+    const parLaMaison = await appel('2027-05-30T09:30:00Z', 'cancelled_by_house')
+    const fait = await appel('2027-05-31T14:00:00Z', 'done')
+    const aVenir = await appel('2027-06-05T09:30:00Z', 'cancelled_by_guest')
+
+    const counts = await runRetention(coffre, MAINTENANT)
+    assert.equal(counts.cancelledCalls, 2)
+    assert.equal(counts.bookings, 0)
+    const { rows } = await admin.query<{ id: string; sealed: Buffer | null; status: string }>(
+      'SELECT id, sealed, status, starts_at FROM bookings',
+    )
+    const parId = new Map(rows.map((row) => [row.id, row]))
+    assert.equal(parId.get(parLaPersonne)?.sealed, null)
+    assert.equal(parId.get(parLaMaison)?.sealed, null)
+    // Le créneau et le statut restent, sans contenu.
+    assert.equal(parId.get(parLaPersonne)?.status, 'cancelled_by_guest')
+    assert.equal(parId.get(fait)?.sealed?.length, 2096)
+    assert.equal(parId.get(aVenir)?.sealed?.length, 2096)
+    const { rows: journal } = await admin.query(
+      `SELECT purged_cancelled_calls FROM vault_access_log WHERE action = 'retention'`,
+    )
+    assert.deepEqual(journal, [{ purged_cancelled_calls: 2 }])
+    // Rejoué : rien de plus.
+    assert.equal((await runRetention(coffre, MAINTENANT)).cancelledCalls, 0)
+
+    // La base n'accepte qu'une remise à NULL d'un appel annulé, sous tout rôle.
+    for (const [sql, valeurs] of [
+      ['UPDATE bookings SET sealed = NULL WHERE id = $1', [fait]],
+      ['UPDATE bookings SET sealed = $2 WHERE id = $1', [parLaPersonne, randomBytes(2096)]],
+      ['UPDATE bookings SET sealed = $2 WHERE id = $1', [aVenir, randomBytes(2096)]],
+    ] as const) {
+      await assert.rejects(coffre.query(sql, [...valeurs]), { code: '23514' }, sql)
+      await assert.rejects(admin.query(sql, [...valeurs]), { code: '23514' }, sql)
+    }
+    // Un appel actif ne peut jamais être sans contenu (contrainte).
+    await assert.rejects(
+      admin.query(
+        `INSERT INTO bookings (id, starts_at, ends_at, slot, privacy_version, retention_until)
+         VALUES (gen_random_uuid(), now(), now() + interval '30 minutes',
+           tstzrange(now(), now() + interval '45 minutes'), 'v', now() + interval '1 year')`,
+      ),
+      { code: '23514' },
+    )
+  })
+
   it('est rejouable : un second passage, même simultané, n’efface rien de plus', async () => {
     await insertRequest(admin, demande({ retentionUntil: new Date('2027-01-01T00:00:00Z') }))
     const [premier, second] = await Promise.all([
@@ -288,6 +349,7 @@ describe('conservation planifiée du coffre', () => {
       verifications: 0,
       bookings: 0,
       tokens: 0,
+      cancelledCalls: 0,
     })
     for (const valeur of Object.values(corps)) assert.equal(typeof valeur, 'number')
   })

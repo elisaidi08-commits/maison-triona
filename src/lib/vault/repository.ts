@@ -78,6 +78,8 @@ export interface RetentionCounts {
   // Réservations échues et jetons expirés depuis plus de 48 heures (story 3.10, migration 0010).
   bookings: number
   tokens: number
+  // Contenus scellés d'appels annulés effacés à la fin du créneau d'origine (D78, migration 0014).
+  cancelledCalls: number
 }
 
 export interface AccessLogEntry {
@@ -412,8 +414,8 @@ export async function logRetention(db: Pool | PoolClient, counts: RetentionCount
     db.query(
       `INSERT INTO vault_access_log
          (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications,
-          purged_bookings, purged_tokens)
-       VALUES ($1, 'retention', $2, $3, $4, $5, $6, $7)`,
+          purged_bookings, purged_tokens, purged_cancelled_calls)
+       VALUES ($1, 'retention', $2, $3, $4, $5, $6, $7, $8)`,
       [
         SYSTEM_ACTOR,
         counts.requests,
@@ -422,6 +424,7 @@ export async function logRetention(db: Pool | PoolClient, counts: RetentionCount
         counts.verifications,
         counts.bookings,
         counts.tokens,
+        counts.cancelledCalls,
       ],
     ),
   )

@@ -406,6 +406,25 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
   }
 }
 
+/**
+ * Même tâche (D78, story 3.11) : efface le contenu scellé des appels annulés (par la personne ou par
+ * la maison) dont le créneau d'origine est fini ; le créneau et le statut restent jusqu'à l'échéance
+ * de la réservation. Jusque-là, Cat peut encore rappeler la personne. La base n'accepte qu'une remise
+ * à NULL d'un appel annulé (déclencheur `bookings_sealed_guard`). Rend le nombre effacé.
+ */
+export async function purgeCancelledContents(db: Db, now: Date): Promise<number> {
+  assertValidDate(now, 'Date de purge')
+  return guard('purgeCancelledContents', async () => {
+    const { rowCount } = await db.query(
+      `UPDATE bookings SET sealed = NULL
+       WHERE status IN ('cancelled_by_guest', 'cancelled_by_house')
+         AND ends_at <= $1 AND sealed IS NOT NULL`,
+      [now],
+    )
+    return rowCount ?? 0
+  })
+}
+
 /** Délai après l'expiration d'un jeton avant son effacement par la conservation planifiée. */
 export const TOKEN_PURGE_DELAY_HOURS = 48
 
