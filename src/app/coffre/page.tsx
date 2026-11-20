@@ -37,7 +37,7 @@ import { LienCoffre } from './_composants/LienCoffre'
 // date de la conservation), mais lus comme elle derrière la vérification de l'accès
 // (etatEnvoiDuCoffre). Si la requête échoue : « État de l'envoi indisponible. », sans l'erreur.
 // Depuis la story 3.10 : « Créer un lien de réservation » (CreerLienReservation), le lien affiché une
-// fois.
+// fois. Depuis la story 3.13 : lien vers l'agenda des appels (/coffre/appels).
 
 export const metadata: Metadata = { title: 'Demandes' }
 
@@ -108,7 +108,8 @@ export default async function AccueilCoffre({ searchParams }: PageProps<'/coffre
           Session de {acces.compte.nom}. Seules les colonnes de tri s’affichent ici ; le contenu
           d’une demande s’ouvre sur sa page, dans ce navigateur, avec votre paquet de clé.
         </p>
-        <p>
+        <p className="flex flex-wrap gap-x-24">
+          <LienCoffre href="/coffre/appels">Agenda des appels</LienCoffre>
           <LienCoffre href="/coffre/disponibilites">Disponibilités des appels</LienCoffre>
         </p>
       </EnTete>

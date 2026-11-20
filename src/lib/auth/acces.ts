@@ -1,5 +1,20 @@
 import type { Pool } from 'pg'
 
+import type { Qualification } from '../booking/agenda.ts'
+import {
+  attachBooking,
+  listAgendaLogged,
+  listCallsOfRequest,
+  readBookingsSealed,
+  setBookingStatus,
+} from '../booking/agenda-repository.ts'
+import type {
+  AgendaListing,
+  AttachedCall,
+  AttachResult,
+  SealedCall,
+  StatusResult,
+} from '../booking/agenda-repository.ts'
 import { createBookingLink, type IssuedLink } from '../booking/bookings.ts'
 import { outboxHealth } from '../outbox/health.ts'
 import type { OutboxHealth } from '../outbox/health.ts'
@@ -7,6 +22,7 @@ import {
   deleteRequest,
   getRequest,
   lastRetentionRun,
+  listRequests,
   listRequestsLogged,
   logExport,
   readSealed,
@@ -172,4 +188,72 @@ export async function lienDeReservationDuCoffre(
 ): Promise<IssuedLink | null> {
   if (acces.etat !== 'autorise') return null
   return createBookingLink(pool, acces.compte.email, maintenant)
+}
+
+// Agenda des appels (story 3.13), pour un accès autorisé ; sinon null, rien n'est lu ni écrit.
+// Heures, statuts et rattachements de la période, sans contenu scellé ; `booking_list` au journal au
+// nom du compte, dans la même transaction.
+export async function agendaDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  periode: { from: Date; to: Date; now: Date },
+): Promise<AgendaListing | null> {
+  if (acces.etat !== 'autorise') return null
+  return listAgendaLogged(pool, acces.compte.email, periode)
+}
+
+// Demandes récentes proposées au rattachement : colonnes en clair seulement (comme la liste de
+// l'accueil), jamais `sealed`. Sans ligne à part : elles s'affichent avec l'agenda, dont la ligne
+// `booking_list` couvre l'affichage.
+export const DEMANDES_RATTACHEMENT = 30
+
+export async function demandesRecentesDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+): Promise<VaultRequestSummary[] | null> {
+  if (acces.etat !== 'autorise') return null
+  return listRequests(pool, { limit: DEMANDES_RATTACHEMENT })
+}
+
+// Lecture des appels : les octets scellés, remis au navigateur qui les ouvre ; `booking_read` par
+// appel, dans la même transaction.
+export async function scellesAppelsDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  ids: string[],
+): Promise<SealedCall[] | null> {
+  if (acces.etat !== 'autorise') return null
+  return readBookingsSealed(pool, ids, acces.compte.email)
+}
+
+// « Fait » ou « pas de réponse » (`booking_status`).
+export async function statutAppelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  statut: Qualification,
+): Promise<StatusResult | null> {
+  if (acces.etat !== 'autorise') return null
+  return setBookingStatus(pool, id, statut, acces.compte.email)
+}
+
+// Rattachement d'un appel à une demande, ou retrait (`booking_attach`).
+export async function rattachementAppelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  demande: string | null,
+): Promise<AttachResult | null> {
+  if (acces.etat !== 'autorise') return null
+  return attachBooking(pool, id, demande, acces.compte.email)
+}
+
+// Appels rattachés à une demande (sa page du coffre) : heures et statut, sans contenu ni journal.
+export async function appelsDeLaDemandeDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<AttachedCall[] | null> {
+  if (acces.etat !== 'autorise') return null
+  return listCallsOfRequest(pool, id)
 }

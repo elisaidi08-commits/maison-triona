@@ -24,7 +24,8 @@ const baseURL = `http://localhost:${PORT}`
 // les e-mails (TEM redirigé vers un double de test par `--import`, sans rien changer au site), la
 // limitation de débit (Upstash, double de test) et le secret des empreintes d'adresse ; son journal
 // est recopié dans un fichier que le test relit (ni adresse ni jeton). Un seul processus de test à la
-// fois (`workers: 1`) : les deux parcours vident la même base.
+// fois (`workers: 1`) : les parcours vident la même base. Depuis la story 3.13, il porte aussi
+// l'agenda des appels (tests/e2e/agenda-parcours.spec.ts).
 const RESERVATION_PORT = Number(process.env.RESERVATION_PORT ?? 3200)
 const reservationURL = `http://localhost:${RESERVATION_PORT}`
 const reservationBase = process.env.RESERVATION_E2E_DATABASE_URL
@@ -56,7 +57,7 @@ export default defineConfig({
     {
       name: 'reservation',
       testDir: './tests/e2e',
-      testMatch: /(reservation|demande-de-lien)-parcours\.spec\.ts/,
+      testMatch: /(reservation|demande-de-lien|agenda)-parcours\.spec\.ts/,
       workers: 1,
       use: { ...devices['Desktop Chrome'], baseURL: reservationURL },
     },
