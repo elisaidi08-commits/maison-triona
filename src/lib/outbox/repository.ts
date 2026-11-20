@@ -10,8 +10,16 @@ import { guard, isUuid } from '../vault/repository.ts'
 // `enqueueNotification` sert au site public (rôle `site_public`, INSERT seul) ; le reste au rôle
 // `envoi` (premier essai après la réponse, puis tâche planifiée toutes les 5 minutes), y compris
 // `enqueueCapAlert` (alerte du plafond de notifications, migration 0009).
+// `booking_access` (story 3.9, migration 0011) : l'e-mail d'accès d'une demande de lien. La ligne ne
+// porte ni l'adresse ni le jeton : ils ne vivent qu'en mémoire, le temps du premier essai
+// (`sendAccessLinkNow`, process.ts). La tâche planifiée ne peut donc pas le reprendre : elle ne le
+// réserve qu'au-delà de `ACCESS_LINK_FIRST_ATTEMPT_MINUTES` (le premier essai a eu tout son temps),
+// pour le passer en échec (`no_contact`), avec une alerte.
 
-export type OutboxTemplate = 'request_notification' | 'technical_alert'
+export type OutboxTemplate = 'request_notification' | 'technical_alert' | 'booking_access'
+
+/** Délai laissé au premier essai d'un e-mail d'accès avant que la tâche planifiée ne s'en saisisse. */
+export const ACCESS_LINK_FIRST_ATTEMPT_MINUTES = 5
 /** Alertes sur un message de la boîte d'envoi : elles portent son identifiant (`alert_subject`). */
 export type MessageAlertEvent = 'send_failed' | 'undelivered' | 'tracking_expired'
 /**
@@ -73,7 +81,10 @@ function claimQuery(extraFilter: string): string {
 RETURNING ${ITEM_COLUMNS}`
 }
 
-const CLAIM_DUE = claimQuery('')
+// Un e-mail d'accès récent appartient encore à son premier essai : la tâche ne le prend pas.
+const CLAIM_DUE = claimQuery(
+  `\n      AND (template <> 'booking_access'\n        OR created_at <= $1::timestamptz - interval '${ACCESS_LINK_FIRST_ATTEMPT_MINUTES} minutes')`,
+)
 const CLAIM_ONE = claimQuery('\n      AND id = $3')
 
 const INSERT_ALERT = `INSERT INTO outbox (id, template, alert_event, alert_subject)
@@ -155,6 +166,15 @@ export async function enqueueNotification(
        VALUES ($1, 'request_notification', $2, $3)`,
       [item.id, item.requestId, item.priority],
     ),
+  )
+}
+
+// E-mail d'accès d'une demande de lien (story 3.9), écrit dans la transaction qui crée le lien
+// (`client`, rôle `site_public`) : un gabarit et un identifiant, rien d'autre. Sans RETURNING.
+export async function enqueueAccessLink(client: PoolClient, id: string): Promise<void> {
+  assertId(id, 'Identifiant du message')
+  await guard('enqueueAccessLink', () =>
+    client.query(`INSERT INTO outbox (id, template) VALUES ($1, 'booking_access')`, [id]),
   )
 }
 

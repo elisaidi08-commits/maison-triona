@@ -1035,7 +1035,8 @@
     "invalid": {
       "title": "Ce lien n’est plus valable.",
       "body": "Pour convenir d’un appel, écrivez-nous : nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
-      "write": "Nous écrire"
+      "write": "Nous écrire",
+      "newLink": "Recevoir un nouveau lien"
     },
     "unavailable": {
       "title": "La réservation est momentanément indisponible.",
@@ -1053,6 +1054,48 @@
     "ics": {
       "summary": "Appel · Maison Triona",
       "description": "Maison Triona vous appelle au numéro indiqué."
+    }
+  },
+  "BookingLink": {
+    "request": {
+      "metaTitle": "Convenir d’un appel",
+      "title": "Convenons d’un appel.",
+      "intro": "Indiquez votre adresse e‑mail : nous vous envoyons un lien personnel pour choisir le moment de l’appel. Il est valable 48 heures ; aucun compte n’est nécessaire.",
+      "form": {
+        "fields": {
+          "email": {
+            "label": "Votre adresse e‑mail",
+            "hint": "Elle ne sert qu’à vous envoyer ce lien."
+          },
+          "piege": {
+            "label": "Référence interne"
+          }
+        },
+        "buttons": {
+          "send": "Recevoir mon lien",
+          "sending": "Envoi en cours"
+        },
+        "errors": {
+          "prefix": "Erreur :",
+          "one": "Un point à revoir",
+          "codes": {
+            "emailRequis": "Merci d’indiquer votre adresse e‑mail.",
+            "emailFormat": "Merci d’indiquer une adresse e‑mail valide."
+          }
+        },
+        "status": {
+          "closed": "La réservation d’un appel ouvrira bientôt ; rien n’a été enregistré ni envoyé.",
+          "tooEarly": "Votre demande n’a pas pu partir. Patientez quelques secondes, puis envoyez-la de nouveau ; votre adresse est restée dans le formulaire.",
+          "failed": "L’envoi n’a pas abouti. Votre adresse est restée dans le formulaire."
+        },
+        "privacy": "Lire la politique de confidentialité (nouvel onglet)"
+      }
+    },
+    "sent": {
+      "metaTitle": "Lien envoyé",
+      "title": "Un lien vient de vous être envoyé.",
+      "body": "Il est valable 48 heures. S’il n’arrive pas d’ici quelques minutes, regardez parmi les courriers indésirables.",
+      "back": "Revenir à l’accueil"
     }
   }
 }

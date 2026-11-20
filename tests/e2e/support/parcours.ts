@@ -1,0 +1,35 @@
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+// Réglages partagés par playwright.config.ts et les parcours avec base (projet `reservation`) :
+// port des doubles de test (faux-services.mjs), secret factice des empreintes d'adresse (le test
+// recalcule `email_hmac`), journal du serveur dédié (le test vérifie qu'il ne contient ni adresse ni
+// jeton). Le port peut changer pour un lancement local à côté d'autres serveurs (variable
+// `FAUX_SERVICES_PORT`). Valeurs factices uniquement.
+
+export const FAUX_SERVICES_PORT = Number(process.env.FAUX_SERVICES_PORT ?? 3201)
+export const FAUX_SERVICES_URL = `http://127.0.0.1:${FAUX_SERVICES_PORT}`
+export const FAUX_UPSTASH_TOKEN = 'jeton-factice-upstash-e2e'
+export const SECRET_ADRESSE_E2E = 'secret-factice-e2e-empreintes-adresse-0123456789'
+export const JOURNAL_SERVEUR = join(
+  tmpdir(),
+  `maison-triona-serveur-reservation-${FAUX_SERVICES_PORT}.log`,
+)
+
+/** Remet les doubles de test à zéro (limites et e-mails reçus). */
+export async function remettreAZero(): Promise<void> {
+  const reponse = await fetch(`${FAUX_SERVICES_URL}/__reset`, { method: 'POST' })
+  if (!reponse.ok) throw new Error('Doubles de test injoignables')
+}
+
+export interface EmailRecu {
+  id: string
+  to: string
+  subject: string
+  text: string
+}
+
+export async function emailsRecus(): Promise<EmailRecu[]> {
+  const reponse = await fetch(`${FAUX_SERVICES_URL}/__emails`)
+  return (await reponse.json()) as EmailRecu[]
+}

@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
+import { verifierSecretAdresseAuBuild } from './src/lib/booking/email-hmac'
 import { redirectionsVercelApp } from './src/lib/redirections'
 import { verifierCronAuBuild } from './src/lib/security/cron'
 
@@ -9,6 +10,9 @@ import { verifierCronAuBuild } from './src/lib/security/cron'
 // Coffre ou e-mails configurés en production sans CRON_SECRET valable : le build échoue (stories
 // 3.2 D et 3.3, src/lib/security/cron.ts).
 verifierCronAuBuild(process.env)
+// Demande de lien de réservation configurée en production (base et e-mails) sans
+// BOOKING_EMAIL_HMAC_SECRET valable : le build échoue (story 3.9, src/lib/booking/email-hmac.ts).
+verifierSecretAdresseAuBuild(process.env)
 
 const deploye = Boolean(process.env.VERCEL_ENV)
 const dev = process.env.NODE_ENV === 'development'
