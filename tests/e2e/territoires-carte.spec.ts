@@ -110,6 +110,29 @@ test('après les pays, ce que la maison fait : les trois services et le contact'
   )
 })
 
+// Reflux (WCAG 1.4.10, story 5.3) : 1 280 × 800 et 1 280 × 1 024 zoomés à 400 %, soit 320 px de
+// large à l'horizontale. Une colonne sous 568 px, sans défilement en largeur ; deux dès 568 px.
+for (const chemin of ['/fr/territoires', '/en/where-we-work']) {
+  test(`${chemin} : à 320 px à l'horizontale, une colonne et aucun défilement en largeur`, async ({
+    page,
+  }) => {
+    for (const [width, height] of [
+      [320, 200],
+      [320, 256],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      await page.goto(chemin)
+      await expect(page.locator('[data-carte-recit]')).toHaveCSS('display', 'block')
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
+      )
+    }
+    await page.setViewportSize({ width: 568, height: 320 })
+    await page.goto(chemin)
+    await expect(page.locator('[data-carte-recit]')).toHaveCSS('display', 'grid')
+  })
+}
+
 test.describe('sans JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 

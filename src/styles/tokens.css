@@ -490,8 +490,10 @@
   /* En portrait sous 1 024 px (téléphone, tablette) : une colonne, la carte collée en haut, le texte
      défile dessous. À l'horizontale (téléphone ou tablette) et dès 1 024 px : deux colonnes, la
      carte collée au milieu de la hauteur visible (au-dessus de la barre mobile), chaque pays un
-     temps de lecture (hauteur de min-h-scene-intro). */
-  @media (orientation: landscape), (width >= 64rem) {
+     temps de lecture (hauteur de min-h-scene-intro). Pas sous 568 px de large (35,5 rem), même à
+     l'horizontale : à 320 px (1 280 px zoomés à 400 %), deux colonnes de 128 px faisaient déborder
+     « Luxembourg » (WCAG 1.4.10, story 5.3) ; une colonne, comme sur un téléphone en portrait. */
+  @media (orientation: landscape) and (width >= 35.5rem), (width >= 64rem) {
     [data-carte-recit] {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
