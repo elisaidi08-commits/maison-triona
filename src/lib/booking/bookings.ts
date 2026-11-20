@@ -395,10 +395,9 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
     if (code === CONTROLE) return { status: 'taken', slots: await loadOpenSlots(pool, now) }
     if (code === UNIQUE) {
       const found = await guard('bookSlot', () => findToken(pool, token))
-      const booking =
-        found?.replayable
-          ? await guard('bookSlot', () => bookingOfToken(pool, found.id))
-          : null
+      const booking = found?.replayable
+        ? await guard('bookSlot', () => bookingOfToken(pool, found.id))
+        : null
       if (booking?.status === 'confirmed')
         return { status: 'already-booked', bookingId: booking.id }
     }
