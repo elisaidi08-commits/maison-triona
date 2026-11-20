@@ -146,3 +146,21 @@ test('aucun en-tête Link de next-intl (alternances dans le HTML seulement)', as
   const response = await request.get('/fr/la-maison')
   expect(response.headers()['link'] ?? '').not.toContain('hreflang')
 })
+
+// Pages en noindex du contact et de la demande de lien : une description quand même, pour le seuil
+// SEO de Lighthouse (constat n° 7 de docs/a11y-report.md) ; jamais indexées.
+for (const path of [
+  '/fr/contact/appel',
+  '/en/contact/call',
+  '/fr/contact/appel/envoye',
+  '/en/contact/call/sent',
+  '/fr/contact/merci',
+  '/en/contact/merci',
+]) {
+  test(`${path} : noindex, avec une description`, async ({ page }) => {
+    await page.goto(path)
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+    const description = await page.locator('meta[name="description"]').getAttribute('content')
+    expect(description?.length ?? 0).toBeGreaterThan(50)
+  })
+}

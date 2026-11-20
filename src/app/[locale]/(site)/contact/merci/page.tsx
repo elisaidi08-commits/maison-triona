@@ -18,7 +18,12 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await rootParams.locale()) as Locale
   const t = await getTranslations({ locale, namespace: 'ContactThanks' })
-  return { title: t('metaTitle'), robots: { index: false, follow: false } }
+  // Description même en noindex : seuil SEO de Lighthouse (constat n° 7 de docs/a11y-report.md).
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function Page() {

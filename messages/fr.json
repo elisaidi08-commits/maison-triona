@@ -963,6 +963,7 @@
   },
   "ContactThanks": {
     "metaTitle": "Merci",
+    "metaDescription": "Votre demande est bien arrivée. Maison Triona vous répond sous 48 heures ouvrées, du lundi au vendredi.",
     "title": "Merci, votre demande est bien arrivée.",
     "body": "Nous vous répondons sous 48 heures ouvrées, du lundi au vendredi.",
     "back": "Revenir à l’accueil"
@@ -1058,6 +1059,7 @@
   "BookingLink": {
     "request": {
       "metaTitle": "Convenir d’un appel",
+      "metaDescription": "Recevez un lien personnel pour choisir le moment d’un appel avec Maison Triona. Aucun compte n’est nécessaire.",
       "title": "Convenons d’un appel.",
       "intro": "Indiquez votre adresse e‑mail : nous vous envoyons un lien personnel pour choisir le moment de l’appel. Il est valable 48 heures ; aucun compte n’est nécessaire.",
       "form": {
@@ -1092,6 +1094,7 @@
     },
     "sent": {
       "metaTitle": "Lien envoyé",
+      "metaDescription": "Votre demande de lien pour convenir d’un appel avec Maison Triona est bien arrivée.",
       "title": "Un lien vient de vous être envoyé.",
       "body": "Il est valable 48 heures. S’il n’arrive pas d’ici quelques minutes, regardez dans vos courriers indésirables, ou écrivez-nous.",
       "back": "Revenir à l’accueil"
