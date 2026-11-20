@@ -8,7 +8,9 @@
  */
 import { z } from 'zod'
 
-import { QUALIFICATIONS, type Qualification } from '../booking/agenda.ts'
+import { AUCUNE_DEMANDE, QUALIFICATIONS, type Qualification } from '../booking/agenda.ts'
+
+export { AUCUNE_DEMANDE }
 
 // Sans compilation à la volée (`new Function`), que la CSP du coffre refuse : voir demande.ts.
 z.config({ jitless: true })
@@ -46,9 +48,6 @@ export function validerQualification(
   if (!statut.success) return { ok: false, erreur: 'statut' }
   return { ok: true, valeur: { id, statut: statut.data } }
 }
-
-/** Valeur de la liste qui retire le rattachement. */
-export const AUCUNE_DEMANDE = 'aucune'
 
 /** Rattachement d'un appel à une demande, ou retrait (formulaire : `id`, `demande`). */
 export function validerRattachement(

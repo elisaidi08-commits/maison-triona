@@ -22,6 +22,9 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number]
 export const QUALIFICATIONS = ['done', 'no_answer'] as const
 export type Qualification = (typeof QUALIFICATIONS)[number]
 
+/** Valeur de la liste du rattachement qui le retire (aucune demande). */
+export const AUCUNE_DEMANDE = 'aucune'
+
 /** Statut affiché : celui de la base, ou « à qualifier », déduit. */
 export type AgendaStatus = BookingStatus | 'to_qualify'
 

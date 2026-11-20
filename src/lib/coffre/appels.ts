@@ -3,12 +3,11 @@
 // nom et le numéro ne s'affichent que dans le navigateur, déchiffrés (PersonneAppel).
 // Imports relatifs seulement : testé par node --test.
 
-import type { AgendaStatus, AgendaView } from '../booking/agenda.ts'
+import { AUCUNE_DEMANDE, type AgendaStatus, type AgendaView } from '../booking/agenda.ts'
 import { zonedParts } from '../booking/zoned-time.ts'
 import type { VaultRequestSummary } from '../vault/repository.ts'
 import { heureEnLettres } from './disponibilites.ts'
 import { dateHeure, libelle, PAYS, SERVICES, TYPES } from './libelles.ts'
-import { AUCUNE_DEMANDE } from '../validation/agenda.ts'
 
 export const FUSEAU_AGENDA = 'Europe/Brussels'
 

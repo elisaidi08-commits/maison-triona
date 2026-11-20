@@ -71,11 +71,18 @@ describe('CSP du coffre', () => {
 describe('WebAssembly sur les seules pages de lecture (partie D)', () => {
   it('reconnaît les pages de lecture, rien d’autre', () => {
     assert.equal(estCheminLecture('/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b'), true)
+    // Agenda des appels (story 3.13) : noms et numéros déchiffrés dans le navigateur.
+    assert.equal(estCheminLecture('/coffre/appels'), true)
+    assert.equal(estCheminLecture('/coffre/appels/'), true)
     for (const chemin of [
       '/coffre',
       '/coffre/connexion',
       '/coffre/demandes',
       '/coffre/enrolement',
+      '/coffre/disponibilites',
+      '/coffre/appels/autre',
+      '/coffre/appelsx',
+      '/fr/coffre/appels',
     ]) {
       assert.equal(estCheminLecture(chemin), false, chemin)
     }
