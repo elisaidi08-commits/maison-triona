@@ -78,29 +78,69 @@ export function optionsDemandes(
   return [{ value: AUCUNE_DEMANDE, label: 'Aucune demande' }, ...options]
 }
 
-/** Réponse d'une action de l'agenda (statut, rattachement), rendue au formulaire. */
-export type ResultatAppel =
-  | 'statut'
-  | 'rattache'
-  | 'detache'
-  | 'refuse'
-  | 'introuvable'
-  | 'demande-inconnue'
-  | 'saisie'
-  | 'indisponible'
+/** Réponse d'une action de l'agenda (statut, rattachement ; depuis la 3.11, déplacer, annuler,
+ * effacer), rendue au formulaire ou portée par l'adresse (`?resultat=`, liste fermée). */
+export const RESULTATS_APPEL = [
+  'statut',
+  'rattache',
+  'detache',
+  'deplace',
+  'inchange',
+  'annule',
+  'efface',
+  'refuse',
+  'pris',
+  'deja-annule',
+  'introuvable',
+  'demande-inconnue',
+  'confirmation',
+  'saisie',
+  'indisponible',
+] as const
+export type ResultatAppel = (typeof RESULTATS_APPEL)[number]
 
 export const MESSAGES_APPEL: Record<ResultatAppel, string> = {
   statut: 'Statut enregistré.',
   rattache: 'Rattachement enregistré.',
   detache: 'Rattachement retiré.',
+  deplace:
+    'Appel déplacé. Aucun message n’est parti : prévenez la personne. Son lien de gestion montre la nouvelle heure.',
+  inchange: 'L’appel est déjà à cette heure : rien n’a changé.',
+  annule:
+    'Appel annulé par la maison. Aucun message n’est parti : prévenez la personne. Le créneau est libéré.',
+  efface: 'Appel effacé, avec ses liens. L’effacement est inscrit au journal, sans contenu.',
   refuse:
     'Erreur : ce statut ne peut pas être choisi pour cet appel (pas encore commencé, ou annulé).',
+  pris: 'Erreur : ce créneau n’est plus libre. Choisissez-en un autre ; l’appel n’a pas bougé.',
+  'deja-annule': 'Cet appel était déjà annulé.',
   introuvable: 'Erreur : cet appel n’existe plus.',
   'demande-inconnue': 'Erreur : cette demande n’existe plus. Rechargez la page.',
+  confirmation: 'Erreur : cochez la case de confirmation avant d’envoyer.',
   saisie: 'Erreur : le choix envoyé n’a pas été reconnu. Rechargez la page.',
   indisponible: 'Erreur : l’enregistrement n’a pas abouti. Réessayez dans un instant.',
 }
 
 export function estErreurAppel(resultat: ResultatAppel): boolean {
-  return !['statut', 'rattache', 'detache'].includes(resultat)
+  return ![
+    'statut',
+    'rattache',
+    'detache',
+    'deplace',
+    'inchange',
+    'annule',
+    'efface',
+    'deja-annule',
+  ].includes(resultat)
+}
+
+/** Paramètre `?resultat=` d'une page de l'agenda : un code de la liste, sinon rien. */
+export function lireResultat(valeur: unknown): ResultatAppel | null {
+  return typeof valeur === 'string' && (RESULTATS_APPEL as readonly string[]).includes(valeur)
+    ? (valeur as ResultatAppel)
+    : null
+}
+
+/** Adresse de la page d'un appel, avec le code d'une action. */
+export function adresseAppel(id: string, resultat?: ResultatAppel): string {
+  return `/coffre/appels/${id}${resultat ? `?resultat=${resultat}` : ''}`
 }

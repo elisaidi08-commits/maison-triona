@@ -1,7 +1,7 @@
 import type { Pool } from 'pg'
 
 import { purgerAuth } from '../auth/purge.ts'
-import { purgeBookings, purgeTokens } from '../booking/bookings.ts'
+import { purgeBookings, purgeCancelledContents, purgeTokens } from '../booking/bookings.ts'
 import { withTransaction } from '../db/transaction.ts'
 import { autorisationCron, secretCron } from '../security/cron.ts'
 import { logRetention, purgeExpired, VaultError, type RetentionCounts } from './repository.ts'
@@ -12,7 +12,8 @@ import { logRetention, purgeExpired, VaultError, type RetentionCounts } from './
 // 2. purge les sessions échues ou inactives, les compteurs de limitation de débit périmés et les
 //    défis du second facteur expirés (purgerAuth) ;
 // 3. efface les réservations d'appel échues et les jetons de lien expirés depuis plus de 48 heures
-//    (story 3.10, src/lib/booking/bookings.ts) ;
+//    (story 3.10, src/lib/booking/bookings.ts), et le contenu scellé des appels annulés dont le
+//    créneau d'origine est fini (D78, story 3.11 ; le créneau et le statut restent) ;
 // 4. inscrit au journal un résumé en nombres seulement (`retention`).
 // Le tout dans une transaction, sous verrou consultatif : Vercel peut livrer deux fois le même
 // passage ; le second attend le premier, ne trouve plus rien et inscrit un résumé à zéro. Une
@@ -34,6 +35,7 @@ export async function runRetention(pool: Pool, now: Date): Promise<RetentionCoun
       // Réservations d'abord : un jeton n'est plus retenu par une réservation effacée.
       const bookings = await purgeBookings(client, now)
       const tokens = await purgeTokens(client, now)
+      const cancelledCalls = await purgeCancelledContents(client, now)
       const counts: RetentionCounts = {
         requests,
         sessions: auth.sessions,
@@ -41,6 +43,7 @@ export async function runRetention(pool: Pool, now: Date): Promise<RetentionCoun
         verifications: auth.verifications,
         bookings,
         tokens,
+        cancelledCalls,
       }
       await logRetention(client, counts)
       return counts

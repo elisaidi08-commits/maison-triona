@@ -3,13 +3,15 @@ import { connection } from 'next/server'
 
 import { LOCALES, type Locale } from '@/i18n/pathnames'
 import { bookingUid, buildIcs } from '@/lib/booking/ics'
-import { lirePageConfirmation } from '@/lib/booking/link-page'
+import { lirePageGestion } from '@/lib/booking/link-page'
 
-// « Ajouter à mon agenda » (story 3.10 ; docs/reservation-appel.md §4.5) : le fichier .ics de l'appel,
-// produit ici, sur le serveur, à chaque demande, sans rien écrire. UID stable (`<id>-guest@`), titre et
-// phrase fixes de messages/*.json : ni nom de service, ni nom, ni numéro, ni lien. Même condition que
-// la confirmation (appel confirmé, pas encore passé) ; sinon 404, sans dire pourquoi. Le chemin porte
-// le jeton : no-store, référent réduit à l'origine, noindex (en-têtes ci-dessous et next.config.ts).
+// Fichier .ics d'un appel, par le lien de gestion (story 3.11 ; docs/reservation-appel.md §4.5) :
+// produit ici, sur le serveur, à chaque demande, sans rien écrire. UID stable (`<id>-guest@`), titre
+// et phrase fixes de messages/*.json : ni nom de service, ni nom, ni numéro, ni lien. Appel à venir ou
+// commencé : `METHOD:PUBLISH` avec la séquence de la base (+1 à chaque déplacement : le nouveau fichier
+// remplace l'ancien dans l'agenda) ; appel annulé : `METHOD:CANCEL`, `STATUS:CANCELLED`, même UID,
+// séquence de l'annulation (il retire l'événement). Lien qui ne vaut plus : 404, sans dire pourquoi.
+// Le chemin porte le jeton : no-store, référent réduit à l'origine, noindex.
 
 const ENTETES_PRIVES = {
   'Cache-Control': 'no-store',
@@ -23,25 +25,27 @@ function introuvable(): Response {
 
 export async function GET(
   _request: Request,
-  { params }: RouteContext<'/[locale]/contact/appel/[jeton]/agenda'>,
+  { params }: RouteContext<'/[locale]/contact/appel/gerer/[jeton]/agenda'>,
 ): Promise<Response> {
   await connection()
   const { locale, jeton } = await params
   if (!(LOCALES as readonly string[]).includes(locale)) return introuvable()
-  const lu = await lirePageConfirmation(jeton)
+  const lu = await lirePageGestion(jeton, locale as Locale)
   if (lu.etat === 'indisponible') {
     return new Response(null, { status: 503, headers: ENTETES_PRIVES })
   }
-  if (lu.etat !== 'confirme') return introuvable()
+  if (lu.etat !== 'valide') return introuvable()
 
   const t = await getTranslations({ locale: locale as Locale, namespace: 'Booking.ics' })
   const ics = buildIcs({
-    uid: bookingUid(lu.confirmation.bookingId, 'guest'),
-    start: lu.confirmation.start,
-    end: lu.confirmation.end,
+    uid: bookingUid(lu.appel.id, 'guest'),
+    start: lu.appel.start,
+    end: lu.appel.end,
     stamp: new Date(),
     summary: t('summary'),
     description: t('description'),
+    sequence: lu.appel.sequence,
+    method: lu.phase === 'cancelled' ? 'CANCEL' : 'PUBLISH',
   })
   return new Response(ics, {
     status: 200,

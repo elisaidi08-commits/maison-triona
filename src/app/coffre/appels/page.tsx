@@ -15,17 +15,22 @@ import {
 } from '@/lib/booking/agenda'
 import type { AgendaView } from '@/lib/booking/agenda'
 import {
+  adresseAppel,
   adresseVue,
+  estErreurAppel,
   FUSEAU_AGENDA,
   heuresAppel,
   jourAppel,
+  lireResultat,
   lireVue,
+  MESSAGES_APPEL,
   optionsDemandes,
   STATUTS_APPEL,
   VUES,
 } from '@/lib/coffre/appels'
 import { dateEnLettres } from '@/lib/coffre/disponibilites'
 import { dateHeure } from '@/lib/coffre/libelles'
+import { isCancelled } from '@/lib/booking/manage'
 import { getCoffrePool } from '@/lib/db/pool'
 import type { VaultRequestSummary } from '@/lib/vault/repository'
 
@@ -46,8 +51,11 @@ import { RattacherAppel } from '../_composants/RattacherAppel'
 // Lecture journalisée au rendu (`booking_list`, une ligne par affichage, src/lib/booking/
 // agenda-repository.ts) ; statut et rattachement par des actions serveur journalisées
 // (./actions.ts). Liens simples, sans préchargement. Sans icône ; textes internes, en français.
-// Hors périmètre : déplacer et annuler (story 3.11), messages et SMS à la personne (3.12),
-// notifications à Cat et invitations Google (boîte d'envoi, Key Manager).
+// Story 3.11 : chaque appel mène à sa page (./[id]), où il se déplace, s'annule ou s'efface ; les
+// appels annulés restent affichés (heure, statut), sans être déchiffrés : leur nombre n'a pas de
+// borne, celui des autres ne dépasse jamais le plafond (LECTURE_MAX, src/lib/validation/agenda.ts).
+// Hors périmètre : messages et SMS à la personne (3.12), notifications à Cat et invitations Google
+// (boîte d'envoi, Key Manager).
 
 export const metadata: Metadata = { title: 'Appels' }
 
@@ -92,7 +100,7 @@ function Appel({
         <Titre className="text-body-l text-encre">{jour ? libelleHeures : heures}</Titre>
         <p className="text-label text-encre uppercase">{STATUTS_APPEL[statut]}</p>
       </div>
-      <PersonneAppel id={appel.id} />
+      {isCancelled(appel.status) ? null : <PersonneAppel id={appel.id} />}
       {canQualify(appel, maintenant) ? (
         <QualifierAppel id={appel.id} statut={appel.status} heures={libelleHeures} />
       ) : null}
@@ -102,6 +110,12 @@ function Appel({
         actuelle={appel.requestId ?? AUCUNE_DEMANDE}
         heures={libelleHeures}
       />
+      <p>
+        <LienCoffre href={adresseAppel(appel.id)}>
+          {isCancelled(appel.status) ? 'Effacer cet appel' : 'Déplacer, annuler ou effacer'}
+          <span className="sr-only"> : appel de {libelleHeures}</span>
+        </LienCoffre>
+      </p>
       {rattachee ? (
         <p>
           <LienCoffre href={`/coffre/demandes/${rattachee.id}`}>
@@ -118,7 +132,9 @@ function Liste({ children }: { children: ReactNode }) {
 }
 
 export default async function PageAppels({ searchParams }: PageProps<'/coffre/appels'>) {
-  const vue = lireVue((await searchParams).vue)
+  const recherche = await searchParams
+  const vue = lireVue(recherche.vue)
+  const resultat = lireResultat(recherche.resultat)
   const acces = await lireAccesRequete()
   if (acces.etat === 'anonyme') redirect('/coffre/connexion')
   if (acces.etat === 'enrolement') redirect('/coffre/enrolement')
@@ -133,7 +149,10 @@ export default async function PageAppels({ searchParams }: PageProps<'/coffre/ap
   })
   if (!agenda) redirect('/coffre/connexion')
   const demandes = (await demandesRecentesDuCoffre(pool, acces)) ?? []
-  const ids = [...agenda.calls, ...agenda.earlierToQualify].map((appel) => appel.id)
+  // Les appels annulés ne se déchiffrent pas (voir plus haut).
+  const ids = [...agenda.calls, ...agenda.earlierToQualify]
+    .filter((appel) => !isCancelled(appel.status))
+    .map((appel) => appel.id)
 
   // Vue de la semaine : un titre par jour qui a des appels.
   const parJour = bornes.days
@@ -157,6 +176,20 @@ export default async function PageAppels({ searchParams }: PageProps<'/coffre/ap
           <LienCoffre href="/coffre/disponibilites">Disponibilités des appels</LienCoffre>
         </p>
       </EnTete>
+
+      {resultat ? (
+        <div aria-live="polite">
+          <p
+            className={
+              estErreurAppel(resultat)
+                ? 'border-l-2 border-encre py-8 pl-24 text-body-s'
+                : 'text-body-s'
+            }
+          >
+            {MESSAGES_APPEL[resultat]}
+          </p>
+        </div>
+      ) : null}
 
       <nav aria-label="Vue de l’agenda" className="flex flex-wrap gap-x-24">
         {AGENDA_VIEWS.map((une) =>

@@ -20,13 +20,17 @@ export { AUCUNE_DEMANDE }
 // Sans compilation à la volée (`new Function`), que la CSP du coffre refuse : voir demande.ts.
 z.config({ jitless: true })
 
-export type CodeErreurAgenda = 'identifiant' | 'statut' | 'demande'
+export type CodeErreurAgenda = 'identifiant' | 'statut' | 'demande' | 'creneau' | 'confirmation'
 
 export type ResultatAgenda<T> = { ok: true; valeur: T } | { ok: false; erreur: CodeErreurAgenda }
 
 /**
  * Appels déchiffrés en une fois : tout ce qu'une page de l'agenda peut montrer (une semaine au
  * plafond le plus haut, et ceux qui restent à qualifier), tiré des constantes, jamais recopié.
+ * Story 3.11 : la vue montre aussi les appels annulés, sans limite de nombre (une personne peut
+ * réserver puis annuler plusieurs fois) ; ils ne sont pas déchiffrés (heure et statut seulement,
+ * src/app/coffre/appels/page.tsx). Les appels non annulés d'un jour ne dépassent jamais le plafond
+ * (réservation et déplacement le comptent sous verrou) : la borne reste juste.
  */
 export const LECTURE_MAX = AGENDA_MAX_CALLS
 
@@ -80,4 +84,32 @@ export function validerIdentifiantsAppels(valeur: unknown): string[] | null {
   const lu = z.array(identifiant).min(1).max(LECTURE_MAX).safeParse(valeur)
   if (!lu.success) return null
   return [...new Set(lu.data)]
+}
+
+/** Déplacer un appel depuis le coffre (formulaire : `id`, `creneau`, instant ISO 8601 en UTC). */
+export function validerDeplacementCoffre(
+  donnees: FormData,
+): ResultatAgenda<{ id: string; debut: Date }> {
+  const id = appel(donnees)
+  if (!id) return { ok: false, erreur: 'identifiant' }
+  const lu = z.iso.datetime().safeParse(champ(donnees, 'creneau'))
+  if (!lu.success) return { ok: false, erreur: 'creneau' }
+  return { ok: true, valeur: { id, debut: new Date(lu.data) } }
+}
+
+/**
+ * Annuler ou effacer un appel depuis le coffre (formulaire : `id`, case `confirmation` cochée,
+ * exigée aussi par le navigateur).
+ */
+export function validerGesteConfirme(donnees: FormData): ResultatAgenda<{ id: string }> {
+  const id = appel(donnees)
+  if (!id) return { ok: false, erreur: 'identifiant' }
+  if (champ(donnees, 'confirmation') !== 'oui') return { ok: false, erreur: 'confirmation' }
+  return { ok: true, valeur: { id } }
+}
+
+/** Identifiant d'appel d'une adresse du coffre (`/coffre/appels/<id>`), ou null. */
+export function lireIdentifiantAppel(valeur: unknown): string | null {
+  const lu = identifiant.safeParse(valeur)
+  return lu.success ? lu.data : null
 }

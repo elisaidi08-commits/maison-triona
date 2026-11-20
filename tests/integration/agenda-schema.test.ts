@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
 import { migrate } from '../../src/lib/db/migrate.ts'
-import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
+import {
+  applyRoles,
+  coffrePool,
+  insererHorsGardes,
+  resetDatabase,
+  TEST_DATABASE_URL,
+  testPool,
+} from './helpers.ts'
 
 // Agenda des appels (story 3.13, db/migrations/0013_agenda.sql), contre PostgreSQL 17 avec les vrais
 // rôles : changements de statut acceptés par la base (qualification d'un appel commencé, sous tout
@@ -37,7 +44,8 @@ async function appel(minutes: number, statut = 'confirmed'): Promise<string> {
   const debut = new Date(Date.now() + minutes * MINUTE)
   const fin = new Date(debut.getTime() + 30 * MINUTE)
   const occupe = new Date(fin.getTime() + 15 * MINUTE)
-  await admin.query(
+  await insererHorsGardes(
+    admin,
     `INSERT INTO bookings
        (id, starts_at, ends_at, slot, privacy_version, retention_until, sealed, status)
      VALUES ($1, $2, $3, tstzrange($2, $4), '2026-11-18', $2::timestamptz + interval '1 year', $5, $6)`,
@@ -94,7 +102,7 @@ describe('agenda des appels : schéma et droits (0013)', () => {
     assert.equal((await statut(enCours)).status, 'no_answer')
   })
 
-  it('refuse de qualifier un appel à venir ou annulé, d’annuler, de revenir à « confirmé »', async () => {
+  it('refuse de qualifier un appel à venir ou annulé, d’annuler un appel commencé, de revenir à « confirmé »', async () => {
     const aVenir = await appel(60)
     for (const nouveau of ['done', 'no_answer']) {
       await assert.rejects(
@@ -104,8 +112,9 @@ describe('agenda des appels : schéma et droits (0013)', () => {
       )
     }
     const passe = await appel(-60)
-    // Annuler : story 3.11, refusé ici, même à venir.
-    for (const id of [passe, aVenir]) {
+    // Annuler un appel commencé : refusé (story 3.11 ; l'annulation d'un appel à venir est testée
+    // dans gestion.test.ts).
+    for (const id of [passe]) {
       for (const nouveau of ['cancelled_by_guest', 'cancelled_by_house']) {
         await assert.rejects(
           coffre.query('UPDATE bookings SET status = $2 WHERE id = $1', [id, nouveau]),
@@ -165,13 +174,12 @@ describe('agenda des appels : schéma et droits (0013)', () => {
     assert.equal((await statut(autre)).status, 'confirmed')
   })
 
-  it('coffre ne modifie que le statut et le rattachement', async () => {
+  it('coffre ne modifie que le statut, le rattachement et (3.11) le créneau', async () => {
     await appel(-60)
     for (const sql of [
-      'UPDATE bookings SET starts_at = starts_at',
-      'UPDATE bookings SET ends_at = ends_at',
-      'UPDATE bookings SET slot = slot',
-      'UPDATE bookings SET sealed = sealed',
+      // `sealed` : remis à NULL pour un appel annulé seulement, par un déclencheur (D78,
+      // conservation.test.ts) : pas un refus de droit ici.
+      'UPDATE bookings SET sequence = sequence + 1',
       'UPDATE bookings SET retention_until = now()',
       "UPDATE bookings SET privacy_version = 'v'",
       'UPDATE bookings SET access_token_id = NULL',
@@ -188,7 +196,7 @@ describe('agenda des appels : schéma et droits (0013)', () => {
     assert.equal(rows.length, 1)
   })
 
-  it('site_public n’a aucun droit nouveau : ni le rattachement, ni le statut, ni le journal', async () => {
+  it('site_public n’a ni le rattachement, ni le statut, ni le journal (même après la 3.11)', async () => {
     const id = await appel(-60)
     const { rows } = await admin.query<{ privilege: string; permis: boolean }>(
       `SELECT p AS privilege, has_column_privilege('site_public', 'bookings', 'request_id', p) AS permis
@@ -290,8 +298,8 @@ describe('agenda des appels : schéma et droits (0013)', () => {
     await coffre.query(
       `INSERT INTO vault_access_log
          (actor, action, purged_requests, purged_sessions, purged_rate_limits, purged_verifications,
-          purged_bookings, purged_tokens)
-       VALUES ('system', 'retention', 0, 0, 0, 0, 0, 0)`,
+          purged_bookings, purged_tokens, purged_cancelled_calls)
+       VALUES ('system', 'retention', 0, 0, 0, 0, 0, 0, 0)`,
     )
     await assert.rejects(ecrire('autre', null, null), CONTROLE)
 

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -16,6 +16,10 @@ import { remettreAZero } from './support/parcours'
 // et saisie conservée, réservation, confirmation, fichier .ics) ; lien consommé ; créneau pris par
 // une autre personne (« Ce créneau vient d'être pris », voisins en tête, saisie conservée) ; axe
 // WCAG 2.2 AA en FR et EN ; aucune violation de la CSP ; jeton jamais en clair en base.
+// Story 3.11 : la confirmation est la page de gestion (lien de gestion) ; déplacer et annuler sans
+// JavaScript (nouvel horaire, fichier .ics mis à jour puis METHOD:CANCEL, créneau libéré), axe FR et
+// EN, ni nom ni numéro dans les réponses ; côté coffre, déplacer, annuler et effacer un appel depuis
+// sa page, journalisés sans contenu.
 // IGNORÉ PAR DÉFAUT sans `RESERVATION_E2E_DATABASE_URL` : il lui faut une base jetable (nom en _test,
 // VIDÉE par le test) et un serveur branché dessus, avec les deux rôles. Projet Playwright
 // `reservation` : playwright.config.ts démarre alors ce serveur dédié, sur le port 3200 (variables
@@ -208,7 +212,7 @@ test.describe('réservation d’un appel de bout en bout', () => {
         await nu.page.getByLabel('Votre numéro').fill(NUMERO)
         await nu.page.getByLabel(/^J’accepte que Maison Triona/).check()
         await nu.page.getByRole('button', { name: 'Convenir de cet appel' }).click()
-        await nu.page.waitForURL(/\/confirmation$/)
+        await nu.page.waitForURL(/\/contact\/appel\/gerer\/[A-Za-z0-9_-]{43}$/)
         await expect(nu.page.getByRole('heading', { level: 1 })).toHaveText(
           'Votre appel est convenu.',
         )
@@ -235,10 +239,28 @@ test.describe('réservation d’un appel de bout en bout', () => {
           `SELECT status, octet_length(sealed) AS taille FROM bookings`,
         )
         expect(appels).toEqual([{ status: 'confirmed', taille: 2096 }])
-        const { rows: consomme } = await base.query('SELECT used_at FROM booking_tokens')
+        const { rows: consomme } = await base.query(
+          "SELECT used_at FROM booking_tokens WHERE purpose = 'access'",
+        )
         expect(consomme[0].used_at).not.toBeNull()
+        // Story 3.11 : la confirmation est la page de gestion, par un lien de gestion (empreinte
+        // seule en base), qui n'est pas le lien d'accès.
+        const gestion = new URL(nu.page.url()).pathname
+        const jetonGestion = gestion.split('/').at(-1) ?? ''
+        expect(jetonGestion).not.toBe(jeton)
+        const { rows: liens } = await base.query(
+          "SELECT token_hash FROM booking_tokens WHERE purpose = 'manage'",
+        )
+        expect(liens.map((ligne) => ligne.token_hash.toString('hex'))).toEqual([
+          createHash('sha256').update(jetonGestion).digest('hex'),
+        ])
         const tout = await toutLeTexte(base)
-        for (const interdit of [jeton.toLowerCase(), 'hortense', '98 76 54']) {
+        for (const interdit of [
+          jeton.toLowerCase(),
+          jetonGestion.toLowerCase(),
+          'hortense',
+          '98 76 54',
+        ]) {
           expect(tout).not.toContain(interdit)
         }
 
@@ -274,7 +296,7 @@ test.describe('réservation d’un appel de bout en bout', () => {
       await pageB.getByLabel('Your number').fill('+33 6 12 34 56 78')
       await pageB.getByLabel(/^I agree that Maison Triona/).check()
       await pageB.getByRole('button', { name: 'Arrange this call' }).click()
-      await pageB.waitForURL(/\/confirmation$/)
+      await pageB.waitForURL(/\/contact\/appel\/gerer\/[A-Za-z0-9_-]{43}$/)
       await expect(pageB.getByRole('heading', { level: 1 })).toHaveText('Your call is arranged.')
 
       await choisi.check()
@@ -302,13 +324,191 @@ test.describe('réservation d’un appel de bout en bout', () => {
         .first()
         .check()
       await pageA.getByRole('button', { name: 'Convenir de cet appel' }).click()
-      await pageA.waitForURL(/\/confirmation$/)
+      await pageA.waitForURL(/\/contact\/appel\/gerer\/[A-Za-z0-9_-]{43}$/)
       const { rows: total } = await base.query(
         `SELECT count(*)::int AS n, count(DISTINCT starts_at)::int AS d FROM bookings WHERE status = 'confirmed'`,
       )
       expect(total[0]).toEqual({ n: 3, d: 3 })
+
+      // Story 3.11, côté coffre : la page d'un appel, déplacer, annuler, effacer (formulaires natifs).
+      const { rows: aVenir } = await base.query<{ id: string; starts_at: Date }>(
+        `SELECT id, starts_at FROM bookings WHERE status = 'confirmed' ORDER BY starts_at LIMIT 1`,
+      )
+      const cible = aVenir[0]!
+      await page.goto(`/coffre/appels/${cible.id}`)
+      const axeCoffre = await new AxeBuilder({ page }).withTags(TAGS).analyze()
+      expect(axeCoffre.violations.map(({ id, nodes }) => ({ id, nodes: nodes.length }))).toEqual([])
+      await expect(page.locator('main')).not.toContainText('Hortense')
+      const options = page.locator('#creneau option')
+      const nouvelle = await options.nth(1).getAttribute('value')
+      await page.locator('#creneau').selectOption(nouvelle ?? '')
+      await page.getByRole('button', { name: 'Déplacer l’appel' }).click()
+      await page.waitForURL(/resultat=deplace$/)
+      await expect(page.locator('main')).toContainText('Appel déplacé.')
+      const { rows: deplace } = await base.query(
+        'SELECT starts_at, sequence FROM bookings WHERE id = $1',
+        [cible.id],
+      )
+      expect(deplace[0].starts_at.toISOString()).toBe(nouvelle)
+      expect(deplace[0].sequence).toBe(1)
+      await page.getByLabel('Je confirme l’annulation de cet appel.').check()
+      await page.getByRole('button', { name: 'Annuler l’appel' }).click()
+      await page.waitForURL(/resultat=annule$/)
+      await expect(page.locator('main')).toContainText('Appel annulé par la maison.')
+      await page.getByLabel('Je confirme l’effacement définitif de cet appel.').check()
+      await page.getByRole('button', { name: 'Effacer l’appel' }).click()
+      await page.waitForURL(/\/coffre\/appels\?resultat=efface$/)
+      await expect(page.locator('main')).toContainText('Appel effacé')
+      const { rows: efface } = await base.query('SELECT 1 FROM bookings WHERE id = $1', [cible.id])
+      expect(efface).toHaveLength(0)
+      const { rows: gestes } = await base.query(
+        `SELECT action, booking_id, request_id FROM vault_access_log
+         WHERE action IN ('booking_move', 'booking_cancel', 'booking_delete') ORDER BY id`,
+      )
+      expect(gestes).toEqual([
+        { action: 'booking_move', booking_id: cible.id, request_id: null },
+        { action: 'booking_cancel', booking_id: cible.id, request_id: null },
+        { action: 'booking_delete', booking_id: cible.id, request_id: null },
+      ])
       expect(violations).toEqual([])
     } finally {
+      await base.end()
+    }
+  })
+
+  test('gestion sans JavaScript : déplacer, annuler, .ics, axe FR et EN, rien de personnel', async ({
+    browser,
+  }) => {
+    await remettreAZero()
+    const base = new pg.Pool({ connectionString: BASE })
+    // Un lien d'accès posé directement en base (empreinte seule), comme le ferait le coffre.
+    const jeton = randomBytes(32).toString('base64url')
+    await base.query(
+      `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
+       VALUES ($1, $2, 'access', now(), now() + interval '47 hours')`,
+      [randomUUID(), createHash('sha256').update(jeton).digest()],
+    )
+    const nu = await sansJavaScript(browser)
+    // Toutes les réponses du parcours, après la réservation : ni nom ni numéro.
+    const reponses: Promise<string>[] = []
+    let ecoute = false
+    nu.page.on('response', (reponse) => {
+      if (ecoute) reponses.push(reponse.text().catch(() => ''))
+    })
+    try {
+      await nu.page.goto(`/fr/contact/appel/${jeton}`)
+      await nu.page
+        .getByRole('group', { name: 'Les prochains moments libres' })
+        .getByRole('radio')
+        .first()
+        .check()
+      await nu.page.getByLabel('Votre nom').fill(NOM)
+      await nu.page.getByLabel('Votre numéro').fill(NUMERO)
+      await nu.page.getByLabel(/^J’accepte que Maison Triona/).check()
+      ecoute = true
+      await nu.page.getByRole('button', { name: 'Convenir de cet appel' }).click()
+      await nu.page.waitForURL(/\/fr\/contact\/appel\/gerer\/[A-Za-z0-9_-]{43}$/)
+      const gestion = new URL(nu.page.url()).pathname
+      const jetonGestion = gestion.split('/').at(-1) ?? ''
+      await expect(nu.page.getByRole('heading', { level: 1 })).toHaveText(
+        'Votre appel est convenu.',
+      )
+      const reponse = await nu.page.reload()
+      expect(reponse?.headers()['referrer-policy']).toBe('strict-origin')
+      expect(reponse?.headers()['cache-control']).toContain('no-store')
+      expect(reponse?.headers()['x-robots-tag']).toContain('noindex')
+      expect(reponse?.headers()['set-cookie']).toBeUndefined()
+      // axe a besoin de JavaScript : même pages, dans un contexte qui l'a (GET sans écriture).
+      const avecJs = await browser.newContext()
+      try {
+        const vue = await avecJs.newPage()
+        for (const chemin of [gestion, `${gestion}/annuler`, gestion.replace('/fr/', '/en/')]) {
+          await vue.goto(chemin)
+          const axe = await new AxeBuilder({ page: vue }).withTags(TAGS).analyze()
+          expect(
+            axe.violations.map(({ id, nodes }) => ({ id, nodes: nodes.length })),
+            chemin,
+          ).toEqual([])
+        }
+      } finally {
+        await avecJs.close()
+      }
+      await nu.page.goto(gestion)
+      const { rows: avant } = await base.query<{ id: string; starts_at: Date }>(
+        "SELECT id, starts_at FROM bookings WHERE status = 'confirmed' ORDER BY created_at DESC LIMIT 1",
+      )
+      const appel = avant[0]!
+      const ics = async () => (await nu.page.request.get(`${gestion}/agenda`)).text()
+      const icsAvant = await ics()
+      expect(icsAvant).toContain('SEQUENCE:0')
+      const uid = /\r\nUID:([^\r]+)\r\n/.exec(icsAvant)?.[1]
+
+      // Déplacer : sans choix, le résumé d'erreurs ; puis un autre moment.
+      const deplacer = nu.page.getByRole('button', { name: 'Déplacer l’appel' })
+      await deplacer.click()
+      await expect(nu.page.locator('#deplacer-erreurs')).toContainText('Un point à revoir')
+      const tete = nu.page.locator('#deplacer-creneau').locator('input[type="radio"]')
+      let choisi = ''
+      for (let index = 0; index < (await tete.count()); index++) {
+        const valeur = (await tete.nth(index).getAttribute('value')) ?? ''
+        if (valeur !== appel.starts_at.toISOString()) {
+          choisi = valeur
+          await tete.nth(index).check()
+          break
+        }
+      }
+      expect(choisi).not.toBe('')
+      await deplacer.click()
+      await nu.page.waitForURL(/\?deplace=1$/)
+      await expect(nu.page.getByRole('status').first()).toContainText('Votre appel est déplacé.')
+      const { rows: apres } = await base.query(
+        'SELECT starts_at, sequence, status FROM bookings WHERE id = $1',
+        [appel.id],
+      )
+      expect(apres[0].starts_at.toISOString()).toBe(choisi)
+      expect(apres[0].sequence).toBe(1)
+      const icsDeplace = await ics()
+      expect(icsDeplace).toContain('SEQUENCE:1')
+      expect(icsDeplace).toContain(`UID:${uid}`)
+      expect(icsDeplace).toContain('METHOD:PUBLISH')
+
+      // Annuler : la page de confirmation n'annule rien ; le bouton, si.
+      await nu.page.getByRole('link', { name: 'Annuler l’appel' }).click()
+      await nu.page.waitForURL(/\/annuler$/)
+      expect(
+        (await base.query('SELECT status FROM bookings WHERE id = $1', [appel.id])).rows[0],
+      ).toEqual({ status: 'confirmed' })
+      await nu.page.getByRole('button', { name: 'Confirmer l’annulation' }).click()
+      await nu.page.waitForURL(/\/gerer\/[A-Za-z0-9_-]{43}$/)
+      await expect(nu.page.getByRole('heading', { level: 1 })).toHaveText('Votre appel est annulé.')
+      const { rows: annule } = await base.query(
+        'SELECT status, sequence FROM bookings WHERE id = $1',
+        [appel.id],
+      )
+      expect(annule[0]).toEqual({ status: 'cancelled_by_guest', sequence: 2 })
+      const icsAnnule = await ics()
+      expect(icsAnnule).toContain('METHOD:CANCEL')
+      expect(icsAnnule).toContain('STATUS:CANCELLED')
+      expect(icsAnnule).toContain('SEQUENCE:2')
+      expect(icsAnnule).toContain(`UID:${uid}`)
+      await expect(nu.page.locator('main form')).toHaveCount(0)
+
+      // Rien de personnel : ni nom ni numéro dans les réponses, ni jeton en base, aucun cookie.
+      const textes = (await Promise.all(reponses)).join('\n')
+      for (const interdit of [NOM, NUMERO, '98 76 54']) {
+        expect(textes).not.toContain(interdit)
+      }
+      const tout = await toutLeTexte(base)
+      for (const interdit of [
+        jeton.toLowerCase(),
+        jetonGestion.toLowerCase(),
+        'parcours-factice',
+      ]) {
+        expect(tout).not.toContain(interdit)
+      }
+      expect(await nu.contexte.cookies()).toEqual([])
+    } finally {
+      await nu.contexte.close()
       await base.end()
     }
   })

@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
 import {
+  ACCESS_REPLAY_MINUTES,
   ACCESS_TOKEN_TTL_HOURS,
   accessTokenExpiry,
   accessTokenState,
+  deriveManageToken,
   generateToken,
   hashToken,
   isTokenFormat,
+  manageTokenState,
   TOKEN_LENGTH,
   tokenMatches,
 } from '../../src/lib/booking/tokens.ts'
@@ -107,5 +111,46 @@ describe('jetons des liens de réservation', () => {
     )
     assert.equal(accessTokenState({ ...lien, purpose: 'manage' }, MAINTENANT), 'wrong-purpose')
     assert.throws(() => accessTokenState(lien, new Date(Number.NaN)), RangeError)
+  })
+
+  // Story 3.11 : lien de gestion.
+  it('déduit le lien de gestion du lien d’accès et du secret : stable, même forme, sans lien visible', () => {
+    const { token } = generateToken()
+    const secret = 'secret-factice-de-test-0123456789-abcdef'
+    const gestion = deriveManageToken(token, secret)
+    assert.equal(isTokenFormat(gestion), true)
+    assert.equal(deriveManageToken(token, secret), gestion)
+    assert.notEqual(gestion, token)
+    assert.notEqual(deriveManageToken(token, `${secret}x`), gestion)
+    assert.notEqual(deriveManageToken(generateToken().token, secret), gestion)
+    assert.equal(gestion.includes(token), false)
+    assert.throws(() => deriveManageToken('court', secret), RangeError)
+    assert.throws(() => deriveManageToken(token, ''), RangeError)
+  })
+
+  it('rend le lien de gestion au double envoi pendant 15 minutes (heure de la base, 0014)', () => {
+    assert.equal(ACCESS_REPLAY_MINUTES, 15)
+    // La base mesure la reprise (`replayable`) : même durée que la constante, dans les deux fonctions.
+    const sql = readFileSync(
+      new URL('../../db/migrations/0014_deplacer_annuler.sql', import.meta.url),
+      'utf8',
+    )
+    const reprise = `t.used_at > now() - interval '${ACCESS_REPLAY_MINUTES} minutes'`
+    assert.equal(sql.split(reprise).length - 1, 2)
+  })
+
+  it('dit l’état d’un lien de gestion : valable jusqu’à la fin de l’appel, annulé, autre usage', () => {
+    const lien = {
+      purpose: 'manage' as const,
+      expiresAt: new Date('2027-03-02T10:00:00Z'),
+      usedAt: null,
+      revokedAt: null,
+    }
+    assert.equal(manageTokenState(lien, MAINTENANT), 'valid')
+    assert.equal(manageTokenState(lien, new Date('2027-03-02T10:00:00Z')), 'expired')
+    assert.equal(manageTokenState({ ...lien, revokedAt: MAINTENANT }, MAINTENANT), 'revoked')
+    assert.equal(manageTokenState({ ...lien, purpose: 'access' }, MAINTENANT), 'wrong-purpose')
+    // Un lien de gestion ne réserve jamais.
+    assert.equal(accessTokenState(lien, MAINTENANT), 'wrong-purpose')
   })
 })

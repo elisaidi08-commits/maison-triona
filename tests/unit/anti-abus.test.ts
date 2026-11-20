@@ -130,6 +130,13 @@ describe('secret du formulaire', () => {
     assert.ok(repli && repli.length >= 32)
     assert.equal(secretFormulaire({ FORM_SIGNING_SECRET: SECRET }), SECRET)
   })
+
+  // Relecture sécurité de la story 3.11 : même règle que le secret des empreintes d'adresse.
+  test('serveur de production hors Vercel (next start) : aucun repli', () => {
+    assert.equal(secretFormulaire({ NODE_ENV: 'production' }), null)
+    assert.equal(secretFormulaire({ NODE_ENV: 'production', FORM_SIGNING_SECRET: 'court' }), null)
+    assert.equal(secretFormulaire({ NODE_ENV: 'production', FORM_SIGNING_SECRET: SECRET }), SECRET)
+  })
 })
 
 describe('adaptateur Upstash', () => {

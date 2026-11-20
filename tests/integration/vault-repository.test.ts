@@ -71,7 +71,9 @@ describe('accès aux données du coffre', () => {
   })
   // `bookings` référence `vault_requests` depuis 0013 (rattachement d'un appel) : vidée avec elle.
   beforeEach(() =>
-    pool.query('TRUNCATE vault_requests, bookings, vault_access_log RESTART IDENTITY'),
+    pool.query(
+      'TRUNCATE vault_requests, bookings, booking_tokens, vault_access_log RESTART IDENTITY',
+    ),
   )
   after(() => pool.end())
 
@@ -179,6 +181,7 @@ describe('accès aux données du coffre', () => {
       verifications: 0,
       bookings: 0,
       tokens: 0,
+      cancelledCalls: 0,
     })
     await pool.query(`UPDATE vault_access_log SET at = '2026-01-01T03:00:00Z'`)
     await logRetention(pool, {
@@ -188,6 +191,7 @@ describe('accès aux données du coffre', () => {
       verifications: 0,
       bookings: 0,
       tokens: 0,
+      cancelledCalls: 0,
     })
     await logAccess(pool, { actor: ACTOR, action: 'login' })
     const dernier = await lastRetentionRun(pool)
@@ -258,10 +262,12 @@ describe('accès aux données du coffre', () => {
       verifications: 3,
       bookings: 4,
       tokens: 5,
+      cancelledCalls: 2,
     })
     const { rows } = await pool.query(
       `SELECT actor, action, request_id, purged_requests, purged_sessions, purged_rate_limits,
-              purged_verifications, purged_bookings, purged_tokens FROM vault_access_log`,
+              purged_verifications, purged_bookings, purged_tokens, purged_cancelled_calls
+       FROM vault_access_log`,
     )
     assert.deepEqual(rows, [
       {
@@ -274,12 +280,37 @@ describe('accès aux données du coffre', () => {
         purged_verifications: 3,
         purged_bookings: 4,
         purged_tokens: 5,
+        purged_cancelled_calls: 2,
       },
     ])
     for (const counts of [
-      { requests: -1, sessions: 0, rateLimits: 0, verifications: 0, bookings: 0, tokens: 0 },
-      { requests: 0.5, sessions: 0, rateLimits: 0, verifications: 0, bookings: 0, tokens: 0 },
-      { requests: 0, sessions: 0, rateLimits: 0, verifications: 0, bookings: -2, tokens: 0 },
+      {
+        requests: -1,
+        sessions: 0,
+        rateLimits: 0,
+        verifications: 0,
+        bookings: 0,
+        tokens: 0,
+        cancelledCalls: 0,
+      },
+      {
+        requests: 0.5,
+        sessions: 0,
+        rateLimits: 0,
+        verifications: 0,
+        bookings: 0,
+        tokens: 0,
+        cancelledCalls: 0,
+      },
+      {
+        requests: 0,
+        sessions: 0,
+        rateLimits: 0,
+        verifications: 0,
+        bookings: -2,
+        tokens: 0,
+        cancelledCalls: 0,
+      },
     ]) {
       await assert.rejects(logRetention(pool, counts), RangeError)
     }

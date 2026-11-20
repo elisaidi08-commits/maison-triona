@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { bookingConfirmationPath, bookingPath, localizedPath } from '@/i18n/pathnames'
+import { bookingPath, localizedPath, managePath } from '@/i18n/pathnames'
 import { retenirEtat } from '@/lib/booking/action-state'
 import {
   bookSlot,
@@ -14,7 +14,7 @@ import {
 import { presenterCreneaux } from '@/lib/booking/display'
 import type { EtatReservation, ValeursReservation } from '@/lib/booking/form'
 import { smsPropose } from '@/lib/booking/options'
-import { isTokenFormat } from '@/lib/booking/tokens'
+import { deriveManageToken, isTokenFormat } from '@/lib/booking/tokens'
 import { getPool } from '@/lib/db/pool'
 import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { limiterDebit } from '@/lib/rate-limit'
@@ -34,13 +34,15 @@ import { sealBooking, VaultKeyError } from '@/lib/vault/seal'
 // 4. limitation de débit des envois valides par empreinte d'IP (préfixe /64 en IPv6, sel du jour),
 //    comme le formulaire de contact : 5 par 10 minutes (un créneau pris ou un double envoi en
 //    coûtent un) ; refusé : « Trop d'envois », saisie conservée ; Upstash en panne : on passe ;
-// 5. le lien est lu (lecture seule) : sans valeur, sa page, qui le dit sobrement ; déjà utilisé pour
-//    un appel à venir (double clic, renvoi), la confirmation. Un lien sans valeur ne coûte donc ni
-//    scellement ni transaction ;
+// 5. le lien est lu (lecture seule) : sans valeur, sa page, qui le dit sobrement ; utilisé il y a
+//    moins de 15 minutes pour un appel à venir (double clic, renvoi), la page de gestion. Un lien
+//    sans valeur ne coûte donc ni scellement ni transaction ;
 // 6. la personne est scellée (clé publique du coffre ; le choix SMS n'est retenu que si la case est
 //    proposée, src/lib/booking/options.ts), puis `bookSlot` réserve dans une transaction (lien
 //    verrouillé, verrou du jour, créneaux recalculés, contrainte d'exclusion) :
-//    - réservé, ou déjà réservé par ce même lien : la confirmation (303) ;
+//    - réservé, ou déjà réservé par ce même lien il y a moins de 15 minutes (double clic, renvoi) :
+//      la page de gestion de l'appel (303), par le lien de gestion déduit du lien d'accès et du
+//      secret du formulaire (story 3.11, `deriveManageToken`) ; elle tient lieu de confirmation ;
 //    - créneau qui n'est plus ouvert : « Ce créneau vient d'être pris », les créneaux encore libres,
 //      les plus proches en tête, la saisie conservée ;
 //    - lien qui ne vaut plus entre-temps : sa page ;
@@ -154,9 +156,11 @@ export async function reserverAppel(
     journaliser('rejected:link')
     redirect(bookingPath(locale, jeton))
   }
+  // Lien de gestion de l'appel, déduit du lien d'accès : jamais conservé, jamais journalisé.
+  const gestion = deriveManageToken(jeton, secret)
   if (lien === 'booked') {
     journaliser('already-booked')
-    redirect(bookingConfirmationPath(locale, jeton))
+    redirect(managePath(locale, gestion))
   }
 
   let issue: BookingResult
@@ -167,6 +171,7 @@ export async function reserverAppel(
     )
     issue = await bookSlot(getPool(), {
       token: jeton,
+      manageToken: gestion,
       start: debut,
       sealed,
       privacyVersion: PRIVACY_POLICY_VERSION,
@@ -197,5 +202,5 @@ export async function reserverAppel(
       journaliser('booked')
       break
   }
-  redirect(bookingConfirmationPath(locale, jeton))
+  redirect(managePath(locale, gestion))
 }

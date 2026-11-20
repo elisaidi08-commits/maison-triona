@@ -6,7 +6,7 @@ import { CheckboxField } from '@/components/ui/CheckboxField'
 import { appelsDeLaDemandeDuCoffre, demandeDuCoffre } from '@/lib/auth/acces'
 import { lireAccesRequete } from '@/lib/auth/serveur'
 import { agendaStatus } from '@/lib/booking/agenda'
-import { heuresAppel, jourAppel, STATUTS_APPEL } from '@/lib/coffre/appels'
+import { adresseAppel, heuresAppel, jourAppel, STATUTS_APPEL } from '@/lib/coffre/appels'
 import { dateEnLettres } from '@/lib/coffre/disponibilites'
 import { colonnesEnClair, date } from '@/lib/coffre/libelles'
 import { getCoffrePool } from '@/lib/db/pool'
@@ -104,16 +104,17 @@ export default async function PageDemande({ params }: PageProps<'/coffre/demande
           <ul className="flex flex-col border-t border-sapin-20">
             {appels.map((appel) => (
               <li key={appel.id} className="border-b border-sapin-20 py-12">
-                {dateEnLettres(jourAppel(appel.startsAt))},{' '}
-                {heuresAppel(appel.startsAt, appel.endsAt)} ·{' '}
-                {STATUTS_APPEL[agendaStatus(appel, new Date())]}
+                <LienCoffre href={adresseAppel(appel.id)}>
+                  {dateEnLettres(jourAppel(appel.startsAt))},{' '}
+                  {heuresAppel(appel.startsAt, appel.endsAt)} ·{' '}
+                  {STATUTS_APPEL[agendaStatus(appel, new Date())]}
+                </LienCoffre>
               </li>
             ))}
           </ul>
           <p>
             Effacer la demande n’efface pas ces appels : leur rattachement est retiré. Si la
-            personne demande l’effacement, l’appel doit être effacé aussi : en attendant un bouton
-            dans l’agenda, demandez-le à Sady.
+            personne demande l’effacement, effacez aussi chaque appel, depuis sa page.
           </p>
         </section>
       ) : null}

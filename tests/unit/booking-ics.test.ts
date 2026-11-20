@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
-import { bookingUid, buildIcs, ICS_DOMAIN } from '../../src/lib/booking/ics.ts'
+import { bookingUid, buildIcs, ICS_DOMAIN, ICS_ORGANIZER } from '../../src/lib/booking/ics.ts'
 
 // Invitation d'agenda de la personne (story 3.10 ; docs/reservation-appel.md §4.5) : sous-ensemble de
 // RFC 5545 écrit à la main, sans dépendance. UID stable, heures en UTC, texte échappé et replié à
@@ -109,13 +109,59 @@ describe('invitation .ics', () => {
       ]) {
         assert.equal(ics.includes(interdit), false, `${locale} : ${interdit}`)
       }
-      // Aucune adresse ni lien : seul l'UID porte un « @ ».
-      assert.equal(ics.match(/@/g)?.length, 1)
+      // Aucune adresse de la personne ni lien : seuls l'UID et l'organisateur générique de la
+      // maison (story 3.11) portent un « @ ».
+      assert.equal(ics.match(/@/g)?.length, 2)
+      assert.equal(ics.match(/mailto:/g)?.length, 1)
+      assert.ok(ics.includes(`mailto:${ICS_ORGANIZER}`))
     }
   })
 
   it('refuse des dates invalides ou une fin avant le début', () => {
     assert.throws(() => buildIcs({ ...EVENEMENT, start: new Date(Number.NaN) }), RangeError)
     assert.throws(() => buildIcs({ ...EVENEMENT, end: EVENEMENT.start }), RangeError)
+  })
+
+  // Story 3.11 : un appel déplacé garde son UID, avec une séquence plus grande ; un appel annulé
+  // donne un fichier METHOD:CANCEL qui retire l'événement.
+  it('met à jour un appel déplacé : même UID, SEQUENCE incrémentée, nouvelles heures', () => {
+    const avant = lignes(buildIcs(EVENEMENT))
+    const apres = lignes(
+      buildIcs({
+        ...EVENEMENT,
+        start: new Date('2027-03-03T15:00:00Z'),
+        end: new Date('2027-03-03T15:30:00Z'),
+        sequence: 1,
+      }),
+    )
+    const uid = (l: string[]) => l.find((ligne) => ligne.startsWith('UID:'))
+    assert.equal(uid(apres), uid(avant))
+    assert.ok(apres.includes('SEQUENCE:1'))
+    assert.ok(apres.includes('METHOD:PUBLISH'))
+    assert.ok(apres.includes('STATUS:CONFIRMED'))
+    assert.ok(apres.includes('DTSTART:20270303T150000Z'))
+    assert.ok(apres.includes('DTEND:20270303T153000Z'))
+  })
+
+  it('retire un appel annulé : METHOD:CANCEL, STATUS:CANCELLED, même UID et sa séquence', () => {
+    const l = lignes(buildIcs({ ...EVENEMENT, sequence: 2, method: 'CANCEL' }))
+    assert.ok(l.includes('METHOD:CANCEL'))
+    assert.ok(l.includes('STATUS:CANCELLED'))
+    assert.ok(l.includes('SEQUENCE:2'))
+    assert.ok(l.includes(`UID:${ID}-guest@${ICS_DOMAIN}`))
+    assert.equal(l.includes('METHOD:PUBLISH'), false)
+    assert.equal(l.includes('STATUS:CONFIRMED'), false)
+    // RFC 5546 : un organisateur, générique (la maison), pour PUBLISH comme pour CANCEL.
+    assert.ok(l.includes(`ORGANIZER;CN=Maison Triona:mailto:${ICS_ORGANIZER}`))
+    assert.ok(
+      lignes(buildIcs(EVENEMENT)).includes(`ORGANIZER;CN=Maison Triona:mailto:${ICS_ORGANIZER}`),
+    )
+    assert.equal(ICS_ORGANIZER, 'contact@maisontriona.com')
+  })
+
+  it('refuse une séquence négative ou fractionnaire et une méthode inconnue', () => {
+    assert.throws(() => buildIcs({ ...EVENEMENT, sequence: -1 }), RangeError)
+    assert.throws(() => buildIcs({ ...EVENEMENT, sequence: 1.5 }), RangeError)
+    assert.throws(() => buildIcs({ ...EVENEMENT, method: 'REQUEST' as 'PUBLISH' }), RangeError)
   })
 })

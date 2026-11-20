@@ -1035,14 +1035,67 @@
       "title": "Booking is temporarily unavailable.",
       "body": "Please try again in a few minutes, or write to us: we reply within 48 working hours."
     },
-    "confirmation": {
-      "metaTitle": "Call arranged",
+    "manage": {
+      "metaTitle": "Your call",
       "title": "Your call is arranged.",
       "when": "{jour}, at {heure}, Brussels and Paris time.",
       "body": "We will call you on the number you gave. We never leave a voicemail.",
+      "keep": "Keep the address of this page, in your bookmarks for instance: until the time of the call, it lets you move or cancel it.",
+      "moved": "Your call has been moved. If you had added it to your calendar, open the new file; if the previous entry is still there, delete it.",
       "calendar": "Add to my calendar",
       "calendarHint": "A file to open with your calendar (.ics).",
+      "move": {
+        "title": "Move the call",
+        "intro": "Choose another time. Your call stays at the agreed time until the new one is confirmed.",
+        "slots": {
+          "legend": "Which other time suits you?",
+          "next": "The next available times",
+          "nearby": "The closest available times",
+          "week": "Week of {date}"
+        },
+        "none": "No other time is available in the coming weeks. Your call stays at the agreed time.",
+        "button": "Move the call",
+        "sending": "Sending",
+        "errors": {
+          "one": "One thing to check",
+          "prefix": "Error:",
+          "creneau": "Please choose a time."
+        },
+        "status": {
+          "taken": "This time has just been taken. The closest times are listed first; your call stays at the agreed time.",
+          "failed": "The call could not be moved. It stays at the agreed time.",
+          "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; your call stays at the agreed time."
+        }
+      },
+      "cancel": {
+        "title": "Cancel the call",
+        "intro": "You will be asked to confirm; nothing is cancelled before then.",
+        "link": "Cancel the call"
+      },
+      "started": {
+        "title": "It is time for your call.",
+        "body": "It can no longer be moved or cancelled. If you have any questions, please write to us."
+      },
+      "cancelled": {
+        "title": "Your call is cancelled.",
+        "byHouse": "The house had to cancel this call.",
+        "body": "If you had added it to your calendar, open this file to remove it, or delete the entry yourself.",
+        "calendar": "Remove from my calendar",
+        "calendarHint": "A file to open with your calendar (.ics).",
+        "newCall": "Arrange another call"
+      },
+      "write": "Write to us",
       "back": "Back to the home page"
+    },
+    "cancelPage": {
+      "metaTitle": "Cancel your call",
+      "title": "Cancel your call?",
+      "body": "{jour}, at {heure}, Brussels and Paris time. This call will be cancelled. To arrange another one, you will simply need to ask for a new link.",
+      "confirm": "Confirm the cancellation",
+      "keep": "Keep my call",
+      "unavailable": "This call can no longer be cancelled.",
+      "failed": "Your call could not be cancelled. It is still booked; please try again in a moment.",
+      "limit": "Too many submissions arrived in a short time. Please try again in a few minutes; your call is still booked."
     },
     "ics": {
       "summary": "Call · Maison Triona",
