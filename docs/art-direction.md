@@ -70,6 +70,8 @@ Valeurs, ratios et tokens : `docs/design-tokens.md`.
 
 ## 5. Typographie
 
+> **D76 (20/11/2026, validée par Cat)** : le site passe **entièrement au sans-serif**, comme la maquette Figma. **Plus Jakarta Sans** Medium pour les titres, le nom et le cachet ; **Inter** pour le texte, les libellés et la navigation ; corps et petits textes à **18 px**, jamais moins. La force des titres vient de la taille et de l'air, jamais du Bold. Échelle : `docs/design-tokens.md` §3.2. Le contenu ci-dessous (banc d'essai, kit Garamond de D50) est l'historique.
+
 ### 5.1 Familles
 
 | Rôle | Famille | Statut |

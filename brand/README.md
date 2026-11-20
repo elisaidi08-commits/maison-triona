@@ -32,7 +32,7 @@ Kit v1 du 29/10/2026 (D48, D49), **à valider par Cat**. Planche de marque compl
 | Ivoire | `#F3EDE1` | fond clair, jamais de blanc pur |
 | Encre | `#2A241F` | texte sur ivoire |
 
-Typographie : **Cormorant Garamond** pour le nom (Light dans le logo principal, Medium dans l'horizontale), **EB Garamond** pour le texte.
+Typographie du kit : **Cormorant Garamond** pour le nom (Light dans le logo principal, Medium dans l'horizontale), **EB Garamond** pour le texte. **Sur le site, depuis D76** (validée par Cat le 20/11/2026) : Plus Jakarta Sans pour les titres et Inter pour le texte ; le sceau L1-D, dessiné en SVG, ne dépend d'aucune police.
 
 ## Règles d'usage
 

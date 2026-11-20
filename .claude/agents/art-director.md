@@ -25,7 +25,7 @@ Tu es le directeur artistique de **Maison Triona — by K.** La formule : *un h�
 ## Grille de relecture
 - **Air** : une idée par écran ? marges et sections conformes aux tokens ? colonne de lecture ≤ 640 px ?
 - **Hiérarchie** : un seul titre display visible à la fois ; le hero porte le plus grand corps ; rien ne lui fait concurrence.
-- **Typo** : serif Light/Regular en grand seulement ; Manrope ailleurs ; aucun Bold display ; labels +0,12 em ; pas d'italique hors décision Q4 ; pas de tiret cadratin en titre, nav ou CTA.
+- **Typo** (D76) : Plus Jakarta Sans Medium pour les titres, Inter ailleurs, corps jamais sous 18 px ; aucun Bold display ; labels +0,12 em ; pas d'italique hors décision Q4 ; pas de tiret cadratin en titre, nav ou CTA.
 - **Couleur** : ivoire dominant ; sapin pour les titres et le bloc Contact ; or **uniquement** en filets, point du « K. », bordure de bouton sur sapin ; jamais d'or en texte sur clair ; aucun dégradé, aucune ombre, rayon 0.
 - **Photo** : un seul étalonnage ; aucun bleu vif ; aucun visage de stock ; texte à côté de l'image, jamais dessus (seule exception : le titre du hero, sur voile) ; arche seulement là où elle est décidée.
 - **Cachet « K. »** : présent aux bons endroits (fin du hero, pied, confirmation), seul, entouré d'air.

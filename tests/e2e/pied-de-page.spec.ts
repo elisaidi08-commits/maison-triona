@@ -54,13 +54,17 @@ test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page })
 
 // Avant D64 : 1 071, 1 070 et 1 446 px ; avant D74 : 775, 957 et 1 241 px. Après D74 : 794, 767 et
 // 768 px (navigation repliée). Le desktop prend 19 px : « Revenir en haut » est désormais une cible de
-// 48 px sur la ligne de la mention IA, au lieu d'une touche logée à côté de la phrase.
-for (const [width, height, max] of [
-  [1440, 900, 820],
-  [834, 1112, 800],
-  [390, 844, 800],
+// 48 px sur la ligne de la mention IA, au lieu d'une touche logée à côté de la phrase. Avec Inter et
+// Plus Jakarta Sans (D76) : 791, 803 et 778 px ; à 390 px, la mention IA tient sur deux lignes (Inter
+// est plus large que le Garamond), toujours seule sous la barre légale.
+for (const [width, height, max, lignesIa] of [
+  [1440, 900, 820, 1],
+  [834, 1112, 820, 1],
+  [390, 844, 800, 2],
 ] as const) {
-  test(`${width} px : moins de ${max} px, mention IA seule sur sa ligne`, async ({ page }) => {
+  test(`${width} px : moins de ${max} px, mention IA seule sous la barre légale`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height })
     await page.goto('/fr')
     const footer = page.locator('footer')
@@ -68,9 +72,9 @@ for (const [width, height, max] of [
     const ai = footer.getByText('Images créées par intelligence artificielle.')
     const aiBox = (await ai.boundingBox())!
     const legal = (await footer.getByRole('link', { name: 'Confidentialité' }).boundingBox())!
-    // La mention commence sous la dernière ligne de la barre et tient sur une ligne.
+    // La mention commence sous la dernière ligne de la barre, sur une ligne (deux au plus à 390 px).
     expect(aiBox.y).toBeGreaterThanOrEqual(legal.y + legal.height)
-    expect(aiBox.height).toBeLessThan(40)
+    expect(aiBox.height).toBeLessThan(lignesIa * 30 + 10)
   })
 }
 

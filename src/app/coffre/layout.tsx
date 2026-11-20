@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { connection } from 'next/server'
 import type { ReactNode } from 'react'
 
-import { cormorant, ebGaramond } from '@/styles/fonts'
+import { fontDisplay, fontText } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // Espace du coffre (story 3.2, partie C ; docs/architecture.md §2) : second layout racine, hors de
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default async function CoffreLayout({ children }: { children: ReactNode }) {
   await connection()
   return (
-    <html lang="fr" className={`${cormorant.variable} ${ebGaramond.variable}`}>
+    <html lang="fr" className={`${fontDisplay.variable} ${fontText.variable}`}>
       <body>
         <main id="contenu" className="conteneur flex flex-col gap-48 py-section">
           {/* La lecture des demandes (partie D) se déchiffre dans le navigateur. */}

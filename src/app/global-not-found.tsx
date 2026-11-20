@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Rule } from '@/components/ui/Rule'
 import { TextLink } from '@/components/ui/TextLink'
-import { cormorant, ebGaramond } from '@/styles/fonts'
+import { fontDisplay, fontText } from '@/styles/fonts'
 import '@/styles/tokens.css'
 
 // 404 des adresses qui ne passent par aucune langue (fichiers inconnus) : bilingue, sans gabarit.
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function GlobalNotFound() {
   return (
-    <html lang="fr" className={`${cormorant.variable} ${ebGaramond.variable}`}>
+    <html lang="fr" className={`${fontDisplay.variable} ${fontText.variable}`}>
       <body>
         <main className="conteneur flex flex-col gap-24 py-section">
           <Rule short />

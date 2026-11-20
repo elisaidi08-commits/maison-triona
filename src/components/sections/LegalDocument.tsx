@@ -6,7 +6,7 @@ import { localizedPath, type InternalPath, type Locale } from '@/i18n/pathnames'
 // Pages légales (story 4.4) : mentions légales et politique de confidentialité, FR et EN, d'après
 // docs/privacy.md et docs/decisions.md D38. Même gabarit pour les deux : en-tête sobre, sommaire
 // « Sur cette page » (vrais liens d'ancre, collant en desktop), puis les sections en colonne de
-// lecture, intertitres en EB Garamond (le grand serif reste au h1). Une section peut porter des paragraphes, une liste, un tableau de faits (<dl>) et un
+// lecture, intertitres en Inter (le grand titre reste au h1, D76). Une section peut porter des paragraphes, une liste, un tableau de faits (<dl>) et un
 // lien interne. Les données légales réelles (forme, siège, BCE, TVA, adresses) n'existent qu'après
 // l'inscription de janvier 2027 : `[CONTENU À FOURNIR PAR CAT]`, et `check:content` bloque la
 // mise en production tant qu'il en reste.
