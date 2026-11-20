@@ -298,6 +298,49 @@ test.describe('demande de lien de bout en bout', () => {
     }
   })
 
+  test('horodatage rejoué : la même réponse, que l’adresse soit limitée ou non', async ({
+    browser,
+  }) => {
+    // Avec JavaScript, pour pouvoir reposer dans la page un horodatage déjà servi. L'adresse
+    // limitée vient du test précédent (3 liens en 24 heures).
+    const limitee = 'camille.limite@exemple.test'
+    const libre = 'rejeu@exemple.test'
+    adresses.push(libre)
+    const ctx = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-for': '192.0.2.150' } })
+    try {
+      const premiere = await ctx.newPage()
+      await premiere.goto('/fr/contact/appel')
+      const champJeton = premiere.locator('input[name="jeton"]')
+      await expect(champJeton).toHaveValue(/^\d{13}\./)
+      const jeton = await champJeton.inputValue()
+      await premiere.getByLabel(CHAMP.fr).fill(limitee)
+      await attendreLesEnvois()
+      await premiere.getByRole('button', { name: BOUTON.fr }).click()
+      await premiere.waitForURL(ENVOYE.fr, { timeout: 15_000 })
+
+      const rejouer = async (adresse: string) => {
+        const page = await ctx.newPage()
+        await page.goto('/fr/contact/appel')
+        await expect(page.locator('input[name="jeton"]')).toHaveValue(/^\d{13}\./)
+        await page.locator('input[name="jeton"]').evaluate((champ, valeur) => {
+          ;(champ as HTMLInputElement).value = valeur
+        }, jeton)
+        await page.getByLabel(CHAMP.fr).fill(adresse)
+        await page.getByRole('button', { name: BOUTON.fr }).click()
+        const statut = page.locator('#lien-statut')
+        await expect(statut).toContainText('Patientez quelques secondes')
+        return { url: new URL(page.url()).pathname, texte: await statut.innerText() }
+      }
+      const surLimitee = await rejouer(limitee)
+      const surLibre = await rejouer(libre)
+      expect(surLibre).toEqual(surLimitee)
+      await emailsPour(libre, 0)
+      expect(await jetonsDe(base, libre)).toHaveLength(0)
+    } finally {
+      await ctx.close()
+    }
+  })
+
   test('limite par IP : 3 demandes par 10 minutes, puis la même réponse sans e-mail', async ({
     browser,
   }) => {

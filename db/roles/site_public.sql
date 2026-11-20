@@ -50,11 +50,11 @@ grant update (used_at) on booking_tokens to site_public;
 
 -- Demande de lien (story 3.9, db/migrations/0011_demande_de_lien.sql ; docs/reservation-appel.md
 -- §2, §4.4) : création d'un lien d'accès avec l'empreinte de l'adresse (jamais l'adresse, jamais le
--- jeton : son empreinte seule) ; annulation des liens vivants de CETTE empreinte (« un nouveau lien
+-- jeton : son empreinte seule), sans `created_at` ni `purpose` (valeurs par défaut de la base : un
+-- lien d'accès, de 48 heures au plus depuis l'heure de la base) ; annulation des liens vivants de CETTE empreinte (« un nouveau lien
 -- annule l'ancien ») par la seule fonction `revoke_live_access_links`, sans lecture des empreintes ni
 -- écriture de `revoked_at`. Aucun effacement. L'e-mail d'accès entre dans la boîte d'envoi par le
 -- droit d'insertion déjà donné plus haut (gabarit `booking_access`, sans demande : contrainte de
 -- 0011).
-grant insert (id, token_hash, purpose, email_hmac, created_at, expires_at)
-  on booking_tokens to site_public;
-grant execute on function revoke_live_access_links(bytea, timestamptz) to site_public;
+grant insert (id, token_hash, email_hmac, expires_at) on booking_tokens to site_public;
+grant execute on function revoke_live_access_links(bytea) to site_public;

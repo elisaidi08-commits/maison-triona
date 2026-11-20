@@ -83,6 +83,10 @@ const lienHeaders = [
   { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
 ]
 
+// Réponse à une demande de lien, en anglais (story 3.9) : /en/contact/call/sent reçoit les mêmes
+// en-têtes que /fr/contact/appel/envoye (couvert par le motif précédent).
+const REPONSE_LIEN_EN = '/en/contact/call/:chemin+'
+
 // Tout sauf /coffre et ce qui est dessous.
 const HORS_COFFRE = '/((?!coffre(?:/|$)).*)'
 
@@ -103,7 +107,10 @@ const nextConfig: NextConfig = {
   // part (story 3.2 C).
   async headers() {
     const site = [{ source: HORS_COFFRE, headers: securityHeaders }]
-    const lien = [{ source: LIEN_RESERVATION, headers: lienHeaders }]
+    const lien = [
+      { source: LIEN_RESERVATION, headers: lienHeaders },
+      { source: REPONSE_LIEN_EN, headers: lienHeaders },
+    ]
     const coffre = [{ source: '/coffre/:path*', headers: coffreHeaders }]
     if (ouvert) return [...site, ...lien, ...coffre]
     return [

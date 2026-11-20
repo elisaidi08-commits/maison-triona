@@ -95,7 +95,7 @@ test('un lien sans valeur propose d’en recevoir un nouveau', async ({ page }) 
   await page.getByRole('link', { name: 'Recevoir un nouveau lien' }).click()
   await expect(page).toHaveURL(/\/fr\/contact\/appel$/)
   await page.goto(`/en/contact/appel/${JETON}`)
-  await expect(page.getByRole('link', { name: 'Get a new link' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Send me a new link' })).toHaveAttribute(
     'href',
     '/en/contact/call',
   )
@@ -146,7 +146,7 @@ test.describe('sans JavaScript', () => {
     await page.getByLabel('Your email address').fill('robot@exemple.test')
     await page.getByRole('button', { name: 'Send me my link' }).click()
     // Sans base, la demande est fermée : le robot reçoit ce que reçoit tout visiteur.
-    await expect(statut(page)).toContainText('will open soon')
+    await expect(statut(page)).toContainText('You will soon be able to arrange a call')
     await expect(resume(page)).toHaveCount(0)
   })
 })

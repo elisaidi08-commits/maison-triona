@@ -71,13 +71,15 @@ describe('secret des empreintes (BOOKING_EMAIL_HMAC_SECRET)', () => {
     }
   })
 
-  it('absent : repli de développement hors Vercel, rien sur un déploiement', () => {
+  it('absent : repli de développement hors Vercel et hors production, rien sinon', () => {
     const repli = secretEmpreinteAdresse({})
     assert.ok(repli && repli.length >= 32)
     assert.equal(secretEmpreinteAdresse({ BOOKING_EMAIL_HMAC_SECRET: '  ' }), repli)
     for (const VERCEL_ENV of ['production', 'preview', 'development']) {
       assert.equal(secretEmpreinteAdresse({ VERCEL_ENV }), null, VERCEL_ENV)
     }
+    // Serveur de production lancé hors de Vercel : pas de repli non plus.
+    assert.equal(secretEmpreinteAdresse({ NODE_ENV: 'production' }), null)
   })
 
   it('garde du build : exigé en production dès que la base et les e-mails sont posés', () => {

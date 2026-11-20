@@ -224,17 +224,15 @@ describe('demande de lien (site_public)', () => {
       await assert.rejects(site.query(sql), REFUS, sql)
     }
     // La fonction n'annule que la cible donnée ; une empreinte inconnue n'annule rien.
-    await site.query('SELECT revoke_live_access_links($1, now())', [Buffer.alloc(32, 9)])
+    await site.query('SELECT revoke_live_access_links($1)', [Buffer.alloc(32, 9)])
     assert.equal((await readBookingLink(site, lien.token, new Date())).state, 'valid')
-    await site.query('SELECT revoke_live_access_links($1, now())', [
-      empreinteAdresse(ADRESSE, SECRET),
-    ])
+    await site.query('SELECT revoke_live_access_links($1)', [empreinteAdresse(ADRESSE, SECRET)])
     assert.equal((await readBookingLink(site, lien.token, new Date())).state, 'invalid')
     // Le rôle `coffre` (ni aucun autre rôle sans droit) ne l'appelle pas.
     const coffre = new pg.Pool({ connectionString: TEST_DATABASE_URL, options: '-c role=coffre' })
     try {
       await assert.rejects(
-        coffre.query('SELECT revoke_live_access_links($1, now())', [Buffer.alloc(32, 1)]),
+        coffre.query('SELECT revoke_live_access_links($1)', [Buffer.alloc(32, 1)]),
         REFUS,
       )
     } finally {

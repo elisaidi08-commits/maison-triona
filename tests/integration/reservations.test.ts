@@ -428,9 +428,11 @@ describe('réservation d’appel', () => {
     const premier = await emettre(adresse)
     const tiers = await emettre(autre)
     const second = await emettre(adresse)
-    assert.equal((await readBookingLink(site, premier.token, MAINTENANT)).state, 'invalid')
-    assert.equal((await readBookingLink(site, second.token, MAINTENANT)).state, 'valid')
-    assert.equal((await readBookingLink(site, tiers.token, MAINTENANT)).state, 'valid')
+    // Avec une empreinte, le lien prend l'heure de la base (story 3.9) : lu à l'heure réelle.
+    const maintenant = new Date()
+    assert.equal((await readBookingLink(site, premier.token, maintenant)).state, 'invalid')
+    assert.equal((await readBookingLink(site, second.token, maintenant)).state, 'valid')
+    assert.equal((await readBookingLink(site, tiers.token, maintenant)).state, 'valid')
     const { rows } = await admin.query(
       'SELECT count(*)::int AS n FROM booking_tokens WHERE revoked_at IS NOT NULL',
     )

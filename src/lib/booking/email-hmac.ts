@@ -12,8 +12,8 @@
  *   dérivée du même secret avec une autre étiquette : Upstash ne voit jamais la valeur de la base.
  * - Validé au démarrage : sur un déploiement Vercel, 32 caractères visibles au moins, sans espace, ou
  *   rien (`null` : la demande de lien reste fermée) ; en production, le build échoue si la demande de
- *   lien est configurée sans lui (`verifierSecretAdresseAuBuild`, next.config.ts). Hors Vercel (poste,
- *   CI), un repli de développement s'applique quand la variable est absente.
+ *   lien est configurée sans lui (`verifierSecretAdresseAuBuild`, next.config.ts). Hors Vercel et hors
+ *   production (`next dev`, tests), un repli de développement s'applique quand la variable est absente.
  * Fonctions pures, imports relatifs : testé par node --test.
  */
 import { createHmac } from 'node:crypto'
@@ -27,7 +27,10 @@ type Environnement = Record<string, string | undefined>
 /** Secret des empreintes d'adresse, ou `null` s'il manque (déploiement) ou s'il est mal formé. */
 export function secretEmpreinteAdresse(env: Environnement = process.env): string | null {
   const brut = env[SECRET_ADRESSE_VARIABLE]
-  if (brut === undefined || brut.trim() === '') return env.VERCEL_ENV ? null : REPLI_DEVELOPPEMENT
+  if (brut === undefined || brut.trim() === '') {
+    // Repli de développement : ni sur Vercel, ni pour un serveur de production lancé ailleurs.
+    return env.VERCEL_ENV || env.NODE_ENV === 'production' ? null : REPLI_DEVELOPPEMENT
+  }
   return FORMAT.test(brut) ? brut : null
 }
 

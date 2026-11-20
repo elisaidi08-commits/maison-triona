@@ -9,7 +9,11 @@
 --    la seule que le rôle `site_public` peut appeler pour annuler (db/roles/site_public.sql) : elle
 --    n'annule que les liens d'accès vivants d'UNE empreinte d'adresse donnée. Le site public n'a ainsi
 --    ni la lecture des empreintes (`email_hmac`), ni l'écriture de `revoked_at` sur n'importe quel
---    lien. SECURITY DEFINER, chemin de recherche figé, droit d'exécution retiré à PUBLIC.
+--    lien. SECURITY DEFINER, chemin de recherche figé, droit d'exécution retiré à PUBLIC ; l'heure
+--    de l'annulation est celle de la base (`now()`), jamais une valeur de l'appelant.
+-- Le site public crée ses liens sans fixer ni `created_at` ni `purpose` (valeurs par défaut : `now()`,
+-- `access`) : la contrainte des 48 heures se calcule ainsi depuis l'heure de la base, et il ne peut
+-- fabriquer ni lien plus long ni lien de gestion (db/roles/site_public.sql).
 -- 3. Une annulation (`revoked_at`) ne se pose qu'une fois et ne se retire jamais, quel que soit le
 --    rôle : déclencheur, comme pour `used_at` (0010).
 -- Les lignes existantes sont revérifiées par l'ajout des contraintes : une ligne non conforme ferait
@@ -23,15 +27,15 @@ alter table outbox add constraint outbox_booking_access_shape check (
   template <> 'booking_access' or (request_id is null and priority = false)
 );
 
-create function revoke_live_access_links(cible bytea, instant timestamptz) returns void
+create function revoke_live_access_links(cible bytea) returns void
 language sql
 security definer
 set search_path = public, pg_temp
 as $$
-  update booking_tokens set revoked_at = instant
+  update booking_tokens set revoked_at = now()
    where email_hmac = cible and purpose = 'access' and used_at is null and revoked_at is null;
 $$;
-revoke all on function revoke_live_access_links(bytea, timestamptz) from public;
+revoke all on function revoke_live_access_links(bytea) from public;
 
 create function booking_tokens_revocation_once() returns trigger
 language plpgsql as $$

@@ -546,6 +546,7 @@
         "title": "Lorsque vous convenez d’un appel",
         "paragraphs": [
           "Vous pouvez aussi convenir d’un appel avec nous. La maison vous transmet un lien personnel, valable 48 heures, pour choisir votre créneau ; aucun compte ni cookie n’est nécessaire.",
+          "Pour recevoir ce lien, vous indiquez votre adresse e‑mail. Elle ne sert qu’à vous l’envoyer : notre fournisseur d’envoi d’e‑mails la reçoit et en garde la trace tant que notre domaine d’envoi est actif. Nous ne la gardons pas ; seule une empreinte, qui ne la révèle pas, reste quelques jours avec le lien, pour annuler un lien précédent et limiter les demandes répétées (trois par jour au plus).",
           "Nous gardons alors votre nom, votre numéro, la langue et le créneau choisis et, si vous souhaitez le dire, la façon dont vous avez connu la maison. Nous ne laissons jamais de message vocal.",
           "Ces informations sont chiffrées dès leur arrivée, comme une demande : seule la maison peut les lire. Seuls le créneau et l’état de l’appel restent lisibles, pour qu’un même moment ne soit jamais proposé deux fois.",
           "Une fois l’appel convenu, la page vous propose un fichier à ajouter à votre agenda ; il ne contient ni votre nom ni votre numéro."
@@ -1060,12 +1061,12 @@
     "request": {
       "metaTitle": "Convenir d’un appel",
       "title": "Convenons d’un appel.",
-      "intro": "Indiquez votre adresse e‑mail : nous vous envoyons un lien personnel pour choisir le moment de l’appel. Il est valable 48 heures ; aucun compte n’est nécessaire.",
+      "intro": "Indiquez votre adresse e‑mail : nous vous envoyons un lien personnel pour choisir le moment de l’appel. Il est valable 48 heures ; aucun compte n’est nécessaire.",
       "form": {
         "fields": {
           "email": {
             "label": "Votre adresse e‑mail",
-            "hint": "Elle ne sert qu’à vous envoyer ce lien."
+            "hint": "Elle sert seulement à vous envoyer ce lien et à éviter les envois répétés."
           },
           "piege": {
             "label": "Référence interne"
@@ -1076,7 +1077,7 @@
           "sending": "Envoi en cours"
         },
         "errors": {
-          "prefix": "Erreur :",
+          "prefix": "Erreur :",
           "one": "Un point à revoir",
           "codes": {
             "emailRequis": "Merci d’indiquer votre adresse e‑mail.",
@@ -1084,8 +1085,8 @@
           }
         },
         "status": {
-          "closed": "La réservation d’un appel ouvrira bientôt ; rien n’a été enregistré ni envoyé.",
-          "tooEarly": "Votre demande n’a pas pu partir. Patientez quelques secondes, puis envoyez-la de nouveau ; votre adresse est restée dans le formulaire.",
+          "closed": "La réservation d’un appel ouvrira bientôt ; rien n’a été enregistré ni envoyé.",
+          "tooEarly": "Votre demande n’a pas pu partir. Patientez quelques secondes, puis envoyez-la de nouveau ; votre adresse est restée dans le formulaire.",
           "failed": "L’envoi n’a pas abouti. Votre adresse est restée dans le formulaire."
         },
         "privacy": "Lire la politique de confidentialité (nouvel onglet)"
@@ -1094,7 +1095,7 @@
     "sent": {
       "metaTitle": "Lien envoyé",
       "title": "Un lien vient de vous être envoyé.",
-      "body": "Il est valable 48 heures. S’il n’arrive pas d’ici quelques minutes, regardez parmi les courriers indésirables.",
+      "body": "Il est valable 48 heures. S’il n’arrive pas d’ici quelques minutes, regardez dans vos courriers indésirables, ou écrivez-nous.",
       "back": "Revenir à l’accueil"
     }
   }

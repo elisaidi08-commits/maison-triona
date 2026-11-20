@@ -1,6 +1,6 @@
 # Réservation d'appel — spec
 
-> **Statut** : conception validée par Sady le 06/11/2026 (D57). **Story 3.8 livrée** : moteur de calcul (partie A, #44) et disponibilités dans le coffre (partie B, 19/11/2026 : `docs/architecture.md` §6.3). **Story 3.10 livrée le 19/11/2026** : réservation par lien personnel, confirmation et fichier .ics, lien créé depuis le coffre en attendant l'e-mail (§10). **Story 3.9 en partie** : jetons seulement. Le reste (page et e-mail de la 3.9, 3.11 à 3.14) n'est pas installé.
+> **Statut** : conception validée par Sady le 06/11/2026 (D57). **Story 3.8 livrée** : moteur de calcul (partie A, #44) et disponibilités dans le coffre (partie B, 19/11/2026 : `docs/architecture.md` §6.3). **Story 3.10 livrée le 19/11/2026** : réservation par lien personnel, confirmation et fichier .ics, lien créé depuis le coffre en attendant l'e-mail (§10). **Story 3.9 livrée le 20/11/2026** : demande de lien et e-mail d'accès (§10). Le reste (3.11 à 3.14) n'est pas installé.
 > **Dépend de** : stories 3.2 (coffre), 3.3 (envoi et boîte d'envoi), 3.5 (anti-abus). **Remplace** la story 3.6 (rappel à la demande).
 > **Priorité** : cette spec précise `docs/architecture.md` §6 et `docs/trust-contact-launch.md` §3 pour la réservation ; en cas de conflit sur un point de confidentialité, `docs/privacy.md` et les règles de discrétion de `CLAUDE.md` priment.
 
@@ -229,3 +229,11 @@ Prérequis : 3.2, 3.3, 3.5. Point de contrôle : ④ (contact). La story 3.6 est
 
 
 **19/11/2026, fournisseur SMS (D71)** : `docs/sms-fournisseur.md` (comparaison, questions à seven) · cette spec §4.5, §7 et §9 · `docs/privacy.md` (§1, sous-traitants) · `docs/rgpd/sous-traitants.md` (seven, transferts vers la Suisse et Monaco) · `docs/rgpd/registre-des-traitements.md` (T2, T8) · `docs/rgpd/analyse-impact.md` · `docs/email-deliverability.md` §1 · `docs/architecture.md` §6.6 · `docs/plan-implementation.md` (3.12) · `docs/launch-checklist.md` §3 · `CLAUDE.md`. Aucun code : la case SMS reste masquée jusqu'à la 3.12.
+
+**20/11/2026, story 3.9** (demande de lien) : `docs/architecture.md` §6.3 · `docs/coffre-cles.md` §3.1 · `docs/privacy.md` (§1, §7, §8) · `docs/rgpd/` (sous-traitants, registre) · `docs/plan-implementation.md` (3.9, lot E). Écarts avec cette spec, à valider par Sady :
+- **E-mail d'accès sans reprise** (§4.5) : ni l'adresse ni le jeton ne sont gardés (pas encore de Key Manager, `email_kms` non créé) ; le message part au premier essai (deux tentatives à 2 s), sinon il est abandonné (`no_contact`) avec une alerte à Sady, et la personne redemande un lien.
+- **Réponse** : « Un lien vient de vous être envoyé. » s'affiche aussi quand rien ne part (adresse ou IP limitée, robot) : c'est le prix de la réponse identique (§2). Le lien et l'e-mail s'écrivent **après** la réponse (`after()`) : une base injoignable ne se voit pas à l'écran.
+- **Limites** (§4.4) : comme la spec, plus un plafond global **bloquant** de 100 liens par jour et une demande **fermée** sans Upstash sur un déploiement (sa panne n'ouvre jamais l'envoi sans limite) `[À CONFIRMER par Sady]`.
+- **Appel à venir** (§2, étape 2) : pas encore de « une réservation à venir par adresse » ni d'ouverture de la page de gestion (3.11) ; un nouveau lien est envoyé.
+- **Lien expiré** (§5) : « Recevoir un nouveau lien » mène à la page de demande (l'adresse n'est pas connue, elle est ressaisie).
+- **Chemins** : `/en/contact/call` et `/en/contact/call/sent` pour la demande ; les liens personnels gardent `/en/contact/appel/<jeton>` (écart de la 3.10).

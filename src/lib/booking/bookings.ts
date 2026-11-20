@@ -12,6 +12,7 @@ import { listConfirmedCalls, loadSlotConfig } from './repository.ts'
 import { DEFAULT_BOOKING_SETTINGS } from './settings.ts'
 import { computeSlots, type Slot } from './slots.ts'
 import {
+  ACCESS_TOKEN_TTL_HOURS,
   accessTokenExpiry,
   accessTokenState,
   generateToken,
@@ -109,7 +110,8 @@ export interface IssuedLink {
 /**
  * Émet un lien d'accès (48 heures) dans la transaction donnée. Avec l'empreinte d'une adresse
  * (story 3.9), les liens vivants de cette adresse sont d'abord annulés, sous verrou consultatif :
- * l'index unique de la base n'en tolère qu'un. Sans empreinte (coffre), rien n'est annulé.
+ * l'index unique de la base n'en tolère qu'un ; création et échéance à l'heure de la base (`now` est
+ * ignoré). Sans empreinte (coffre), rien n'est annulé, et `now` fixe la création.
  */
 export async function issueAccessToken(
   client: PoolClient,
@@ -126,19 +128,22 @@ export async function issueAccessToken(
       [emailHmac],
     )
     // Fonction de la base (migration 0011) : le site public n'annule que les liens de cette empreinte.
-    await client.query('SELECT revoke_live_access_links($1, $2)', [emailHmac, now])
-    await client.query(
-      `INSERT INTO booking_tokens (id, token_hash, purpose, email_hmac, created_at, expires_at)
-       VALUES ($1, $2, 'access', $3, $4, $5)`,
-      [id, hash, emailHmac, now, expiresAt],
+    await client.query('SELECT revoke_live_access_links($1)', [emailHmac])
+    // Heures de la base : le site public ne fixe ni la création ni l'usage du lien (rôle
+    // `site_public`, 0011) ; `now` ne sert qu'aux liens du coffre.
+    const { rows } = await client.query<{ expires_at: Date }>(
+      `INSERT INTO booking_tokens (id, token_hash, email_hmac, expires_at)
+       VALUES ($1, $2, $3, now() + make_interval(hours => $4))
+       RETURNING expires_at`,
+      [id, hash, emailHmac, ACCESS_TOKEN_TTL_HOURS],
     )
-  } else {
-    await client.query(
-      `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
-       VALUES ($1, $2, 'access', $3, $4)`,
-      [id, hash, now, expiresAt],
-    )
+    return { token, expiresAt: rows[0]?.expires_at ?? expiresAt }
   }
+  await client.query(
+    `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
+     VALUES ($1, $2, 'access', $3, $4)`,
+    [id, hash, now, expiresAt],
+  )
   return { token, expiresAt }
 }
 
