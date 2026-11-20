@@ -1086,6 +1086,7 @@
       },
       "cancelled": {
         "title": "Votre appel est annulé.",
+        "byHouse": "La maison a dû annuler cet appel.",
         "body": "Si vous l’aviez ajouté à votre agenda, ouvrez ce fichier pour l’en retirer, ou supprimez le rendez-vous vous-même.",
         "calendar": "Retirer de mon agenda",
         "calendarHint": "Un fichier à ouvrir avec votre agenda (.ics).",

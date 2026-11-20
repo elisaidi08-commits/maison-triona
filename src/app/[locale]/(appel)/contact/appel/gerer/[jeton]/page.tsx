@@ -61,9 +61,13 @@ export default async function Page({
     errors: t.raw('move.errors') as TextesDeplacement['errors'],
     status: t.raw('move.status') as TextesDeplacement['status'],
   }
+  // Annulé par la maison (D78) : la personne n'y est pour rien, la page le dit et propose un autre
+  // appel ; par la personne : « Votre appel est annulé. »
   const titre =
     lu.phase === 'cancelled'
-      ? t('cancelled.title')
+      ? lu.appel.status === 'cancelled_by_house'
+        ? t('cancelled.byHouse')
+        : t('cancelled.title')
       : lu.phase === 'started'
         ? t('started.title')
         : t('title')

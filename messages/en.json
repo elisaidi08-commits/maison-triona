@@ -1079,6 +1079,7 @@
       },
       "cancelled": {
         "title": "Your call is cancelled.",
+        "byHouse": "The house had to cancel this call.",
         "body": "If you had added it to your calendar, open this file to remove it, or delete the entry yourself.",
         "calendar": "Remove from my calendar",
         "calendarHint": "A file to open with your calendar (.ics).",

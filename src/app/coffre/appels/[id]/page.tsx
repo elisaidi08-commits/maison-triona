@@ -32,7 +32,9 @@ import { annulerAppelCoffre, deplacerAppelCoffre, effacerAppelCoffre } from '../
 // page d'une demande. Chaque geste passe par une Server Action journalisée (`booking_move`,
 // `booking_cancel`, `booking_delete`), formulaire natif, sans JavaScript ; le résultat revient dans
 // l'adresse (`?resultat=`, liste fermée). Aucun message ne part vers la personne : l'e-mail courtois
-// avec un lien pour choisir un autre créneau (§3.2) attend la boîte d'envoi (3.12). Les créneaux
+// avec un lien pour choisir un autre créneau (§3.2) attend la boîte d'envoi (3.12) ; d'ici là, Cat
+// prévient la personne par téléphone (D78). Rien du contenu scellé n'est remis ni ouvert ici : pas
+// de ligne `booking_read` à l'affichage (D78, point 6). Les créneaux
 // proposés suivent les mêmes règles que la page publique (délai minimal, horizon, plafond, absences).
 
 export const metadata: Metadata = { title: 'Appel' }
@@ -78,8 +80,12 @@ export default async function PageAppel({
       <EnTete titre="Appel">
         <p>
           Session de {acces.compte.nom}. Heures de Bruxelles. Chaque déplacement, annulation ou
-          effacement est inscrit au journal d’accès, sans contenu. Aucun message ne part vers la
-          personne : prévenez-la vous-même tant que les e-mails des appels ne sont pas installés.
+          effacement est inscrit au journal d’accès, sans contenu.
+        </p>
+        {/* Brouillon à valider par Cat (D78) : vrai jusqu'aux e-mails des appels (3.12). */}
+        <p className="border-l border-or pl-16">
+          Aucun message ne part encore : après un déplacement ou une annulation, prévenez la
+          personne par téléphone.
         </p>
         <p>
           <LienCoffre href="/coffre/appels">Retour à l’agenda des appels</LienCoffre>
