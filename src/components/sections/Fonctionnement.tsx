@@ -8,8 +8,8 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 // modèle (la maison présente, le prestataire signe, la maison veille), puis ce qu'il faut savoir
 // (sélection, qui rémunère la maison, ce qu'elle ne fait pas, confidentialité). Pièces partagées
 // par la page Services et les trois pages de service.
-// Mise en page « fiche » : peu de chapitres en serif à gauche, le texte en colonne de lecture à
-// droite, des sous-titres en EB Garamond dans le chapitre. Aucun tarif, aucune promesse médicale.
+// Mise en page « fiche » : peu de chapitres en titre à gauche, le texte en colonne de lecture à
+// droite, des sous-titres en Inter dans le chapitre (D76). Aucun tarif, aucune promesse médicale.
 // Pages de service (audit du 06/11/2026 §4, D64) : un seul chapitre, « Comment ça se passe », qui
 // réunit le déroulé, la phrase du modèle et ce qu'il faut savoir, au lieu de trois chapitres à la
 // suite (CommentCaSePasse).

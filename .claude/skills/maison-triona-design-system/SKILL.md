@@ -25,14 +25,14 @@ Source complète : `docs/design-tokens.md` et `docs/art-direction.md`. En cas d'
 ## Typographie
 | Classe | Usage | Famille |
 |---|---|---|
-| `text-display-xl` | Titre du hero (72 px desktop → 44 px mobile) | Cormorant Garamond Light |
-| `text-display-l` | Titre de page | Cormorant Garamond Light |
-| `text-title-h2` | Titre de section | Cormorant Garamond Regular |
-| `text-title-h3` | Titre de ligne (services) | EB Garamond Medium |
-| `text-body-l` / `text-body` / `text-body-s` | Textes | EB Garamond Regular (corps 20 px) |
-| `text-label` | Label capitales, +0,12 em, 14 px | EB Garamond Medium |
+| `text-display-xl` | Titre du hero (72 px desktop → 40 px mobile) | Plus Jakarta Sans Medium |
+| `text-display-l` | Titre de page (56 → 34 px) | Plus Jakarta Sans Medium |
+| `text-title-h2` | Titre de section (44 → 30 px) | Plus Jakarta Sans Medium |
+| `text-title-h3` | Titre de ligne (services, 24 → 20 px) | Inter Medium |
+| `text-body-l` / `text-body` / `text-body-s` | Textes (20 → 18 px ; 18 px ; 18 px) | Inter Regular |
+| `text-label` | Label capitales, +0,12 em, 13 px | Inter Medium |
 
-Règles : display jamais en Bold, jamais sous ~32 px ; un seul titre display par écran ; pas d'italique (sauf arbitrage Q4) ; **corps 20 px (EB Garamond, D50), jamais sous 18 px minimum** ; colonne de lecture `max-w-measure` (640 px).
+Règles (D76, typographie validée par Cat le 20/11/2026) : display en Medium, jamais en Bold ; un seul titre display par écran ; pas d'italique (sauf arbitrage Q4) ; **corps 18 px, jamais sous 18 px** (petits textes compris) ; colonne de lecture `max-w-measure` (640 px).
 
 Texte sur image : seul le titre display du hero, sur voile sapin ≥ 58 % (`--veil-hero`) ; tout texte courant sur aplat (`docs/design-tokens.md` §2.4).
 
