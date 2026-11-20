@@ -73,7 +73,7 @@ export function isToQualify(call: CallTimes, now: Date): boolean {
 /**
  * « Fait » ou « pas de réponse » se choisit une fois l'appel commencé (un appel sans réponse se sait
  * tout de suite), et se corrige ; jamais pour un appel annulé. Même règle que le déclencheur de
- * db/migrations/0011_agenda.sql, qui a le dernier mot.
+ * db/migrations/0012_agenda.sql, qui a le dernier mot.
  */
 export function canQualify(call: CallTimes, now: Date): boolean {
   return QUALIFIABLE.includes(call.status) && call.startsAt.getTime() <= now.getTime()

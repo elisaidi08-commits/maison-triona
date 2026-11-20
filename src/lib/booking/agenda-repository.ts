@@ -4,7 +4,7 @@ import { withTransaction } from '../db/transaction.ts'
 import { isUuid, LIST_LOG_WINDOW_S, VaultError } from '../vault/repository.ts'
 import type { BookingStatus, Qualification } from './agenda.ts'
 
-// Agenda des appels de Cat (story 3.13 ; docs/reservation-appel.md §3.2 ; db/migrations/0011_agenda.sql),
+// Agenda des appels de Cat (story 3.13 ; docs/reservation-appel.md §3.2 ; db/migrations/0012_agenda.sql),
 // rôle `coffre`, sans ORM, dans le style de src/lib/vault/repository.ts : requêtes paramétrées, erreurs
 // réduites à leur code (VaultError). Chaque lecture et chaque action est inscrite au journal d'accès
 // dans la même transaction, au nom du compte, sans contenu (ni nom, ni numéro, ni heure, ni statut) :
@@ -178,7 +178,7 @@ export type StatusResult = 'changed' | 'unchanged' | 'not-found' | 'refused'
 
 /**
  * « Fait » ou « pas de réponse » (§3.2), pour un appel commencé, confirmé ou déjà qualifié (Cat
- * corrige un clic). La condition est dans la requête ; le déclencheur de 0011 la double sous tout
+ * corrige un clic). La condition est dans la requête ; le déclencheur de 0012 la double sous tout
  * rôle. `unchanged` : déjà ce statut (double clic), rien n'est écrit.
  */
 export async function setBookingStatus(

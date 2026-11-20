@@ -75,8 +75,8 @@ grant insert (id, token_hash, purpose, created_at, expires_at) on booking_tokens
 grant delete on bookings to coffre;
 grant select (id, expires_at), delete on booking_tokens to coffre;
 
--- Agenda des appels (story 3.13, db/migrations/0011_agenda.sql) : modification des deux seules colonnes
--- que l'agenda écrit, le statut (« fait », « pas de réponse » : le déclencheur de 0011 refuse tout
+-- Agenda des appels (story 3.13, db/migrations/0012_agenda.sql) : modification des deux seules colonnes
+-- que l'agenda écrit, le statut (« fait », « pas de réponse » : le déclencheur de 0012 refuse tout
 -- autre changement, sous tout rôle) et le rattachement à une demande (`request_id`). Ni le créneau, ni
 -- le contenu scellé, ni l'échéance, ni le lien ; ni insertion de réservation.
 grant update (status, request_id) on bookings to coffre;

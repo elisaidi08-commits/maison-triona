@@ -1,4 +1,4 @@
--- Agenda des appels de Cat dans le coffre (story 3.13 ; docs/reservation-appel.md §3.2). Numéro 0011,
+-- Agenda des appels de Cat dans le coffre (story 3.13 ; docs/reservation-appel.md §3.2). Numéro 0012,
 -- réservé à cette story.
 -- 1. Statuts. La liste est déjà celle de la spec depuis 0008 (`confirmed`, `done`, `no_answer`,
 --    `cancelled_by_guest`, `cancelled_by_house`) ; « à qualifier » ne se stocke pas : il se déduit

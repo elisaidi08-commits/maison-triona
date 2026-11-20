@@ -13,7 +13,7 @@ import {
 // Agenda des appels (story 3.13 ; docs/reservation-appel.md §3.2) : bornes des vues « Aujourd'hui »
 // et « Cette semaine » à l'heure de Bruxelles, changements d'heure compris ; « à qualifier » déduit
 // (confirmé, fin passée), jamais stocké ; qualification permise une fois l'appel commencé (même
-// règle que le déclencheur de db/migrations/0011_agenda.sql) ; lien `tel:`.
+// règle que le déclencheur de db/migrations/0012_agenda.sql) ; lien `tel:`.
 
 const BRUXELLES = 'Europe/Brussels'
 const HEURE = 3_600_000

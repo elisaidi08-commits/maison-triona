@@ -8,7 +8,7 @@ import pg from 'pg'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
 
-// Agenda des appels (story 3.13, db/migrations/0011_agenda.sql), contre PostgreSQL 17 avec les vrais
+// Agenda des appels (story 3.13, db/migrations/0012_agenda.sql), contre PostgreSQL 17 avec les vrais
 // rôles : changements de statut acceptés par la base (qualification d'un appel commencé, sous tout
 // rôle), rattachement à une demande remis à nul quand elle est effacée, droits du rôle `coffre` (les
 // deux seules colonnes `status` et `request_id`), aucun droit nouveau pour `site_public`, quatre
@@ -61,7 +61,7 @@ async function statut(id: string): Promise<{ status: string; request_id: string 
   return rows[0]
 }
 
-describe('agenda des appels : schéma et droits (0011)', () => {
+describe('agenda des appels : schéma et droits (0012)', () => {
   before(async () => {
     await resetDatabase(admin)
     await migrate(admin, MIGRATIONS)
