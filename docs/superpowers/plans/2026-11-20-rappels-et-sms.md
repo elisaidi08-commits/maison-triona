@@ -22,10 +22,10 @@
 
 1. **La 3.11 (déplacer et annuler) est fusionnée** dans `main` (session `maison-triona-bd`, migration `0014`). Elle touche `src/lib/booking/*`, `src/actions/booking*.ts` et les pages d'appel, que ce plan modifie aussi. Partir d'un `main` à jour.
 2. **Migration réservée : `0015_rappels.sql`** (0012 : PR n° 84 ; 0013 : agenda ; 0014 : 3.11). Revérifier avec `git ls-tree origin/main db/migrations/` et les autres sessions.
-3. **Décisions de Sady** (§ suivant) tranchées et consignées dans `docs/decisions.md` au prochain numéro libre.
+3. **Décisions de Sady** (§ suivant) : **tranchées le 20/11/2026** (« ok pour les six recos »), consignées en **D77**.
 4. Pour la production seulement : §« À faire par Sady ».
 
-## Décisions à confirmer (Sady)
+## Décisions (Sady, 20/11/2026 : les six recommandations retenues, D77)
 
 | N° | Question | Recommandation |
 |---|---|---|
@@ -684,7 +684,7 @@ Point d'accroche (session de la 3.11, 20/11/2026) : l'annulation et le déplacem
 - [ ] `docs/privacy.md` (§1, §7, §8 : e-mail et numéro gardés par la clé serveur jusqu'à 24 h après l'appel ; risque STOP en Belgique, décision 6).
 - [ ] `docs/rgpd/registre-des-traitements.md` (T2, T8), `docs/rgpd/sous-traitants.md` (**Scaleway Key Manager** : même sous-traitant que la base, région `fr-par`), `docs/rgpd/analyse-impact.md`.
 - [ ] `docs/email-deliverability.md` §1 (e-mail de la veille), `docs/launch-checklist.md` (clé `KMS_*`, réception des SMS dans les cinq pays).
-- [ ] `docs/plan-implementation.md` (3.12, lot E) et `docs/decisions.md` (décisions 1 à 6, numéro libre au moment de la fusion).
+- [ ] `docs/plan-implementation.md` (3.12, lot E) ; décisions déjà consignées en D77.
 
 ### Task 11 : Relectures et fusion
 
