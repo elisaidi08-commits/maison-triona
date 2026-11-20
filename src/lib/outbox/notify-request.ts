@@ -5,6 +5,7 @@ import type { EmailConfig } from '../email/config.ts'
 import { jourUtc } from '../security/empreinte.ts'
 import type { StoredRequest } from '../vault/store.ts'
 import type { OutboxDeps } from './process.ts'
+import type { CapAlertEvent } from './repository.ts'
 
 // Branchement de l'envoi sur la demande (story 3.3), sans import de Next : la Server Action
 // (src/actions/request.ts) n'appelle que ces fonctions, avec ses dépendances (`after`, journaux).
@@ -28,6 +29,9 @@ import type { OutboxDeps } from './process.ts'
 //   l'alerte est écrite par le rôle `envoi` dans un `after`, puis envoyée aussitôt ; si cet essai
 //   échoue, la tâche planifiée la reprend comme tout message. Mêmes garanties que le premier essai
 //   (`failed:after`, `failed:config` une fois) ; écriture refusée : `failed:notify-cap-alert`.
+// - Même mécanisme pour le plafond global des demandes de lien (3.9, suites, D72) : événement
+//   `link_cap`, clé `lien-plafond:<jour>`, statuts `alert:link-cap-sent` et `failed:link-cap-alert`
+//   (src/actions/booking-link.ts).
 // Journaux : des statuts fixes seulement, jamais un message d'erreur (il nommerait des variables),
 // un secret ni une adresse.
 // Imports relatifs seulement : testé par node --test.
@@ -61,18 +65,33 @@ export interface FirstAttemptDeps {
   logOnce: LogOnce<'failed:config'>
 }
 
-export type CapAlertLogStatus = 'alert:notify-cap-sent' | 'failed:after' | 'failed:notify-cap-alert'
+// Par plafond : préfixe de la clé d'usage unique du jour et statuts du journal.
+const CAP_ALERTS = {
+  notify_cap: {
+    key: 'notif-plafond',
+    sent: 'alert:notify-cap-sent',
+    failed: 'failed:notify-cap-alert',
+  },
+  link_cap: {
+    key: 'lien-plafond',
+    sent: 'alert:link-cap-sent',
+    failed: 'failed:link-cap-alert',
+  },
+} as const satisfies Record<CapAlertEvent, { key: string; sent: string; failed: string }>
 
-export interface CapAlertDeps {
+export type CapAlertLogStatus<E extends CapAlertEvent = 'notify_cap'> =
+  (typeof CAP_ALERTS)[E]['sent'] | (typeof CAP_ALERTS)[E]['failed'] | 'failed:after'
+
+export interface CapAlertDeps<E extends CapAlertEvent = 'notify_cap'> {
   /** `after` de `next/server` en production. */
   after: (task: () => Promise<void>) => void
   createDeps: (config: EmailConfig) => OutboxDeps
   /** `enqueueCapAlert` en production (rôle `envoi`). */
-  enqueue: (pool: Pool, id: string) => Promise<void>
+  enqueue: (pool: Pool, id: string, event: E) => Promise<void>
   /** Ne lève jamais (src/lib/outbox/process.ts) ; protégé quand même. */
   sendNow: (deps: OutboxDeps, id: string) => Promise<void>
   /** À chaque fois (au plus une alerte par jour). */
-  log: (status: CapAlertLogStatus) => void
+  log: (status: CapAlertLogStatus<E>) => void
   logOnce: LogOnce<'failed:config'>
 }
 
@@ -162,18 +181,28 @@ export function scheduleFirstAttempts(
   }
 }
 
-/** Clé d'usage unique de l'alerte du plafond : le jour UTC, aucune autre donnée. */
-export function capAlertKey(now: Date): string {
-  return `notif-plafond:${jourUtc(now)}`
+/**
+ * Clé d'usage unique de l'alerte d'un plafond (notifications par défaut) : le jour UTC, aucune
+ * autre donnée.
+ */
+export function capAlertKey(now: Date, event: CapAlertEvent = 'notify_cap'): string {
+  return `${CAP_ALERTS[event].key}:${jourUtc(now)}`
 }
 
 /**
- * Alerte à Sady au premier dépassement du jour du plafond de notifications. `mark` : résultat de
- * la clé d'usage unique (`usageUnique(capAlertKey(…))`) ; seul `nouveau` pose l'alerte. Ne lève
- * jamais : la demande s'enregistre et le visiteur atteint le remerciement quoi qu'il arrive.
+ * Alerte à Sady au premier dépassement du jour d'un plafond : notifications par défaut, ou
+ * demandes de lien (`link_cap`). `mark` : résultat de la clé d'usage unique
+ * (`usageUnique(capAlertKey(…, event))`) ; seul `nouveau` pose l'alerte. Ne lève jamais : la
+ * demande suit son cours et le visiteur reçoit sa réponse quoi qu'il arrive.
  */
-export function scheduleCapAlert(mark: string, config: EmailConfig, deps: CapAlertDeps): void {
+export function scheduleCapAlert<E extends CapAlertEvent = 'notify_cap'>(
+  mark: string,
+  config: EmailConfig,
+  deps: CapAlertDeps<NoInfer<E>>,
+  event: E = 'notify_cap' as E,
+): void {
   if (mark !== 'nouveau') return
+  const statuses = CAP_ALERTS[event]
   const task = async (): Promise<void> => {
     let outboxDeps: OutboxDeps
     try {
@@ -185,10 +214,10 @@ export function scheduleCapAlert(mark: string, config: EmailConfig, deps: CapAle
     let id: string
     try {
       id = outboxDeps.newId()
-      await deps.enqueue(outboxDeps.pool, id)
+      await deps.enqueue(outboxDeps.pool, id, event)
     } catch {
       // Rien en base : pas de reprise, et la clé du jour est déjà posée (aucune autre alerte).
-      quietly(() => deps.log('failed:notify-cap-alert'))
+      quietly(() => deps.log(statuses.failed))
       return
     }
     try {
@@ -203,5 +232,5 @@ export function scheduleCapAlert(mark: string, config: EmailConfig, deps: CapAle
     quietly(() => deps.log('failed:after'))
     return
   }
-  quietly(() => deps.log('alert:notify-cap-sent'))
+  quietly(() => deps.log(statuses.sent))
 }

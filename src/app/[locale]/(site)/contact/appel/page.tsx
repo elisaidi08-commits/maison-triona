@@ -3,7 +3,8 @@ import { getTranslations } from 'next-intl/server'
 import * as rootParams from 'next/root-params'
 import { BookingLinkForm, type TextesDemandeLien } from '@/components/forms/BookingLinkForm'
 import { Rule } from '@/components/ui/Rule'
-import { localizedPath, type Locale } from '@/i18n/pathnames'
+import type { Locale } from '@/i18n/pathnames'
+import { privacyHref } from '@/lib/privacy'
 
 // Demande d'un lien de réservation d'appel (story 3.9 ; docs/reservation-appel.md §2, étape 1) : la
 // page ne demande que l'adresse e-mail ; la langue vient de l'URL. Même colonne que le contact. Page
@@ -11,9 +12,6 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 // du sitemap, comme le remerciement : elle n'a rien à dire aux moteurs `[À CONFIRMER par Sady]`.
 // Textes en brouillon (content/brouillons.json : `BookingLink`) ; le libellé « Convenir d'un appel »
 // reste à valider par Cat (hors de la liste des CTA approuvés, spec §9).
-
-// Section « Lorsque vous convenez d'un appel » de la politique : son ancre change avec la langue.
-const ANCRE_APPEL: Record<Locale, string> = { fr: 'appel', en: 'call' }
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await rootParams.locale()) as Locale
@@ -37,7 +35,7 @@ export default async function Page() {
         <BookingLinkForm
           locale={locale}
           textes={t.raw('form') as TextesDemandeLien}
-          confidentialite={`${localizedPath('/confidentialite', locale)}#${ANCRE_APPEL[locale]}`}
+          confidentialite={privacyHref('appel', locale)}
         />
       </div>
     </div>
