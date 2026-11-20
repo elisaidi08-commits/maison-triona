@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { Pool, PoolClient } from 'pg'
 
 import { withTransaction } from '../db/transaction.ts'
+import { enqueueAccessLink } from '../outbox/repository.ts'
 import { VaultError } from '../vault/repository.ts'
 import { RETENTION_MONTHS, retentionDeadline } from '../vault/retention.ts'
 import { BOOKING_SEALED_BYTES } from '../vault/seal.ts'
@@ -11,6 +12,7 @@ import { listConfirmedCalls, loadSlotConfig } from './repository.ts'
 import { DEFAULT_BOOKING_SETTINGS } from './settings.ts'
 import { computeSlots, type Slot } from './slots.ts'
 import {
+  ACCESS_TOKEN_TTL_HOURS,
   accessTokenExpiry,
   accessTokenState,
   generateToken,
@@ -28,8 +30,9 @@ import { zonedParts } from './zoned-time.ts'
 // - Coffre (rôle `coffre`) : `createBookingLink`, un lien d'accès sans cible, journalisé.
 // - Site public (rôle `site_public`) : `readBookingLink` et `readConfirmation` ne font que lire (une
 //   page affichée par GET n'engage rien, §4.4) ; `bookSlot` réserve, dans une transaction.
-// - Story 3.9 : `issueAccessToken` avec l'empreinte d'une adresse annule d'abord les liens vivants
-//   de cette adresse (un nouveau lien annule l'ancien).
+// - Story 3.9 : `requestAccessLink` (rôle `site_public`) émet un lien avec l'empreinte d'une adresse,
+//   ce qui annule d'abord les liens vivants de cette adresse (un nouveau lien annule l'ancien), et
+//   inscrit l'e-mail d'accès dans la boîte d'envoi, dans la même transaction.
 
 type Db = Pool | PoolClient
 
@@ -107,7 +110,8 @@ export interface IssuedLink {
 /**
  * Émet un lien d'accès (48 heures) dans la transaction donnée. Avec l'empreinte d'une adresse
  * (story 3.9), les liens vivants de cette adresse sont d'abord annulés, sous verrou consultatif :
- * l'index unique de la base n'en tolère qu'un. Sans empreinte (coffre), rien n'est annulé.
+ * l'index unique de la base n'en tolère qu'un ; création et échéance à l'heure de la base (`now` est
+ * ignoré). Sans empreinte (coffre), rien n'est annulé, et `now` fixe la création.
  */
 export async function issueAccessToken(
   client: PoolClient,
@@ -123,23 +127,23 @@ export async function issueAccessToken(
       "SELECT pg_advisory_xact_lock(hashtext('maison-triona:lien:' || encode($1::bytea, 'hex')))",
       [emailHmac],
     )
-    await client.query(
-      `UPDATE booking_tokens SET revoked_at = $2
-       WHERE email_hmac = $1 AND purpose = 'access' AND used_at IS NULL AND revoked_at IS NULL`,
-      [emailHmac, now],
+    // Fonction de la base (migration 0011) : le site public n'annule que les liens de cette empreinte.
+    await client.query('SELECT revoke_live_access_links($1)', [emailHmac])
+    // Heures de la base : le site public ne fixe ni la création ni l'usage du lien (rôle
+    // `site_public`, 0011) ; `now` ne sert qu'aux liens du coffre.
+    const { rows } = await client.query<{ expires_at: Date }>(
+      `INSERT INTO booking_tokens (id, token_hash, email_hmac, expires_at)
+       VALUES ($1, $2, $3, now() + make_interval(hours => $4))
+       RETURNING expires_at`,
+      [id, hash, emailHmac, ACCESS_TOKEN_TTL_HOURS],
     )
-    await client.query(
-      `INSERT INTO booking_tokens (id, token_hash, purpose, email_hmac, created_at, expires_at)
-       VALUES ($1, $2, 'access', $3, $4, $5)`,
-      [id, hash, emailHmac, now, expiresAt],
-    )
-  } else {
-    await client.query(
-      `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
-       VALUES ($1, $2, 'access', $3, $4)`,
-      [id, hash, now, expiresAt],
-    )
+    return { token, expiresAt: rows[0]?.expires_at ?? expiresAt }
   }
+  await client.query(
+    `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
+     VALUES ($1, $2, 'access', $3, $4)`,
+    [id, hash, now, expiresAt],
+  )
   return { token, expiresAt }
 }
 
@@ -157,6 +161,33 @@ export async function createBookingLink(pool: Pool, actor: string, now: Date): P
         "INSERT INTO vault_access_log (actor, action) VALUES ($1, 'booking_link')",
         [actor],
       )
+      return issued
+    }),
+  )
+}
+
+/**
+ * Demande de lien (story 3.9, rôle `site_public`) : dans une transaction, le lien d'accès de cette
+ * empreinte d'adresse (les précédents annulés) et sa ligne `booking_access` dans la boîte d'envoi.
+ * L'un ne va jamais sans l'autre : un lien sans e-mail ne servirait à personne, un e-mail sans lien
+ * mènerait à une page « Ce lien n'est plus valable ». Rend le jeton, à remettre au seul premier essai
+ * d'envoi, jamais conservé.
+ */
+export async function requestAccessLink(
+  pool: Pool,
+  input: { emailHmac: Uint8Array; outboxId: string; now: Date },
+): Promise<IssuedLink> {
+  assertValidDate(input.now, 'Date de la demande')
+  if (!(input.emailHmac instanceof Uint8Array) || input.emailHmac.length !== 32) {
+    throw new RangeError('Empreinte d’adresse invalide')
+  }
+  return guard('requestAccessLink', () =>
+    withTransaction(pool, async (client) => {
+      const issued = await issueAccessToken(client, {
+        emailHmac: input.emailHmac,
+        now: input.now,
+      })
+      await enqueueAccessLink(client, input.outboxId)
       return issued
     }),
   )

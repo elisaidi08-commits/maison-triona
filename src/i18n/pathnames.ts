@@ -23,6 +23,10 @@ export const PATHNAMES = {
   '/contact': '/contact',
   // Remerciement après un envoi (story 3.2 B) : noindex, hors du sitemap.
   '/contact/merci': '/contact/merci',
+  // Demande d'un lien de réservation d'appel (story 3.9, D57) et sa réponse, la même pour toute
+  // adresse : noindex, hors du sitemap (docs/architecture.md §4).
+  '/contact/appel': { fr: '/contact/appel', en: '/contact/call' },
+  '/contact/appel/envoye': { fr: '/contact/appel/envoye', en: '/contact/call/sent' },
   '/mentions-legales': { fr: '/mentions-legales', en: '/legal-notice' },
   '/confidentialite': { fr: '/confidentialite', en: '/privacy' },
   '/accessibilite': { fr: '/accessibilite', en: '/accessibility' },

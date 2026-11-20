@@ -310,7 +310,9 @@ describe('tables de la réservation d’appel', () => {
       'SELECT email_hmac FROM booking_tokens',
       'UPDATE booking_tokens SET revoked_at = now()',
       'UPDATE booking_tokens SET expires_at = now()',
-      "INSERT INTO booking_tokens (id, token_hash, expires_at) VALUES (gen_random_uuid(), '\\x00', now())",
+      // Depuis la story 3.9, la création d'un lien est permise, jamais avec `used_at` ni `revoked_at`.
+      "INSERT INTO booking_tokens (id, token_hash, expires_at, used_at) VALUES (gen_random_uuid(), '\\x00', now(), now())",
+      "INSERT INTO booking_tokens (id, token_hash, expires_at, revoked_at) VALUES (gen_random_uuid(), '\\x00', now(), now())",
       'DELETE FROM booking_tokens',
       'UPDATE booking_settings SET daily_cap = 12',
       'DELETE FROM availability_exceptions',

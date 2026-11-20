@@ -540,6 +540,7 @@
         "title": "When you arrange a call",
         "paragraphs": [
           "You may also arrange a call with us. The house sends you a personal link, valid for 48 hours, to choose your time; no account or cookie is needed.",
+          "To receive this link, you give us your email address. It is used only to send it to you: our email provider receives it and keeps a record of it for as long as our sending domain is active. We do not keep it; only a fingerprint, which does not reveal it, stays with the link for a few days, to cancel an earlier link and to limit repeated requests (three a day at most).",
           "We then keep your name, your number, the language and time you chose and, if you wish to say, how you heard of the house. We never leave a voicemail.",
           "This information is encrypted as soon as it arrives, like an enquiry: only the house can read it. Only the time and the status of the call remain readable, so that the same time is never offered twice.",
           "Once the call is arranged, the page offers you a file to add to your calendar; it contains neither your name nor your number."
@@ -1028,7 +1029,8 @@
     "invalid": {
       "title": "This link is no longer valid.",
       "body": "To arrange a call, write to us: we reply within 48 working hours, Monday to Friday.",
-      "write": "Write to us"
+      "write": "Write to us",
+      "newLink": "Send me a new link"
     },
     "unavailable": {
       "title": "Booking is temporarily unavailable.",
@@ -1046,6 +1048,48 @@
     "ics": {
       "summary": "Call · Maison Triona",
       "description": "Maison Triona will call you on the number you gave."
+    }
+  },
+  "BookingLink": {
+    "request": {
+      "metaTitle": "Arrange a call",
+      "title": "Let us arrange a call.",
+      "intro": "Enter your email address: we will send you a personal link to choose a time for the call. It is valid for 48 hours; no account is needed.",
+      "form": {
+        "fields": {
+          "email": {
+            "label": "Your email address",
+            "hint": "It is used only to send you this link and to prevent repeated sending."
+          },
+          "piege": {
+            "label": "Internal reference"
+          }
+        },
+        "buttons": {
+          "send": "Send me my link",
+          "sending": "Sending"
+        },
+        "errors": {
+          "prefix": "Error:",
+          "one": "One thing to check",
+          "codes": {
+            "emailRequis": "Please enter your email address.",
+            "emailFormat": "Please enter a valid email address."
+          }
+        },
+        "status": {
+          "closed": "You will soon be able to arrange a call here; nothing has been saved or sent.",
+          "tooEarly": "Your request could not be sent. Please wait a few seconds, then send it again; your address is still in the form.",
+          "failed": "Your request could not be sent. Your address is still in the form."
+        },
+        "privacy": "Read the privacy policy (opens in a new tab)"
+      }
+    },
+    "sent": {
+      "metaTitle": "Link sent",
+      "title": "A link has just been sent to you.",
+      "body": "It is valid for 48 hours. If it does not arrive within a few minutes, please check your spam or junk folder, or write to us.",
+      "back": "Back to the home page"
     }
   }
 }

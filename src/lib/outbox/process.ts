@@ -1,5 +1,7 @@
 import type { Pool } from 'pg'
 
+import { bookingPath } from '../../i18n/pathnames.ts'
+import { renderAccessLink, type LangueLien } from '../email/access-link.ts'
 import type { EmailConfig } from '../email/config.ts'
 import type { EmailTransport, SendResult, StatusResult } from '../email/tem.ts'
 import { renderAlert, renderNotification } from '../email/templates.ts'
@@ -27,6 +29,10 @@ import { MAX_ATTEMPTS, nextAttemptAt, purgeBefore, trackingExpired } from './sch
 // - TEM n'offre pas de clé d'idempotence : un envoi accepté dont le marquage échoue sera repris à
 //   la fin du bail, d'où un doublon possible. Ce risque rare est accepté (décision du 18/11/2026).
 // - Jamais d'alerte sur une alerte (le dépôt le garantit aussi).
+// - E-mail d'accès (story 3.9, `booking_access`) : l'adresse et le jeton ne sont jamais en base. Seul
+//   `sendAccessLinkNow`, appelé juste après la demande avec ce qu'elle a en mémoire, peut l'envoyer
+//   (deux essais rapprochés au plus) ; la tâche planifiée le passe en échec `no_contact`, avec une
+//   alerte, s'il est resté en attente.
 // Imports relatifs seulement : testé par node --test.
 
 export type OutboxLogStatus =
@@ -36,6 +42,7 @@ export type OutboxLogStatus =
   | 'failed:alert'
   | 'failed:exhausted'
   | 'failed:db'
+  | 'failed:no-contact'
   | 'delivered'
   | 'undelivered'
 
@@ -121,6 +128,7 @@ function render(item: OutboxItem, config: EmailConfig): { to: string; mail: Rend
       }),
     }
   }
+  if (item.template !== 'request_notification') throw new RangeError('Gabarit sans destinataire')
   if (item.requestId === null) throw new RangeError('Notification sans demande')
   return {
     to: config.notifyTo,
@@ -172,6 +180,13 @@ export async function sendItem(
     return 'failed'
   }
 
+  // E-mail d'accès : ni adresse ni jeton en base, rien à reprendre (story 3.9).
+  if (item.template === 'booking_access') {
+    await markFailed(pool, item.id, 'no_contact', alertIdFor(deps, item.template))
+    logSafely(deps, 'failed:no-contact', item.id)
+    return 'failed'
+  }
+
   let rendered: { to: string; mail: RenderedEmail }
   try {
     rendered = render(item, config)
@@ -213,6 +228,93 @@ export async function sendNow(deps: OutboxDeps, id: string): Promise<void> {
     const item = await claimOne(deps.pool, id, deps.now())
     if (item === null) return
     await sendItem(deps, item)
+  } catch {
+    logSafely(deps, 'failed:db', id)
+  }
+}
+
+/** Ce que la demande de lien a en mémoire : jamais en base, jamais dans un journal. */
+export interface AccessLinkContent {
+  to: string
+  token: string
+  locale: LangueLien
+}
+
+export interface AccessLinkOptions {
+  /** Essais rapprochés au plus, quand TEM répond une erreur passagère (2 par défaut). */
+  attempts?: number
+  /** Pause entre deux essais (2 s par défaut). */
+  pauseMs?: number
+  sleep?: (ms: number) => Promise<void>
+}
+
+const ACCESS_LINK_ATTEMPTS = 2
+const ACCESS_LINK_PAUSE_MS = 2000
+/** Marge d'horloge entre le serveur et la base, pour réserver un e-mail d'accès tout juste écrit. */
+const CLOCK_TOLERANCE_MS = 60_000
+
+const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Premier (et seul) envoi d'un e-mail d'accès, juste après la demande de lien (story 3.9). L'adresse
+ * et le jeton viennent de la mémoire de la demande ; rien n'est relu ni écrit ailleurs qu'en base
+ * (statut du message). Une erreur passagère de TEM laisse un second essai, 2 secondes après ; puis
+ * échec définitif et alerte à Sady (identifiant du message seulement). Ne lève jamais : en cas
+ * d'erreur de la base, le message reste en attente et la tâche planifiée le passe en échec.
+ */
+export async function sendAccessLinkNow(
+  deps: OutboxDeps,
+  id: string,
+  content: AccessLinkContent,
+  options: AccessLinkOptions = {},
+): Promise<void> {
+  const attempts = Math.max(1, Math.min(options.attempts ?? ACCESS_LINK_ATTEMPTS, 3))
+  const sleep = options.sleep ?? pause
+  const { pool, transport, config } = deps
+  try {
+    // La ligne vient d'être écrite avec l'heure de la base (`now()`, en microsecondes) : l'horloge du
+    // serveur peut la précéder de quelques millisecondes, ou plus d'un serveur à l'autre. Sans marge,
+    // la ligne ne serait pas encore « due » et, faute de reprise possible, l'e-mail serait perdu.
+    const item = await claimOne(pool, id, new Date(deps.now().getTime() + CLOCK_TOLERANCE_MS))
+    if (item === null) return
+    if (item.template !== 'booking_access') {
+      // Jamais le cas en pratique : le message réservé n'est pas un e-mail d'accès. On le rend à la
+      // tâche planifiée sans rien envoyer.
+      await markRetry(pool, item.id, 'wrong_template', deps.now())
+      logSafely(deps, 'retry', item.id)
+      return
+    }
+
+    let mail: RenderedEmail
+    try {
+      mail = renderAccessLink({
+        locale: content.locale,
+        link: `${config.siteUrl}${bookingPath(content.locale, content.token)}`,
+      })
+    } catch {
+      await markFailed(pool, item.id, 'render', alertIdFor(deps, item.template))
+      logSafely(deps, 'failed:provider', item.id)
+      return
+    }
+
+    let result: SendResult = { ok: false, retryable: false, code: 'not_sent' }
+    for (let essai = 1; essai <= attempts; essai += 1) {
+      if (essai > 1) await sleep(options.pauseMs ?? ACCESS_LINK_PAUSE_MS)
+      result = await safeSend(transport, {
+        from: config.from,
+        to: content.to,
+        subject: mail.subject,
+        text: mail.text,
+      })
+      if (result.ok || !result.retryable) break
+    }
+    if (result.ok) {
+      await markAccepted(pool, item.id, result.providerId, deps.now())
+      logSafely(deps, 'sent', item.id)
+      return
+    }
+    await markFailed(pool, item.id, result.code, alertIdFor(deps, item.template))
+    logSafely(deps, 'failed:provider', item.id)
   } catch {
     logSafely(deps, 'failed:db', id)
   }
