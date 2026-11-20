@@ -957,6 +957,7 @@
   },
   "ContactThanks": {
     "metaTitle": "Thank you",
+    "metaDescription": "Your request has reached Maison Triona. We reply within 48 working hours, Monday to Friday.",
     "title": "Thank you, your request has arrived safely.",
     "body": "We reply within 48 working hours, Monday to Friday.",
     "back": "Back to the home page"
@@ -1052,6 +1053,7 @@
   "BookingLink": {
     "request": {
       "metaTitle": "Arrange a call",
+      "metaDescription": "Receive a personal link to choose a time for a call with Maison Triona. No account is needed.",
       "title": "Let us arrange a call.",
       "intro": "Enter your email address: we will send you a personal link to choose a time for the call. It is valid for 48 hours; no account is needed.",
       "form": {
@@ -1086,6 +1088,7 @@
     },
     "sent": {
       "metaTitle": "Link sent",
+      "metaDescription": "Your request for a link to arrange a call with Maison Triona has been received.",
       "title": "A link has just been sent to you.",
       "body": "It is valid for 48 hours. If it does not arrive within a few minutes, please check your spam or junk folder, or write to us.",
       "back": "Back to the home page"
