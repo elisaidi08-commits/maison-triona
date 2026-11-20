@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test'
 
-// Pied de page « Kiln » (D54), immobile et resserré par D64 (2) : fond ivoire, filet or en tête,
-// phrase de l'accueil, touche « revenir en haut », trois colonnes, « Maison Triona » signé du « K. »,
-// barre légale avec la mention IA sur sa propre ligne. Aucun réseau social, rien qui bouge.
+// Pied de page « Kiln » (D54), immobile (D64, 2), resserré par D72 (story 2.16) : fond ivoire, filet
+// or en tête, phrase de l'accueil, deux zones (la maison, la navigation), « Maison Triona » signé du
+// « K. », barre légale avec la mention IA et « Revenir en haut de la page » en lien texte. En mobile,
+// la navigation se replie dans un <details>. Aucun réseau social, rien qui bouge.
 
 test('le pied de page garde ses liens, sans aucun réseau social', async ({ page }) => {
   await page.goto('/fr')
@@ -26,8 +27,20 @@ test('le pied de page garde ses liens, sans aucun réseau social', async ({ page
   await expect(footer.getByRole('heading', { level: 2 })).toHaveText([
     'Maison Triona',
     'Navigation',
-    'Contact',
   ])
+})
+
+test('plus de colonne Contact : la réassurance du bloc Contact n’est pas répétée', async ({
+  page,
+}) => {
+  await page.goto('/fr/services')
+  const reassurance = 'Chaque demande est lue personnellement et reste confidentielle.'
+  await expect(page.locator('[data-surface="sapin"]').getByText(reassurance)).toBeVisible()
+  await expect(page.locator('footer').getByText(reassurance)).toHaveCount(0)
+  // Le contact reste joignable depuis le pied : le lien de la navigation.
+  await expect(
+    page.locator('footer').getByRole('link', { name: 'Contact', exact: true }),
+  ).toBeVisible()
 })
 
 test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page }) => {
@@ -39,17 +52,15 @@ test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page })
   await expect(stamp).toHaveCSS('font-size', '48px')
 })
 
-// Avant D64 : 1 071, 1 070 et 1 446 px. Le lien de la FAQ (story 2.8) ajoute une ligne à la
-// navigation (957 px à 834) ; celui de l'accessibilité (story 4.4), une ligne à la barre légale en
-// mobile (1 241 px à 390).
+// Avant D64 : 1 071, 1 070 et 1 446 px ; avant D72 : 775, 957 et 1 241 px. Après D72 : 794, 767 et
+// 768 px (navigation repliée). Le desktop prend 19 px : « Revenir en haut » est désormais une cible de
+// 48 px sur la ligne de la mention IA, au lieu d'une touche logée à côté de la phrase.
 for (const [width, height, max] of [
-  [1440, 900, 800],
-  [834, 1112, 1000],
-  [390, 844, 1300],
+  [1440, 900, 820],
+  [834, 1112, 800],
+  [390, 844, 800],
 ] as const) {
-  test(`${width} px : nettement plus court qu’avant (moins de ${max} px), mention IA seule sur sa ligne`, async ({
-    page,
-  }) => {
+  test(`${width} px : moins de ${max} px, mention IA seule sur sa ligne`, async ({ page }) => {
     await page.setViewportSize({ width, height })
     await page.goto('/fr')
     const footer = page.locator('footer')
@@ -63,13 +74,27 @@ for (const [width, height, max] of [
   })
 }
 
+test('390 px : la navigation est repliée et s’ouvre au clavier', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/fr')
+  const footer = page.locator('footer')
+  const services = footer.getByRole('link', { name: 'Conciergerie de luxe' })
+  await expect(services).toBeHidden()
+  const summary = footer.locator('summary', { hasText: 'Navigation' })
+  expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+  await summary.focus()
+  await page.keyboard.press('Enter')
+  await expect(services).toBeVisible()
+  await expect(footer.getByRole('navigation', { name: 'Navigation' })).toHaveCount(1)
+})
+
 test('immobile : ni disque, ni lettres animées, ni flèche qui part', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/fr')
   const footer = page.locator('footer')
   await footer.scrollIntoViewIfNeeded()
-  // Un seul dessin, la flèche de la touche ; aucun fond tracé derrière le texte.
-  await expect(footer.locator('svg')).toHaveCount(1)
+  // Aucun dessin : ni disque, ni flèche (la touche sapin est devenue un lien texte, D72).
+  await expect(footer.locator('svg')).toHaveCount(0)
   const top = page.getByRole('link', { name: 'Revenir en haut de la page' })
   await top.hover()
   await page.waitForTimeout(400)
@@ -83,7 +108,7 @@ test('immobile : ni disque, ni lettres animées, ni flèche qui part', async ({ 
   expect(await top.evaluate((link) => getComputedStyle(link).transform)).toBe('none')
 })
 
-test('la touche ramène en haut de la page', async ({ page }) => {
+test('le lien ramène en haut de la page', async ({ page }) => {
   await page.goto('/fr')
   await page.getByRole('link', { name: 'Revenir en haut de la page' }).click()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(2)
@@ -92,9 +117,12 @@ test('la touche ramène en haut de la page', async ({ page }) => {
 test.describe('sans JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('le pied de page est complet et la touche fonctionne', async ({ page }) => {
+  test('la navigation repliée s’ouvre et le lien remonte', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/fr')
-    await expect(page.locator('footer').getByRole('link', { name: 'Nous écrire' })).toBeVisible()
+    const footer = page.locator('footer')
+    await footer.locator('summary', { hasText: 'Navigation' }).click()
+    await expect(footer.getByRole('link', { name: 'Garde d’enfants' })).toBeVisible()
     await page.getByRole('link', { name: 'Revenir en haut de la page' }).click()
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(2)
   })
