@@ -37,8 +37,10 @@ grant insert (id, template, request_id, priority) on outbox to site_public;
 -- §4.2). La page publique calcule les créneaux : disponibilités de Cat en lecture (rien de personnel),
 -- et des réservations, l'identifiant, le lien qui a servi, le créneau et le statut seulement : jamais
 -- `sealed`, ni la version de la politique, ni les dates de création et de conservation. Jetons : les
--- colonnes utiles à la vérification, et `used_at` seul en écriture (consommer le lien ; il donne
--- aussi le verrou de ligne, SELECT … FOR UPDATE). Création et annulation : story 3.9, en bas ;
+-- colonnes d'état, jamais l'empreinte (`token_hash`) ni l'adresse (`email_hmac`) : depuis la story
+-- 3.11, un lien se retrouve par les fonctions `find_booking_token` et `lock_booking_token` (verrou de
+-- ligne), sur l'empreinte du jeton reçu ; `used_at` seul en écriture (consommer le lien, sous le
+-- déclencheur de 0010). Création et annulation : story 3.9, en bas ;
 -- aucun effacement. Réservation : insertion des colonnes écrites par la page ; le statut
 -- n'en fait pas partie, une réservation naît toujours « confirmée » (valeur par défaut).
 grant select on booking_settings, availability_rules, availability_exceptions to site_public;
@@ -47,7 +49,7 @@ grant select (id, access_token_id, starts_at, ends_at, slot, status, sequence)
 grant insert (
   id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed
 ) on bookings to site_public;
-grant select (id, token_hash, purpose, booking_id, created_at, expires_at, used_at, revoked_at)
+grant select (id, purpose, booking_id, created_at, expires_at, used_at, revoked_at)
   on booking_tokens to site_public;
 grant update (used_at) on booking_tokens to site_public;
 
@@ -63,16 +65,25 @@ grant insert (id, token_hash, email_hmac, expires_at) on booking_tokens to site_
 grant execute on function revoke_live_access_links(bytea) to site_public;
 
 -- Lien de gestion (story 3.11, db/migrations/0014_deplacer_annuler.sql ; docs/reservation-appel.md
--- §2, étapes 4 et 6) : créé par la seule fonction `issue_manage_token`, dans la transaction de la
--- réservation, pour l'appel que le lien d'accès vient de réserver (échéance et empreinte fixées par la
--- base) ; aucun droit d'insertion d'un lien de gestion, aucune écriture de `expires_at`. Lecture de
--- l'appel visé (`booking_id`) et de la séquence de l'invitation (plus haut). Déplacer : début, fin et
--- plage de l'appel (ce droit donne aussi le verrou de ligne, SELECT … FOR UPDATE). Annuler : par la
--- seule fonction `cancel_booking_as_guest` (« annulé par la personne ») ; aucun droit sur le statut,
--- donc ni qualification ni annulation au nom de la maison. Les déclencheurs de 0014 n'acceptent
--- qu'un appel confirmé qui n'a pas commencé, vers un créneau à venir, et posent eux-mêmes la
--- séquence ; la contrainte d'exclusion refuse tout chevauchement. Ni le contenu scellé, ni
--- l'échéance de conservation, ni le lien d'accès, ni le rattachement ; aucun effacement.
+-- §2, étapes 4 et 6 ; relecture sécurité) : le site public n'a AUCUN droit d'écriture sur `bookings`.
+-- Tout passe par des fonctions SECURITY DEFINER qui exigent l'empreinte d'un lien valable, qu'il ne
+-- peut pas lire (plus haut) : il ne vise donc un appel qu'avec le jeton de son lien de gestion.
+-- - `issue_manage_token` : le lien de gestion, dans la transaction de la réservation, pour l'appel
+--   que ce lien d'accès vient d'insérer (échéance et empreinte d'adresse fixées par la base) ;
+-- - `find_booking_token`, `lock_booking_token` : un lien par son empreinte (sans l'empreinte) ;
+-- - `lock_call_as_guest`, `move_booking_as_guest`, `cancel_booking_as_guest` : verrouiller,
+--   déplacer, annuler (« annulé par la personne ») l'appel d'un lien de gestion valable, et lui seul.
+-- Les déclencheurs de 0014 bornent le déplacement (appel confirmé à venir, durée inchangée, pause des
+-- réglages, horizon) et posent la séquence et l'échéance de conservation ; la contrainte d'exclusion
+-- refuse tout chevauchement. Lecture de `booking_id` et de la séquence (plus haut). Aucun droit sur
+-- le statut, le contenu scellé, l'échéance, le lien d'accès ni le rattachement ; aucun effacement.
+-- REVOKE : un rôle déjà posé par une version précédente de ce fichier perd ces droits (le fichier
+-- repart de toute façon de rien, en haut).
+revoke update on bookings from site_public;
 grant execute on function issue_manage_token(uuid, bytea, uuid) to site_public;
-grant execute on function cancel_booking_as_guest(uuid) to site_public;
-grant update (starts_at, ends_at, slot) on bookings to site_public;
+grant execute on function find_booking_token(bytea) to site_public;
+grant execute on function lock_booking_token(bytea) to site_public;
+grant execute on function lock_call_as_guest(bytea) to site_public;
+grant execute on function move_booking_as_guest(bytea, timestamptz, timestamptz, timestamptz)
+  to site_public;
+grant execute on function cancel_booking_as_guest(bytea) to site_public;

@@ -27,7 +27,13 @@ import {
 } from '../../src/lib/booking/bookings.ts'
 import { listConfirmedCalls } from '../../src/lib/booking/repository.ts'
 import { deriveManageToken, generateToken, hashToken } from '../../src/lib/booking/tokens.ts'
-import { zonedTimeToUtc } from '../../src/lib/booking/zoned-time.ts'
+import {
+  addDays,
+  isoWeekday,
+  zonedParts,
+  zonedTimeToUtc,
+} from '../../src/lib/booking/zoned-time.ts'
+import { retentionDeadline } from '../../src/lib/vault/retention.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { sealBooking } from '../../src/lib/vault/seal.ts'
 import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } from './helpers.ts'
@@ -42,16 +48,23 @@ import { applyRoles, coffrePool, resetDatabase, TEST_DATABASE_URL, testPool } fr
 
 const MIGRATIONS = fileURLToPath(new URL('../../db/migrations', import.meta.url))
 const FUSEAU = 'Europe/Brussels'
+const MINUTE = 60_000
 const CAT = 'cat-gestion@exemple.test'
 const SECRET = 'secret-factice-des-tests-de-gestion-0123456'
 const NOM = 'Philomène Factice-Gestion'
 const NUMERO = '+32 470 11 22 33'
-// Lundi 1er mars 2027, 9 h à Bruxelles : premier créneau libre le mardi 2 mars à 10 h 30.
-const MAINTENANT = new Date('2027-03-01T08:00:00Z')
+// Un lundi, 9 h à Bruxelles, au moins 7 jours après aujourd'hui : les déclencheurs de 0014 bornent un
+// déplacement par l'horizon de réservation compté depuis l'heure de la BASE (now()), les dates du test
+// suivent donc l'heure réelle. Premier créneau libre : le mardi à 10 h 30.
+const AUJOURDHUI = zonedParts(new Date(), FUSEAU).date
+const LUNDI = addDays(AUJOURDHUI, 7 + ((8 - isoWeekday(AUJOURDHUI)) % 7))
+const MARDI = addDays(LUNDI, 1)
+const MERCREDI = addDays(LUNDI, 2)
+const MAINTENANT = zonedTimeToUtc(LUNDI, '09:00', FUSEAU)
+const apres = (date: Date, minutes: number) => new Date(date.getTime() + minutes * MINUTE)
 const PRIVACY = '2026-11-18'
 const REFUS = { code: '42501' }
 const CONTROLE = { code: '23514' }
-const MINUTE = 60_000
 
 const admin = testPool()
 const coffre = coffrePool()
@@ -68,12 +81,12 @@ const autorise: AccesCoffre = {
 let clePublique: string
 
 const heure = (date: string, h: string) => zonedTimeToUtc(date, h, FUSEAU)
-const MARDI_1030 = heure('2027-03-02', '10:30')
-const MARDI_1115 = heure('2027-03-02', '11:15')
-const MARDI_1200 = heure('2027-03-02', '12:00')
-const MARDI_1600 = heure('2027-03-02', '16:00')
-const MARDI_1645 = heure('2027-03-02', '16:45')
-const MERCREDI_1030 = heure('2027-03-03', '10:30')
+const MARDI_1030 = heure(MARDI, '10:30')
+const MARDI_1115 = heure(MARDI, '11:15')
+const MARDI_1200 = heure(MARDI, '12:00')
+const MARDI_1600 = heure(MARDI, '16:00')
+const MARDI_1645 = heure(MARDI, '16:45')
+const MERCREDI_1030 = heure(MERCREDI, '10:30')
 
 interface Reserve {
   id: string
@@ -182,6 +195,8 @@ describe('déplacer et annuler un appel (3.11)', () => {
     await admin.query('DELETE FROM vault_access_log')
     await admin.query('UPDATE booking_settings SET daily_cap = 4, min_notice_minutes = 1440')
     await admin.query("DELETE FROM availability_exceptions WHERE kind <> 'holiday'")
+    // Les dates suivent l'heure réelle : aucun jour férié ne doit tomber dans la semaine du test.
+    await admin.query("UPDATE availability_exceptions SET active = false WHERE kind = 'holiday'")
   })
   after(async () => {
     await siteBis.end()
@@ -192,7 +207,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
 
   it('déplace dans la même ligne : nouvelle plage, ancienne libérée, séquence et échéance suivent', async () => {
     const a = await reserver(MARDI_1030)
-    assert.equal(await echeanceGestion(a.id), '2027-03-02T10:00:00.000Z')
+    assert.equal(await echeanceGestion(a.id), apres(MARDI_1030, 30).toISOString())
     // La page de gestion propose les créneaux sans cet appel : le sien y figure.
     const lu = await readManageLink(site, a.gestion, MAINTENANT, { withSlots: true })
     assert.ok(lu.state === 'valid')
@@ -202,11 +217,11 @@ describe('déplacer et annuler un appel (3.11)', () => {
     assert.equal(deplace.status, 'moved')
     const ligne = await appel(a.id)
     assert.equal(ligne.starts_at.toISOString(), MARDI_1600.toISOString())
-    assert.equal(ligne.ends_at.toISOString(), '2027-03-02T15:30:00.000Z')
-    assert.equal(ligne.fin.toISOString(), '2027-03-02T15:45:00.000Z')
+    assert.equal(ligne.ends_at.toISOString(), apres(MARDI_1600, 30).toISOString())
+    assert.equal(ligne.fin.toISOString(), apres(MARDI_1600, 45).toISOString())
     assert.equal(ligne.status, 'confirmed')
     assert.equal(ligne.sequence, 1)
-    assert.equal(await echeanceGestion(a.id), '2027-03-02T15:30:00.000Z')
+    assert.equal(await echeanceGestion(a.id), apres(MARDI_1600, 30).toISOString())
     // L'ancien créneau est libre : une autre personne le prend.
     const b = await reserver(MARDI_1030)
     assert.notEqual(b.id, a.id)
@@ -223,8 +238,8 @@ describe('déplacer et annuler un appel (3.11)', () => {
     await reserver(MARDI_1600)
     for (const cible of [
       MARDI_1600, // pris
-      heure('2027-03-02', '13:00'), // hors de la semaine type
-      heure('2027-03-01', '16:00'), // dans le délai minimal
+      heure(MARDI, '13:00'), // hors de la semaine type
+      heure(LUNDI, '16:00'), // dans le délai minimal
     ]) {
       const issue = await deplacer(a.gestion, cible)
       assert.equal(issue.status, 'taken', cible.toISOString())
@@ -251,7 +266,8 @@ describe('déplacer et annuler un appel (3.11)', () => {
     assert.equal((await deplacer(mardi[0]!.gestion, MARDI_1645)).status, 'moved')
     const { rows } = await admin.query(
       `SELECT count(*)::int AS n FROM bookings
-       WHERE status = 'confirmed' AND starts_at >= '2027-03-01T23:00Z' AND starts_at < '2027-03-02T23:00Z'`,
+       WHERE status = 'confirmed' AND starts_at >= $1 AND starts_at < $2`,
+      [heure(MARDI, '00:00'), heure(MERCREDI, '00:00')],
     )
     assert.equal(rows[0].n, 4)
     // Une annulation libère une place du plafond.
@@ -287,12 +303,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
     await assert.rejects(
       admin.query(
         `UPDATE bookings SET starts_at = $2, ends_at = $3, slot = tstzrange($2, $4) WHERE id = $1`,
-        [
-          a.id,
-          heure('2027-03-02', '16:10'),
-          heure('2027-03-02', '16:40'),
-          heure('2027-03-02', '16:55'),
-        ],
+        [a.id, heure(MARDI, '16:10'), heure(MARDI, '16:40'), heure(MARDI, '16:55')],
       ),
       { code: '23P01' },
     )
@@ -309,7 +320,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
     assert.equal(ligne.status, 'cancelled_by_guest')
     assert.equal(ligne.sequence, 1)
     assert.deepEqual(
-      await listConfirmedCalls(site, new Date('2027-03-02T00:00Z'), new Date('2027-03-03T00:00Z')),
+      await listConfirmedCalls(site, heure(MARDI, '00:00'), heure(MERCREDI, '00:00')),
       [],
     )
     // Le créneau se reprend.
@@ -354,41 +365,98 @@ describe('déplacer et annuler un appel (3.11)', () => {
         CONTROLE,
       )
     }
-    await assert.rejects(site.query('SELECT cancel_booking_as_guest($1)', [commence]), CONTROLE)
     // Un appel qualifié ne se déplace pas.
     const fait = await appelReel(-60, 'done')
     await assert.rejects(vers(fait, dans(4 * 24 * 60)), CONTROLE)
-    // Un appel à venir se déplace sous tout rôle (coffre), séquence posée par la base.
+    // Un appel à venir se déplace sous tout rôle (coffre) : séquence et échéance posées par la base.
+    const nouveau = dans(5 * 24 * 60)
     await coffre.query(
       `UPDATE bookings SET starts_at = $2, ends_at = $2::timestamptz + interval '30 minutes',
          slot = tstzrange($2, $2::timestamptz + interval '45 minutes') WHERE id = $1`,
-      [aVenir, dans(5 * 24 * 60)],
+      [aVenir, nouveau],
     )
     assert.equal((await appel(aVenir)).sequence, 1)
-    // La personne, par sa fonction, annule un appel à venir ; une seconde fois, rien.
-    const { rows } = await site.query('SELECT cancel_booking_as_guest($1) AS fait', [aVenir])
+    const { rows: echeance } = await admin.query(
+      'SELECT retention_until FROM bookings WHERE id = $1',
+      [aVenir],
+    )
+    assert.equal(
+      echeance[0].retention_until.toISOString(),
+      retentionDeadline(nouveau, 12).toISOString(),
+    )
+    // La personne, par sa fonction et l'empreinte de SON lien, annule ; une seconde fois, rien.
+    const lien = generateToken()
+    await admin.query(
+      `INSERT INTO booking_tokens (id, token_hash, purpose, booking_id, expires_at)
+       SELECT $1, $2, 'manage', id, ends_at FROM bookings WHERE id = $3`,
+      [randomUUID(), lien.hash, aVenir],
+    )
+    const { rows } = await site.query('SELECT cancel_booking_as_guest($1) AS fait', [lien.hash])
     assert.equal(rows[0].fait, true)
     const { rows: encore } = await site.query('SELECT cancel_booking_as_guest($1) AS fait', [
-      aVenir,
+      lien.hash,
     ])
     assert.equal(encore[0].fait, false)
     assert.equal((await appel(aVenir)).status, 'cancelled_by_guest')
     assert.equal((await appel(aVenir)).sequence, 2)
   })
 
-  it('droits du site public : le créneau seulement, ni statut, ni séquence, ni lien de gestion forgé', async () => {
+  it('bornes d’un déplacement sous tout rôle : durée, pause, horizon, échéance recalculée', async () => {
+    const id = await appelReel(3 * 24 * 60)
+    const dans = (minutes: number) => new Date(Date.now() + minutes * MINUTE)
+    const vers = (debut: Date, duree: number, occupe: number) =>
+      coffre.query(
+        `UPDATE bookings SET starts_at = $2, ends_at = $3, slot = tstzrange($2, $4) WHERE id = $1`,
+        [id, debut, apres(debut, duree), apres(debut, occupe)],
+      )
+    const debut = dans(4 * 24 * 60)
+    // Durée changée, pause démesurée (plage jusqu'en 2100), au-delà de l'horizon (21 jours).
+    await assert.rejects(vers(debut, 60, 75), CONTROLE, 'durée')
+    await assert.rejects(vers(debut, 30, 30 + 16), CONTROLE, 'pause')
+    await assert.rejects(
+      coffre.query(`UPDATE bookings SET slot = tstzrange(starts_at, '2100-01-01') WHERE id = $1`, [
+        id,
+      ]),
+      CONTROLE,
+      'plage jusqu’en 2100',
+    )
+    await assert.rejects(vers(dans(23 * 24 * 60), 30, 45), CONTROLE, 'horizon')
+    // Dans les bornes : passe, échéance recalculée depuis le nouveau début.
+    await vers(debut, 30, 45)
+    const { rows } = await admin.query('SELECT retention_until FROM bookings WHERE id = $1', [id])
+    assert.equal(rows[0].retention_until.toISOString(), retentionDeadline(debut, 12).toISOString())
+    // Le cas d'un 29 février : même règle que retentionDeadline (fin de février de l'année suivante).
+    const { rows: bissextile } = await admin.query<{ fin: Date }>(
+      `SELECT (('2028-02-29T10:00:00Z'::timestamptz at time zone 'UTC') + interval '12 months')
+         at time zone 'UTC' AS fin`,
+    )
+    assert.equal(
+      bissextile[0]!.fin.toISOString(),
+      retentionDeadline(new Date('2028-02-29T10:00:00Z'), 12).toISOString(),
+    )
+  })
+
+  it('droits du site public : aucune écriture directe sur les appels, aucune empreinte lue', async () => {
     const a = await reserver(MARDI_1030)
     for (const sql of [
+      // Relecture sécurité : ni déplacement direct (plage jusqu'en 2100, 3 h du matin…), ni statut.
+      'UPDATE bookings SET starts_at = starts_at',
+      "UPDATE bookings SET slot = tstzrange(starts_at, '2100-01-01')",
+      'UPDATE bookings SET ends_at = ends_at',
       "UPDATE bookings SET status = 'cancelled_by_house'",
+      "UPDATE bookings SET status = 'cancelled_by_guest'",
       "UPDATE bookings SET status = 'done'",
       'UPDATE bookings SET sequence = 7',
       'UPDATE bookings SET sealed = sealed',
       'UPDATE bookings SET retention_until = now()',
       'UPDATE bookings SET access_token_id = NULL',
       'UPDATE bookings SET request_id = NULL',
+      'SELECT id FROM bookings FOR UPDATE',
       'DELETE FROM bookings',
       'SELECT sealed FROM bookings',
+      'SELECT token_hash FROM booking_tokens',
       'SELECT email_hmac FROM booking_tokens',
+      "SELECT cancel_booking_as_guest(token_hash) FROM booking_tokens WHERE purpose = 'manage'",
       'UPDATE booking_tokens SET expires_at = expires_at',
       'UPDATE booking_tokens SET booking_id = NULL',
       'UPDATE booking_tokens SET revoked_at = now()',
@@ -397,6 +465,12 @@ describe('déplacer et annuler un appel (3.11)', () => {
     ]) {
       await assert.rejects(site.query(sql), REFUS, sql)
     }
+    // L'ancienne signature (un identifiant d'appel) n'existe plus : `SELECT
+    // cancel_booking_as_guest(id) FROM bookings` n'annule rien.
+    await assert.rejects(site.query('SELECT cancel_booking_as_guest(id) FROM bookings'), {
+      code: '42883',
+    })
+    assert.equal((await appel(a.id)).status, 'confirmed')
     await assert.rejects(
       site.query(
         `INSERT INTO booking_tokens (id, token_hash, purpose, booking_id, expires_at)
@@ -405,12 +479,26 @@ describe('déplacer et annuler un appel (3.11)', () => {
       ),
       REFUS,
     )
-    // La fonction ne crée rien pour un appel qui a déjà son lien, ni pour un lien d'accès inconnu.
+    // La fonction ne crée rien pour un appel qui a déjà son lien, ni pour un lien d'accès inconnu,
+    // ni pour un appel réservé dans une autre transaction (C1 : `created_at = now()`).
     const { rows: acces } = await admin.query(
       'SELECT access_token_id FROM bookings WHERE id = $1',
       [a.id],
     )
-    for (const cible of [acces[0].access_token_id, randomUUID()]) {
+    const ancien = generateToken()
+    const ancienId = randomUUID()
+    await admin.query(
+      `INSERT INTO booking_tokens (id, token_hash, purpose, created_at, expires_at)
+       VALUES ($1, $2, 'access', now() - interval '1 hour', now() + interval '1 hour')`,
+      [ancienId, ancien.hash],
+    )
+    const sansLien = await appelReel(3 * 24 * 60)
+    await admin.query(
+      "UPDATE bookings SET access_token_id = $2, created_at = now() - interval '1 minute' WHERE id = $1",
+      [sansLien, ancienId],
+    )
+    await admin.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [ancienId])
+    for (const cible of [acces[0].access_token_id, randomUUID(), ancienId]) {
       const { rows } = await site.query('SELECT issue_manage_token($1, $2, $3) AS cree', [
         randomUUID(),
         generateToken().hash,
@@ -418,21 +506,79 @@ describe('déplacer et annuler un appel (3.11)', () => {
       ])
       assert.equal(rows[0].cree, false)
     }
-    // Et le coffre ne l'appelle pas, ni l'annulation de la personne.
-    await assert.rejects(
-      coffre.query('SELECT issue_manage_token($1, $2, $3)', [
-        randomUUID(),
-        generateToken().hash,
-        randomUUID(),
-      ]),
-      REFUS,
-    )
-    await assert.rejects(coffre.query('SELECT cancel_booking_as_guest($1)', [a.id]), REFUS)
+    // Le coffre n'appelle aucune fonction du site public.
+    for (const sql of [
+      'SELECT issue_manage_token(gen_random_uuid(), $1, gen_random_uuid())',
+      'SELECT cancel_booking_as_guest($1)',
+      'SELECT * FROM lock_call_as_guest($1)',
+      "SELECT move_booking_as_guest($1, now(), now() + interval '30 minutes', now() + interval '45 minutes')",
+      'SELECT * FROM find_booking_token($1)',
+    ]) {
+      await assert.rejects(coffre.query(sql, [generateToken().hash]), REFUS, sql)
+    }
     await assert.rejects(coffre.query('UPDATE bookings SET sequence = 0'), REFUS)
     const { rows: liens } = await admin.query(
       "SELECT count(*)::int AS n FROM booking_tokens WHERE purpose = 'manage'",
     )
     assert.equal(liens[0].n, 1)
+  })
+
+  it('fonctions du site public : empreinte inconnue, d’accès, expirée ou annulée → rien', async () => {
+    const a = await reserver(MARDI_1030)
+    const fermer = await reserver(MARDI_1600)
+    await admin.query(
+      "UPDATE booking_tokens SET revoked_at = now() WHERE booking_id = $1 AND purpose = 'manage'",
+      [fermer.id],
+    )
+    // Lien expiré : celui d'un appel dont l'échéance est passée (posée à la main pour le test).
+    const expire = await reserver(MERCREDI_1030)
+    await admin.query(
+      `UPDATE booking_tokens SET created_at = now() - interval '2 hours', expires_at = now() - interval '1 hour'
+       WHERE booking_id = $1`,
+      [expire.id],
+    )
+    const debut = heure(MERCREDI, '16:00')
+    for (const hash of [
+      generateToken().hash,
+      hashToken(a.acces),
+      hashToken(fermer.gestion),
+      hashToken(expire.gestion),
+    ]) {
+      const verrou = await site.query('SELECT * FROM lock_call_as_guest($1)', [hash])
+      assert.equal(verrou.rows.length, 0)
+      const { rows: deplace } = await site.query(
+        'SELECT move_booking_as_guest($1, $2, $3, $4) AS fait',
+        [hash, debut, apres(debut, 30), apres(debut, 45)],
+      )
+      assert.equal(deplace[0].fait, false)
+      const { rows: annule } = await site.query('SELECT cancel_booking_as_guest($1) AS fait', [
+        hash,
+      ])
+      assert.equal(annule[0].fait, false)
+    }
+    for (const id of [a.id, fermer.id, expire.id]) {
+      const ligne = await appel(id)
+      assert.equal(ligne.status, 'confirmed')
+      assert.equal(ligne.sequence, 0)
+    }
+    // Avec le bon lien, la fonction déplace l'appel de ce lien, et lui seul, dans les bornes.
+    const { rows } = await site.query('SELECT move_booking_as_guest($1, $2, $3, $4) AS fait', [
+      hashToken(a.gestion),
+      debut,
+      apres(debut, 30),
+      apres(debut, 45),
+    ])
+    assert.equal(rows[0].fait, true)
+    assert.equal((await appel(a.id)).starts_at.toISOString(), debut.toISOString())
+    await assert.rejects(
+      site.query('SELECT move_booking_as_guest($1, $2, $3, $4)', [
+        hashToken(a.gestion),
+        debut,
+        apres(debut, 30),
+        new Date('2100-01-01T00:00:00Z'),
+      ]),
+      CONTROLE,
+    )
   })
 
   it('un lien de gestion inconnu, d’accès, expiré ou annulé ne touche à rien', async () => {
@@ -455,7 +601,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
       await moveBookingByToken(site, {
         token: b.gestion,
         start: MERCREDI_1030,
-        now: new Date('2027-03-02T15:30:00Z'),
+        now: apres(MARDI_1600, 30),
       }),
       { status: 'invalid-link' },
     )
@@ -518,7 +664,12 @@ describe('déplacer et annuler un appel (3.11)', () => {
       ],
     )
     const texte = JSON.stringify(journal).toLowerCase()
-    for (const interdit of [NOM.toLowerCase(), '470', '2027-03-02t15', 'cancelled']) {
+    for (const interdit of [
+      NOM.toLowerCase(),
+      '470',
+      MARDI_1600.toISOString().slice(0, 13).toLowerCase(),
+      'cancelled',
+    ]) {
       assert.equal(texte.includes(interdit), false, interdit)
     }
   })

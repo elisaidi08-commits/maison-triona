@@ -5,6 +5,7 @@ import { isUuid, LIST_LOG_WINDOW_S, VaultError } from '../vault/repository.ts'
 import { EARLIER_TO_QUALIFY_LIMIT, type BookingStatus, type Qualification } from './agenda.ts'
 import {
   cancelBooking,
+  houseAccess,
   moveBooking,
   readCallWithSlots,
   type CancelResult,
@@ -350,10 +351,10 @@ export async function moveBookingByHouse(
   assertValidDate(start, 'Début')
   assertValidDate(now, 'Date')
   if (!isUuid(id)) return { status: 'not-found' }
-  const result = await moveBooking(
+  return moveBooking(
     pool,
     'moveBookingByHouse',
-    async () => id.toLowerCase(),
+    houseAccess(id.toLowerCase()),
     { start, now },
     async (client, call) => {
       await client.query(
@@ -362,7 +363,6 @@ export async function moveBookingByHouse(
       )
     },
   )
-  return result.status === 'invalid-link' ? { status: 'not-found' } : result
 }
 
 /** Annuler depuis le coffre : « annulé par la maison », une ligne `booking_cancel`. */
@@ -377,8 +377,8 @@ export async function cancelBookingByHouse(
   const result = await cancelBooking(
     pool,
     'cancelBookingByHouse',
-    async () => id.toLowerCase(),
-    { status: 'cancelled_by_house', now },
+    houseAccess(id.toLowerCase()),
+    { now },
     async (client, bookingId) => {
       await client.query(
         "INSERT INTO vault_access_log (actor, action, booking_id) VALUES ($1, 'booking_cancel', $2)",
@@ -386,7 +386,7 @@ export async function cancelBookingByHouse(
       )
     },
   )
-  return result === 'invalid-link' ? 'not-found' : result
+  return result
 }
 
 /**

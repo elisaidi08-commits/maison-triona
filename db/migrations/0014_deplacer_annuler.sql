@@ -19,10 +19,17 @@
 --    ligne (début, fin, plage) : l'ancienne plage n'est libérée qu'au moment où la nouvelle est prise,
 --    dans la même instruction ; la contrainte d'exclusion (0013) refuse un chevauchement (23P01) et
 --    rien ne change alors.
--- 5. Annulation par la personne : la seule fonction `cancel_booking_as_guest`, que le rôle
---    `site_public` peut appeler ; il n'a aucun droit d'écrire le statut (il ne peut ni qualifier un
---    appel, ni l'annuler au nom de la maison).
--- 6. Journal d'accès : trois actions du coffre sur un appel, `booking_move`, `booking_cancel`,
+-- 5. Le site public n'a AUCUN droit d'écriture sur `bookings` (relecture sécurité) : il ne verrouille,
+--    ne déplace et n'annule un appel que par trois fonctions qui exigent l'empreinte d'un lien de
+--    gestion valable (`lock_call_as_guest`, `move_booking_as_guest`, `cancel_booking_as_guest`), et
+--    n'agissent que sur l'appel de ce lien. Il ne lit plus aucune empreinte de jeton
+--    (`token_hash`) : il retrouve un lien par `find_booking_token` / `lock_booking_token`, sur
+--    l'empreinte qu'il calcule du jeton reçu. Une empreinte est ainsi une capacité : sans le jeton, le
+--    site public ne peut viser aucun lien, donc aucun appel.
+-- 6. Bornes d'un déplacement, sous tout rôle (coffre compris) : durée de l'appel inchangée, pause
+--    comprise entre 0 et celle des réglages, début dans l'horizon de réservation ; l'échéance de
+--    conservation est recalculée depuis le nouveau début (même règle que la réservation).
+-- 7. Journal d'accès : trois actions du coffre sur un appel, `booking_move`, `booking_cancel`,
 --    `booking_delete` (effacement, procédure RGPD), chacune avec l'appel visé et rien d'autre.
 -- Les droits (site public : déplacer et annuler par le lien de gestion ; coffre : déplacer, annuler,
 -- effacer) sont dans db/roles/*.sql, appliqués à la main après les migrations.
@@ -64,6 +71,9 @@ begin
      and t.used_at is not null
      and b.status = 'confirmed'
      and b.ends_at > now()
+     -- Seule la transaction de la réservation crée le lien : l'appel vient d'être inséré
+     -- (`created_at`, valeur par défaut, que le site public n'écrit pas).
+     and b.created_at = now()
      and not exists (
        select 1 from public.booking_tokens as m
         where m.booking_id = b.id and m.purpose = 'manage'
@@ -127,13 +137,22 @@ begin
 end;
 $$;
 
--- Déplacement : un appel confirmé, pas encore commencé, vers un début à venir, toujours confirmé.
--- Chaque déplacement incrémente la séquence. Les déclencheurs BEFORE se suivent par ordre alphabétique :
--- celui-ci passe avant `bookings_status_transition`.
+-- Déplacement : un appel confirmé, pas encore commencé, vers un début à venir, toujours confirmé,
+-- sous tout rôle. Bornes (relecture sécurité) : la durée de l'appel ne change pas ; la plage occupée
+-- dépasse la fin d'au plus la pause des réglages ; le début reste dans l'horizon de réservation (la
+-- fenêtre de `bookingWindow` court jusqu'au minuit local qui suit le dernier jour : horizon + 1 jour,
+-- plus une heure pour un changement d'heure). L'échéance de conservation est recalculée depuis le
+-- nouveau début, comme à la réservation (`retentionDeadline(début, RETENTION_MONTHS = 12)`, en UTC,
+-- src/lib/vault/retention.ts ; les tests comparent les deux). Chaque déplacement incrémente la
+-- séquence. Les déclencheurs BEFORE se suivent par ordre alphabétique : celui-ci passe avant
+-- `bookings_status_transition`.
 create function bookings_move_guard() returns trigger
 language plpgsql
 set search_path = pg_catalog
 as $$
+declare
+  pause integer;
+  horizon integer;
 begin
   if new.starts_at = old.starts_at and new.ends_at = old.ends_at and new.slot = old.slot then
     return new;
@@ -147,6 +166,17 @@ begin
   if new.starts_at <= now() then
     raise exception 'Nouveau créneau déjà passé' using errcode = 'check_violation';
   end if;
+  if new.ends_at - new.starts_at <> old.ends_at - old.starts_at then
+    raise exception 'La durée d’un appel ne change pas' using errcode = 'check_violation';
+  end if;
+  select buffer_minutes, horizon_days into pause, horizon from public.booking_settings;
+  if upper(new.slot) - new.ends_at > make_interval(mins => pause) then
+    raise exception 'Pause plus longue que celle des réglages' using errcode = 'check_violation';
+  end if;
+  if new.starts_at > now() + make_interval(days => horizon + 1, hours => 1) then
+    raise exception 'Créneau hors de l’horizon de réservation' using errcode = 'check_violation';
+  end if;
+  new.retention_until := ((new.starts_at at time zone 'UTC') + interval '12 months') at time zone 'UTC';
   new.sequence := old.sequence + 1;
   return new;
 end;
@@ -156,10 +186,94 @@ create trigger bookings_move_guard
   before update of starts_at, ends_at, slot on bookings
   for each row execute function bookings_move_guard();
 
--- Annulation par la personne (lien de gestion, rôle `site_public`) : « annulé par la personne », pour
--- un appel confirmé ; le déclencheur des statuts refuse un appel commencé et pose la séquence. Vrai si
--- l'appel est annulé. L'appelant a déjà verrouillé la ligne (SELECT … FOR UPDATE) et vérifié le lien.
-create function cancel_booking_as_guest(p_booking uuid) returns boolean
+-- Fonctions du site public (rôle `site_public`). Toutes SECURITY DEFINER, chemin de recherche figé,
+-- noms qualifiés, droit d'exécution retiré à PUBLIC. Un lien de gestion « valable » : cette
+-- empreinte, usage `manage`, pas annulé, pas expiré (l'heure de la base). L'application vérifie aussi
+-- le lien à son heure (src/lib/booking/bookings.ts) ; la base a le dernier mot.
+
+-- Un lien par son empreinte (lecture, puis verrou de ligne pour la réservation), sans l'empreinte ni
+-- l'adresse : le site public ne lit plus `token_hash` ni `email_hmac`.
+create function find_booking_token(p_hash bytea)
+returns table (
+  id uuid, purpose text, booking_id uuid, expires_at timestamptz, used_at timestamptz,
+  revoked_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at
+    from public.booking_tokens as t
+   where t.token_hash = p_hash;
+$$;
+revoke all on function find_booking_token(bytea) from public;
+
+create function lock_booking_token(p_hash bytea)
+returns table (
+  id uuid, purpose text, booking_id uuid, expires_at timestamptz, used_at timestamptz,
+  revoked_at timestamptz
+)
+language sql
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at
+    from public.booking_tokens as t
+   where t.token_hash = p_hash
+     for update of t;
+$$;
+revoke all on function lock_booking_token(bytea) from public;
+
+-- L'appel d'un lien de gestion valable, verrouillé jusqu'à la fin de la transaction.
+create function lock_call_as_guest(p_hash bytea)
+returns table (id uuid, starts_at timestamptz, ends_at timestamptz, status text, sequence integer)
+language sql
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select b.id, b.starts_at, b.ends_at, b.status, b.sequence
+    from public.bookings as b
+    join public.booking_tokens as t on t.booking_id = b.id
+   where t.token_hash = p_hash
+     and t.purpose = 'manage'
+     and t.revoked_at is null
+     and t.expires_at > now()
+     for update of b;
+$$;
+revoke all on function lock_call_as_guest(bytea) from public;
+
+-- Déplace l'appel de ce lien, et lui seul (début, fin, plage). L'application a recalculé les
+-- créneaux sous le verrou du jour ; les bornes du déclencheur `bookings_move_guard` et la contrainte
+-- d'exclusion valent ici aussi. Vrai si l'appel est déplacé.
+create function move_booking_as_guest(
+  p_hash bytea, p_start timestamptz, p_end timestamptz, p_occupied_until timestamptz
+) returns boolean
+language plpgsql
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+declare
+  deplace integer;
+begin
+  update public.bookings as b
+     set starts_at = p_start, ends_at = p_end, slot = tstzrange(p_start, p_occupied_until, '[)')
+    from public.booking_tokens as t
+   where t.booking_id = b.id
+     and t.token_hash = p_hash
+     and t.purpose = 'manage'
+     and t.revoked_at is null
+     and t.expires_at > now()
+     and b.status = 'confirmed';
+  get diagnostics deplace = row_count;
+  return deplace = 1;
+end;
+$$;
+revoke all on function move_booking_as_guest(bytea, timestamptz, timestamptz, timestamptz) from public;
+
+-- Annule l'appel de ce lien, « annulé par la personne », s'il est confirmé ; le déclencheur des
+-- statuts refuse un appel commencé et pose la séquence. Vrai si l'appel est annulé.
+create function cancel_booking_as_guest(p_hash bytea) returns boolean
 language plpgsql
 security definer
 set search_path = pg_catalog, pg_temp
@@ -167,13 +281,20 @@ as $$
 declare
   annule integer;
 begin
-  update public.bookings set status = 'cancelled_by_guest'
-   where id = p_booking and status = 'confirmed';
+  update public.bookings as b
+     set status = 'cancelled_by_guest'
+    from public.booking_tokens as t
+   where t.booking_id = b.id
+     and t.token_hash = p_hash
+     and t.purpose = 'manage'
+     and t.revoked_at is null
+     and t.expires_at > now()
+     and b.status = 'confirmed';
   get diagnostics annule = row_count;
   return annule = 1;
 end;
 $$;
-revoke all on function cancel_booking_as_guest(uuid) from public;
+revoke all on function cancel_booking_as_guest(bytea) from public;
 
 -- Liste complète des actions, reprise telle quelle de 0013 (`availability`, `booking_link` et les
 -- quatre de l'agenda compris) : une migration qui redéfinit cette contrainte ne retire jamais une

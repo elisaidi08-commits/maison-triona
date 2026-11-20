@@ -328,10 +328,14 @@ describe('tables de la réservation d’appel', () => {
     const client = await site.connect()
     try {
       await client.query('BEGIN')
-      const { rows: jetons } = await client.query(
-        `SELECT id, token_hash, purpose, expires_at, used_at, revoked_at
-         FROM booking_tokens WHERE id = $1 FOR UPDATE`,
+      // Depuis la story 3.11, par la fonction de la base (le site public ne lit plus l'empreinte).
+      const { rows: empreinte } = await admin.query(
+        'SELECT token_hash FROM booking_tokens WHERE id = $1',
         [jetonId],
+      )
+      const { rows: jetons } = await client.query(
+        'SELECT id, purpose, expires_at, used_at, revoked_at FROM lock_booking_token($1)',
+        [empreinte[0].token_hash],
       )
       assert.equal(jetons.length, 1)
       await client.query('UPDATE booking_tokens SET used_at = now() WHERE id = $1', [jetonId])

@@ -9,7 +9,7 @@ import { RETENTION_MONTHS, retentionDeadline } from '../vault/retention.ts'
 import { BOOKING_SEALED_BYTES } from '../vault/seal.ts'
 import { bookingWindow, type SlotConfig } from './config.ts'
 import type { BookingStatus } from './agenda.ts'
-import { callPhase, type CallPhase, type CancelledStatus } from './manage.ts'
+import { callPhase, type CallPhase } from './manage.ts'
 import { listConfirmedCalls, loadSlotConfig } from './repository.ts'
 import { DEFAULT_BOOKING_SETTINGS } from './settings.ts'
 import { computeSlots, type Slot } from './slots.ts'
@@ -22,7 +22,6 @@ import {
   isAccessReplayable,
   isTokenFormat,
   manageTokenState,
-  tokenMatches,
   type StoredToken,
 } from './tokens.ts'
 import { zonedParts } from './zoned-time.ts'
@@ -51,7 +50,6 @@ const CONTROLE = '23514'
 
 interface TokenRow {
   id: string
-  token_hash: Buffer
   purpose: 'access' | 'manage'
   booking_id: string | null
   expires_at: Date
@@ -77,18 +75,21 @@ function assertValidDate(date: Date, label: string): void {
   if (Number.isNaN(date.getTime())) throw new RangeError(`${label} invalide`)
 }
 
-// Retrouve un jeton par son empreinte, puis compare à temps constant. Une forme inattendue
-// n'atteint pas la base. `forUpdate` : verrou de ligne jusqu'à la fin de la transaction (deux envois
-// du même lien passent l'un après l'autre).
+// Retrouve un jeton par son empreinte. Une forme inattendue n'atteint pas la base. Depuis la story
+// 3.11 (relecture sécurité), par les fonctions de la base `find_booking_token` et `lock_booking_token`
+// (0014) : le site public ne lit plus aucune empreinte, qui devient ainsi une capacité (sans le jeton,
+// on ne vise aucun lien). La base compare les empreintes (SHA-256 de 32 octets aléatoires : une
+// comparaison qui s'arrête tôt n'apprend rien d'utile). `forUpdate` : verrou de ligne jusqu'à la fin
+// de la transaction (deux envois du même lien passent l'un après l'autre).
 async function findToken(db: Db, token: string, forUpdate = false): Promise<FoundToken | null> {
   if (!isTokenFormat(token)) return null
   const { rows } = await db.query<TokenRow>(
-    `SELECT id, token_hash, purpose, booking_id, expires_at, used_at, revoked_at
-     FROM booking_tokens WHERE token_hash = $1${forUpdate ? ' FOR UPDATE' : ''}`,
+    `SELECT id, purpose, booking_id, expires_at, used_at, revoked_at
+     FROM ${forUpdate ? 'lock_booking_token' : 'find_booking_token'}($1)`,
     [hashToken(token)],
   )
   const row = rows[0]
-  if (!row || !tokenMatches(token, row.token_hash)) return null
+  if (!row) return null
   return {
     id: row.id,
     purpose: row.purpose,
@@ -536,6 +537,77 @@ export type MoveResult =
   | { status: 'taken'; slots: Slot[] }
 
 /**
+ * Accès à UN appel dans une transaction : par le lien de gestion de la personne (fonctions de la base
+ * qui exigent l'empreinte d'un lien valable, rôle `site_public`, qui n'a aucun droit d'écriture sur
+ * `bookings`) ou par son identifiant (coffre, rôle `coffre`, requêtes directes). Les règles et les
+ * bornes sont celles des déclencheurs de 0014, sous tout rôle.
+ */
+export interface CallAccess {
+  /** L'appel, verrouillé (FOR UPDATE) jusqu'à la fin de la transaction ; null s'il n'est pas visé. */
+  lock(client: PoolClient): Promise<ManagedCall | null>
+  /** Déplace l'appel verrouillé ; faux s'il n'a pas bougé. */
+  move(client: PoolClient, slot: { start: Date; end: Date; occupiedUntil: Date }): Promise<boolean>
+  /** Annule l'appel verrouillé (par la personne, ou par la maison) ; faux s'il n'a pas été annulé. */
+  cancel(client: PoolClient): Promise<boolean>
+}
+
+/**
+ * Par le lien de gestion (rôle `site_public`) : le lien est d'abord vérifié à l'heure de
+ * l'application (`manageTokenState`), puis la base le revérifie à la sienne dans chaque fonction.
+ */
+export function guestAccess(token: string, now: Date): CallAccess {
+  const hash = hashToken(token)
+  return {
+    async lock(client) {
+      if (!(await callOfManageToken(client, token, now))) return null
+      const { rows } = await client.query<ManagedRow>(
+        'SELECT id, starts_at, ends_at, status, sequence FROM lock_call_as_guest($1)',
+        [hash],
+      )
+      return rows[0] ? toManaged(rows[0]) : null
+    },
+    async move(client, slot) {
+      const { rows } = await client.query<{ fait: boolean }>(
+        'SELECT move_booking_as_guest($1, $2::timestamptz, $3::timestamptz, $4::timestamptz) AS fait',
+        [hash, slot.start, slot.end, slot.occupiedUntil],
+      )
+      return rows[0]?.fait === true
+    },
+    async cancel(client) {
+      const { rows } = await client.query<{ fait: boolean }>(
+        'SELECT cancel_booking_as_guest($1) AS fait',
+        [hash],
+      )
+      return rows[0]?.fait === true
+    },
+  }
+}
+
+/** Par l'identifiant de l'appel (coffre, rôle `coffre`) ; une annulation est « par la maison ». */
+export function houseAccess(id: string): CallAccess {
+  return {
+    lock: (client) => selectCall(client, id, true),
+    async move(client, slot) {
+      const { rowCount } = await client.query(
+        `UPDATE bookings
+         SET starts_at = $2::timestamptz, ends_at = $3::timestamptz,
+             slot = tstzrange($2::timestamptz, $4::timestamptz, '[)')
+         WHERE id = $1 AND status = 'confirmed'`,
+        [id, slot.start, slot.end, slot.occupiedUntil],
+      )
+      return rowCount === 1
+    },
+    async cancel(client) {
+      const { rowCount } = await client.query(
+        "UPDATE bookings SET status = 'cancelled_by_house' WHERE id = $1 AND status = 'confirmed'",
+        [id],
+      )
+      return rowCount === 1
+    },
+  }
+}
+
+/**
  * Déplace un appel (§2, étape 6 ; §3.2), dans la transaction donnée :
  * 1. l'appel est verrouillé (FOR UPDATE) : deux déplacements, ou un déplacement et une annulation,
  *    passent l'un après l'autre ;
@@ -546,20 +618,21 @@ export type MoveResult =
  *    sont rendues) ; le début choisi doit en être ;
  * 5. une seule mise à jour de la ligne : nouvelle plage prise et ancienne libérée dans la même
  *    instruction ; la contrainte d'exclusion refuse un chevauchement (23P01, l'ancienne plage reste
- *    alors). La séquence de l'invitation est incrémentée par la base (déclencheur de 0014), comme
- *    l'échéance du lien de gestion.
+ *    alors). La durée de l'appel ne change pas (celle de la réservation, que le déclencheur de 0014
+ *    impose) ; la pause est celle des réglages du moment. La base pose la séquence de l'invitation,
+ *    l'échéance de conservation et celle du lien de gestion.
  * Rend `taken` sans rien écrire si le créneau n'est plus ouvert ; une violation de la contrainte lève
  * (code 23P01) : à l'appelant d'annuler la transaction et de relire les créneaux.
  */
 export async function moveBookingLocked(
   client: PoolClient,
-  bookingId: string,
+  access: CallAccess,
   start: Date,
   now: Date,
 ): Promise<MoveResult> {
   assertValidDate(start, 'Début')
   assertValidDate(now, 'Date')
-  const call = await selectCall(client, bookingId, true)
+  const call = await access.lock(client)
   if (!call) return { status: 'not-found' }
   if (phaseOf(call, now) !== 'upcoming') return { status: 'not-movable' }
   if (call.start.getTime() === start.getTime()) return { status: 'unchanged', call }
@@ -572,17 +645,14 @@ export async function moveBookingLocked(
   const slot = slots.find((candidate) => candidate.start.getTime() === start.getTime())
   if (!slot) return { status: 'taken', slots }
 
-  const occupiedUntil = new Date(slot.end.getTime() + config.settings.bufferMinutes * MINUTE_MS)
-  const { rows } = await client.query<ManagedRow>(
-    `UPDATE bookings
-     SET starts_at = $2::timestamptz, ends_at = $3::timestamptz,
-         slot = tstzrange($2::timestamptz, $4::timestamptz, '[)')
-     WHERE id = $1 AND status = 'confirmed'
-     RETURNING id, starts_at, ends_at, status, sequence`,
-    [call.id, slot.start, slot.end, occupiedUntil],
-  )
-  if (!rows[0]) return { status: 'not-movable' }
-  return { status: 'moved', call: toManaged(rows[0]) }
+  const end = new Date(slot.start.getTime() + (call.end.getTime() - call.start.getTime()))
+  const occupiedUntil = new Date(end.getTime() + config.settings.bufferMinutes * MINUTE_MS)
+  if (!(await access.move(client, { start: slot.start, end, occupiedUntil }))) {
+    return { status: 'not-movable' }
+  }
+  const moved = await access.lock(client)
+  if (!moved) return { status: 'not-movable' }
+  return { status: 'moved', call: moved }
 }
 
 export type CancelResult = 'cancelled' | 'already-cancelled' | 'not-cancellable' | 'not-found'
@@ -595,60 +665,37 @@ export type CancelResult = 'cancelled' | 'already-cancelled' | 'not-cancellable'
  */
 export async function cancelBookingLocked(
   client: PoolClient,
-  bookingId: string,
-  status: CancelledStatus,
+  access: CallAccess,
   now: Date,
 ): Promise<CancelResult> {
   assertValidDate(now, 'Date')
-  if (status !== 'cancelled_by_guest' && status !== 'cancelled_by_house') {
-    throw new RangeError('Statut invalide')
-  }
-  const call = await selectCall(client, bookingId, true)
+  const call = await access.lock(client)
   if (!call) return 'not-found'
   const phase = phaseOf(call, now)
   if (phase === 'cancelled') return 'already-cancelled'
   if (phase !== 'upcoming') return 'not-cancellable'
-  // La personne (rôle `site_public`) n'a pas le droit d'écrire le statut : elle annule par la seule
-  // fonction de la base `cancel_booking_as_guest` (0014). Le coffre écrit « annulé par la maison ».
-  if (status === 'cancelled_by_guest') {
-    const { rows } = await client.query<{ fait: boolean }>(
-      'SELECT cancel_booking_as_guest($1) AS fait',
-      [call.id],
-    )
-    return rows[0]?.fait === true ? 'cancelled' : 'not-cancellable'
-  }
-  const { rowCount } = await client.query(
-    "UPDATE bookings SET status = 'cancelled_by_house' WHERE id = $1 AND status = 'confirmed'",
-    [call.id],
-  )
-  return rowCount === 1 ? 'cancelled' : 'not-cancellable'
+  return (await access.cancel(client)) ? 'cancelled' : 'not-cancellable'
 }
 
-/** Retrouve l'appel visé dans la transaction (lien de gestion, ou identifiant du coffre). */
-type LocateCall = (client: PoolClient) => Promise<string | null>
-
 /**
- * LE dépôt d'un déplacement (story 3.11), pour la personne (lien de gestion) comme pour Cat (coffre) :
- * une transaction, `moveBookingLocked`, puis, si l'appel est déplacé, `onMoved` (journal du coffre)
- * et le point d'accroche de la 3.12, dans la même transaction. Une violation de la contrainte
- * d'exclusion (créneau pris par une autre transaction) annule tout et rend les créneaux encore
- * ouverts pour cet appel ; un refus d'un déclencheur (l'heure de la base dit que l'appel a commencé)
- * rend `not-movable`.
+ * LE dépôt d'un déplacement (story 3.11), pour la personne (`guestAccess`) comme pour Cat
+ * (`houseAccess`) : une transaction, `moveBookingLocked`, puis, si l'appel est déplacé, `onMoved`
+ * (journal du coffre) et le point d'accroche de la 3.12, dans la même transaction. Une violation de la
+ * contrainte d'exclusion (créneau pris par une autre transaction) annule tout et rend les créneaux
+ * encore ouverts pour cet appel ; un refus d'un déclencheur (l'heure de la base dit que l'appel a
+ * commencé, ou un créneau hors des bornes) rend `not-movable`.
  */
 export async function moveBooking(
   pool: Pool,
   operation: string,
-  locate: LocateCall,
+  access: CallAccess,
   input: { start: Date; now: Date },
   onMoved?: (client: PoolClient, call: ManagedCall) => Promise<void>,
-): Promise<MoveResult | { status: 'invalid-link' }> {
-  let bookingId: string | null = null
+): Promise<MoveResult> {
   try {
     return await guard(operation, () =>
       withTransaction(pool, async (client) => {
-        bookingId = await locate(client)
-        if (!bookingId) return { status: 'invalid-link' as const }
-        const result = await moveBookingLocked(client, bookingId, input.start, input.now)
+        const result = await moveBookingLocked(client, access, input.start, input.now)
         if (result.status === 'moved') {
           if (onMoved) await onMoved(client, result.call)
           // 3.12 : effacer contact_kms et abandonner les rappels en attente de cet appel (puis
@@ -661,8 +708,12 @@ export async function moveBooking(
     )
   } catch (error) {
     const code = codeOf(error)
-    if (code === EXCLUSION && bookingId) {
-      return { status: 'taken', slots: await loadOpenSlots(pool, input.now, bookingId) }
+    if (code === EXCLUSION) {
+      // L'appel n'a pas bougé : ses créneaux possibles, relus sans lui (lecture seule).
+      const call = await guard(operation, () =>
+        withTransaction(pool, (client) => access.lock(client)),
+      )
+      return { status: 'taken', slots: await loadOpenSlots(pool, input.now, call?.id) }
     }
     if (code === CONTROLE) return { status: 'not-movable' }
     throw error
@@ -670,26 +721,26 @@ export async function moveBooking(
 }
 
 /**
- * LE dépôt d'une annulation (story 3.11), pour la personne (`cancelled_by_guest`) comme pour Cat
- * (`cancelled_by_house`) : une transaction, `cancelBookingLocked`, puis, si l'appel est annulé,
- * `onCancelled` (journal du coffre) et le point d'accroche de la 3.12, dans la même transaction. Un
- * refus d'un déclencheur rend `not-cancellable`.
+ * LE dépôt d'une annulation (story 3.11), pour la personne (`cancelled_by_guest`, `guestAccess`)
+ * comme pour Cat (`cancelled_by_house`, `houseAccess`) : une transaction, `cancelBookingLocked`,
+ * puis, si l'appel est annulé, `onCancelled` (journal du coffre) et le point d'accroche de la 3.12,
+ * dans la même transaction. Un refus d'un déclencheur rend `not-cancellable`.
  */
 export async function cancelBooking(
   pool: Pool,
   operation: string,
-  locate: LocateCall,
-  input: { status: CancelledStatus; now: Date },
+  access: CallAccess,
+  input: { now: Date },
   onCancelled?: (client: PoolClient, bookingId: string) => Promise<void>,
-): Promise<CancelResult | 'invalid-link'> {
+): Promise<CancelResult> {
   try {
     return await guard(operation, () =>
-      withTransaction(pool, async (client): Promise<CancelResult | 'invalid-link'> => {
-        const bookingId = await locate(client)
-        if (!bookingId) return 'invalid-link'
-        const result = await cancelBookingLocked(client, bookingId, input.status, input.now)
+      withTransaction(pool, async (client): Promise<CancelResult> => {
+        const call = await access.lock(client)
+        if (!call) return 'not-found'
+        const result = await cancelBookingLocked(client, access, input.now)
         if (result === 'cancelled') {
-          if (onCancelled) await onCancelled(client, bookingId)
+          if (onCancelled) await onCancelled(client, call.id)
           // 3.12 : effacer contact_kms et abandonner les rappels en attente de cet appel, ici, dans
           // cette transaction.
           // 3.3 / 3.12 : message d'annulation à la personne (« annulé par la maison » : avec un lien
@@ -706,7 +757,7 @@ export async function cancelBooking(
 
 /**
  * Déplacer par le lien de gestion (rôle `site_public`). `invalid-link` : le lien ne vaut plus (ou n'a
- * jamais valu) ; rien n'est lu au-delà.
+ * jamais valu) ; rien n'est écrit.
  */
 export async function moveBookingByToken(
   pool: Pool,
@@ -715,12 +766,13 @@ export async function moveBookingByToken(
   assertValidDate(input.start, 'Début')
   assertValidDate(input.now, 'Date')
   if (!isTokenFormat(input.token)) return { status: 'invalid-link' }
-  return moveBooking(
+  const result = await moveBooking(
     pool,
     'moveBookingByToken',
-    (client) => callOfManageToken(client, input.token, input.now),
+    guestAccess(input.token, input.now),
     input,
   )
+  return result.status === 'not-found' ? { status: 'invalid-link' } : result
 }
 
 /** Annuler par le lien de gestion (rôle `site_public`) : toujours « annulé par la personne ». */
@@ -730,12 +782,13 @@ export async function cancelBookingByToken(
 ): Promise<CancelResult | 'invalid-link'> {
   assertValidDate(input.now, 'Date')
   if (!isTokenFormat(input.token)) return 'invalid-link'
-  return cancelBooking(
+  const result = await cancelBooking(
     pool,
     'cancelBookingByToken',
-    (client) => callOfManageToken(client, input.token, input.now),
-    { status: 'cancelled_by_guest', now: input.now },
+    guestAccess(input.token, input.now),
+    { now: input.now },
   )
+  return result === 'not-found' ? 'invalid-link' : result
 }
 
 /** Un appel par son identifiant (coffre), avec les créneaux où le déplacer s'il se déplace encore. */
