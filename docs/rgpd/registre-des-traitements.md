@@ -120,8 +120,8 @@ Les mesures de sécurité sont décrites dans `analyse-impact.md` §5 ; les pres
 |---|---|
 | **Finalité** | Savoir si le site est utile et quels choix d'entrée sont utilisés, en totaux. |
 | **Personnes concernées** | Visiteurs du site. |
-| **Données** | Pages vues **sans paramètres** ; événements `Entrée` (choix), `Langue`, `Partage`, sans identifiant ; pour compter les visiteurs, empreinte quotidienne de l'IP et du navigateur avec une clé effacée toutes les 24 h ; IP non conservée ; pays, région et ville déduits. |
-| **Destinataires** | Plausible (UE ; données en Allemagne, à vérifier à la signature), servi depuis le domaine du site. |
+| **Données** | Pages vues **sans paramètres** (liens personnels de réservation, coffre et démo jamais comptés) ; référent réduit à l'origine d'un site externe ; événements « Entrée … » (le choix dans le nom), « Langue … », « Partage … », sans identifiant ; pour compter les visiteurs, empreinte quotidienne de l'IP et du navigateur avec une clé effacée toutes les 24 h ; IP non conservée ; pays, région et ville déduits. |
+| **Destinataires** | Plausible (UE ; données en Allemagne, à vérifier à la signature) ; Vercel (la fonction `/api/m`, région `cdg1`, voit passer l'IP et le navigateur à chaque événement). Aucun script de Plausible : **notre serveur transmet à Plausible l'IP et le User-Agent du visiteur à chaque événement**, sans que nous les gardions (story 5.2, `docs/mesure.md`). |
 | **Transferts hors UE** | Aucun. |
 | **Conservation** | Totaux ; empreinte : 24 h. |
 

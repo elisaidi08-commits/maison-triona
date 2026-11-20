@@ -17,6 +17,8 @@ export type Choice = {
   note?: string
   // Besoin présélectionné dans le formulaire de contact (D26, story 3.4) : `data-besoin`.
   besoin?: string
+  // Événement de la mesure d'audience (story 5.2, liste fermée de src/lib/mesure/evenements.ts).
+  mesure?: string
 }
 
 type ChoiceListProps = {
@@ -29,20 +31,22 @@ type ChoiceListProps = {
 function ChoiceLink({
   href,
   besoin,
+  mesure,
   className,
   children,
 }: {
   href: string
   besoin?: string
+  mesure?: string
   className: string
   children: ReactNode
 }) {
   return href.startsWith('#') ? (
-    <a href={href} data-besoin={besoin} className={className}>
+    <a href={href} data-besoin={besoin} data-mesure={mesure} className={className}>
       {children}
     </a>
   ) : (
-    <Link href={href} data-besoin={besoin} className={className}>
+    <Link href={href} data-besoin={besoin} data-mesure={mesure} className={className}>
       {children}
     </Link>
   )
@@ -61,6 +65,7 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
           <ChoiceLink
             href={choice.href}
             besoin={choice.besoin}
+            mesure={choice.mesure}
             className={`group flex min-h-touch-lg items-baseline gap-24 py-16 text-encre ${
               rowOnDesktop
                 ? `lg:h-full lg:flex-col lg:gap-8 lg:px-24 lg:py-16 ${index === 0 ? 'lg:pl-0' : ''}`

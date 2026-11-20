@@ -8,7 +8,7 @@ import { localizedPath, type Locale } from '../i18n/pathnames.ts'
 // technique, jamais affichée (D61).
 // Imports relatifs seulement : testé par node --test.
 
-export const PRIVACY_POLICY_VERSION = '2026-11-20.2'
+export const PRIVACY_POLICY_VERSION = '2026-11-20.3'
 
 // Sections de la politique vers lesquelles renvoient les formulaires (« Lorsque vous nous
 // écrivez », « Lorsque vous convenez d'un appel ») : leur ancre (`Privacy.sections[].id`) change

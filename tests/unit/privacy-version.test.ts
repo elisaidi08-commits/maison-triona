@@ -27,6 +27,9 @@ const EMPREINTES: Record<string, string> = {
   // Suites de la demande de lien (D72) : plus de confirmation promise au visiteur (D69), la limite
   // de l'e-mail d'accès saisi par un autre, une phrase française restée de la 3.10 retirée.
   '2026-11-20.2': '88116d4b97b351b235d00051a00e059be98db2f18fe4514a30574b67e3327905',
+  // Mesure d'audience (story 5.2) : aucun script de Plausible, notre serveur transmet la page vue
+  // avec l'adresse IP et le navigateur.
+  '2026-11-20.3': '1f7e60f507840814168a04022465b17bafe25e59ea39617c9ede9eb4c4752191',
 }
 
 describe('PRIVACY_POLICY_VERSION', () => {

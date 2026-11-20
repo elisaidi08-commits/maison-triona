@@ -14,14 +14,17 @@ type TextLinkProps = {
   children: ReactNode
   transitionTypes?: string[]
   besoin?: string
+  /** Événement de la mesure d'audience (story 5.2, liste fermée de src/lib/mesure/evenements.ts). */
+  mesure?: string
 }
 
-export function TextLink({ href, children, transitionTypes, besoin }: TextLinkProps) {
+export function TextLink({ href, children, transitionTypes, besoin, mesure }: TextLinkProps) {
   return (
     <Link
       href={href}
       transitionTypes={transitionTypes}
       data-besoin={besoin}
+      data-mesure={mesure}
       className="inline-flex min-h-touch items-center text-sapin underline decoration-or decoration-1 underline-offset-8 transition-colors duration-micro ease-standard hover:decoration-sapin"
     >
       {children}

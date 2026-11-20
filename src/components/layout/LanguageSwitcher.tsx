@@ -29,6 +29,7 @@ export function LanguageSwitcher({ label, active, names }: LanguageSwitcherProps
             lang={locale}
             hrefLang={locale}
             aria-current={locale === active ? 'true' : undefined}
+            data-mesure={locale === active ? undefined : `langue:${locale}`}
             className={`inline-flex min-h-touch min-w-touch items-center justify-center ${
               locale === active ? 'text-encre' : 'text-encre-68 hover:text-encre'
             }`}

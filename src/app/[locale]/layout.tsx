@@ -8,7 +8,9 @@ import { Header } from '@/components/layout/Header'
 import { LanguageSuggestion } from '@/components/layout/LanguageSuggestion'
 import { MobileBar } from '@/components/layout/MobileBar'
 import { SkipLink } from '@/components/layout/SkipLink'
+import { Mesure } from '@/components/mesure/Mesure'
 import { localizedPath } from '@/i18n/pathnames'
+import { lireConfigMesure } from '@/lib/mesure/plausible'
 import { openGraphBase } from '@/lib/seo'
 import { indexable, siteUrl } from '@/lib/site'
 import { routing, type Locale } from '@/i18n/routing'
@@ -31,6 +33,16 @@ export async function generateMetadata(): Promise<Metadata> {
     robots: { index: indexable, follow: indexable },
     // Image de partage typographique (story 1.3) ; une image par langue au lot C.
     openGraph: openGraphBase(locale),
+  }
+}
+
+// Mesure d'audience (story 5.2) : le composant n'est rendu que si Plausible est configuré. Une
+// configuration invalide coupe la mesure sans casser la page.
+function mesureActive(): boolean {
+  try {
+    return lireConfigMesure(process.env) !== null
+  } catch {
+    return false
   }
 }
 
@@ -67,6 +79,7 @@ export default async function LocaleLayout({ children }: { children: ReactNode }
         />
         <MobileBar href={localizedPath('/contact', locale)} label={bar('label')} />
         <PreselectionBesoin />
+        {mesureActive() ? <Mesure /> : null}
       </body>
     </html>
   )
