@@ -1,12 +1,12 @@
-"""Polices du site. Prototype D72 (maquette Figma) : Plus Jakarta Sans pour les titres (graisses 400 à
-500) et Manrope pour le texte (400 à 600). Kit précédent (D43, D50), gardé pour revenir en arrière :
+"""Polices du site. Prototype D76 : Plus Jakarta Sans pour les titres (graisses 400 à 500, comme la
+maquette Figma) et Inter pour le texte (400 à 600, taille optique fixée à 14, la version « texte »). Kit précédent (D43, D50), gardé pour revenir en arrière :
 Cormorant Garamond (300 à 400) et EB Garamond (400 à 500). Polices variables réduites à leur plage de graisses, sous-ensemble latin du
 français, en woff2 : deux fichiers préchargés pour un budget de 80 ko (docs/architecture.md).
 
 Prérequis (outil de développement, hors du site) :
   python3 -m venv .venv-kit && .venv-kit/bin/pip install fonttools brotli
-  Polices (licence OFL) dans <polices>/ : PlusJakartaSans.ttf et Manrope.ttf, fichiers [wght] de
-  https://github.com/google/fonts/tree/main/ofl/plusjakartasans et .../ofl/manrope (kit précédent :
+  Polices (licence OFL) dans <polices>/ : PlusJakartaSans.ttf (fichier [wght]) et Inter.ttf (fichier
+  [opsz,wght]) de https://github.com/google/fonts/tree/main/ofl/plusjakartasans et .../ofl/inter (kit précédent :
   CormorantGaramond.ttf et EBGaramond.ttf, .../ofl/cormorantgaramond et .../ofl/ebgaramond).
 Usage :
   .venv-kit/bin/python -I scripts/polices-kit.py <polices> src/fonts
@@ -32,14 +32,15 @@ UNICODES = [
 ]
 
 JOBS = [
-    ('PlusJakartaSans.ttf', (400, 500), 'plus-jakarta-sans.woff2'),
-    ('Manrope.ttf', (400, 600), 'manrope.woff2'),
+    ('PlusJakartaSans.ttf', {'wght': (400, 500)}, 'plus-jakarta-sans.woff2'),
+    # Inter : taille optique fixée à 14 (dessin « texte ») : 24 ko au lieu de 36 avec l'axe entier.
+    ('Inter.ttf', {'wght': (400, 600), 'opsz': 14}, 'inter.woff2'),
 ]
 
-for source, weights, target in JOBS:
+for source, axes, target in JOBS:
     # Réenregistrer la police réduite avant le sous-ensemble (variations gvar à matérialiser).
     buffer = io.BytesIO()
-    instantiateVariableFont(TTFont(SRC / source), {'wght': weights}).save(buffer)
+    instantiateVariableFont(TTFont(SRC / source), axes).save(buffer)
     buffer.seek(0)
     font = TTFont(buffer)
     options = subset.Options()
@@ -52,4 +53,4 @@ for source, weights, target in JOBS:
     subsetter.subset(font)
     font.flavor = 'woff2'
     font.save(OUT / target)
-    print(f'{target} : {(OUT / target).stat().st_size / 1024:.1f} ko, graisses {weights[0]} à {weights[1]}')
+    print(f'{target} : {(OUT / target).stat().st_size / 1024:.1f} ko, graisses {axes["wght"][0]} à {axes["wght"][1]}')
