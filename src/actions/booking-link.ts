@@ -42,7 +42,9 @@ import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 //    sécurité) : la réponse à un rejeu ne dépend jamais de l'état des compteurs d'une adresse ;
 // 7. limitation de débit (spec §4.4) : 3 demandes par 10 minutes par empreinte d'IP (préfixe /64 en
 //    IPv6, sel du jour), 3 par 24 heures par adresse (empreinte du secret des adresses, jamais
-//    l'adresse), plafond global de 100 par jour, bloquant. Refusée : AUCUN lien, AUCUN e-mail, et la
+//    l'adresse), puis, pour les seules demandes admises par ces deux limites, plafond global de 100
+//    par jour, bloquant (une demande refusée par sa limite ne l'entame pas). Refusée : AUCUN lien,
+//    AUCUN e-mail, et la
 //    même réponse qu'une demande aboutie. Ce point envoie des e-mails à des adresses saisies par
 //    n'importe qui : contrairement au contact, une panne d'Upstash (réseau, identifiants refusés) le
 //    FERME (« L'envoi n'a pas abouti »), elle ne le laisse jamais ouvert sans limite.
@@ -51,16 +53,17 @@ import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 //    du plafond de notifications (src/actions/request.ts) : clé d'usage unique `lien-plafond:<jour>`
 //    (une alerte par jour au plus, même sous concurrence ; tout autre résultat, aucune), écriture
 //    par le compte de l'envoi dans un `after()`, puis envoi aussitôt (`alert:link-cap-sent`). Au-delà
-//    du plafond, toute demande est refusée et fait ce même appel de plus : il ne dépend d'aucune
-//    adresse ;
+//    du plafond, toute demande admise par les limites par IP et par adresse est refusée et fait ce
+//    même appel de plus ;
 // 8. après la réponse (`after()`), dans une transaction (rôle `site_public`) : les liens vivants de
 //    cette adresse annulés, un lien neuf (empreinte du jeton seule), l'e-mail d'accès dans la boîte
 //    d'envoi (gabarit seul) ; puis le premier essai d'envoi, avec l'adresse et le jeton gardés en
 //    mémoire seulement. Redirection (303 sans JavaScript) vers « Un lien vient de vous être envoyé ».
 // Réponse identique quelle que soit l'adresse : connue ou non, limitée ou non, la même page, le même
-// texte, et les mêmes appels avant la réponse (horodatage, limitation) : l'écriture en base, faite
+// texte. Le nombre d'appels à Upstash avant la réponse varie (1 appel de limitation si la demande est
+// refusée par sa limite, 2 si elle est admise, 3 au-delà du plafond) ; l'écriture en base, faite
 // après la réponse, ne se lit pas dans son délai ; une durée minimale commune (`DUREE_MINIMUM_MS`)
-// lisse le reste. Contrepartie : une base injoignable ne se voit plus à l'écran (le lien n'arrive
+// masque le reste. Contrepartie : une base injoignable ne se voit plus à l'écran (le lien n'arrive
 // pas, `[lien] failed:vault` au journal) ; la personne redemande un lien.
 // Journaux : un statut seulement, jamais l'adresse, le jeton, une empreinte ni une erreur brute.
 
@@ -194,8 +197,9 @@ function planifierLien(
   }
 }
 
-// Plafond global atteint : alerte à Sady au premier dépassement du jour (D72). Le plafond ne dépend
-// d'aucune adresse : l'appel de plus à Upstash ne dit rien d'une adresse. Ne lève jamais.
+// Plafond global atteint : alerte à Sady au premier dépassement du jour (D72). Seules les demandes
+// admises par les limites par IP et par adresse y arrivent ; l'appel de plus à Upstash est masqué
+// par la durée minimale commune. Ne lève jamais.
 async function alerterPlafond(config: EmailConfig, jour: Date): Promise<void> {
   const premier = await usageUnique(capAlertKey(jour, 'link_cap'), CAP_ALERT_TTL_SECONDS)
   scheduleCapAlert(
@@ -284,11 +288,18 @@ export async function demanderLien(_precedent: EtatLien, donnees: FormData): Pro
 
   const jour = new Date(maintenant)
   const cleJour = `lien-jour:${jourUtc(jour)}`
-  const debit = await limiterDebit([
+  // Deux temps (D72, 20/11/2026) : le plafond du jour ne compte que les demandes admises par les
+  // limites par IP et par adresse ; sinon un seul envoyeur, refusé par sa limite, épuiserait le
+  // plafond de tout le monde jusqu'à minuit UTC. Le second appel ne se lit pas dans le délai de la
+  // réponse : la durée minimale commune (600 ms) le couvre.
+  const limites = await limiterDebit([
     { cle: `lien-ip:${empreinte(reseauIp(await adresseIp()), secret, jour)}`, ...LIMITE_IP },
     { cle: `lien-adresse:${cleDebitAdresse(email, reglage.secretAdresse)}`, ...LIMITE_ADRESSE },
-    { cle: cleJour, ...PLAFOND_JOUR },
   ])
+  const debit =
+    limites.statut === 'autorise'
+      ? await limiterDebit([{ cle: cleJour, ...PLAFOND_JOUR }])
+      : limites
   switch (debit.statut) {
     case 'refuse':
       // Même page qu'une demande aboutie : rien ne dit si l'adresse ou l'IP est limitée.

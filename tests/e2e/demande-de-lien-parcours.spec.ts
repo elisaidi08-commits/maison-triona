@@ -11,6 +11,7 @@ import pg from 'pg'
 import {
   emailsRecus,
   JOURNAL_SERVEUR,
+  lireCompteur,
   poserCle,
   remettreAZero,
   SECRET_ADRESSE_E2E,
@@ -30,6 +31,8 @@ import {
 // porte une, ce qui sépare les deux limites. Données factices uniquement.
 
 const BASE = process.env.RESERVATION_E2E_DATABASE_URL
+// Compteur du plafond global du jour dans le double d'Upstash (D72).
+const clePlafond = () => `mt:debit:lien-jour:${new Date().toISOString().slice(0, 10)}`
 const RACINE = `${resolve(__dirname, '../..')}/`
 const LIEN = /https?:\/\/[^\s/]+(\/(?:fr|en)\/contact\/appel\/[A-Za-z0-9_-]{43})(?=\n)/
 
@@ -284,10 +287,13 @@ test.describe('demande de lien de bout en bout', () => {
       const prets = []
       for (const ctx of contextes) prets.push(await preparerEnvoi(ctx, adresse))
       await attendreLesEnvois()
+      const plafondAvant = await lireCompteur(clePlafond())
       const reponses = []
       for (const pret of prets) reponses.push(await envoyer(pret))
       // Les quatre réponses sont identiques, la quatrième comprise.
       for (const reponse of reponses) expect(reponse).toEqual(reponses[0])
+      // La demande refusée par la limite par adresse n'entame pas le plafond global (D72).
+      expect(await lireCompteur(clePlafond())).toBe(plafondAvant + 3)
       const recus = await emailsPour(adresse, 3)
       for (const mail of recus) jetons.push(cheminDuLien(mail).split('/').at(-1)!)
       // Trois liens seulement en base pour cette adresse, le dernier seul vivant.
@@ -352,9 +358,12 @@ test.describe('demande de lien de bout en bout', () => {
       const prets = []
       for (const adresse of quatre) prets.push(await preparerEnvoi(ctx, adresse))
       await attendreLesEnvois()
+      const plafondAvant = await lireCompteur(clePlafond())
       const reponses = []
       for (const pret of prets) reponses.push(await envoyer(pret))
       for (const reponse of reponses) expect(reponse).toEqual(reponses[0])
+      // La demande refusée par la limite par IP n'entame pas le plafond global (D72).
+      expect(await lireCompteur(clePlafond())).toBe(plafondAvant + 3)
       for (const adresse of quatre.slice(0, 3)) {
         const [mail] = await emailsPour(adresse, 1)
         jetons.push(cheminDuLien(mail!).split('/').at(-1)!)
@@ -401,7 +410,7 @@ test.describe('demande de lien de bout en bout', () => {
   test('plafond global : la même réponse sans lien, et une seule alerte à Sady', async ({
     browser,
   }) => {
-    const cle = `mt:debit:lien-jour:${new Date().toISOString().slice(0, 10)}`
+    const cle = clePlafond()
     await poserCle(cle, '100', 86_400)
     const deux = ['plafond1@exemple.test', 'plafond2@exemple.test']
     adresses.push(...deux)
