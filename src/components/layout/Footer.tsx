@@ -5,17 +5,17 @@ import { NavLink } from './NavLink'
 import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { SERVICE_PATHS, SERVICES } from '@/lib/services'
 
-// Pied de page « Kiln » (D54, validé par Cat), rendu immobile par D64 (2), resserré par D72 (story
+// Pied de page « Kiln » (D54, validé par Cat), rendu immobile par D64 (2), resserré par D74 (story
 // 2.16) : fond ivoire, filet or en tête ; la phrase de l'accueil en deux lignes ; deux zones (la
 // maison et ses pays, la navigation) ; le nom « Maison Triona » signé du « K. » (Stamp, 48 px) ; une
 // barre sous un filet or : copyright, liens légaux, FR · EN, puis la mention des images générées par
 // IA (privacy.md §4) et « Revenir en haut de la page », un vrai lien texte vers `#top` (sans
-// JavaScript). D72 retire la colonne Contact, qui répétait le bloc Contact posé juste au-dessus sur la
+// JavaScript). D74 retire la colonne Contact, qui répétait le bloc Contact posé juste au-dessus sur la
 // plupart des pages (le lien Contact reste dans la navigation et dans la barre mobile), et la touche
 // sapin de 96 px. Rien ne bouge. Aucun réseau social (CLAUDE.md, discrétion), aucun texte nouveau.
 //
 // Mobile (< 768) : la navigation se replie dans un <details> natif (s'ouvre sans JavaScript, signe
-// + / − comme la FAQ). Tablette et desktop : la maison à gauche, la navigation ouverte à droite.
+// + / − comme la FAQ), une seule colonne : les pages, puis les services. Tablette et desktop : la maison à gauche, la navigation ouverte à droite.
 
 export async function Footer({ locale }: { locale: Locale }) {
   const t = await getTranslations('Footer')
@@ -44,7 +44,7 @@ export async function Footer({ locale }: { locale: Locale }) {
   // Les deux listes de la navigation, rendues ouvertes (≥ 768) ou repliées (< 768).
   const listes = (
     <>
-      <ul className="grid grid-cols-2 gap-x-gutter md:flex md:flex-col">
+      <ul className="flex flex-col">
         {pages.map(({ href, label }) => (
           <li key={href}>
             <NavLink href={localizedPath(href, locale)}>{label}</NavLink>
@@ -104,7 +104,7 @@ export async function Footer({ locale }: { locale: Locale }) {
                   −
                 </span>
               </summary>
-              <div className="flex flex-col pb-16">{listes}</div>
+              <div className="flex flex-col gap-24 pb-24">{listes}</div>
             </details>
           </nav>
         </div>

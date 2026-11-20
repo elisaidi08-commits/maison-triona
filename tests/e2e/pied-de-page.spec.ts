@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-// Pied de page « Kiln » (D54), immobile (D64, 2), resserré par D72 (story 2.16) : fond ivoire, filet
+// Pied de page « Kiln » (D54), immobile (D64, 2), resserré par D74 (story 2.16) : fond ivoire, filet
 // or en tête, phrase de l'accueil, deux zones (la maison, la navigation), « Maison Triona » signé du
 // « K. », barre légale avec la mention IA et « Revenir en haut de la page » en lien texte. En mobile,
 // la navigation se replie dans un <details>. Aucun réseau social, rien qui bouge.
@@ -52,7 +52,7 @@ test('le nom garde ses capitales, signé du « K. » de 48 px', async ({ page })
   await expect(stamp).toHaveCSS('font-size', '48px')
 })
 
-// Avant D64 : 1 071, 1 070 et 1 446 px ; avant D72 : 775, 957 et 1 241 px. Après D72 : 794, 767 et
+// Avant D64 : 1 071, 1 070 et 1 446 px ; avant D74 : 775, 957 et 1 241 px. Après D74 : 794, 767 et
 // 768 px (navigation repliée). Le desktop prend 19 px : « Revenir en haut » est désormais une cible de
 // 48 px sur la ligne de la mention IA, au lieu d'une touche logée à côté de la phrase.
 for (const [width, height, max] of [
@@ -93,7 +93,7 @@ test('immobile : ni disque, ni lettres animées, ni flèche qui part', async ({ 
   await page.goto('/fr')
   const footer = page.locator('footer')
   await footer.scrollIntoViewIfNeeded()
-  // Aucun dessin : ni disque, ni flèche (la touche sapin est devenue un lien texte, D72).
+  // Aucun dessin : ni disque, ni flèche (la touche sapin est devenue un lien texte, D74).
   await expect(footer.locator('svg')).toHaveCount(0)
   const top = page.getByRole('link', { name: 'Revenir en haut de la page' })
   await top.hover()
