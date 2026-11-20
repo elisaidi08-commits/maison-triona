@@ -94,6 +94,38 @@ test('/coffre/disponibilites a la CSP à nonce et les en-têtes du coffre', asyn
   expect(await response.text()).not.toContain('Prochains créneaux')
 })
 
+// Agenda des appels (story 3.13) : session ouverte par le TOTP exigée ; CSP à nonce du coffre, avec
+// WebAssembly (les noms et numéros se déchiffrent dans le navigateur). Le parcours avec session :
+// agenda-parcours.spec.ts (projet `reservation`).
+test('sans session, /coffre/appels mène à la connexion, sans rien afficher', async ({ page }) => {
+  await page.goto('/coffre/appels')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Connexion')
+  await page.goto('/coffre/appels?vue=semaine')
+  await expect(page).toHaveURL(/\/coffre\/connexion$/)
+  expect(await page.locator('main').innerText()).not.toContain('Cette semaine')
+})
+
+test('/coffre/appels a la CSP à nonce avec WebAssembly et les en-têtes du coffre', async ({
+  request,
+}) => {
+  const response = await request.get('/coffre/appels', { maxRedirects: 0 })
+  const headers = response.headers()
+  const csp = headers['content-security-policy'] ?? ''
+  expect(csp).toMatch(
+    /script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' 'wasm-unsafe-eval'(;|$)/,
+  )
+  expect(csp.replace("'wasm-unsafe-eval'", '')).not.toContain('unsafe-eval')
+  expect(csp).not.toContain("'unsafe-inline'")
+  expect(csp).toContain("connect-src 'self'")
+  expect(csp).toContain("form-action 'self'")
+  expect(csp).toContain("frame-ancestors 'none'")
+  expect(headers['x-robots-tag']).toBe('noindex, nofollow')
+  expect(headers['cache-control']).toContain('no-store')
+  expect(headers['referrer-policy']).toBe('no-referrer')
+  expect(await response.text()).not.toContain('Noms et numéros')
+})
+
 test('le site public ne pose aucun cookie, même après une visite du coffre', async ({
   page,
   context,
@@ -187,6 +219,8 @@ test('WebAssembly n’est admis que sur les pages de lecture du coffre', async (
   for (const path of [
     '/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
     '/coffre/demandes/pas-un-identifiant',
+    '/coffre/appels',
+    '/coffre/appels?vue=semaine',
   ]) {
     expect(await scriptSrc(path), path).toMatch(
       /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic' 'wasm-unsafe-eval'$/,
@@ -198,6 +232,7 @@ test('WebAssembly n’est admis que sur les pages de lecture du coffre', async (
     '/coffre/enrolement',
     '/coffre/verification',
     '/coffre/disponibilites',
+    '/coffre/appels/autre',
   ]) {
     expect(await scriptSrc(path), path).toMatch(
       /^script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'$/,
