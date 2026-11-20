@@ -574,7 +574,7 @@
         "id": "mesure",
         "title": "Ce que nous mesurons",
         "paragraphs": [
-          "Pour savoir si le site est utile, nous comptons les pages vues et quelques choix, comme le service consulté, toujours en totaux. L’outil retenu, Plausible, n’utilise aucun cookie. Pour compter les visiteurs sans les identifier, il calcule chaque jour une empreinte à partir de votre adresse IP et de votre navigateur, avec une clé effacée toutes les 24 heures ; votre adresse IP n’est pas conservée, seuls le pays, la région et la ville en sont déduits. Il est servi depuis notre propre domaine ; ses données sont hébergées en Allemagne."
+          "Pour savoir si le site est utile, nous comptons les pages vues et quelques choix, comme le service consulté, toujours en totaux. L’outil retenu, Plausible, n’utilise aucun cookie. Pour compter les visiteurs sans les identifier, il calcule chaque jour une empreinte à partir de votre adresse IP et de votre navigateur, avec une clé effacée toutes les 24 heures ; votre adresse IP n’est pas conservée, seuls le pays, la région et la ville en sont déduits. Aucun script de Plausible n’est chargé : votre navigateur envoie la page vue à notre site, qui la transmet à Plausible avec votre adresse IP et le nom de votre navigateur, nécessaires à cette empreinte ; nous ne les gardons pas. Ses données sont hébergées en Allemagne."
         ]
       },
       {

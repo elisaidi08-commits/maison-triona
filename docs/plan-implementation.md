@@ -276,6 +276,7 @@ Réponses aux questions des rapports de phase 0 ; mise à jour de `anti-patterns
 
 **5.2 Mesure respectueuse + Search Console (E5-S6, E7-S5)** — Plausible via notre domaine ; événements `Entrée` (propriété `choix`), `Langue`, `Partage` **sans identifiant** ; pages vues **sans** paramètres de requête ; Search Console (propriété de domaine, sans script) ; modèle de **rapport mensuel simple** ; `docs/privacy.md` à jour.
 **CA** : aucune requête vers un domaine tiers ; aucun identifiant ni IP associés au choix ; `/contact?service=…&s=…` enregistré comme `/contact` ; aucun objectif de classement promis.
+*Faite le 20/11/2026, désactivée sans `PLAUSIBLE_DOMAIN`* : aucun script de Plausible ; le navigateur envoie à `/api/m`, notre serveur transmet par l'Events API ; choix d'entrée dans le **nom** de l'événement (les propriétés demandent l'offre Business) ; liens de réservation, coffre et démo jamais comptés, filtrés dans le navigateur et sur le serveur ; référent réduit à l'origine. Search Console et rapport mensuel : `docs/mesure.md`. Reste à Sady : compte Plausible, huit objectifs, variable.
 
 **5.3 Accessibilité 2.2 AA et performance ⛳ (E5-S5)** — Passe complète : axe, Lighthouse, **clavier**, **VoiceOver et NVDA**, **zoom 200 %**, texte agrandi, mobile réel, reduced-motion (version statique complète), bouton pause, formulaire en étapes, accordéon, PDF.
 **CA** : `docs/a11y-report.md` rempli pour toutes les pages et les deux langues ; budgets d'octets tenus ; INP ≤ 200 ms.

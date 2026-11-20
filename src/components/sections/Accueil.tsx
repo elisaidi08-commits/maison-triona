@@ -38,12 +38,14 @@ export async function HeroAccueil({ locale }: { locale: Locale }) {
       label: home(`choices.${service.key}.label`),
       category: home(`choices.${service.key}.category`),
       besoin: service.id,
+      mesure: `entree:${service.id}`,
     })),
     {
       href: localizedPath('/contact', locale),
       label: home('choices.unsure.label'),
       note: home('choices.unsure.note'),
       besoin: 'indecis',
+      mesure: 'entree:indecis',
     },
   ]
   return (

@@ -52,9 +52,9 @@
 - [ ] + Avis juridique obtenu : base légale, absence de bandeau, mention IA, « Notre indépendance », vocabulaire réglementé des services.
 
 ## 6. Mesure
-- [ ] Analytics sans traceurs actif (servi via notre domaine) ; **pas de bandeau** si aucun traceur.
+- [ ] Analytics sans traceurs actif (événements transmis par notre serveur, story 5.2) : compte Plausible, **huit objectifs** créés, `PLAUSIBLE_DOMAIN` posée puis redéploiement (`docs/mesure.md`) ; **pas de bandeau** si aucun traceur.
 - [ ] + Événement `Entrée` agrégé, sans identifiant ; pages vues sans paramètres de requête.
-- [ ] + **Liens de réservation exclus de la mesure** (story 3.10) : `/*/contact/appel/*` (réservation, confirmation, fichier .ics, liens de gestion) n'est jamais compté, sinon le chemin, donc le jeton, partirait à Plausible. Exclusion posée dans le script ou la réécriture servis par notre domaine (option d'exclusion de pages de Plausible, à vérifier dans sa documentation au moment de l'installer), et vérifiée : après une réservation de test, aucune page `/contact/appel/…` dans le tableau de bord. La page de demande de lien (`/fr/contact/appel`, 3.9) peut, elle, être comptée.
+- [ ] + **Liens de réservation exclus de la mesure** (story 3.10) : `/<langue>/contact/appel/<jeton>…` n'est jamais compté. Filtre posé par la story 5.2 dans le navigateur et sur le serveur (`src/lib/mesure/evenements.ts`) ; à vérifier dans le tableau de bord après l'ouverture : aucune page de ce type dans « Pages ».
 
 ## 7. Qualité
 - [ ] Pages 404 et 500 soignées (FR/EN), favicon, image de partage (FR/EN).
