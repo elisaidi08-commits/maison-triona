@@ -44,22 +44,30 @@ export function localizedPath(internal: InternalPath, locale: Locale): string {
 
 // Liens personnels de réservation d'appel (story 3.10) : hors de la table, même chemin dans les deux
 // langues (comme /contact/merci), jamais dans le sitemap. Le jeton est dans l'adresse : ces pages sont
-// noindex, no-store, référent réduit à l'origine (next.config.ts).
-const BOOKING = /^\/(?:fr|en)(\/contact\/appel\/[A-Za-z0-9_-]{43}(?:\/confirmation)?)$/
+// noindex, no-store, référent réduit à l'origine (next.config.ts). Depuis la story 3.11, le lien de
+// gestion (`/contact/appel/gerer/<jeton>`, ses pages « annuler » et « agenda ») remplace la
+// confirmation du lien d'accès consommé.
+const BOOKING =
+  /^\/(?:fr|en)(\/contact\/appel\/(?:gerer\/[A-Za-z0-9_-]{43}(?:\/annuler)?|[A-Za-z0-9_-]{43}))$/
 
 /** Page de réservation d'un lien : `/fr/contact/appel/<jeton>`. */
 export function bookingPath(locale: Locale, token: string): string {
   return `/${locale}/contact/appel/${token}`
 }
 
-/** Confirmation, après la réservation. */
-export function bookingConfirmationPath(locale: Locale, token: string): string {
-  return `${bookingPath(locale, token)}/confirmation`
+/** Page de gestion d'un appel (story 3.11) : le voir, le déplacer, l'annuler. */
+export function managePath(locale: Locale, token: string): string {
+  return `/${locale}/contact/appel/gerer/${token}`
 }
 
-/** Fichier .ics de l'appel (« Ajouter à mon agenda »). */
-export function bookingCalendarPath(locale: Locale, token: string): string {
-  return `${bookingPath(locale, token)}/agenda`
+/** Confirmation de l'annulation, avant le geste. */
+export function manageCancelPath(locale: Locale, token: string): string {
+  return `${managePath(locale, token)}/annuler`
+}
+
+/** Fichier .ics de l'appel : l'ajouter, le mettre à jour (déplacé) ou le retirer (annulé). */
+export function manageCalendarPath(locale: Locale, token: string): string {
+  return `${managePath(locale, token)}/agenda`
 }
 
 /** Même page dans une autre langue ; à défaut, l'accueil de cette langue. */

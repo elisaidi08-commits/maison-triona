@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, type FormEvent } from 'rea
 import { reserverAppel } from '@/actions/booking'
 import { Button } from '@/components/ui/Button'
 import { CheckboxField } from '@/components/ui/CheckboxField'
+import { SlotChoices } from '@/components/forms/SlotChoices'
 import { ChoiceRow, choiceInputId } from '@/components/ui/ChoiceRow'
 import { ErrorSummary } from '@/components/ui/ErrorSummary'
 import { TextField } from '@/components/ui/TextField'
@@ -15,7 +16,7 @@ import {
   type CreneauAffiche,
   type EtatReservation,
 } from '@/lib/booking/form'
-import { grouperParSemaine, teteDeListe } from '@/lib/booking/grouping'
+import { teteDeListe } from '@/lib/booking/grouping'
 import { LANGUES, LIMITES, ORIGINES } from '@/lib/demande/champs'
 
 // Réservation d'un appel (story 3.10 ; docs/reservation-appel.md §2, étape 3) : un seul écran, un seul
@@ -27,8 +28,7 @@ import { LANGUES, LIMITES, ORIGINES } from '@/lib/demande/champs'
 //   toute la saisie (WCAG 3.3.7), ou part vers la confirmation.
 // - Avec JavaScript : même chose sans rechargement ; le résumé ou le message reçoit le focus ; un
 //   second envoi pendant le premier est ignoré (le serveur, de toute façon, ne réserve qu'une fois).
-// Tous les créneaux portent le même `name` : un seul choix possible, d'un groupe à l'autre. Libellés
-// composés sur le serveur (src/lib/booking/display.ts). Validation native coupée (`noValidate`) : les
+// Créneaux : SlotChoices, partagé avec le déplacement (story 3.11). Validation native coupée (`noValidate`) : les
 // messages sont ceux du site, en tête et près du champ.
 
 type Libelles = Record<string, string>
@@ -121,7 +121,6 @@ export function BookingForm({
   const libres = etat.creneaux ?? creneaux
   const pris = etat.statut === 'pris'
   const tete = teteDeListe(libres, pris ? etat.creneauPris : undefined)
-  const semaines = grouperParSemaine(libres, tete)
 
   // Le lien du résumé mène au premier créneau proposé, ou à la première option d'un groupe.
   const ancre = (champ: ChampReservation): string => {
@@ -181,45 +180,14 @@ export function BookingForm({
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="jeton" value={jeton} />
 
-      <fieldset className="m-0 flex min-w-0 flex-col gap-48 border-0 p-0">
-        <legend className="mb-24 p-0 font-display text-title-h2 text-sapin">
-          {textes.slots.legend}
-        </legend>
-        <ChoiceRow
-          id={ID.creneau}
-          name="creneau"
-          legend={pris ? textes.slots.nearby : textes.slots.next}
-          required
-          defaultValue={v.creneau}
-          error={erreur('creneau')}
-          options={tete.map((creneau) => ({
-            value: creneau.debut,
-            label: `${creneau.libelleJour}, ${creneau.libelleHeure}`,
-          }))}
-        />
-        {semaines.map((semaine) => (
-          <fieldset key={semaine.semaine} className="m-0 flex min-w-0 flex-col gap-32 border-0 p-0">
-            <legend className="mb-16 p-0 text-label text-encre uppercase">
-              {textes.slots.week.replace('{date}', semaine.libelle)}
-            </legend>
-            {semaine.jours.map((jour) => (
-              <ChoiceRow
-                key={jour.jour}
-                id={`appel-jour-${jour.jour}`}
-                name="creneau"
-                legend={jour.libelle}
-                required
-                columns={3}
-                defaultValue={v.creneau}
-                options={jour.creneaux.map((creneau) => ({
-                  value: creneau.debut,
-                  label: creneau.libelleHeure,
-                }))}
-              />
-            ))}
-          </fieldset>
-        ))}
-      </fieldset>
+      <SlotChoices
+        prefixe="appel"
+        creneaux={libres}
+        creneauPris={pris ? etat.creneauPris : undefined}
+        defaultValue={v.creneau}
+        error={erreur('creneau')}
+        textes={textes.slots}
+      />
 
       <TextField
         id={ID.nom}

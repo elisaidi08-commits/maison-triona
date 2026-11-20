@@ -5,6 +5,8 @@ import { expect, test } from '@playwright/test'
 // lien est alors sans valeur. Page sobre qui invite à écrire, identique quel que soit le lien (rien
 // ne dit pourquoi), noindex, référent réduit à l’origine (jamais le jeton), jamais en cache, aucun cookie ; confirmation et fichier
 // .ics refusés de même ; le sélecteur de langue garde le lien. Axe WCAG 2.2 AA, FR et EN.
+// Story 3.11 : la page de gestion (`/contact/appel/gerer/<jeton>`), sa page d'annulation et son
+// fichier .ics suivent les mêmes règles ; la confirmation du lien d'accès n'existe plus.
 // Le parcours complet, avec base et coffre, est dans reservation-parcours.spec.ts (ignoré par défaut).
 
 const JETON = 'AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_abcde'
@@ -12,7 +14,36 @@ const AUTRE = 'zYxWvUtSrQpOnMlKjIhGfEdCbA9876543210_-edcba'
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 const TITRES = { fr: 'Ce lien n’est plus valable.', en: 'This link is no longer valid.' }
 
+const CHEMINS = (locale: 'fr' | 'en') => [
+  `/${locale}/contact/appel/${JETON}`,
+  `/${locale}/contact/appel/gerer/${JETON}`,
+  `/${locale}/contact/appel/gerer/${JETON}/annuler`,
+]
+
 for (const locale of ['fr', 'en'] as const) {
+  test(`/${locale} : lien de gestion sans valeur → même page sobre, mêmes en-têtes`, async ({
+    page,
+  }) => {
+    for (const chemin of CHEMINS(locale).slice(1)) {
+      const reponse = await page.goto(chemin)
+      expect(reponse?.status(), chemin).toBe(200)
+      const entetes = reponse!.headers()
+      expect(entetes['referrer-policy'], chemin).toBe('strict-origin')
+      expect(entetes['cache-control'], chemin).toContain('no-store')
+      expect(entetes['x-robots-tag'], chemin).toContain('noindex')
+      expect(entetes['set-cookie'], chemin).toBeUndefined()
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+        'content',
+        'noindex, nofollow',
+      )
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(TITRES[locale])
+      await expect(page.locator('main form')).toHaveCount(0)
+      await expect(page.locator('main')).not.toContainText(JETON)
+      const axe = await new AxeBuilder({ page }).withTags(TAGS).analyze()
+      expect(axe.violations.map(({ id, nodes }) => ({ id, nodes: nodes.length }))).toEqual([])
+    }
+  })
+
   test(`/${locale} : lien sans valeur → page sobre, noindex, référent réduit à l’origine, sans cookie`, async ({
     page,
   }) => {
@@ -53,21 +84,23 @@ test('tout lien sans valeur reçoit exactement la même page', async ({ page }) 
     `/fr/contact/appel/${AUTRE}`,
     '/fr/contact/appel/trop-court',
     `/fr/contact/appel/${JETON}A`,
-    `/fr/contact/appel/${JETON}/confirmation`,
+    `/fr/contact/appel/gerer/${JETON}`,
+    `/fr/contact/appel/gerer/${AUTRE}/annuler`,
+    '/fr/contact/appel/gerer/trop-court',
   ]) {
     expect(await contenu(chemin), chemin).toBe(reference)
   }
 })
 
-test('la confirmation et le fichier .ics d’un lien sans valeur sont refusés, sans cache', async ({
+test('la gestion et le fichier .ics d’un lien sans valeur sont refusés, sans cache', async ({
   request,
 }) => {
-  const confirmation = await request.get(`/en/contact/appel/${JETON}/confirmation`)
-  expect(confirmation.status()).toBe(200)
-  expect(confirmation.headers()['referrer-policy']).toBe('strict-origin')
-  expect(await confirmation.text()).toContain(TITRES.en)
+  const gestion = await request.get(`/en/contact/appel/gerer/${JETON}`)
+  expect(gestion.status()).toBe(200)
+  expect(gestion.headers()['referrer-policy']).toBe('strict-origin')
+  expect(await gestion.text()).toContain(TITRES.en)
 
-  const agenda = await request.get(`/fr/contact/appel/${JETON}/agenda`)
+  const agenda = await request.get(`/fr/contact/appel/gerer/${JETON}/agenda`)
   expect(agenda.status()).toBe(404)
   expect(agenda.headers()['cache-control']).toContain('no-store')
   expect(agenda.headers()['referrer-policy']).toBe('strict-origin')
@@ -83,10 +116,30 @@ test('un POST forgé vers la page ne réserve rien et ne révèle rien', async (
   expect(await reponse.text()).not.toContain('Votre appel est convenu')
 })
 
+test('un POST forgé vers la page de gestion n’annule ni ne déplace rien', async ({ request }) => {
+  for (const chemin of [
+    `/fr/contact/appel/gerer/${JETON}`,
+    `/fr/contact/appel/gerer/${JETON}/annuler`,
+  ]) {
+    const reponse = await request.post(chemin, {
+      form: { creneau: '2027-03-02T09:30:00.000Z', jeton: JETON, locale: 'fr' },
+    })
+    expect(reponse.status(), chemin).toBeLessThan(500)
+    const texte = await reponse.text()
+    expect(texte, chemin).not.toContain('Votre appel est déplacé')
+    expect(texte, chemin).not.toContain('Votre appel est annulé')
+  }
+})
+
 test('le sélecteur de langue garde le lien de réservation', async ({ page }) => {
   await page.goto(`/fr/contact/appel/${JETON}`)
   const en = page.getByRole('link', { name: /^EN/ }).first()
   await expect(en).toHaveAttribute('href', `/en/contact/appel/${JETON}`)
+  await page.goto(`/fr/contact/appel/gerer/${JETON}/annuler`)
+  await expect(page.getByRole('link', { name: /^EN/ }).first()).toHaveAttribute(
+    'href',
+    `/en/contact/appel/gerer/${JETON}/annuler`,
+  )
 })
 
 test('les pages de lien ne sont pas dans le sitemap', async ({ request }) => {
