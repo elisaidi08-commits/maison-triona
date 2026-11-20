@@ -1,11 +1,13 @@
-"""Polices du site (D43, D50) : Cormorant Garamond pour les titres (graisses 300 à 400) et EB Garamond
-pour le texte (400 à 500). Polices variables réduites à leur plage de graisses, sous-ensemble latin du
+"""Polices du site. Prototype D72 (maquette Figma) : Plus Jakarta Sans pour les titres (graisses 400 à
+500) et Manrope pour le texte (400 à 600). Kit précédent (D43, D50), gardé pour revenir en arrière :
+Cormorant Garamond (300 à 400) et EB Garamond (400 à 500). Polices variables réduites à leur plage de graisses, sous-ensemble latin du
 français, en woff2 : deux fichiers préchargés pour un budget de 80 ko (docs/architecture.md).
 
 Prérequis (outil de développement, hors du site) :
   python3 -m venv .venv-kit && .venv-kit/bin/pip install fonttools brotli
-  Polices (licence OFL) dans <polices>/ : CormorantGaramond.ttf et EBGaramond.ttf, fichiers [wght] de
-  https://github.com/google/fonts/tree/main/ofl/cormorantgaramond et .../ofl/ebgaramond.
+  Polices (licence OFL) dans <polices>/ : PlusJakartaSans.ttf et Manrope.ttf, fichiers [wght] de
+  https://github.com/google/fonts/tree/main/ofl/plusjakartasans et .../ofl/manrope (kit précédent :
+  CormorantGaramond.ttf et EBGaramond.ttf, .../ofl/cormorantgaramond et .../ofl/ebgaramond).
 Usage :
   .venv-kit/bin/python -I scripts/polices-kit.py <polices> src/fonts
 """
@@ -30,8 +32,8 @@ UNICODES = [
 ]
 
 JOBS = [
-    ('CormorantGaramond.ttf', (300, 400), 'cormorant-garamond.woff2'),
-    ('EBGaramond.ttf', (400, 500), 'eb-garamond.woff2'),
+    ('PlusJakartaSans.ttf', (400, 500), 'plus-jakarta-sans.woff2'),
+    ('Manrope.ttf', (400, 600), 'manrope.woff2'),
 ]
 
 for source, weights, target in JOBS:
