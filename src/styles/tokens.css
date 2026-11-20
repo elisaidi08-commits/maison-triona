@@ -360,6 +360,14 @@
     line-height: var(--text-body--line-height);
   }
 
+  /* Titres et texte agrandi (D73, WCAG 1.4.4 et 1.4.10) : un mot long (« Accompagnement ») ou une
+     suite insécable ne fait plus défiler la page en largeur quand le texte du navigateur est
+     agrandi sur un téléphone. Coupure sans tiret, seulement si le mot ne tient pas seul sur sa
+     ligne : rien ne change à l'affichage normal (pas de césure, choix de Sady du 20/11/2026). */
+  :where(h1, h2, h3, h4, h5, h6) {
+    overflow-wrap: anywhere;
+  }
+
   /* Surface sombre : texte ivoire, focus champagne (6,47:1 sur sapin). */
   [data-surface='sapin'] {
     --focus-color: var(--color-champagne);

@@ -76,7 +76,8 @@ export function ChoiceList({ choices, rowOnDesktop = false }: ChoiceListProps) {
             <span aria-hidden="true" className="w-32 shrink-0 text-label text-sapin">
               {choice.number ?? ' '}
             </span>
-            <span className="flex flex-col gap-4">
+            {/* Coupure sans tiret d'un mot trop long pour la ligne (texte agrandi à 200 %, D73). */}
+            <span className="flex flex-col gap-4 wrap-anywhere">
               <span
                 className={`filet-survol self-start text-choix ${choice.number ? '' : 'font-normal'}`}
               >
