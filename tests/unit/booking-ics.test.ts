@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
-import { bookingUid, buildIcs, ICS_DOMAIN } from '../../src/lib/booking/ics.ts'
+import { bookingUid, buildIcs, ICS_DOMAIN, ICS_ORGANIZER } from '../../src/lib/booking/ics.ts'
 
 // Invitation d'agenda de la personne (story 3.10 ; docs/reservation-appel.md §4.5) : sous-ensemble de
 // RFC 5545 écrit à la main, sans dépendance. UID stable, heures en UTC, texte échappé et replié à
@@ -109,8 +109,11 @@ describe('invitation .ics', () => {
       ]) {
         assert.equal(ics.includes(interdit), false, `${locale} : ${interdit}`)
       }
-      // Aucune adresse ni lien : seul l'UID porte un « @ ».
-      assert.equal(ics.match(/@/g)?.length, 1)
+      // Aucune adresse de la personne ni lien : seuls l'UID et l'organisateur générique de la
+      // maison (story 3.11) portent un « @ ».
+      assert.equal(ics.match(/@/g)?.length, 2)
+      assert.equal(ics.match(/mailto:/g)?.length, 1)
+      assert.ok(ics.includes(`mailto:${ICS_ORGANIZER}`))
     }
   })
 
@@ -148,6 +151,12 @@ describe('invitation .ics', () => {
     assert.ok(l.includes(`UID:${ID}-guest@${ICS_DOMAIN}`))
     assert.equal(l.includes('METHOD:PUBLISH'), false)
     assert.equal(l.includes('STATUS:CONFIRMED'), false)
+    // RFC 5546 : un organisateur, générique (la maison), pour PUBLISH comme pour CANCEL.
+    assert.ok(l.includes(`ORGANIZER;CN=Maison Triona:mailto:${ICS_ORGANIZER}`))
+    assert.ok(
+      lignes(buildIcs(EVENEMENT)).includes(`ORGANIZER;CN=Maison Triona:mailto:${ICS_ORGANIZER}`),
+    )
+    assert.equal(ICS_ORGANIZER, 'contact@maisontriona.com')
   })
 
   it('refuse une séquence négative ou fractionnaire et une méthode inconnue', () => {

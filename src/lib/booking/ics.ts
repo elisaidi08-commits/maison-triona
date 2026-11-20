@@ -11,13 +11,20 @@
  * un. Un appel annulé donne un fichier `METHOD:CANCEL`, `STATUS:CANCELLED`, même UID, séquence de
  * l'annulation : il retire l'événement (RFC 5546 §3.2.5). Toujours un fichier téléchargé, jamais
  * envoyé.
- * Les invitations envoyées par e-mail (`METHOD:REQUEST`, VTIMEZONE Europe/Brussels, ORGANIZER)
+ * Les invitations envoyées par e-mail (`METHOD:REQUEST`, VTIMEZONE Europe/Brussels, ATTENDEE)
  * viendront avec l'envoi (stories 3.3 et 3.12).
  * Imports relatifs seulement : testé par node --test.
  */
 
 /** Domaine des UID (D65). */
 export const ICS_DOMAIN = 'maisontriona.com'
+
+/**
+ * Organisateur générique de la maison (RFC 5546 : `ORGANIZER` est exigé pour `PUBLISH` et `CANCEL`) :
+ * aucune donnée de la personne, aucun nom de Cat. Aucune adresse de la maison n'est encore choisie
+ * (D47) : `contact@` [À CONFIRMER par Sady : adresse de la messagerie de la maison].
+ */
+export const ICS_ORGANIZER = `contact@${ICS_DOMAIN}`
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LIGNE_MAX = 75
@@ -98,6 +105,7 @@ export function buildIcs(event: IcsEvent): string {
     `METHOD:${method}`,
     'BEGIN:VEVENT',
     `UID:${event.uid}`,
+    `ORGANIZER;CN=Maison Triona:mailto:${ICS_ORGANIZER}`,
     `DTSTAMP:${horodatage(event.stamp)}`,
     `DTSTART:${debut}`,
     `DTEND:${fin}`,
