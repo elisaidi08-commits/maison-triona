@@ -372,6 +372,22 @@ describe('boîte d’envoi : envoi d’un message (sendItem)', () => {
     assert.deepEqual(h.logs, [['sent', id]])
   })
 
+  it('envoie à Sady l’alerte du plafond des demandes de lien, la date seulement', async () => {
+    const id = randomUUID()
+    await enqueueCapAlert(pool, id, 'link_cap')
+    const createdAt = (await row(id))?.created_at
+    assert.ok(createdAt)
+    const h = harness()
+    await sendNow(h.deps, id)
+    const mail = renderAlert({ event: 'link_cap', subjectId: null, createdAt })
+    assert.deepEqual(h.sent, [
+      { from: CONFIG.from, to: CONFIG.alertTo, subject: mail.subject, text: mail.text },
+    ])
+    assert.ok(!mail.text.includes(id))
+    assert.equal((await row(id))?.status, 'accepted')
+    assert.deepEqual(h.logs, [['sent', id]])
+  })
+
   it('l’alerte du plafond qui échoue définitivement ne crée pas d’alerte', async () => {
     const id = randomUUID()
     await enqueueCapAlert(pool, id)

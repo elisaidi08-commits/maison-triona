@@ -31,10 +31,11 @@ const ALERT_LINES: Record<AlertEvent, string> = {
   undelivered: 'Message non délivré au destinataire.',
   tracking_expired: 'Livraison non confirmée après 72 heures.',
   notify_cap: `Plafond de notifications atteint${NBSP}: les demandes suivantes de la journée sont enregistrées dans le coffre, sans e-mail.`,
+  link_cap: `Plafond des demandes de lien atteint${NBSP}: jusqu’à minuit UTC, plus aucun lien de réservation n’est créé ni envoyé, mais la page annonce l’envoi au visiteur.`,
 }
 
-// Seule l'alerte du plafond ne porte pas d'identifiant : elle ne concerne aucun message.
-const WITHOUT_SUBJECT: readonly AlertEvent[] = ['notify_cap']
+// Seules les alertes de plafond ne portent pas d'identifiant : elles ne concernent aucun message.
+const WITHOUT_SUBJECT: readonly AlertEvent[] = ['notify_cap', 'link_cap']
 
 const DATE_FORMAT = new Intl.DateTimeFormat('fr-BE', {
   timeZone: 'Europe/Brussels',
@@ -86,8 +87,8 @@ export function renderNotification(input: {
   return { subject, text }
 }
 
-// `subjectId` : identifiant du message en cause, obligatoire sauf pour `notify_cap`, qui n'en a
-// aucun (et n'en accepte aucun).
+// `subjectId` : identifiant du message en cause, obligatoire sauf pour les alertes de plafond
+// (`notify_cap`, `link_cap`), qui n'en ont aucun (et n'en acceptent aucun).
 export function renderAlert(input: {
   event: AlertEvent
   subjectId: string | null

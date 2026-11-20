@@ -10,6 +10,7 @@ import { localizedPath, type Locale } from '@/i18n/pathnames'
 import { etatRetenu } from '@/lib/booking/action-state'
 import { lirePageLien } from '@/lib/booking/link-page'
 import { smsPropose } from '@/lib/booking/options'
+import { privacyHref } from '@/lib/privacy'
 
 // Réservation d'un appel par lien personnel (story 3.10 ; docs/reservation-appel.md §2, étape 3) :
 // un seul écran, sous la même colonne que le contact. Le lien vaut-il encore, quels créneaux sont
@@ -71,7 +72,7 @@ export default async function Page({ params }: PageProps<'/[locale]/contact/appe
             etatInitial={etat}
             sms={smsPropose()}
             textes={textes}
-            confidentialite={`${localizedPath('/confidentialite', locale)}#appel`}
+            confidentialite={privacyHref('appel', locale)}
           />
         )}
       </div>

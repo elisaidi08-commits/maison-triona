@@ -62,7 +62,7 @@ Propriété **de domaine** `maisontriona.com`, vérifiée par un enregistrement 
 
 ## Relecture sécurité (20/11/2026)
 
-`security-privacy-reviewer` : rien de bloquant. Corrigé avant la PR : texte de la politique publiée (« servi depuis notre domaine » remplacé par la transmission par notre serveur, version `2026-11-20.2`), envois d'autres sites refusés et débit limité, aperçus coupés, événements à la racine de la langue, liste fermée des pages, risque n° 12 (recoupement) dans `docs/privacy.md` §8, Vercel parmi les destinataires (registre T7), `PLAUSIBLE_DOMAIN` dans `.env.example`. **À trancher par Sady** : tronquer l'IP avant de l'envoyer (risque n° 12). **Au juriste** : exemption de consentement avec envoi de l'IP à chaque événement.
+`security-privacy-reviewer` : rien de bloquant. Corrigé avant la PR : texte de la politique publiée (« servi depuis notre domaine » remplacé par la transmission par notre serveur, version `2026-11-20.3`), envois d'autres sites refusés et débit limité, aperçus coupés, événements à la racine de la langue, liste fermée des pages, risque n° 12 (recoupement) dans `docs/privacy.md` §8, Vercel parmi les destinataires (registre T7), `PLAUSIBLE_DOMAIN` dans `.env.example`. **À trancher par Sady** : tronquer l'IP avant de l'envoyer (risque n° 12). **Au juriste** : exemption de consentement avec envoi de l'IP à chaque événement.
 
 ## Vérification du 20/11/2026
 
