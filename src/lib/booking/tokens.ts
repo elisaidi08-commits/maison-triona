@@ -17,6 +17,8 @@ export const ACCESS_TOKEN_TTL_HOURS = 48
  * Lien d'accès qui vient de servir (story 3.11) : pendant ce délai après la réservation, un second
  * envoi du même formulaire (double clic, renvoi sans JavaScript) mène encore au lien de gestion ;
  * ensuite, le lien d'accès ne vaut plus rien (§2, étape 4 : seul le lien de gestion reste valable).
+ * Mesuré à l'heure de la base (`replayable` de `find_booking_token`, 0014, qui recopie cette valeur) :
+ * `used_at` est posé par la base, jamais par l'appelant.
  */
 export const ACCESS_REPLAY_MINUTES = 15
 
@@ -100,14 +102,6 @@ export function deriveManageToken(accessToken: string, secret: string): string {
   if (typeof secret !== 'string' || secret.length === 0) throw new RangeError('Secret manquant')
   const cle = Buffer.from(hkdfSync('sha256', secret, '', 'maison-triona:gestion', 32))
   return createHmac('sha256', cle).update(accessToken, 'utf8').digest('base64url')
-}
-
-/** Le lien d'accès a-t-il servi assez récemment pour rendre encore le lien de gestion ? */
-export function isAccessReplayable(usedAt: Date | null, now: Date): boolean {
-  assertValidDate(now)
-  if (!usedAt) return false
-  const age = now.getTime() - usedAt.getTime()
-  return age >= 0 && age < ACCESS_REPLAY_MINUTES * 60 * 1000
 }
 
 export type ManageTokenState = 'valid' | 'expired' | 'revoked' | 'wrong-purpose'

@@ -159,6 +159,9 @@ declare
   pause integer;
   horizon integer;
   delai integer;
+  plafond integer;
+  jour text;
+  pris integer;
 begin
   if new.starts_at = old.starts_at and new.ends_at = old.ends_at and new.slot = old.slot then
     return new;
@@ -172,7 +175,8 @@ begin
   if new.ends_at - new.starts_at <> old.ends_at - old.starts_at then
     raise exception 'La durée d’un appel ne change pas' using errcode = 'check_violation';
   end if;
-  select buffer_minutes, horizon_days, min_notice_minutes into pause, horizon, delai
+  select buffer_minutes, horizon_days, min_notice_minutes, daily_cap
+    into pause, horizon, delai, plafond
     from public.booking_settings;
   if not found then
     raise exception 'Réglages des appels absents' using errcode = 'check_violation';
@@ -186,6 +190,19 @@ begin
   end if;
   if new.starts_at > now() + make_interval(days => horizon + 1, hours => 1) then
     raise exception 'Créneau hors de l’horizon de réservation' using errcode = 'check_violation';
+  end if;
+  -- Changement de jour : plafond du nouveau jour, sous le verrou de l'application (même clé que
+  -- `bookings_insert_guard`). Le même jour, l'appel garde sa place.
+  jour := to_char(new.starts_at at time zone 'Europe/Brussels', 'YYYY-MM-DD');
+  if jour <> to_char(old.starts_at at time zone 'Europe/Brussels', 'YYYY-MM-DD') then
+    perform pg_advisory_xact_lock(hashtext('maison-triona:appels:' || jour));
+    select count(*) into pris from public.bookings as b
+     where b.id <> new.id
+       and b.status in ('confirmed', 'done', 'no_answer')
+       and to_char(b.starts_at at time zone 'Europe/Brussels', 'YYYY-MM-DD') = jour;
+    if pris >= plafond then
+      raise exception 'Plafond du jour atteint' using errcode = 'check_violation';
+    end if;
   end if;
   new.retention_until := ((new.starts_at at time zone 'UTC') + interval '12 months') at time zone 'UTC';
   new.sequence := old.sequence + 1;
@@ -203,18 +220,21 @@ create trigger bookings_move_guard
 -- le lien à son heure (src/lib/booking/bookings.ts) ; la base a le dernier mot.
 
 -- Un lien par son empreinte (lecture, puis verrou de ligne pour la réservation), sans l'empreinte ni
--- l'adresse : le site public ne lit plus `token_hash` ni `email_hmac`.
+-- l'adresse : le site public ne lit plus `token_hash` ni `email_hmac`. `replayable` : le lien d'accès
+-- a servi il y a moins de 15 minutes, à l'heure de la base (ACCESS_REPLAY_MINUTES,
+-- src/lib/booking/tokens.ts) : un second envoi du formulaire mène encore au lien de gestion.
 create function find_booking_token(p_hash bytea)
 returns table (
   id uuid, purpose text, booking_id uuid, expires_at timestamptz, used_at timestamptz,
-  revoked_at timestamptz
+  revoked_at timestamptz, replayable boolean
 )
 language sql
 stable
 security definer
 set search_path = pg_catalog, pg_temp
 as $$
-  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at
+  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at,
+         t.used_at is not null and t.used_at > now() - interval '15 minutes'
     from public.booking_tokens as t
    where t.token_hash = p_hash;
 $$;
@@ -223,13 +243,14 @@ revoke all on function find_booking_token(bytea) from public;
 create function lock_booking_token(p_hash bytea)
 returns table (
   id uuid, purpose text, booking_id uuid, expires_at timestamptz, used_at timestamptz,
-  revoked_at timestamptz
+  revoked_at timestamptz, replayable boolean
 )
 language sql
 security definer
 set search_path = pg_catalog, pg_temp
 as $$
-  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at
+  select t.id, t.purpose, t.booking_id, t.expires_at, t.used_at, t.revoked_at,
+         t.used_at is not null and t.used_at > now() - interval '15 minutes'
     from public.booking_tokens as t
    where t.token_hash = p_hash
      for update of t;
@@ -321,8 +342,10 @@ set search_path = pg_catalog
 as $$
 declare
   reglages record;
+  jour text;
+  pris integer;
 begin
-  select duration_minutes, buffer_minutes, min_notice_minutes, horizon_days into reglages
+  select duration_minutes, buffer_minutes, min_notice_minutes, horizon_days, daily_cap into reglages
     from public.booking_settings;
   if not found then
     raise exception 'Réglages des appels absents' using errcode = 'check_violation';
@@ -342,6 +365,18 @@ begin
   if new.starts_at > now() + make_interval(days => reglages.horizon_days + 1, hours => 1) then
     raise exception 'Créneau hors de l’horizon de réservation' using errcode = 'check_violation';
   end if;
+  -- Plafond du jour à Bruxelles, sous le même verrou consultatif que l'application (même clé que
+  -- `bookSlot` et `moveBookingLocked` : 'maison-triona:appels:' || date locale « YYYY-MM-DD » ;
+  -- réentrant dans la même transaction).
+  jour := to_char(new.starts_at at time zone 'Europe/Brussels', 'YYYY-MM-DD');
+  perform pg_advisory_xact_lock(hashtext('maison-triona:appels:' || jour));
+  select count(*) into pris from public.bookings as b
+   where b.id <> new.id
+     and b.status in ('confirmed', 'done', 'no_answer')
+     and to_char(b.starts_at at time zone 'Europe/Brussels', 'YYYY-MM-DD') = jour;
+  if pris >= reglages.daily_cap then
+    raise exception 'Plafond du jour atteint' using errcode = 'check_violation';
+  end if;
   new.retention_until := ((new.starts_at at time zone 'UTC') + interval '12 months') at time zone 'UTC';
   return new;
 end;
@@ -351,26 +386,43 @@ create trigger bookings_insert_guard
   before insert on bookings
   for each row execute function bookings_insert_guard();
 
+-- Consommation d'un lien (0010), redéfinie à chemin figé et nom qualifié, sans changer son
+-- comportement : `book_slot_as_guest` tourne en `pg_catalog, pg_temp`, et un déclencheur sans chemin
+-- figé hériterait du chemin de l'appelant.
+create or replace function booking_tokens_usage_unique() returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if old.used_at is not null then
+    raise exception 'Lien déjà utilisé' using errcode = 'check_violation';
+  end if;
+  if new.used_at is null then
+    raise exception 'Utilisation du lien sans date' using errcode = 'check_violation';
+  end if;
+  if not exists (select 1 from public.bookings where access_token_id = new.id) then
+    raise exception 'Lien utilisé sans réservation' using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
 -- Réservation par le site public (rôle `site_public`, seule voie d'insertion d'un appel) : le lien
 -- d'accès de cette empreinte, verrouillé, doit être vivant (usage `access`, ni consommé, ni annulé,
 -- ni expiré à l'heure de la base). Dans la même transaction : l'appel est inséré (bornes de
 -- `bookings_insert_guard`, contrainte d'exclusion : 23P01 si le créneau vient d'être pris), le lien
--- consommé (`used_at` : l'heure de l'application si elle est plus tard que celle de la base, jamais
--- plus tôt ; elle ne sert qu'à la reprise de 15 minutes), et le lien de gestion créé
+-- consommé (`used_at` : l'heure de la base, jamais une valeur de l'appelant ; elle sert à la reprise
+-- de 15 minutes, `replayable`), et le lien de gestion créé
 -- (`issue_manage_token`, devenue interne). Le contenu scellé (nom, numéro, langue, choix SMS,
 -- origine) est celui que l'application a scellé, de taille fixe (contrainte). Rend l'identifiant de
 -- l'appel, ou NULL si le lien ne vaut pas.
 create function book_slot_as_guest(
   p_access_hash bytea, p_start timestamptz, p_end timestamptz, p_occupied_until timestamptz,
-  p_privacy_version text, p_sealed bytea, p_manage_hash bytea, p_used_at timestamptz
+  p_privacy_version text, p_sealed bytea, p_manage_hash bytea
 ) returns uuid
 language plpgsql
 security definer
--- `public, pg_temp` (comme `revoke_live_access_links`, 0011) et non `pg_catalog` seul : la
--- consommation du lien déclenche `booking_tokens_usage_unique` (0010), écrit sans chemin figé, qui
--- hérite de celui-ci pour trouver `bookings`. `pg_temp` en dernier : aucun objet temporaire ne masque
--- une table ; les noms restent qualifiés ici.
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   lien record;
@@ -391,7 +443,7 @@ begin
     (appel, lien.id, p_start, p_end, tstzrange(p_start, p_occupied_until, '[)'),
      p_privacy_version, p_start, p_sealed);
   update public.booking_tokens
-     set used_at = greatest(coalesce(p_used_at, now()), now())
+     set used_at = now()
    where id = lien.id;
   if not public.issue_manage_token(gen_random_uuid(), p_manage_hash, lien.id) then
     raise exception 'Lien de gestion non créé' using errcode = 'check_violation';
@@ -400,7 +452,7 @@ begin
 end;
 $$;
 revoke all on function
-  book_slot_as_guest(bytea, timestamptz, timestamptz, timestamptz, text, bytea, bytea, timestamptz)
+  book_slot_as_guest(bytea, timestamptz, timestamptz, timestamptz, text, bytea, bytea)
   from public;
 
 -- Liste complète des actions, reprise telle quelle de 0013 (`availability`, `booking_link` et les

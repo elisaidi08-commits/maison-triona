@@ -18,7 +18,6 @@ import {
   accessTokenState,
   generateToken,
   hashToken,
-  isAccessReplayable,
   isTokenFormat,
   manageTokenState,
   type StoredToken,
@@ -54,12 +53,16 @@ interface TokenRow {
   expires_at: Date
   used_at: Date | null
   revoked_at: Date | null
+  /** Lien d'accès consommé il y a moins de 15 minutes, à l'heure de la base (0014). */
+  replayable: boolean
 }
 
 interface FoundToken extends StoredToken {
   id: string
   /** Appel visé par un lien de gestion (story 3.11) ; null pour un lien d'accès. */
   bookingId: string | null
+  /** Reprise du double envoi possible (moins de 15 minutes après la réservation, heure de la base). */
+  replayable: boolean
 }
 
 async function guard<T>(operation: string, run: () => Promise<T>): Promise<T> {
@@ -83,7 +86,7 @@ function assertValidDate(date: Date, label: string): void {
 async function findToken(db: Db, token: string, forUpdate = false): Promise<FoundToken | null> {
   if (!isTokenFormat(token)) return null
   const { rows } = await db.query<TokenRow>(
-    `SELECT id, purpose, booking_id, expires_at, used_at, revoked_at
+    `SELECT id, purpose, booking_id, expires_at, used_at, revoked_at, replayable
      FROM ${forUpdate ? 'lock_booking_token' : 'find_booking_token'}($1)`,
     [hashToken(token)],
   )
@@ -96,6 +99,7 @@ async function findToken(db: Db, token: string, forUpdate = false): Promise<Foun
     expiresAt: row.expires_at,
     usedAt: row.used_at,
     revokedAt: row.revoked_at,
+    replayable: row.replayable === true,
   }
 }
 
@@ -270,7 +274,7 @@ export async function checkBookingLink(db: Db, token: string, now: Date): Promis
     if (!found) return 'invalid'
     const state = accessTokenState(found, now)
     if (state === 'valid') return 'valid'
-    if (state !== 'used' || !isAccessReplayable(found.usedAt, now)) return 'invalid'
+    if (state !== 'used' || !found.replayable) return 'invalid'
     const booking = await bookingOfToken(db, found.id)
     return booking?.status === 'confirmed' && booking.ends_at.getTime() > now.getTime()
       ? 'booked'
@@ -338,7 +342,7 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
         if (!found) return { status: 'invalid-link' }
         const state = accessTokenState(found, now)
         if (state === 'used') {
-          if (!isAccessReplayable(found.usedAt, now)) return { status: 'invalid-link' }
+          if (!found.replayable) return { status: 'invalid-link' }
           const booking = await bookingOfToken(client, found.id)
           return booking?.status === 'confirmed'
             ? { status: 'already-booked', bookingId: booking.id }
@@ -365,7 +369,7 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
         // créé, dans cette transaction. Le site public n'a aucun autre droit d'écriture.
         const { rows } = await client.query<{ id: string | null }>(
           `SELECT book_slot_as_guest($1, $2::timestamptz, $3::timestamptz, $4::timestamptz, $5, $6,
-             $7, $8::timestamptz) AS id`,
+             $7) AS id`,
           [
             hashToken(token),
             slot.start,
@@ -374,7 +378,6 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
             privacyVersion,
             sealed,
             hashToken(manageToken),
-            now,
           ],
         )
         const id = rows[0]?.id
@@ -393,7 +396,7 @@ export async function bookSlot(pool: Pool, input: NewBooking): Promise<BookingRe
     if (code === UNIQUE) {
       const found = await guard('bookSlot', () => findToken(pool, token))
       const booking =
-        found && isAccessReplayable(found.usedAt, now)
+        found?.replayable
           ? await guard('bookSlot', () => bookingOfToken(pool, found.id))
           : null
       if (booking?.status === 'confirmed')

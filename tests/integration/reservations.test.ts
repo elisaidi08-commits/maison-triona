@@ -113,6 +113,16 @@ async function reserver(
   })
 }
 
+// La consommation d'un lien recule de `minutes` (heure de la base : `used_at` ne se modifie jamais,
+// déclencheur de 0010 ; hors déclencheurs, pour le test seulement).
+async function vieillirConsommation(token: string, minutes: number): Promise<void> {
+  await insererHorsGardes(
+    admin,
+    'UPDATE booking_tokens SET used_at = used_at - make_interval(mins => $2) WHERE token_hash = $1',
+    [hashToken(token), minutes],
+  )
+}
+
 async function compter(table: string): Promise<number> {
   const { rows } = await admin.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)
   return rows[0]?.n ?? 0
@@ -310,9 +320,10 @@ describe('réservation d’appel', () => {
     assert.equal(await etatDesTables(), avant)
     await reserver(token, MARDI_1030)
     assert.equal(await checkBookingLink(site, token, MAINTENANT), 'booked')
-    // Story 3.11 : 15 minutes après la réservation, le lien d'accès ne vaut plus rien (seul le lien
-    // de gestion reste valable).
-    assert.equal(await checkBookingLink(site, token, apres(MAINTENANT, 15)), 'invalid')
+    // Story 3.11 : 15 minutes après la réservation (heure de la base, qui pose `used_at`), le lien
+    // d'accès ne vaut plus rien (seul le lien de gestion reste valable).
+    await vieillirConsommation(token, 15)
+    assert.equal(await checkBookingLink(site, token, MAINTENANT), 'invalid')
     // L'appel passé, le lien ne vaut plus rien.
     assert.equal(await checkBookingLink(site, token, apres(MARDI_1030, 30)), 'invalid')
   })
@@ -352,7 +363,8 @@ describe('réservation d’appel', () => {
     const { rows: jetons } = await admin.query(
       "SELECT id, used_at FROM booking_tokens WHERE purpose = 'access'",
     )
-    assert.equal(jetons[0].used_at.toISOString(), MAINTENANT.toISOString())
+    // Heure de la base, jamais celle de l'appelant (0014).
+    assert.ok(Math.abs(jetons[0].used_at.getTime() - Date.now()) < 60_000)
     assert.equal(appel.access_token_id, jetons[0].id)
 
     // Story 3.11 : le lien de gestion, créé dans la même transaction (empreinte seule), échéance à
@@ -386,7 +398,8 @@ describe('réservation d’appel', () => {
     })
     assert.equal(await compter('bookings'), 1)
     // Plus de 15 minutes après : le lien d'accès ne vaut plus rien, même pas pour un renvoi.
-    assert.deepEqual(await reserver(token, MARDI_1115, site, undefined, apres(MAINTENANT, 20)), {
+    await vieillirConsommation(token, 20)
+    assert.deepEqual(await reserver(token, MARDI_1115), {
       status: 'invalid-link',
     })
     // L'appel passé, la page de gestion ne se lit plus.

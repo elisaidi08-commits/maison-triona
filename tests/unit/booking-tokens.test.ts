@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 
 import {
@@ -10,7 +11,6 @@ import {
   deriveManageToken,
   generateToken,
   hashToken,
-  isAccessReplayable,
   isTokenFormat,
   manageTokenState,
   TOKEN_LENGTH,
@@ -128,15 +128,15 @@ describe('jetons des liens de réservation', () => {
     assert.throws(() => deriveManageToken(token, ''), RangeError)
   })
 
-  it('rend le lien de gestion au double envoi pendant 15 minutes seulement', () => {
+  it('rend le lien de gestion au double envoi pendant 15 minutes (heure de la base, 0014)', () => {
     assert.equal(ACCESS_REPLAY_MINUTES, 15)
-    assert.equal(isAccessReplayable(null, MAINTENANT), false)
-    assert.equal(isAccessReplayable(MAINTENANT, MAINTENANT), true)
-    assert.equal(isAccessReplayable(MAINTENANT, new Date('2027-03-01T08:14:59.999Z')), true)
-    assert.equal(isAccessReplayable(MAINTENANT, new Date('2027-03-01T08:15:00Z')), false)
-    // Une date d'usage dans le futur (horloges décalées) ne vaut rien.
-    assert.equal(isAccessReplayable(new Date('2027-03-01T09:00:00Z'), MAINTENANT), false)
-    assert.throws(() => isAccessReplayable(MAINTENANT, new Date(Number.NaN)), RangeError)
+    // La base mesure la reprise (`replayable`) : même durée que la constante, dans les deux fonctions.
+    const sql = readFileSync(
+      new URL('../../db/migrations/0014_deplacer_annuler.sql', import.meta.url),
+      'utf8',
+    )
+    const reprise = `t.used_at > now() - interval '${ACCESS_REPLAY_MINUTES} minutes'`
+    assert.equal(sql.split(reprise).length - 1, 2)
   })
 
   it('dit l’état d’un lien de gestion : valable jusqu’à la fin de l’appel, annulé, autre usage', () => {

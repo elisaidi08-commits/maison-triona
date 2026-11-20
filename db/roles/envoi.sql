@@ -6,6 +6,10 @@
 -- `npm run db:migrate` (les droits portent sur une table existante). Rejouable.
 -- Aucun mot de passe ici : le compte qui se connecte reçoit ce rôle à part (procédure).
 
+-- Personne ne crée d'objet dans le schéma public, hors du propriétaire (défaut de PostgreSQL 15 et
+-- plus ; posé ici pour une base plus ancienne ou modifiée). Rejouable.
+revoke create on schema public from public;
+
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'envoi') then

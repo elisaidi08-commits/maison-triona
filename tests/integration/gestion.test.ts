@@ -607,7 +607,7 @@ describe('déplacer et annuler un appel (3.11)', () => {
       occupe = 45,
       gestion = generateToken().hash,
     ) =>
-      site.query('SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7, $8) AS id', [
+      site.query('SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7) AS id', [
         hash,
         debut,
         apres(debut, duree),
@@ -615,7 +615,6 @@ describe('déplacer et annuler un appel (3.11)', () => {
         PRIVACY,
         Buffer.alloc(2096, 5),
         gestion,
-        MAINTENANT,
       ])
     // Jeton inconnu, consommé, expiré, de gestion : rien (NULL), rien d'écrit.
     const consomme = await reserver(MARDI_1030)
@@ -646,14 +645,13 @@ describe('déplacer et annuler un appel (3.11)', () => {
       [
         'plage jusqu’en 2100',
         () =>
-          site.query("SELECT book_slot_as_guest($1, $2, $3, '2100-01-01', $4, $5, $6, $7)", [
+          site.query("SELECT book_slot_as_guest($1, $2, $3, '2100-01-01', $4, $5, $6)", [
             hash,
             MARDI_1600,
             apres(MARDI_1600, 30),
             PRIVACY,
             Buffer.alloc(2096, 5),
             generateToken().hash,
-            MAINTENANT,
           ]),
       ],
       ['délai minimal', () => reserverDirect(hash, demain)],
@@ -683,7 +681,24 @@ describe('déplacer et annuler un appel (3.11)', () => {
     )
     assert.equal(liens.length, 2)
     assert.equal(liens[0].purpose, 'access')
-    assert.equal(liens[0].used_at.toISOString(), MAINTENANT.toISOString())
+    // `used_at` : l'heure de la base, l'appelant ne la choisit pas (0014).
+    assert.ok(Math.abs(liens[0].used_at.getTime() - Date.now()) < 60_000)
+    // L'ancienne signature, qui recevait `used_at` de l'appelant, n'existe plus.
+    await assert.rejects(
+      site.query(
+        "SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7, '2100-01-01'::timestamptz)",
+        [
+          hash,
+          MERCREDI_1030,
+          apres(MERCREDI_1030, 30),
+          apres(MERCREDI_1030, 45),
+          PRIVACY,
+          Buffer.alloc(2096, 5),
+          generateToken().hash,
+        ],
+      ),
+      { code: '42883' },
+    )
     assert.equal(liens[1].purpose, 'manage')
     // Le même lien ne réserve plus.
     const { rows: encore } = await reserverDirect(hash, MERCREDI_1030)
@@ -697,6 +712,67 @@ describe('déplacer et annuler un appel (3.11)', () => {
       ),
       CONTROLE,
     )
+  })
+
+  it('plafond du jour imposé par la base : réservation et déplacement vers un jour plein refusés', async () => {
+    for (const debut of [MARDI_1030, MARDI_1115, MARDI_1200, MARDI_1600]) await reserver(debut)
+    const mercredi = await reserver(MERCREDI_1030)
+    // 5e appel du mardi par la fonction (l'application n'est pas consultée) : refusé.
+    const vivant = await createBookingLink(coffre, CAT, MAINTENANT)
+    await assert.rejects(
+      site.query('SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7)', [
+        hashToken(vivant.token),
+        MARDI_1645,
+        apres(MARDI_1645, 30),
+        apres(MARDI_1645, 45),
+        PRIVACY,
+        Buffer.alloc(2096, 6),
+        generateToken().hash,
+      ]),
+      CONTROLE,
+    )
+    // Déplacement de l'appel du mercredi vers le mardi plein : refusé, par la personne (fonction)
+    // comme par le coffre (requête directe).
+    await assert.rejects(
+      site.query('SELECT move_booking_as_guest($1, $2, $3, $4)', [
+        hashToken(mercredi.gestion),
+        MARDI_1645,
+        apres(MARDI_1645, 30),
+        apres(MARDI_1645, 45),
+      ]),
+      CONTROLE,
+    )
+    await assert.rejects(
+      coffre.query(
+        `UPDATE bookings SET starts_at = $2, ends_at = $3, slot = tstzrange($2, $4) WHERE id = $1`,
+        [mercredi.id, MARDI_1645, apres(MARDI_1645, 30), apres(MARDI_1645, 45)],
+      ),
+      CONTROLE,
+    )
+    assert.equal((await appel(mercredi.id)).starts_at.toISOString(), MERCREDI_1030.toISOString())
+    // Le même jour, un appel garde sa place : un appel du mardi se déplace dans le mardi.
+    const { rows } = await admin.query('SELECT id FROM bookings WHERE starts_at = $1', [MARDI_1030])
+    await coffre.query(
+      `UPDATE bookings SET starts_at = $2, ends_at = $3, slot = tstzrange($2, $4) WHERE id = $1`,
+      [rows[0].id, MARDI_1645, apres(MARDI_1645, 30), apres(MARDI_1645, 45)],
+    )
+    // Un appel annulé ne compte plus.
+    await admin.query("UPDATE bookings SET status = 'cancelled_by_house' WHERE id = $1", [
+      rows[0].id,
+    ])
+    const { rows: libre } = await site.query(
+      'SELECT book_slot_as_guest($1, $2, $3, $4, $5, $6, $7) AS id',
+      [
+        hashToken(vivant.token),
+        MARDI_1030,
+        apres(MARDI_1030, 30),
+        apres(MARDI_1030, 45),
+        PRIVACY,
+        Buffer.alloc(2096, 6),
+        generateToken().hash,
+      ],
+    )
+    assert.ok(libre[0].id)
   })
 
   it('fonctions du site public : empreinte inconnue, d’accès, expirée ou annulée → rien', async () => {
