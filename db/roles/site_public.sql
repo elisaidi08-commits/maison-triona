@@ -9,7 +9,9 @@
 -- Depuis la story 3.10, la réservation d'appel : lecture des disponibilités, du créneau et du statut
 -- des réservations (jamais le contenu scellé), vérification et consommation des jetons, insertion
 -- d'une réservation (voir en bas). Depuis la story 3.9, la demande de lien : création d'un lien
--- d'accès, annulation du précédent, e-mail d'accès dans la boîte d'envoi (voir en bas).
+-- d'accès, annulation du précédent, e-mail d'accès dans la boîte d'envoi (voir en bas). Depuis la
+-- story 3.11, le lien de gestion : sa création par une fonction, le déplacement et l'annulation d'un
+-- appel (voir en bas).
 -- Hors des migrations automatiques : appliqué à la main, par l'administrateur de la base, APRÈS
 -- `npm run db:migrate` (les droits portent sur une table existante). Rejouable.
 -- Aucun mot de passe ici : le compte qui se connecte reçoit ce rôle à part (procédure).
@@ -40,11 +42,12 @@ grant insert (id, template, request_id, priority) on outbox to site_public;
 -- aucun effacement. Réservation : insertion des colonnes écrites par la page ; le statut
 -- n'en fait pas partie, une réservation naît toujours « confirmée » (valeur par défaut).
 grant select on booking_settings, availability_rules, availability_exceptions to site_public;
-grant select (id, access_token_id, starts_at, ends_at, slot, status) on bookings to site_public;
+grant select (id, access_token_id, starts_at, ends_at, slot, status, sequence)
+  on bookings to site_public;
 grant insert (
   id, access_token_id, starts_at, ends_at, slot, privacy_version, retention_until, sealed
 ) on bookings to site_public;
-grant select (id, token_hash, purpose, created_at, expires_at, used_at, revoked_at)
+grant select (id, token_hash, purpose, booking_id, created_at, expires_at, used_at, revoked_at)
   on booking_tokens to site_public;
 grant update (used_at) on booking_tokens to site_public;
 
@@ -58,3 +61,18 @@ grant update (used_at) on booking_tokens to site_public;
 -- 0011).
 grant insert (id, token_hash, email_hmac, expires_at) on booking_tokens to site_public;
 grant execute on function revoke_live_access_links(bytea) to site_public;
+
+-- Lien de gestion (story 3.11, db/migrations/0014_deplacer_annuler.sql ; docs/reservation-appel.md
+-- §2, étapes 4 et 6) : créé par la seule fonction `issue_manage_token`, dans la transaction de la
+-- réservation, pour l'appel que le lien d'accès vient de réserver (échéance et empreinte fixées par la
+-- base) ; aucun droit d'insertion d'un lien de gestion, aucune écriture de `expires_at`. Lecture de
+-- l'appel visé (`booking_id`) et de la séquence de l'invitation (plus haut). Déplacer : début, fin et
+-- plage de l'appel (ce droit donne aussi le verrou de ligne, SELECT … FOR UPDATE). Annuler : par la
+-- seule fonction `cancel_booking_as_guest` (« annulé par la personne ») ; aucun droit sur le statut,
+-- donc ni qualification ni annulation au nom de la maison. Les déclencheurs de 0014 n'acceptent
+-- qu'un appel confirmé qui n'a pas commencé, vers un créneau à venir, et posent eux-mêmes la
+-- séquence ; la contrainte d'exclusion refuse tout chevauchement. Ni le contenu scellé, ni
+-- l'échéance de conservation, ni le lien d'accès, ni le rattachement ; aucun effacement.
+grant execute on function issue_manage_token(uuid, bytea, uuid) to site_public;
+grant execute on function cancel_booking_as_guest(uuid) to site_public;
+grant update (starts_at, ends_at, slot) on bookings to site_public;

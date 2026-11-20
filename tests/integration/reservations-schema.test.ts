@@ -363,8 +363,9 @@ describe('tables de la réservation d’appel', () => {
     )
     for (const sql of [
       "INSERT INTO bookings (id, starts_at, ends_at, slot, sealed, privacy_version, retention_until) VALUES (gen_random_uuid(), now(), now() + interval '1 hour', tstzrange(now(), now() + interval '1 hour'), '\\x00', 'v', now())",
-      // Statut et rattachement : agenda de la story 3.13 (agenda-schema.test.ts) ; rien d'autre.
-      'UPDATE bookings SET starts_at = starts_at',
+      // Statut et rattachement : agenda de la story 3.13 (agenda-schema.test.ts) ; créneau : story
+      // 3.11 (gestion.test.ts) ; rien d'autre.
+      'UPDATE bookings SET sequence = sequence',
       'UPDATE bookings SET sealed = sealed',
       'UPDATE bookings SET retention_until = now()',
       'TRUNCATE bookings',

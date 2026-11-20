@@ -2,7 +2,8 @@
 -- Auth, lecture des demandes, gel et effacement des demandes (partie D), journal d'accès en écriture et
 -- en lecture, disponibilités de Cat (story 3.8 B), réservations en lecture et création d'un lien de
 -- réservation (story 3.10), effacement des réservations échues et des jetons expirés par la
--- conservation (0010), statut et rattachement des appels par l'agenda (story 3.13), rien d'autre.
+-- conservation (0010), statut et rattachement des appels par l'agenda (story 3.13), déplacement,
+-- annulation et effacement d'un appel (story 3.11), rien d'autre.
 -- Ni insertion d'une demande, ni modification d'une autre colonne que `frozen` (ni le contenu scellé,
 -- ni l'échéance, ni le statut), ni modification ni effacement du journal, ni table de migrations, ni
 -- création d'objet. La tâche planifiée de conservation (/api/cron/retention) passe par ce même rôle.
@@ -80,3 +81,12 @@ grant select (id, expires_at), delete on booking_tokens to coffre;
 -- autre changement, sous tout rôle) et le rattachement à une demande (`request_id`). Ni le créneau, ni
 -- le contenu scellé, ni l'échéance, ni le lien ; ni insertion de réservation.
 grant update (status, request_id) on bookings to coffre;
+
+-- Déplacer et annuler un appel depuis l'agenda (story 3.11, db/migrations/0014_deplacer_annuler.sql) :
+-- début, fin et plage de l'appel (le statut est déjà accordé plus haut). Les déclencheurs de 0014
+-- n'acceptent qu'un appel confirmé qui n'a pas commencé, vers un créneau à venir, et posent la
+-- séquence ; la contrainte d'exclusion refuse tout chevauchement. Effacer un appel (procédure RGPD) :
+-- `delete` sur `bookings` et `booking_tokens` est déjà accordé (conservation, 0010) ; son lien de
+-- gestion part avec lui (clé étrangère), son lien d'accès est effacé dans la même transaction. Ni le
+-- contenu scellé, ni l'échéance, ni la séquence, ni aucun lien en écriture.
+grant update (starts_at, ends_at, slot) on bookings to coffre;
