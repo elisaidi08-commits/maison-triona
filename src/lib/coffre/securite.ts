@@ -7,7 +7,8 @@ export function estCheminCoffre(chemin: string): boolean {
 
 // Page d'une demande (/coffre/demandes/<uuid>, partie D) dont l'identifiant n'est pas un UUID : le
 // proxy répond 404 sans rendre la page. Même motif que l'identifiant de src/lib/vault/repository.ts.
-const CHEMIN_DEMANDE = /^\/coffre\/demandes\/([^/]+)\/?$/
+// Depuis la story 3.11, la page d'un appel (/coffre/appels/<uuid>) aussi.
+const CHEMIN_DEMANDE = /^\/coffre\/(?:demandes|appels)\/([^/]+)\/?$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Pages de lecture : celles des demandes (/coffre/demandes/…) et l'agenda des appels (/coffre/appels,
@@ -40,7 +41,7 @@ export const PAGE_INTROUVABLE = `<!doctype html>
 <body>
 <main id="contenu">
 <h1>Introuvable</h1>
-<p>Cette demande n’existe pas, ou elle a été effacée.</p>
+<p>Cette page n’existe pas, ou ce qu’elle montrait a été effacé.</p>
 <p><a href="/coffre">Retour à la liste des demandes</a></p>
 </main>
 </body>

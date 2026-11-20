@@ -104,18 +104,29 @@ export async function loadSlotConfig(db: Db, options: LoadOptions = {}): Promise
  * Depuis la story 3.13, un appel qualifié (« fait », « pas de réponse ») compte comme un confirmé :
  * dans le plafond du jour et pour sa plage, comme dans la contrainte d'exclusion (0013) ; seul un
  * appel annulé en sort.
+ * Depuis la story 3.11, `exclude` retire de la liste l'appel qu'on déplace : sa plage et sa place dans
+ * le plafond du jour sont rendues au calcul de son nouveau créneau (la base, elle, ne les libère qu'en
+ * prenant le nouveau, dans la même instruction).
  */
-export async function listConfirmedCalls(db: Db, from: Date, to: Date): Promise<BookedCall[]> {
+export async function listConfirmedCalls(
+  db: Db,
+  from: Date,
+  to: Date,
+  options: { exclude?: string } = {},
+): Promise<BookedCall[]> {
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
     throw new RangeError('Période invalide')
   }
+  const exclude = options.exclude ?? null
+  if (exclude !== null && !UUID.test(exclude)) throw new RangeError('Appel invalide')
   const { rows } = await guard('listConfirmedCalls', () =>
     db.query<{ debut: Date; fin: Date }>(
       `SELECT lower(slot) AS debut, upper(slot) AS fin FROM bookings
        WHERE status IN ('confirmed', 'done', 'no_answer')
          AND slot && tstzrange($1::timestamptz, $2::timestamptz)
+         AND ($3::uuid IS NULL OR id <> $3::uuid)
        ORDER BY lower(slot)`,
-      [from, to],
+      [from, to, exclude],
     ),
   )
   return rows.map((row) => ({ start: row.debut, occupiedUntil: row.fin }))

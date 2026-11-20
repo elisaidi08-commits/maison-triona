@@ -6,13 +6,19 @@
  * (`timingSafeEqual`). Un jeton ne va jamais dans un journal, ni dans un message d'erreur.
  * Serveur seulement (API de Node) ; imports relatifs : testé par node --test.
  */
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
 export const TOKEN_BYTES = 32
 /** Longueur du jeton en base64url sans remplissage : ⌈32 × 8 / 6⌉. */
 export const TOKEN_LENGTH = 43
 /** Durée de validité d'un lien d'accès (§2, D57). */
 export const ACCESS_TOKEN_TTL_HOURS = 48
+/**
+ * Lien d'accès qui vient de servir (story 3.11) : pendant ce délai après la réservation, un second
+ * envoi du même formulaire (double clic, renvoi sans JavaScript) mène encore au lien de gestion ;
+ * ensuite, le lien d'accès ne vaut plus rien (§2, étape 4 : seul le lien de gestion reste valable).
+ */
+export const ACCESS_REPLAY_MINUTES = 15
 
 const HASH_BYTES = 32
 const FORMAT = /^[A-Za-z0-9_-]{43}$/
@@ -73,6 +79,44 @@ export function accessTokenState(token: StoredToken, now: Date): TokenState {
   if (token.purpose !== 'access') return 'wrong-purpose'
   if (token.revokedAt) return 'revoked'
   if (token.usedAt) return 'used'
+  if (now.getTime() >= token.expiresAt.getTime()) return 'expired'
+  return 'valid'
+}
+
+/**
+ * Lien de gestion d'un appel (story 3.11 ; §2, étapes 4 et 6) : déduit du lien d'accès qui l'a réservé
+ * et d'un secret serveur (HMAC-SHA256, étiquette propre), même forme qu'un jeton (43 caractères). Le
+ * déduire plutôt que le tirer au hasard permet de le rendre une seconde fois au double envoi du
+ * formulaire, sans le garder nulle part ; la base n'en reçoit que l'empreinte, comme tout jeton. Sans
+ * le secret, le lien d'accès seul ne le donne pas ; passé ACCESS_REPLAY_MINUTES, le serveur ne le
+ * rend plus.
+ */
+export function deriveManageToken(accessToken: string, secret: string): string {
+  if (!isTokenFormat(accessToken)) throw new RangeError('Jeton invalide')
+  if (typeof secret !== 'string' || secret.length === 0) throw new RangeError('Secret manquant')
+  return createHmac('sha256', secret)
+    .update(`maison-triona:gestion:${accessToken}`, 'utf8')
+    .digest('base64url')
+}
+
+/** Le lien d'accès a-t-il servi assez récemment pour rendre encore le lien de gestion ? */
+export function isAccessReplayable(usedAt: Date | null, now: Date): boolean {
+  assertValidDate(now)
+  if (!usedAt) return false
+  const age = now.getTime() - usedAt.getTime()
+  return age >= 0 && age < ACCESS_REPLAY_MINUTES * 60 * 1000
+}
+
+export type ManageTokenState = 'valid' | 'expired' | 'revoked' | 'wrong-purpose'
+
+/**
+ * État d'un lien de gestion à cet instant : il vaut jusqu'à la fin de l'appel (`expires_at`, que la
+ * base garde égale à la fin, même après un déplacement), sauf s'il est annulé.
+ */
+export function manageTokenState(token: StoredToken, now: Date): ManageTokenState {
+  assertValidDate(now)
+  if (token.purpose !== 'manage') return 'wrong-purpose'
+  if (token.revokedAt) return 'revoked'
   if (now.getTime() >= token.expiresAt.getTime()) return 'expired'
   return 'valid'
 }

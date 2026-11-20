@@ -3,11 +3,16 @@
  * écrit à la main, sans dépendance. Ici, le fichier « Ajouter à mon agenda » de la personne, produit
  * sur le serveur après la réservation : `METHOD:PUBLISH` (un fichier importé, pas une invitation
  * envoyée), heures en UTC (lues par tous les agendas, sans bloc VTIMEZONE), `UID` stable par
- * réservation et par destinataire (`<id>-guest@`, `<id>-host@` pour Cat), `SEQUENCE` pour les
- * déplacements (story 3.11). Contenu neutre : un titre et une phrase fixes, tirés de messages/*.json ;
- * ni nom de service, ni nom, ni numéro, ni lien (le lien porte un jeton).
- * Les invitations envoyées par e-mail (`METHOD:REQUEST`, `CANCEL`, VTIMEZONE Europe/Brussels) viendront
- * avec l'envoi (stories 3.3 et 3.11).
+ * réservation et par destinataire (`<id>-guest@`, `<id>-host@` pour Cat). Contenu neutre : un titre
+ * et une phrase fixes, tirés de messages/*.json ; ni nom de service, ni nom, ni numéro, ni lien (le
+ * lien porte un jeton).
+ * Story 3.11 : un appel déplacé garde son UID et porte une `SEQUENCE` plus grande (celle de la base,
+ * `bookings.sequence`, +1 à chaque déplacement) : l'agenda remplace l'événement au lieu d'en ajouter
+ * un. Un appel annulé donne un fichier `METHOD:CANCEL`, `STATUS:CANCELLED`, même UID, séquence de
+ * l'annulation : il retire l'événement (RFC 5546 §3.2.5). Toujours un fichier téléchargé, jamais
+ * envoyé.
+ * Les invitations envoyées par e-mail (`METHOD:REQUEST`, VTIMEZONE Europe/Brussels, ORGANIZER)
+ * viendront avec l'envoi (stories 3.3 et 3.12).
  * Imports relatifs seulement : testé par node --test.
  */
 
@@ -26,6 +31,8 @@ export interface IcsEvent {
   summary: string
   description: string
   sequence?: number
+  /** `PUBLISH` (par défaut) : ajouter ou mettre à jour ; `CANCEL` : retirer l'appel annulé. */
+  method?: 'PUBLISH' | 'CANCEL'
 }
 
 /** UID stable : une réservation, un destinataire. */
@@ -81,19 +88,21 @@ export function buildIcs(event: IcsEvent): string {
   }
   const sequence = event.sequence ?? 0
   if (!Number.isInteger(sequence) || sequence < 0) throw new RangeError('Séquence invalide')
+  const method = event.method ?? 'PUBLISH'
+  if (method !== 'PUBLISH' && method !== 'CANCEL') throw new RangeError('Méthode invalide')
   const lignes = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Maison Triona//Appel//FR',
     'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+    `METHOD:${method}`,
     'BEGIN:VEVENT',
     `UID:${event.uid}`,
     `DTSTAMP:${horodatage(event.stamp)}`,
     `DTSTART:${debut}`,
     `DTEND:${fin}`,
     `SEQUENCE:${sequence}`,
-    'STATUS:CONFIRMED',
+    method === 'CANCEL' ? 'STATUS:CANCELLED' : 'STATUS:CONFIRMED',
     'TRANSP:OPAQUE',
     `SUMMARY:${texte(event.summary)}`,
     `DESCRIPTION:${texte(event.description)}`,

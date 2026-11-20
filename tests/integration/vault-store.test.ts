@@ -203,7 +203,9 @@ describe('enregistrement chiffré dans le coffre', () => {
   })
   // `bookings` référence `vault_requests` depuis 0013 (rattachement d'un appel) : vidée avec elle.
   beforeEach(() =>
-    pool.query('TRUNCATE vault_requests, bookings, vault_access_log, outbox RESTART IDENTITY'),
+    pool.query(
+      'TRUNCATE vault_requests, bookings, booking_tokens, vault_access_log, outbox RESTART IDENTITY',
+    ),
   )
   after(async () => {
     await sitePublic.end()

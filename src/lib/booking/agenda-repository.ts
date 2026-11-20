@@ -3,6 +3,16 @@ import type { Pool, PoolClient } from 'pg'
 import { withTransaction } from '../db/transaction.ts'
 import { isUuid, LIST_LOG_WINDOW_S, VaultError } from '../vault/repository.ts'
 import { EARLIER_TO_QUALIFY_LIMIT, type BookingStatus, type Qualification } from './agenda.ts'
+import {
+  cancelBooking,
+  moveBooking,
+  readCallWithSlots,
+  type CancelResult,
+  type ManagedCall,
+  type MoveResult,
+} from './bookings.ts'
+import type { CallPhase } from './manage.ts'
+import type { Slot } from './slots.ts'
 
 // Agenda des appels de Cat (story 3.13 ; docs/reservation-appel.md §3.2 ; db/migrations/0013_agenda.sql),
 // rôle `coffre`, sans ORM, dans le style de src/lib/vault/repository.ts : requêtes paramétrées, erreurs
@@ -11,8 +21,12 @@ import { EARLIER_TO_QUALIFY_LIMIT, type BookingStatus, type Qualification } from
 // - `listAgendaLogged` : heures, statuts et rattachements (`booking_list`, une ligne par affichage) ;
 // - `readBookingsSealed` : octets scellés, ouverts dans le navigateur (`booking_read`, une par appel) ;
 // - `setBookingStatus` : « fait » ou « pas de réponse » (`booking_status`) ;
-// - `attachBooking` : rattachement à une demande, ou retrait (`booking_attach`).
-// Ce qui ne change rien (même statut, même rattachement) n'écrit rien, journal compris.
+// - `attachBooking` : rattachement à une demande, ou retrait (`booking_attach`) ;
+// - story 3.11 : `moveBookingByHouse` (`booking_move`), `cancelBookingByHouse` (`booking_cancel`),
+//   `deleteBooking` (`booking_delete`, effacement à la demande de la personne). `readCallForHouse`
+//   lit la page d'un appel (heures, statut, créneaux où le déplacer), sans contenu et sans journal,
+//   comme la page d'une demande.
+// Ce qui ne change rien (même statut, même rattachement, même créneau) n'écrit rien, journal compris.
 
 type Db = Pool | PoolClient
 
@@ -295,4 +309,111 @@ export async function listCallsOfRequest(pool: Pool, requestId: string): Promise
       status: row.status,
     }))
   })
+}
+
+// --- Déplacer, annuler, effacer depuis le coffre (story 3.11 ; docs/reservation-appel.md §3.2) ---
+
+export interface HouseCall {
+  call: ManagedCall
+  phase: CallPhase
+  /** Créneaux où l'appel peut aller (sans lui), seulement s'il se déplace encore. */
+  slots: Slot[]
+}
+
+/**
+ * Page d'un appel dans le coffre : heures, statut, séquence, et les créneaux où le déplacer (mêmes
+ * règles que la page publique : délai minimal, horizon, plafond, absences). Jamais `sealed`. Sans
+ * journal : rien de la personne n'est lu, et Next 16 peut rendre une page deux fois par requête.
+ */
+export async function readCallForHouse(
+  pool: Pool,
+  id: string,
+  now: Date,
+): Promise<HouseCall | null> {
+  if (!isUuid(id)) return null
+  assertValidDate(now, 'Date')
+  return guard('readCallForHouse', () => readCallWithSlots(pool, id.toLowerCase(), now))
+}
+
+/**
+ * Déplacer depuis le coffre, au nom du compte : une ligne `booking_move` (l'appel, rien d'autre) dans
+ * la même transaction que le déplacement. Aucun message ne part (boîte d'envoi : story 3.12) ; le lien
+ * de gestion de la personne montre la nouvelle heure.
+ */
+export async function moveBookingByHouse(
+  pool: Pool,
+  id: string,
+  start: Date,
+  actor: string,
+  now: Date,
+): Promise<MoveResult> {
+  assertValidDate(start, 'Début')
+  assertValidDate(now, 'Date')
+  if (!isUuid(id)) return { status: 'not-found' }
+  const result = await moveBooking(
+    pool,
+    'moveBookingByHouse',
+    async () => id.toLowerCase(),
+    { start, now },
+    async (client, call) => {
+      await client.query(
+        "INSERT INTO vault_access_log (actor, action, booking_id) VALUES ($1, 'booking_move', $2)",
+        [actor, call.id],
+      )
+    },
+  )
+  return result.status === 'invalid-link' ? { status: 'not-found' } : result
+}
+
+/** Annuler depuis le coffre : « annulé par la maison », une ligne `booking_cancel`. */
+export async function cancelBookingByHouse(
+  pool: Pool,
+  id: string,
+  actor: string,
+  now: Date,
+): Promise<CancelResult> {
+  assertValidDate(now, 'Date')
+  if (!isUuid(id)) return 'not-found'
+  const result = await cancelBooking(
+    pool,
+    'cancelBookingByHouse',
+    async () => id.toLowerCase(),
+    { status: 'cancelled_by_house', now },
+    async (client, bookingId) => {
+      await client.query(
+        "INSERT INTO vault_access_log (actor, action, booking_id) VALUES ($1, 'booking_cancel', $2)",
+        [actor, bookingId],
+      )
+    },
+  )
+  return result === 'invalid-link' ? 'not-found' : result
+}
+
+/**
+ * Effacer un appel (procédure RGPD, docs/rgpd/procedures.md, droit à l'effacement), quel que soit son
+ * statut : la réservation (contenu scellé compris), son lien de gestion (clé étrangère) et son lien
+ * d'accès, dans une transaction avec la ligne `booking_delete` (l'identifiant seul, qui survit à
+ * l'appel pour rejouer l'effacement après une restauration de sauvegarde). Faux si l'appel n'existe
+ * pas.
+ */
+export async function deleteBooking(pool: Pool, id: string, actor: string): Promise<boolean> {
+  if (!isUuid(id)) return false
+  return guard('deleteBooking', () =>
+    withTransaction(pool, async (client) => {
+      const { rows } = await client.query<{ access_token_id: string | null }>(
+        'DELETE FROM bookings WHERE id = $1 RETURNING access_token_id',
+        [id.toLowerCase()],
+      )
+      const row = rows[0]
+      if (!row) return false
+      if (row.access_token_id) {
+        await client.query('DELETE FROM booking_tokens WHERE id = $1', [row.access_token_id])
+      }
+      await client.query(
+        "INSERT INTO vault_access_log (actor, action, booking_id) VALUES ($1, 'booking_delete', $2)",
+        [actor, id.toLowerCase()],
+      )
+      return true
+    }),
+  )
 }

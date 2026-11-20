@@ -12,11 +12,16 @@ import {
   createBookingLink,
   issueAccessToken,
   readBookingLink,
-  readConfirmation,
+  readManageLink,
 } from '../../src/lib/booking/bookings.ts'
 import { lienDeReservationDuCoffre } from '../../src/lib/auth/acces.ts'
 import { listConfirmedCalls } from '../../src/lib/booking/repository.ts'
-import { generateToken, hashToken } from '../../src/lib/booking/tokens.ts'
+import {
+  deriveManageToken,
+  generateToken,
+  hashToken,
+  isTokenFormat,
+} from '../../src/lib/booking/tokens.ts'
 import { zonedTimeToUtc } from '../../src/lib/booking/zoned-time.ts'
 import { migrate } from '../../src/lib/db/migrate.ts'
 import { withTransaction } from '../../src/lib/db/transaction.ts'
@@ -37,6 +42,7 @@ const CAT = 'cat-reservations@exemple.test'
 // mardi 2 mars à 10 h 30 (09:30 UTC).
 const MAINTENANT = new Date('2027-03-01T08:00:00Z')
 const PRIVACY = '2026-11-18'
+const SECRET = 'secret-factice-des-tests-de-reservation-0123'
 
 const admin = testPool()
 const coffre = coffrePool()
@@ -65,13 +71,22 @@ async function lien(): Promise<string> {
   return (await createBookingLink(coffre, CAT, MAINTENANT)).token
 }
 
-async function reserver(token: string, start: Date, pool: pg.Pool = site, nom?: string) {
+async function reserver(
+  token: string,
+  start: Date,
+  pool: pg.Pool = site,
+  nom?: string,
+  now: Date = MAINTENANT,
+) {
   return bookSlot(pool, {
     token,
+    // Un jeton mal formé n'a pas de lien de gestion : n'importe quel autre jeton tient la place
+    // (bookSlot refuse le jeton avant de s'en servir).
+    manageToken: isTokenFormat(token) ? deriveManageToken(token, SECRET) : generateToken().token,
     start,
     sealed: await scelle(nom),
     privacyVersion: PRIVACY,
-    now: MAINTENANT,
+    now,
   })
 }
 
@@ -224,12 +239,12 @@ describe('réservation d’appel', () => {
       token = await lien()
       await readBookingLink(site, token, MAINTENANT)
       await reserver(token, MARDI_1030)
-      await readConfirmation(site, token, MAINTENANT)
+      await readManageLink(site, deriveManageToken(token, SECRET), MAINTENANT)
       await reserver(token, MARDI_1030)
     })
     assert.equal(await compter('bookings'), 1)
     const base = await toutLeTexte()
-    for (const forme of formes(token)) {
+    for (const forme of [...formes(token), ...formes(deriveManageToken(token, SECRET))]) {
       assert.equal(base.includes(forme), false, 'en base')
       assert.equal(envoye.includes(forme), false, 'dans les requêtes')
     }
@@ -243,7 +258,7 @@ describe('réservation d’appel', () => {
     const avant = await etatDesTables()
     const lu = await readBookingLink(site, token, MAINTENANT)
     await readBookingLink(site, token, MAINTENANT)
-    await readConfirmation(site, token, MAINTENANT)
+    await readManageLink(site, token, MAINTENANT, { withSlots: true })
     assert.equal(await etatDesTables(), avant)
     assert.equal(lu.state, 'valid')
     if (lu.state !== 'valid') return
@@ -270,6 +285,9 @@ describe('réservation d’appel', () => {
     assert.equal(await etatDesTables(), avant)
     await reserver(token, MARDI_1030)
     assert.equal(await checkBookingLink(site, token, MAINTENANT), 'booked')
+    // Story 3.11 : 15 minutes après la réservation, le lien d'accès ne vaut plus rien (seul le lien
+    // de gestion reste valable).
+    assert.equal(await checkBookingLink(site, token, new Date('2027-03-01T08:15:00Z')), 'invalid')
     // L'appel passé, le lien ne vaut plus rien.
     assert.equal(await checkBookingLink(site, token, new Date('2027-03-02T10:00:00Z')), 'invalid')
   })
@@ -302,25 +320,53 @@ describe('réservation d’appel', () => {
     )
     assert.ok(!(await toutLeTexte()).includes('ysolde'))
 
-    const { rows: jetons } = await admin.query('SELECT id, used_at FROM booking_tokens')
+    const { rows: jetons } = await admin.query(
+      "SELECT id, used_at FROM booking_tokens WHERE purpose = 'access'",
+    )
     assert.equal(jetons[0].used_at.toISOString(), MAINTENANT.toISOString())
     assert.equal(appel.access_token_id, jetons[0].id)
 
-    // Le lien ne rouvre plus la réservation ; la confirmation, elle, se lit.
+    // Story 3.11 : le lien de gestion, créé dans la même transaction (empreinte seule), échéance à
+    // la fin de l'appel, empreinte d'adresse recopiée du lien d'accès (vide : lien du coffre).
+    const gestion = deriveManageToken(token, SECRET)
+    const { rows: liens } = await admin.query(
+      "SELECT token_hash, booking_id, expires_at, email_hmac FROM booking_tokens WHERE purpose = 'manage'",
+    )
+    assert.equal(liens.length, 1)
+    assert.deepEqual(liens[0].token_hash, hashToken(gestion))
+    assert.equal(liens[0].booking_id, resultat.bookingId)
+    assert.equal(liens[0].expires_at.toISOString(), '2027-03-02T10:00:00.000Z')
+    assert.equal(liens[0].email_hmac, null)
+
+    // Le lien ne rouvre plus la réservation ; la page de gestion, elle, se lit.
     assert.deepEqual(await readBookingLink(site, token, MAINTENANT), { state: 'invalid' })
-    assert.deepEqual(await readConfirmation(site, token, MAINTENANT), {
-      bookingId: resultat.bookingId,
-      start: MARDI_1030,
-      end: new Date('2027-03-02T10:00:00.000Z'),
-    })
+    const lu = await readManageLink(site, gestion, MAINTENANT)
+    assert.equal(lu.state, 'valid')
+    if (lu.state === 'valid') {
+      assert.equal(lu.call.id, resultat.bookingId)
+      assert.equal(lu.call.start.toISOString(), MARDI_1030.toISOString())
+      assert.equal(lu.call.sequence, 0)
+      assert.equal(lu.phase, 'upcoming')
+    }
+    // Le lien d'accès n'est pas un lien de gestion.
+    assert.deepEqual(await readManageLink(site, token, MAINTENANT), { state: 'invalid' })
     // Renvoi du même formulaire (retour arrière, double clic) : la même réservation, rien de plus.
     assert.deepEqual(await reserver(token, MARDI_1115), {
       status: 'already-booked',
       bookingId: resultat.bookingId,
     })
     assert.equal(await compter('bookings'), 1)
-    // L'appel passé, la confirmation ne se lit plus.
-    assert.equal(await readConfirmation(site, token, new Date('2027-03-02T10:00:00Z')), null)
+    // Plus de 15 minutes après : le lien d'accès ne vaut plus rien, même pas pour un renvoi.
+    assert.deepEqual(
+      await reserver(token, MARDI_1115, site, undefined, new Date('2027-03-01T08:20:00Z')),
+      {
+        status: 'invalid-link',
+      },
+    )
+    // L'appel passé, la page de gestion ne se lit plus.
+    assert.deepEqual(await readManageLink(site, gestion, new Date('2027-03-02T10:00:00Z')), {
+      state: 'invalid',
+    })
   })
 
   it('course à deux sur un même créneau : une seule réservation', async () => {
@@ -413,7 +459,7 @@ describe('réservation d’appel', () => {
     for (const token of [expire.token, annule.token, generateToken().token, 'court']) {
       assert.deepEqual(await readBookingLink(site, token, MAINTENANT), { state: 'invalid' })
       assert.deepEqual(await reserver(token, MARDI_1030), { status: 'invalid-link' })
-      assert.equal(await readConfirmation(site, token, MAINTENANT), null)
+      assert.deepEqual(await readManageLink(site, token, MAINTENANT), { state: 'invalid' })
     }
     assert.equal(await etatDesTables(), avant)
   })

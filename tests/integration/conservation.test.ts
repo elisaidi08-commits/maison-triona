@@ -157,9 +157,11 @@ describe('conservation planifiée du coffre', () => {
     ])
   })
 
-  it('efface les réservations échues et les jetons expirés depuis plus de 48 heures (3.10)', async () => {
+  it('efface les réservations échues et les jetons expirés depuis plus de 48 heures (3.10, 3.11)', async () => {
     // Jetons : A expiré depuis 3 jours, B depuis 15 heures, C et D utilisés et expirés depuis
-    // 12 jours ; C sert de clé à la confirmation d'un appel à venir, D à un appel passé.
+    // 12 jours ; C a réservé un appel à venir, D un appel passé. Depuis la story 3.11, le lien
+    // d'accès consommé n'est plus la clé de la confirmation (le lien de gestion l'a remplacé) : C
+    // part comme les autres, l'appel garde sa réservation.
     const jeton = async (nom: string, expire: string, utilise = false) => {
       const id = randomUUID()
       const fin = new Date(expire)
@@ -181,7 +183,7 @@ describe('conservation planifiée du coffre', () => {
       )
       return id
     }
-    const a = await jeton('A', '2027-05-29T00:00:00Z')
+    await jeton('A', '2027-05-29T00:00:00Z')
     const b = await jeton('B', '2027-05-31T12:00:00Z')
     const c = await jeton('C', '2027-05-20T00:00:00Z', true)
     const d = await jeton('D', '2027-05-20T00:00:00Z', true)
@@ -191,21 +193,23 @@ describe('conservation planifiée du coffre', () => {
 
     const counts = await runRetention(coffre, MAINTENANT)
     assert.equal(counts.bookings, 1)
-    assert.equal(counts.tokens, 2)
+    assert.equal(counts.tokens, 3)
     const { rows: jetons } = await admin.query<{ id: string }>('SELECT id FROM booking_tokens')
-    assert.deepEqual(jetons.map((row) => row.id).sort(), [b.id, c.id].sort())
-    assert.ok(!jetons.some((row) => row.id === a.id || row.id === d.id))
+    assert.deepEqual(
+      jetons.map((row) => row.id),
+      [b.id],
+    )
     const { rows: appels } = await admin.query<{ id: string; access_token_id: string | null }>(
       'SELECT id, access_token_id FROM bookings ORDER BY starts_at',
     )
     assert.deepEqual(appels, [
       { id: passe, access_token_id: null },
-      { id: aVenir, access_token_id: c.id },
+      { id: aVenir, access_token_id: null },
     ])
     const { rows: journal } = await admin.query(
       `SELECT purged_bookings, purged_tokens FROM vault_access_log WHERE action = 'retention'`,
     )
-    assert.deepEqual(journal, [{ purged_bookings: 1, purged_tokens: 2 }])
+    assert.deepEqual(journal, [{ purged_bookings: 1, purged_tokens: 3 }])
   })
 
   it('est rejouable : un second passage, même simultané, n’efface rien de plus', async () => {

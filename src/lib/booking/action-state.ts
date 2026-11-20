@@ -13,17 +13,19 @@ import type { EtatReservation } from './form.ts'
 // l'état revient par `useActionState`, ceci ne sert pas. Vérifié de bout en bout sans JavaScript
 // (tests/e2e/reservation-parcours.spec.ts), à revérifier à chaque montée de version de Next.
 
-const etats = new WeakMap<object, EtatReservation>()
+// Depuis la story 3.11, le même mécanisme sert au déplacement d'un appel (src/actions/booking-manage.ts) :
+// l'état est d'un type ou de l'autre selon le formulaire ; chaque page relit celui de son action.
+const etats = new WeakMap<object, unknown>()
 
-export async function retenirEtat(etat: EtatReservation): Promise<EtatReservation> {
+export async function retenirEtat<T = EtatReservation>(etat: T): Promise<T> {
   etats.set(await headers(), etat)
   return etat
 }
 
 // Lu une fois, puis retiré : rien ne reste en mémoire après le rendu qui le consomme.
-export async function etatRetenu(): Promise<EtatReservation | undefined> {
+export async function etatRetenu<T = EtatReservation>(): Promise<T | undefined> {
   const cle = await headers()
-  const etat = etats.get(cle)
+  const etat = etats.get(cle) as T | undefined
   etats.delete(cle)
   return etat
 }

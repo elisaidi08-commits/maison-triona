@@ -3,7 +3,11 @@ import type { Pool } from 'pg'
 import type { Qualification } from '../booking/agenda.ts'
 import {
   attachBooking,
+  cancelBookingByHouse,
+  deleteBooking,
   listAgendaLogged,
+  moveBookingByHouse,
+  readCallForHouse,
   listCallsOfRequest,
   readBookingsSealed,
   setBookingStatus,
@@ -12,10 +16,16 @@ import type {
   AgendaListing,
   AttachedCall,
   AttachResult,
+  HouseCall,
   SealedCall,
   StatusResult,
 } from '../booking/agenda-repository.ts'
-import { createBookingLink, type IssuedLink } from '../booking/bookings.ts'
+import {
+  createBookingLink,
+  type CancelResult,
+  type IssuedLink,
+  type MoveResult,
+} from '../booking/bookings.ts'
 import { outboxHealth } from '../outbox/health.ts'
 import type { OutboxHealth } from '../outbox/health.ts'
 import {
@@ -256,4 +266,49 @@ export async function appelsDeLaDemandeDuCoffre(
 ): Promise<AttachedCall[] | null> {
   if (acces.etat !== 'autorise') return null
   return listCallsOfRequest(pool, id)
+}
+
+// Page d'un appel (story 3.11) : heures, statut, créneaux où le déplacer ; sans contenu ni journal,
+// comme la page d'une demande. Sans accès autorisé, ou appel inconnu : null.
+export async function appelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  maintenant: Date,
+): Promise<HouseCall | null> {
+  if (acces.etat !== 'autorise') return null
+  return readCallForHouse(pool, id, maintenant)
+}
+
+// Déplacer un appel à venir (`booking_move`), au nom du compte. Aucun message ne part (3.12).
+export async function deplacementAppelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  debut: Date,
+  maintenant: Date,
+): Promise<MoveResult | null> {
+  if (acces.etat !== 'autorise') return null
+  return moveBookingByHouse(pool, id, debut, acces.compte.email, maintenant)
+}
+
+// Annuler un appel à venir, « annulé par la maison » (`booking_cancel`). Aucun message ne part (3.12).
+export async function annulationAppelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+  maintenant: Date,
+): Promise<CancelResult | null> {
+  if (acces.etat !== 'autorise') return null
+  return cancelBookingByHouse(pool, id, acces.compte.email, maintenant)
+}
+
+// Effacer un appel (procédure RGPD, `booking_delete`) : la réservation et ses liens.
+export async function effacementAppelDuCoffre(
+  pool: Pool,
+  acces: AccesCoffre,
+  id: string,
+): Promise<boolean> {
+  if (acces.etat !== 'autorise') return false
+  return deleteBooking(pool, id, acces.compte.email)
 }

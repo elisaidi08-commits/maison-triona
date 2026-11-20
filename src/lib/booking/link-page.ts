@@ -1,11 +1,13 @@
 import { getPool } from '../db/pool.ts'
 import { vaultPublicKeyFromEnv } from '../vault/config.ts'
-import { readBookingLink, readConfirmation, type Confirmation } from './bookings.ts'
+import { readBookingLink, readManageLink, type ManagedCall } from './bookings.ts'
 import { presenterCreneaux, type Langue } from './display.ts'
+import type { CallPhase } from './manage.ts'
 import type { CreneauAffiche } from './form.ts'
 import { isTokenFormat } from './tokens.ts'
 
-// Lectures des pages de lien (story 3.10) : réservation, confirmation, fichier .ics. Lecture seule,
+// Lectures des pages de lien (story 3.10) : réservation ; depuis la story 3.11, gestion (déplacer,
+// annuler) et fichier .ics, par le lien de gestion. Lecture seule,
 // rôle `site_public` (DATABASE_URL). La réservation n'est ouverte que si le coffre est configuré (base
 // et clé publique, comme le formulaire de contact) ; sinon aucun lien ne peut valoir. Une base
 // injoignable donne `indisponible`, jamais `invalide` : on ne dit pas d'un lien qu'il ne vaut plus sans
@@ -34,19 +36,33 @@ export async function lirePageLien(
   }
 }
 
-export type PageConfirmation =
-  { etat: 'confirme'; confirmation: Confirmation } | { etat: 'invalide' } | { etat: 'indisponible' }
+export type PageGestion =
+  | { etat: 'valide'; appel: ManagedCall; phase: CallPhase; creneaux: CreneauAffiche[] }
+  | { etat: 'invalide' }
+  | { etat: 'indisponible' }
 
-export async function lirePageConfirmation(
+/**
+ * Page de gestion (story 3.11), son annulation et son fichier .ics. `creneaux` : seulement si demandés
+ * (page principale) et si l'appel se déplace encore, dans la langue de la page.
+ */
+export async function lirePageGestion(
   jeton: string,
+  langue: Langue,
+  options: { creneaux?: boolean } = {},
   now: Date = new Date(),
-): Promise<PageConfirmation> {
+): Promise<PageGestion> {
   if (!ouverte(jeton)) return { etat: 'invalide' }
   try {
-    const confirmation = await readConfirmation(getPool(), jeton, now)
-    return confirmation ? { etat: 'confirme', confirmation } : { etat: 'invalide' }
+    const lu = await readManageLink(getPool(), jeton, now, { withSlots: options.creneaux === true })
+    if (lu.state !== 'valid') return { etat: 'invalide' }
+    return {
+      etat: 'valide',
+      appel: lu.call,
+      phase: lu.phase,
+      creneaux: presenterCreneaux(lu.slots, langue),
+    }
   } catch {
-    console.info('[reservation] failed:read')
+    console.info('[gestion] failed:read')
     return { etat: 'indisponible' }
   }
 }

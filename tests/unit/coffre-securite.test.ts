@@ -104,6 +104,8 @@ describe('adresse d’une demande (partie D)', () => {
       '/coffre/demandes/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5bb',
       '/coffre/demandes/%3Cscript%3E',
       '/coffre/demandes/1',
+      '/coffre/appels/pas-un-uuid',
+      '/coffre/appels/1',
     ]) {
       assert.equal(cheminDemandeMalForme(chemin), true, chemin)
     }
@@ -114,6 +116,8 @@ describe('adresse d’une demande (partie D)', () => {
       '/coffre',
       '/coffre/connexion',
       '/coffre/demandes',
+      '/coffre/appels',
+      '/coffre/appels/6f1c2a8e-3b4d-4e5f-8a9b-0c1d2e3f4a5b',
     ]) {
       assert.equal(cheminDemandeMalForme(chemin), false, chemin)
     }
