@@ -30,6 +30,7 @@ export function CopyLink({ url, label, copied }: { url: string; label: string; c
         <button
           type="button"
           onClick={copy}
+          data-mesure="partage:lien"
           className="inline-flex min-h-touch cursor-pointer items-center text-sapin underline decoration-or decoration-1 underline-offset-8"
         >
           {label}

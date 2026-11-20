@@ -28,6 +28,7 @@ const ALLOWED_PREFIXES = [
 const SERVER_ONLY = {
   'src/lib/email/tem.ts': ['https://api.scaleway.com/'],
   'src/lib/sms/seven.ts': ['https://gateway.seven.io/'],
+  'src/lib/mesure/plausible.ts': ['https://plausible.io/'],
 }
 
 const MOODBOARD = [/cosmos_/i, /docs\/moodboard/i, /MOODBOARD/, /ASSETS PHOTO MAQUETTE/i]

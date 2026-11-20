@@ -66,17 +66,17 @@ Choisir « Accompagner un proche » peut révéler une situation de santé ou de
 
 | Mesure | Événement | Propriétés | Ce qui n'est **pas** mesuré |
 |---|---|---|---|
-| Pages vues | automatique (Plausible) | chemin **sans** paramètres de requête | durée de session individuelle, parcours individuel, empreinte d'appareil |
-| Choix d'entrée | `Entrée` | `choix` ∈ `conciergerie`, `grand-age`, `enfants`, `indecis` | qui a cliqué, depuis quelle IP |
+| Pages vues | `pageview` (envoyée par notre serveur) | chemin **sans** paramètres de requête ; référent réduit à l'origine d'un site externe | durée de session individuelle, parcours individuel, empreinte d'appareil |
+| Choix d'entrée | `Entrée conciergerie`, `Entrée grand âge`, `Entrée enfants`, `Entrée demande particulière` (le choix est dans le nom : les propriétés demandent l'offre Business, story 5.2) | aucune | qui a cliqué, depuis quelle IP |
 | Demande envoyée | page `/contact/merci` vue | aucune | le service demandé, le pays, la langue, l'urgence, l'origine |
 | Rappel demandé | page de confirmation du rappel vue | aucune | idem |
-| Bascule de langue | `Langue` | `vers` ∈ `fr`, `en` | — |
-| Partage | `Partage` | `moyen` ∈ `email`, `lien` | la page partagée avec le service, le destinataire |
+| Bascule de langue | `Langue fr`, `Langue en` | aucune | — |
+| Partage | `Partage e-mail`, `Partage lien` | aucune | la page partagée avec le service, le destinataire |
 | Section partenaires (phase 2) | au plus une vue agrégée | aucune | quel partenaire a été regardé |
 
-**Liens de réservation (story 3.10)** : quand Plausible sera posé, exclure de la mesure les chemins `/*/contact/appel/*` (réservation, confirmation, fichier .ics, liens de gestion) : le jeton du lien personnel est dans le chemin, il partirait sinon avec la page vue (`docs/launch-checklist.md` §6).
+**Liens de réservation (story 3.10)** : les chemins `/<langue>/contact/appel/<jeton>…` (réservation, confirmation, fichier .ics, liens de gestion) ne sont **jamais** comptés ; le filtre s'applique dans le navigateur (le jeton n'en sort pas) et de nouveau sur le serveur (story 5.2, `src/lib/mesure/evenements.ts`). Le coffre et la démo non plus.
 
-Plausible n'utilise pas de cookie et compte les visiteurs avec une empreinte quotidienne salée, effacée au bout de 24 h, sans conserver l'IP. Le script est servi depuis notre domaine (réécriture dans `next.config`) : aucun appel vers un domaine tiers depuis le navigateur. Search Console (côté Google, sans script dans nos pages) donne des requêtes et des pages, jamais des personnes.
+Plausible n'utilise pas de cookie et compte les visiteurs avec une empreinte quotidienne salée, effacée au bout de 24 h, sans conserver l'IP. **Aucun script de Plausible** n'est chargé (story 5.2) : le navigateur envoie la page vue ou l'événement à notre domaine (`/api/m`), et notre serveur le transmet à Plausible avec le navigateur et l'IP du visiteur, nécessaires à l'empreinte ; la route ne journalise rien. Aucun appel vers un domaine tiers depuis le navigateur. Détail et réglages : `docs/mesure.md`. Search Console (côté Google, sans script dans nos pages) donne des requêtes et des pages, jamais des personnes.
 
 ---
 

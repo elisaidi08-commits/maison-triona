@@ -94,6 +94,7 @@ export function LanguageSuggestion({
       <Link
         href={switchLocalePath(pathname, target)}
         hrefLang={target}
+        data-mesure={`langue:${target}`}
         className="inline-flex min-h-touch items-center underline decoration-or decoration-1 underline-offset-8"
       >
         {switchLabel}
