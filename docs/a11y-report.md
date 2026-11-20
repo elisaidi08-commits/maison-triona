@@ -33,6 +33,23 @@ Build de production (`main` après la 3.10), Chromium par Playwright, **34 adres
 
 Tests ajoutés : `tests/e2e/focus-non-masque.spec.ts` (sommaires collants, bouton pause de l'immersion, « Close » à 48 px). Ils échouaient avant la correction. **Restent manuels** : VoiceOver (macOS et iOS), NVDA, appareils mobiles réels, tests utilisateurs (5.4), Lighthouse des pages de la 3.10 (`/contact/appel/…`, avec une base).
 
+## 0 ter. Relevé automatisé du 20/11/2026 (story 5.3, après les stories 2.16, 3.9 et 3.13)
+
+Build de production de `main` (e50bafb, avant la typographie D76), agent `qa-a11y-perf`. Puis contrôles du texte agrandi et du reflux refaits sur `main` avec Inter (D76) et la correction D73.
+
+| Contrôle | Résultat |
+|---|---|
+| axe (`npm run test:a11y`) | ✅ 43 sur 43, 0 violation ; les pages de la 3.9 (`/contact/appel`, `/envoye`, FR et EN) sont dans la liste |
+| e2e sans base (`npm run test:e2e`) | ✅ 204 réussis, 2 ignorés (coffre, avec base) |
+| Lighthouse 13, mobile et desktop | ✅ 100 partout en performance, accessibilité et bonnes pratiques sur l'accueil, Grand âge, La Maison, FAQ, Contact, demande de lien ; LCP mobile 0,9 s au plus (2,0 à 2,8 s le 18/11) ; CLS 0. ⛔ SEO 86 sur la demande de lien (constat n° 7) |
+| Reflux 320 × 800, 37 adresses | ✅ aucun défilement en largeur |
+| 1280 px à 400 % (320 × 200, 320 × 256) | ⛔ puis ✅ : Territoires (constat n° 6) |
+| 390 px, texte à 200 % | ⛔ puis ✅ : 9 pages avant D73, aucune après sur les 36 pages publiques (constat n° 4) |
+| Cibles et focus du pied de page neuf (2.16) et des pages de demande de lien | ✅ cibles ≥ 48 × 48, anneau de 3 px, aucun focus masqué |
+| Réseau et console | ✅ aucune requête tierce, aucune erreur, aucun cookie |
+
+**Pas testé** : pages à jeton de la réservation (avec base), Lighthouse des autres pages publiques, INP et poids avant LCP, clavier complet page par page (fait sur 6 pages), VoiceOver, NVDA, appareils réels.
+
 ## 1. Matrice de tests
 
 Une ligne par page et par langue. ✅ conforme · ⛔ non conforme (avec lien vers le constat) · — non applicable.
@@ -85,5 +102,8 @@ Une ligne par page et par langue. ✅ conforme · ⛔ non conforme (avec lien ve
 | 1 | 19/11/2026 | `/fr/confidentialite` (1280 × 800) | 2.4.11 | Le sommaire collant, plus haut que la fenêtre, donnait le focus à ses trois derniers liens hors de l'écran, sans défilement possible | Important | Corrigé : sommaire limité à la place libre, qui défile seul (`sommaire-collant`, aussi sur La Maison) | 5.3 |
 | 2 | 19/11/2026 | `/fr/services` (bureau, suggestion de langue affichée) | 2.4.11 | Le bouton pause de l'immersion, au pied de la scène collante, était entièrement masqué par la suggestion de langue | Important | Corrigé : bouton remonté de la hauteur du bandeau (`translate`, CLS 0) ; même protection pour le bouton des pages de service | 5.3 |
 | 3 | 19/11/2026 | Toutes les pages, langue du navigateur différente | 2.5.8 (exigence 48 px du projet) | « Close » de la suggestion de langue mesurait 39 px de large (le minimum AA de 24 px était tenu) | Mineur | Corrigé | 5.3 |
-| 4 | 19/11/2026 | Accueil, services, contact FR, Notre indépendance, conciergerie FR, confidentialité FR (390 px) | Au-delà de 1.4.4 | Avec le texte du navigateur à 200 % sur un téléphone, la page défile en largeur : un mot long d'un titre ne tient pas (« Accompagnement » en `title-h2`, 481 px), et le menu fermé déborde. Rien à 150 % | Mineur | Ouvert : la césure (`hyphens: auto`) réglerait les titres, mais change leur dessin ; choix de DA à faire par Sady | 5.3 |
+| 4 | 19/11/2026 | Accueil, services, contact FR, Notre indépendance, conciergerie FR, confidentialité FR (390 px) | Au-delà de 1.4.4 | Avec le texte du navigateur à 200 % sur un téléphone, la page défile en largeur : un mot long d'un titre ne tient pas (« Accompagnement » en `title-h2`, 481 px), et le menu fermé déborde. Rien à 150 % | Mineur | **Corrigé le 20/11/2026** (D73) : coupure sans tiret des mots trop longs pour la ligne (`overflow-wrap: anywhere` sur `body`), sans césure ; plus aucun défilement en largeur sur les 36 pages publiques FR et EN (test `titres-texte-agrandi.spec.ts`), affichage normal inchangé (captures identiques). Le menu fermé n'était pas en cause (relevé du 20/11, §0 ter). À revoir sur un vrai téléphone | 5.3 |
 | 5 | 19/11/2026 | `/fr/territoires`, `/en/where-we-work` (320 px) | — (visuel) | Étiquettes de la carte qui se chevauchent (« Suisse » sur une autre). La carte est `aria-hidden` et les pays sont repris en texte juste au-dessus : aucune information perdue | Mineur | Ouvert | 5.3 |
+| 6 | 20/11/2026 | `/fr/territoires`, `/en/where-we-work` (1280 × 800 et 1280 × 1024 à 400 %, soit 320 px à l'horizontale) | 1.4.10 | La page défilait de 15 px en largeur : à l'horizontale, la carte et le texte passaient en deux colonnes de 128 px, trop étroites pour « Luxembourg » et « Switzerland ». La pré-passe ne mesurait 320 px qu'en portrait | Important | Corrigé le 20/11/2026 : deux colonnes à l'horizontale seulement dès 568 px de large (35,5 rem) ; une colonne en dessous (test dans `territoires-carte.spec.ts`) | 5.3 |
+| 7 | 20/11/2026 | `/fr/contact/appel`, `/en/contact/call` (Lighthouse) | — (seuil SEO du projet) | SEO à 86 : pas de meta description (aussi `/contact/appel/envoye`, `/contact/call/sent`, `/contact/merci`), pages en `noindex` | Mineur | Ouvert : descriptions FR et EN à ajouter en brouillon, validation de Cat (choix de Sady du 20/11/2026) | 5.3 |
+| 8 | 20/11/2026 | `/en/the-house`, `/fr/la-maison` | — (rendu) | Le prénom « Catriona », isolé dans un `<span data-nosnippet>`, s'affiche parfois avec un dessin différent du reste de la phrase sur les captures de Chromium, d'une capture à l'autre ; même police et même largeur mesurées à chaque fois | Mineur | Ouvert : à vérifier dans Safari et Chrome réels | 5.3 |

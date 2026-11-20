@@ -45,7 +45,7 @@
 | Story | État | Peut commencer ? |
 |---|---|---|
 | **5.2 Mesure et Search Console** | Rien de codé | **Oui, maintenant**, désactivée sans variable : Plausible servi par notre domaine (réécriture), événements `Entrée`, `Langue`, `Partage` sans identifiant, pages vues sans paramètres, **`/*/contact/appel/*` jamais compté** (le jeton partirait sinon), modèle de rapport mensuel. Le compte Plausible et Search Console attendent le domaine (Sady). |
-| **5.3 Accessibilité et performance** | Pré-passe faite (PR n° 80) ; césure des titres en cours dans `~/maison-triona-cesure` (D73) | Les parties automatisées, oui (après la césure) ; VoiceOver, NVDA et mobile réel : Sady |
+| **5.3 Accessibilité et performance** | Pré-passe faite (PR n° 80) ; texte agrandi corrigé le 20/11/2026 (coupure sans tiret, D73) | Les parties automatisées, oui ; VoiceOver, NVDA et mobile réel : Sady |
 | **5.4 Tests utilisateurs** | Protocole écrit (`docs/usability-protocol.md`) | Quand les textes français sont validés par Cat : 5 participants (2 seniors, 2 enfants adultes aidants, 1 utilisateur de lecteur d'écran), sur la préproduction, seuils fixés avant |
 | **5.5 Checklist et mise en production** | 0 / 45 | Après la société inscrite, les DPA et `check:content` vert |
 
