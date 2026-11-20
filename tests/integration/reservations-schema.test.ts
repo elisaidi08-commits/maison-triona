@@ -95,7 +95,8 @@ describe('tables de la réservation d’appel', () => {
     assert.equal(contraintes.length, 1)
     assert.match(
       contraintes[0].def,
-      /EXCLUDE USING gist \(slot WITH &&\) WHERE \(\(?status = 'confirmed'/,
+      // Depuis 0013 (agenda), les appels qualifiés gardent aussi leur plage.
+      /EXCLUDE USING gist \(slot WITH &&\) WHERE \(\(status = ANY \(ARRAY\['confirmed'::text, 'done'::text, 'no_answer'::text\]\)\)\)/,
     )
   })
 
@@ -310,7 +311,9 @@ describe('tables de la réservation d’appel', () => {
       'SELECT email_hmac FROM booking_tokens',
       'UPDATE booking_tokens SET revoked_at = now()',
       'UPDATE booking_tokens SET expires_at = now()',
-      "INSERT INTO booking_tokens (id, token_hash, expires_at) VALUES (gen_random_uuid(), '\\x00', now())",
+      // Depuis la story 3.9, la création d'un lien est permise, jamais avec `used_at` ni `revoked_at`.
+      "INSERT INTO booking_tokens (id, token_hash, expires_at, used_at) VALUES (gen_random_uuid(), '\\x00', now(), now())",
+      "INSERT INTO booking_tokens (id, token_hash, expires_at, revoked_at) VALUES (gen_random_uuid(), '\\x00', now(), now())",
       'DELETE FROM booking_tokens',
       'UPDATE booking_settings SET daily_cap = 12',
       'DELETE FROM availability_exceptions',
@@ -360,7 +363,10 @@ describe('tables de la réservation d’appel', () => {
     )
     for (const sql of [
       "INSERT INTO bookings (id, starts_at, ends_at, slot, sealed, privacy_version, retention_until) VALUES (gen_random_uuid(), now(), now() + interval '1 hour', tstzrange(now(), now() + interval '1 hour'), '\\x00', 'v', now())",
-      "UPDATE bookings SET status = 'done'",
+      // Statut et rattachement : agenda de la story 3.13 (agenda-schema.test.ts) ; rien d'autre.
+      'UPDATE bookings SET starts_at = starts_at',
+      'UPDATE bookings SET sealed = sealed',
+      'UPDATE bookings SET retention_until = now()',
       'TRUNCATE bookings',
       'SELECT * FROM booking_tokens',
       'SELECT token_hash FROM booking_tokens',

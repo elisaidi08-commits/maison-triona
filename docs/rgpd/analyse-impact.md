@@ -113,6 +113,7 @@ Les lignes directrices européennes sur l'AIPD (WP248 rév. 01) considèrent qu'
 6. **Notes et échanges hors du site** (messagerie, téléphone de Cat) : le niveau de protection dépend de leur hébergement et de la discipline (§5.2).
 7. **Métadonnées gardées par TEM** : l'adresse de Cat, celle de Sady et le sujet de chaque message restent chez TEM tant que le domaine est actif ; jamais une adresse de visiteur.
 8. **Envois au nom du domaine depuis une fonction compromise** : la fonction du formulaire détient la clé de TEM (premier essai d'envoi). Mitigations : clé limitée à l'envoi et à la lecture des e-mails de ce projet, aucune adresse de visiteur dans la boîte d'envoi.
+9. **Lien en clair entre un appel et une demande** (story 3.13, rattachement) : l'identifiant de la demande est en clair dans l'appel ; un lecteur de la base relie donc un créneau d'appel (date, heure, statut) au service de la demande, colonne déjà en clair (« Grand âge » laisse deviner une situation proche de la santé). Mis en balance : le service, le pays, la langue et les dates des demandes sont déjà en clair (colonnes de tri), et le créneau de l'appel aussi ; le rattachement n'ajoute ni nom, ni numéro, ni contenu, qui restent scellés. Mitigations : rattachement facultatif, fait par Cat seule (session TOTP, journalisé), remis à nul quand la demande est effacée ; accès à la base restreint. Base légale de T2 toujours `[À VALIDER JURIDIQUEMENT]`.
 
 ## 7. Plan d'action avant l'ouverture
 

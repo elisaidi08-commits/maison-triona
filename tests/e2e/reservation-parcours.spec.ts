@@ -9,6 +9,7 @@ import type { Browser, Page } from '@playwright/test'
 import pg from 'pg'
 
 import { codeTotp, secretDeLUri } from '../integration/totp'
+import { remettreAZero } from './support/parcours'
 
 // Réservation d'un appel de bout en bout (story 3.10) : lien créé dans le coffre (TOTP), affiché une
 // fois, journalisé sans valeur ; page de réservation sans JavaScript (une GET ne modifie rien, erreurs
@@ -132,6 +133,9 @@ test.describe('réservation d’un appel de bout en bout', () => {
     browser,
   }) => {
     preparer()
+    // Limitation de débit active sur ce serveur depuis la story 3.9 (double d'Upstash) : compteurs à
+    // zéro, une reprise du test en CI repart de rien.
+    await remettreAZero()
     const base = new pg.Pool({ connectionString: BASE })
     const violations: string[] = []
     page.on('console', (message) => {

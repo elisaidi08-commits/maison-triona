@@ -101,6 +101,9 @@ export async function loadSlotConfig(db: Db, options: LoadOptions = {}): Promise
  * `bookings` par la story 3.10 : lu par la page publique de réservation (rôle `site_public`, colonnes
  * `slot` et `status` seulement) et par le coffre (aperçu des créneaux, appels gardés d'une journée
  * bloquée, spec §3.1). Rien de personnel : des instants.
+ * Depuis la story 3.13, un appel qualifié (« fait », « pas de réponse ») compte comme un confirmé :
+ * dans le plafond du jour et pour sa plage, comme dans la contrainte d'exclusion (0013) ; seul un
+ * appel annulé en sort.
  */
 export async function listConfirmedCalls(db: Db, from: Date, to: Date): Promise<BookedCall[]> {
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
@@ -109,7 +112,8 @@ export async function listConfirmedCalls(db: Db, from: Date, to: Date): Promise<
   const { rows } = await guard('listConfirmedCalls', () =>
     db.query<{ debut: Date; fin: Date }>(
       `SELECT lower(slot) AS debut, upper(slot) AS fin FROM bookings
-       WHERE status = 'confirmed' AND slot && tstzrange($1::timestamptz, $2::timestamptz)
+       WHERE status IN ('confirmed', 'done', 'no_answer')
+         AND slot && tstzrange($1::timestamptz, $2::timestamptz)
        ORDER BY lower(slot)`,
       [from, to],
     ),
