@@ -84,14 +84,17 @@ describe('boîte d’envoi : rôles', () => {
     const client = await pool.connect()
     try {
       await client.query('SET ROLE site_public')
-      await assert.rejects(
-        client.query(
-          `INSERT INTO outbox (id, template, alert_event)
-           VALUES ($1, 'technical_alert', 'notify_cap')`,
-          [randomUUID()],
-        ),
-        REFUS,
-      )
+      for (const event of ['notify_cap', 'link_cap']) {
+        await assert.rejects(
+          client.query(
+            `INSERT INTO outbox (id, template, alert_event)
+             VALUES ($1, 'technical_alert', $2)`,
+            [randomUUID(), event],
+          ),
+          REFUS,
+          event,
+        )
+      }
     } finally {
       await client.query('RESET ROLE')
       client.release()

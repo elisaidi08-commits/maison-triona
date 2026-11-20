@@ -22,6 +22,16 @@ export async function remettreAZero(): Promise<void> {
   if (!reponse.ok) throw new Error('Doubles de test injoignables')
 }
 
+/** Pose une clé du double d'Upstash (clé complète, préfixe `mt:` compris). */
+export async function poserCle(cle: string, valeur: string, duree: number): Promise<void> {
+  const reponse = await fetch(`${FAUX_SERVICES_URL}/__cle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cle, valeur, duree }),
+  })
+  if (!reponse.ok) throw new Error('Doubles de test injoignables')
+}
+
 export interface EmailRecu {
   id: string
   to: string

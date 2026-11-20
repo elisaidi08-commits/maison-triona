@@ -11,6 +11,7 @@ import pg from 'pg'
 import {
   emailsRecus,
   JOURNAL_SERVEUR,
+  poserCle,
   remettreAZero,
   SECRET_ADRESSE_E2E,
   type EmailRecu,
@@ -395,6 +396,49 @@ test.describe('demande de lien de bout en bout', () => {
     }
   })
 
+  // Plafond global (D72) : 100 demandes par jour UTC, bloquant ; au premier dépassement du jour,
+  // une seule alerte à Sady, la date seulement, même pour plusieurs demandes refusées.
+  test('plafond global : la même réponse sans lien, et une seule alerte à Sady', async ({
+    browser,
+  }) => {
+    const cle = `mt:debit:lien-jour:${new Date().toISOString().slice(0, 10)}`
+    await poserCle(cle, '100', 86_400)
+    const deux = ['plafond1@exemple.test', 'plafond2@exemple.test']
+    adresses.push(...deux)
+    const contextes = [
+      await contexte(browser, '203.0.113.21'),
+      await contexte(browser, '203.0.113.22'),
+    ]
+    try {
+      const prets = [
+        await preparerEnvoi(contextes[0]!, deux[0]!),
+        await preparerEnvoi(contextes[1]!, deux[1]!),
+      ]
+      await attendreLesEnvois()
+      const reponses = [await envoyer(prets[0]!), await envoyer(prets[1]!)]
+      expect(reponses[1]).toEqual(reponses[0])
+      expect(reponses[0]!.texte).toContain('Un lien vient de vous être envoyé.')
+      for (const adresse of deux) {
+        await emailsPour(adresse, 0)
+        expect(await jetonsDe(base, adresse)).toHaveLength(0)
+      }
+      const alertes = await emailsPour('alerte@exemple.test', 1)
+      expect(alertes[0]!.subject).toBe('Alerte technique · Maison Triona')
+      expect(alertes[0]!.text).toContain('Plafond des demandes de lien atteint')
+      for (const valeur of [...deux, '203.0.113', 'exemple.test']) {
+        expect(alertes[0]!.text).not.toContain(valeur)
+      }
+      const { rows } = await base.query<{ alert_subject: string | null }>(
+        `SELECT alert_subject FROM outbox
+         WHERE template = 'technical_alert' AND alert_event = 'link_cap'`,
+      )
+      expect(rows).toEqual([{ alert_subject: null }])
+    } finally {
+      for (const ctx of contextes) await ctx.close()
+      await poserCle(cle, '0', 86_400)
+    }
+  })
+
   test('ni adresse ni jeton en clair, en base comme dans le journal du serveur', async () => {
     expect(jetons.length).toBeGreaterThanOrEqual(8)
     const tout = await toutLeTexte(base)
@@ -410,6 +454,7 @@ test.describe('demande de lien de bout en bout', () => {
     expect(journal).toContain('[lien] issued')
     expect(journal).toContain('[lien] rejected:rate')
     expect(journal).toContain('[lien] rejected:honeypot')
+    expect(journal).toContain('[lien] alert:link-cap-sent')
     for (const valeur of [...jetons, ...adresses, 'exemple.test']) {
       expect(journal).not.toContain(valeur.trim().toLowerCase())
     }

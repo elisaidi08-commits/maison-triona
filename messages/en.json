@@ -531,7 +531,6 @@
           "The service, the country, the urgency, your name, an email address or a telephone number, the language and your consent are needed to reply to you; everything else is optional.",
           "There is no need to share any medical details; we will talk about it in person.",
           "If you choose to meet a professional, we pass on to them, with your consent, your name, your contact details and what is useful to them about your situation.",
-          "If you give an email address, you receive a short confirmation. It repeats nothing of your enquiry.",
           "No decision is made by automated means: every enquiry is read by a person."
         ]
       },
@@ -555,7 +554,7 @@
           "Only two people can read the encrypted content: the founder of the house and the person in charge of the technical upkeep of the site. Every login requires two-factor authentication; every reading, export or deletion is recorded in a log.",
           "The message that tells us a new enquiry has arrived contains nothing of your enquiry: only its date and a link to the vault.",
           "Our technical logs keep nothing you write: only an identifier and the outcome of the submission. As for any website, our host records the address of the pages visited, the date, your IP address and your browser, for one day.",
-          "To block abusive submissions, we keep for 24 hours at most a fingerprint of your IP address, computed with a key changed every day, and a fingerprint of the confirmation address."
+          "To block abusive submissions, we keep for 24 hours at most a fingerprint of your IP address, computed with a key changed every day, and, if you give one, a fingerprint of your email address."
         ]
       },
       {
@@ -655,7 +654,7 @@
           "Our host, Vercel, is an American company. Your enquiry passes through its servers in readable form until it is encrypted; we do not store it there. Like any American company, Vercel may be required by American law to hand over data, even data processed in Europe.",
           "An erased enquiry remains in the backups for up to 7 days; its content stays encrypted.",
           "The personal booking link appears in our host’s logs. It is only valid for 48 hours; once the call is arranged, it only serves to see the confirmation again, until the call.",
-          "The confirmation is sent to the address typed into the form. If it reaches you although you did not write to us, please ignore it: it contains nothing but an acknowledgement of receipt."
+          "The personal booking link is sent to the address typed on the request page, and we cannot check that it is yours. If it reaches you although you did not ask for it, please ignore it: it expires on its own after 48 hours."
         ]
       },
       {

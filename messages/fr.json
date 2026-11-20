@@ -537,7 +537,6 @@
           "Le service, le pays, l’urgence, votre nom, une adresse e‑mail ou un numéro de téléphone, la langue et votre accord sont nécessaires pour vous répondre ; le reste est facultatif.",
           "Inutile de nous donner des détails médicaux ; nous en parlerons de vive voix.",
           "Si vous choisissez de rencontrer un professionnel, nous lui transmettons, avec votre accord, votre nom, vos coordonnées et ce qui lui est utile de votre situation.",
-          "Si vous indiquez une adresse e‑mail, vous recevez un court message de confirmation. Il ne reprend rien de votre demande.",
           "Aucune décision n’est prise de façon automatisée : chaque demande est lue par une personne."
         ]
       },
@@ -561,7 +560,7 @@
           "Seules deux personnes peuvent lire le contenu chiffré : la fondatrice de la maison et la personne chargée de la maintenance technique du site. Chaque connexion exige une double authentification ; chaque lecture, export ou suppression laisse une trace dans un journal.",
           "Le message qui nous prévient d’une nouvelle demande ne contient rien de votre demande : seulement sa date et un lien vers le coffre.",
           "Nos journaux techniques ne gardent rien de ce que vous écrivez : seulement un identifiant et le résultat de l’envoi. Comme pour tout site, notre hébergeur enregistre l’adresse des pages consultées, la date, votre adresse IP et votre navigateur, pendant un jour.",
-          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et une empreinte de l’adresse de confirmation."
+          "Pour bloquer les envois abusifs, nous gardons au plus 24 heures une empreinte de votre adresse IP, calculée avec une clé changée chaque jour, et, si vous en indiquez une, une empreinte de votre adresse e‑mail."
         ]
       },
       {
@@ -660,9 +659,8 @@
         "items": [
           "Notre hébergeur, Vercel, est une société américaine. Votre demande traverse ses serveurs en clair, le temps d’être chiffrée ; nous ne l’y enregistrons pas. Comme toute société américaine, Vercel peut être tenu par le droit américain de communiquer des données, même traitées en Europe.",
           "Une demande effacée subsiste jusqu’à 7 jours dans les sauvegardes ; son contenu y reste chiffré.",
-          "Jusqu’à 24 heures après un appel, votre adresse e‑mail et votre numéro restent lisibles par notre serveur, pour vous envoyer les messages de l’appel : un serveur compromis permettrait de les lire.",
           "Le lien personnel de réservation apparaît dans les journaux de notre hébergeur. Il n’est valable que 48 heures ; une fois l’appel convenu, il ne sert plus qu’à revoir la confirmation, jusqu’à l’appel.",
-          "Le message de confirmation part à l’adresse saisie dans le formulaire. S’il vous parvient sans que vous ayez écrit, ignorez-le : il ne contient rien d’autre qu’un accusé de réception."
+          "Le lien personnel de réservation part à l’adresse saisie sur la page de demande, sans que nous puissions vérifier qu’elle est la vôtre. S’il vous parvient sans que vous l’ayez demandé, ignorez-le : il expire de lui-même au bout de 48 heures."
         ]
       },
       {

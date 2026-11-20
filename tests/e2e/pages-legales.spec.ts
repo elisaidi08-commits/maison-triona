@@ -60,3 +60,36 @@ test('les mentions légales citent l’hébergeur et la mention des images cré�
   await expect(page.locator('#hebergement')).toContainText('Vercel Inc.')
   await expect(page.locator('#images')).toContainText('intelligence artificielle')
 })
+
+// Les formulaires renvoient à leur section de la politique, dans la langue de la page (D72 : les
+// ancres `#demande` et `#appel` n'existaient pas en anglais).
+for (const { page: chemin, section } of [
+  { page: '/fr/contact', section: 'demande' },
+  { page: '/en/contact', section: 'enquiry' },
+  { page: '/fr/contact/appel', section: 'appel' },
+  { page: '/en/contact/call', section: 'call' },
+]) {
+  test(`${chemin} : le lien vers la politique mène à une section qui existe`, async ({ page }) => {
+    await page.goto(chemin)
+    const lien = page.locator('main a[href*="#"]').filter({ hasText: /confidentialit|privacy/i })
+    await expect(lien).toHaveCount(1)
+    const href = (await lien.getAttribute('href')) ?? ''
+    expect(href).toMatch(new RegExp(`#${section}$`))
+    await page.goto(href)
+    await expect(page.locator(`#${section}-titre`)).toBeVisible()
+  })
+}
+
+test('la politique ne promet plus de confirmation par e-mail au visiteur (D69)', async ({
+  page,
+}) => {
+  for (const chemin of ['/fr/confidentialite', '/en/privacy']) {
+    await page.goto(chemin)
+    await expect(page.locator('main')).not.toContainText(
+      /message de confirmation|short confirmation/,
+    )
+    await expect(page.locator('main')).not.toContainText(
+      /adresse de confirmation|confirmation address/,
+    )
+  }
+})

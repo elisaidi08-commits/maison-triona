@@ -12,7 +12,9 @@ import type { EtatLien } from '@/lib/booking/link-form'
 import { getPool } from '@/lib/db/pool'
 import { emailConfigFromEnv, type EmailConfig } from '@/lib/email/config'
 import { createOutboxDeps } from '@/lib/outbox/deps'
-import { sendAccessLinkNow, type AccessLinkContent } from '@/lib/outbox/process'
+import { CAP_ALERT_TTL_SECONDS, capAlertKey, scheduleCapAlert } from '@/lib/outbox/notify-request'
+import { sendAccessLinkNow, sendNow, type AccessLinkContent } from '@/lib/outbox/process'
+import { enqueueCapAlert } from '@/lib/outbox/repository'
 import { limiterDebit, usageUnique } from '@/lib/rate-limit'
 import { empreinte, jourUtc, reseauIp } from '@/lib/security/empreinte'
 import {
@@ -43,7 +45,14 @@ import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 //    l'adresse), plafond global de 100 par jour, bloquant. Refusée : AUCUN lien, AUCUN e-mail, et la
 //    même réponse qu'une demande aboutie. Ce point envoie des e-mails à des adresses saisies par
 //    n'importe qui : contrairement au contact, une panne d'Upstash (réseau, identifiants refusés) le
-//    FERME (« L'envoi n'a pas abouti »), elle ne le laisse jamais ouvert sans limite ;
+//    FERME (« L'envoi n'a pas abouti »), elle ne le laisse jamais ouvert sans limite.
+//    Plafond global dépassé (D72) : au premier dépassement du jour UTC, une alerte technique part à
+//    Sady (événement `link_cap`, la date seulement : ni adresse, ni IP, ni empreinte), comme celle
+//    du plafond de notifications (src/actions/request.ts) : clé d'usage unique `lien-plafond:<jour>`
+//    (une alerte par jour au plus, même sous concurrence ; tout autre résultat, aucune), écriture
+//    par le compte de l'envoi dans un `after()`, puis envoi aussitôt (`alert:link-cap-sent`). Au-delà
+//    du plafond, toute demande est refusée et fait ce même appel de plus : il ne dépend d'aucune
+//    adresse ;
 // 8. après la réponse (`after()`), dans une transaction (rôle `site_public`) : les liens vivants de
 //    cette adresse annulés, un lien neuf (empreinte du jeton seule), l'e-mail d'accès dans la boîte
 //    d'envoi (gabarit seul) ; puis le premier essai d'envoi, avec l'adresse et le jeton gardés en
@@ -57,7 +66,8 @@ import { vaultPublicKeyFromEnv } from '@/lib/vault/config'
 
 const LIMITE_IP = { maximum: 3, fenetreSecondes: 10 * 60 }
 const LIMITE_ADRESSE = { maximum: 3, fenetreSecondes: 24 * 60 * 60 }
-// Plafond global des e-mails d'accès, bloquant : `[À CONFIRMER par Sady]` (valeur et alerte).
+// Plafond global des e-mails d'accès, bloquant, avec une alerte à Sady au premier dépassement du
+// jour (décision de Sady du 20/11/2026, D72).
 const PLAFOND_JOUR = { maximum: 100, fenetreSecondes: 24 * 60 * 60 }
 /** Durée minimale d'une réponse aboutie ou refusée en silence (piège, limite) : 600 ms. */
 const DUREE_MINIMUM_MS = 600
@@ -75,6 +85,8 @@ type Statut =
   | 'failed:vault'
   | 'failed:after'
   | 'mail:disabled'
+  | 'alert:link-cap-sent'
+  | 'failed:link-cap-alert'
   | 'issued'
 
 function journaliser(statut: Statut) {
@@ -182,6 +194,25 @@ function planifierLien(
   }
 }
 
+// Plafond global atteint : alerte à Sady au premier dépassement du jour (D72). Le plafond ne dépend
+// d'aucune adresse : l'appel de plus à Upstash ne dit rien d'une adresse. Ne lève jamais.
+async function alerterPlafond(config: EmailConfig, jour: Date): Promise<void> {
+  const premier = await usageUnique(capAlertKey(jour, 'link_cap'), CAP_ALERT_TTL_SECONDS)
+  scheduleCapAlert(
+    premier.statut,
+    config,
+    {
+      after,
+      createDeps: createOutboxDeps,
+      enqueue: enqueueCapAlert,
+      sendNow,
+      log: journaliser,
+      logOnce: configurationManquante,
+    },
+    'link_cap',
+  )
+}
+
 export async function demanderLien(_precedent: EtatLien, donnees: FormData): Promise<EtatLien> {
   const debut = Date.now()
   const valeurs = lireValeursLien(donnees)
@@ -252,15 +283,17 @@ export async function demanderLien(_precedent: EtatLien, donnees: FormData): Pro
   }
 
   const jour = new Date(maintenant)
+  const cleJour = `lien-jour:${jourUtc(jour)}`
   const debit = await limiterDebit([
     { cle: `lien-ip:${empreinte(reseauIp(await adresseIp()), secret, jour)}`, ...LIMITE_IP },
     { cle: `lien-adresse:${cleDebitAdresse(email, reglage.secretAdresse)}`, ...LIMITE_ADRESSE },
-    { cle: `lien-jour:${jourUtc(jour)}`, ...PLAFOND_JOUR },
+    { cle: cleJour, ...PLAFOND_JOUR },
   ])
   switch (debit.statut) {
     case 'refuse':
       // Même page qu'une demande aboutie : rien ne dit si l'adresse ou l'IP est limitée.
       journaliser('rejected:rate')
+      if (debit.depassees.includes(cleJour)) await alerterPlafond(reglage.email, jour)
       await attendreAuMoins(debut)
       redirect(envoye)
     case 'reponse':

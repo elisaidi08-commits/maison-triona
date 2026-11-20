@@ -32,8 +32,10 @@ type Commun =
   | { statut: 'config' }
   | { statut: 'reponse' }
 
+// `refuse` : `depassees` donne les clés des limites bloquantes dépassées, en mémoire seulement
+// (jamais journalisées), pour qu'un appelant reconnaisse un plafond global (alerte à Sady, D72).
 export type ResultatLimite =
-  Commun | { statut: 'autorise'; alertes: string[] } | { statut: 'refuse' }
+  Commun | { statut: 'autorise'; alertes: string[] } | { statut: 'refuse'; depassees: string[] }
 
 export type ResultatUnique = Commun | { statut: 'nouveau' } | { statut: 'deja-vu' }
 
@@ -107,7 +109,10 @@ export async function limiterDebit(
   const comptes = limites.map((_, index) => resultat(execution.resultats[index * 2 + 1]))
   if (comptes.some((compte) => typeof compte !== 'number')) return { statut: 'reponse' }
   const depassees = limites.filter((limite, index) => (comptes[index] as number) > limite.maximum)
-  if (depassees.some((limite) => !limite.alerte)) return { statut: 'refuse' }
+  const bloquantes = depassees.filter((limite) => !limite.alerte)
+  if (bloquantes.length > 0) {
+    return { statut: 'refuse', depassees: bloquantes.map((limite) => limite.cle) }
+  }
   return { statut: 'autorise', alertes: depassees.map((limite) => limite.cle) }
 }
 

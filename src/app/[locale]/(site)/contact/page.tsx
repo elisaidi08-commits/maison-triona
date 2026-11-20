@@ -4,7 +4,8 @@ import * as rootParams from 'next/root-params'
 import { RequestForm, type TextesFormulaire } from '@/components/forms/RequestForm'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Rule } from '@/components/ui/Rule'
-import { localizedPath, type Locale } from '@/i18n/pathnames'
+import type { Locale } from '@/i18n/pathnames'
+import { privacyHref } from '@/lib/privacy'
 import { pageMetadata } from '@/lib/seo'
 
 // Contact (stories 3.1, 3.4 et 3.5) : le formulaire en étapes, variante A (D08) : une colonne de
@@ -34,7 +35,7 @@ export default async function Page() {
           <RequestForm
             locale={locale}
             textes={t.raw('form') as TextesFormulaire}
-            confidentialite={`${localizedPath('/confidentialite', locale)}#demande`}
+            confidentialite={privacyHref('demande', locale)}
           />
         </div>
       </div>
