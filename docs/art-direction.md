@@ -169,7 +169,7 @@ Mesures en px desktop ; tablette et mobile dans `docs/design-tokens.md`.
 - Sélecteur **FR · EN** typographique, 13 px, langue inactive en encre-68. Jamais de drapeau, jamais de globe.
 - En-tête **transparent sur ivoire**, non collant en V1. Si on le rend collant : filet 1 px sapin à 20 % au scroll, rien d'autre (n° 29).
 - Mobile : logo + « Menu » en toutes lettres ; menu plein écran ivoire, entrées en display 32 px, **sceau** en bas (D49).
-- Pied de page (D54, validé par Cat) : panneau « Kiln » ivoire (disque et dalle en filet or, phrase de l'accueil, touche « revenir en haut », trois colonnes, le nom en très grand, barre filetée) ; le sceau L1-D reste dans l'en-tête et le menu. Avant D54 : le sceau (64 px) remplaçait le « K. ». Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque. Le cachet « K. » (`Stamp`) reste disponible, mais le sceau est la marque.
+- Pied de page (D54, validé par Cat ; immobile par D64 ; **resserré par D72**) : panneau « Kiln » ivoire (filet or en tête, phrase de l'accueil, deux zones : la maison et ses pays, la navigation ; le nom en grand signé du « K. » ; barre filetée avec la mention IA et « Revenir en haut de la page » en lien texte). En mobile, la navigation se replie dans un `<details>`. Plus de colonne Contact ni de touche sapin (D72). Le sceau L1-D reste dans l'en-tête et le menu.
 
 ### 7.2 Hero et entrée par besoin (Accueil, scène S1)
 Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (Annexe B).
@@ -213,6 +213,8 @@ Spec : `docs/ux-entry-i18n-a11y.md` (prioritaire), variante **B** recommandée (
 
 ### 7.6 Pied de page
 
+> **D72 (19/11/2026, story 2.16)** : colonne Contact retirée (elle répétait le bloc Contact), touche sapin remplacée par le lien texte « Revenir en haut de la page » dans la barre, navigation repliée en `<details>` sous 768 px. Hauteurs : 768 px à 390 (1 241 avant), 767 à 834, 794 à 1440. Les descriptions ci-dessous (D64, D54) sont antérieures.
+>
 > **D64 n° 2 (18/11/2026)** : le pied de page est désormais **immobile et plus court** (727 px à 1440, 1 145 px à 390) : ni disque ni dalle, ni loupe, ni lettres qui montent ; le nom en 56 px ; filets or hors des blocs de texte ; mention IA sur sa propre ligne ; « K. » de 48 px en signature. La description ci-dessous est celle de D54, avant cette décision.
 - **D54, validé par Cat** : panneau « Kiln » aux **mêmes couleurs que l'en-tête et les pages** (06/11/2026) : fond **ivoire**, filet or en tête, grand disque et dalle tracés d'un **filet or** derrière, phrase et nom en sapin, intitulés en encre, focus sapin.
 - En haut : la phrase de l'accueil en deux lignes (Cormorant Garamond), la touche « revenir en haut » (vrai lien `#top`, 48 × 96 px, sapin, flèche ivoire).
