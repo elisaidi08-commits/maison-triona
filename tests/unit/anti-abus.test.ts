@@ -189,7 +189,32 @@ describe('adaptateur Upstash', () => {
     const reponse = [{ result: null }, { result: 4 }, { result: null }, { result: 10 }]
     assert.deepEqual(await limiterDebit(limites, { env, fetch: faux(reponse) }), {
       statut: 'refuse',
+      depassees: ['ip:abc'],
     })
+  })
+
+  // Demande de lien (3.9, suites, D72) : l'appelant reconnaît son plafond global, bloquant, parmi
+  // les limites dépassées, pour alerter Sady.
+  test('refusé : les clés des limites bloquantes dépassées, jamais celles d’alerte', async () => {
+    const bloquantes = [
+      { cle: 'lien-ip:abc', maximum: 3, fenetreSecondes: 600 },
+      { cle: 'lien-adresse:def', maximum: 3, fenetreSecondes: 86400 },
+      { cle: 'lien-jour:2026-11-20', maximum: 100, fenetreSecondes: 86400 },
+      { cle: 'jour:2026-11-20', maximum: 1, fenetreSecondes: 86400, alerte: true },
+    ]
+    const reponse = (comptes: number[]) => comptes.flatMap((n) => [{ result: null }, { result: n }])
+    assert.deepEqual(
+      await limiterDebit(bloquantes, { env, fetch: faux(reponse([1, 1, 101, 2])) }),
+      { statut: 'refuse', depassees: ['lien-jour:2026-11-20'] },
+    )
+    assert.deepEqual(
+      await limiterDebit(bloquantes, { env, fetch: faux(reponse([4, 1, 100, 2])) }),
+      { statut: 'refuse', depassees: ['lien-ip:abc'] },
+    )
+    assert.deepEqual(
+      await limiterDebit(bloquantes, { env, fetch: faux(reponse([4, 4, 150, 2])) }),
+      { statut: 'refuse', depassees: ['lien-ip:abc', 'lien-adresse:def', 'lien-jour:2026-11-20'] },
+    )
   })
 
   test('plafond global du jour dépassé : alerte, sans bloquer', async () => {

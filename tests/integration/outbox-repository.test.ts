@@ -85,6 +85,32 @@ describe('boîte d’envoi : schéma', () => {
     )
   })
 
+  // Alerte du plafond des demandes de lien (migration 0012) : pas plus d'identifiant.
+  it('accepte une alerte link_cap sans identifiant, refuse celle qui en porte un', async () => {
+    await pool.query(
+      `INSERT INTO outbox (id, template, alert_event) VALUES ($1, 'technical_alert', 'link_cap')`,
+      [randomUUID()],
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO outbox (id, template, alert_event, alert_subject)
+         VALUES ($1, 'technical_alert', 'link_cap', $2)`,
+        [randomUUID(), randomUUID()],
+      ),
+      { constraint: 'outbox_alert_shape' },
+    )
+  })
+
+  it('refuse un e-mail d’accès qui porte l’événement link_cap', async () => {
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO outbox (id, template, alert_event) VALUES ($1, 'booking_access', 'link_cap')`,
+        [randomUUID()],
+      ),
+      { constraint: 'outbox_alert_shape' },
+    )
+  })
+
   it('refuse toujours une alerte sur un message sans son identifiant', async () => {
     for (const event of ['send_failed', 'undelivered', 'tracking_expired']) {
       await assert.rejects(
@@ -294,6 +320,24 @@ describe('boîte d’envoi : écriture', () => {
     assert.equal(written.status, 'pending')
     assert.equal(written.attempts, 0)
     // Due tout de suite : `sendNow` peut la réserver dans la foulée.
+    assert.ok(await claimOne(pool, id, new Date(Date.now() + MINUTE)))
+  })
+
+  it('écrit l’alerte du plafond des demandes de lien, sous le rôle envoi, sans identifiant', async () => {
+    const envoi = envoiPool()
+    const id = randomUUID()
+    try {
+      await enqueueCapAlert(envoi, id, 'link_cap')
+    } finally {
+      await envoi.end()
+    }
+    const written = await row(id)
+    assert.ok(written)
+    assert.equal(written.template, 'technical_alert')
+    assert.equal(written.alert_event, 'link_cap')
+    assert.equal(written.alert_subject, null)
+    assert.equal(written.request_id, null)
+    assert.equal(written.status, 'pending')
     assert.ok(await claimOne(pool, id, new Date(Date.now() + MINUTE)))
   })
 
@@ -770,6 +814,12 @@ describe('boîte d’envoi : validation avant toute requête', () => {
         }),
     ],
     ['enqueueCapAlert id', () => enqueueCapAlert(noDb, TEMOIN)],
+    [
+      // Seules les alertes de plafond s'écrivent ainsi : jamais une alerte sur un message.
+      'enqueueCapAlert événement',
+      () => enqueueCapAlert(noDb, ID, 'send_failed' as 'link_cap'),
+    ],
+    ['enqueueCapAlert événement inconnu', () => enqueueCapAlert(noDb, ID, TEMOIN as 'link_cap')],
     ['claimDue date', () => claimDue(noDb, new Date(Number.NaN), 10)],
     ['claimDue limite 0', () => claimDue(noDb, T0, 0)],
     ['claimDue limite 101', () => claimDue(noDb, T0, 101)],
